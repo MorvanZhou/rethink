@@ -1,6 +1,7 @@
 # Rethink
 
 A note-taking app dependent on python.
+The official web version can be found at [https://rethink.run](https://rethink.run).
 
 ## Installation
 
