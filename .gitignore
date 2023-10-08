@@ -1,0 +1,24 @@
+/venv
+/.tox
+/**/.data
+/tests/tmp
+/src/rethink/.data
+/**/*.egg-info
+/dist
+
+
+# local env files
+/.env.*
+
+# Editor directories and files
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+/temp
