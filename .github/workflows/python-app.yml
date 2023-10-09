@@ -38,7 +38,6 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test
         run: |
-          mkdir -p tests/tmp
           python -m unittest discover -s tests -t . -p "test_*.py"
 
   build-mac:
@@ -69,7 +68,6 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test
         run: |
-          mkdir -p tests/tmp
           python -m unittest discover -s tests -t . -p "test_*.py"
 
   build-win:
