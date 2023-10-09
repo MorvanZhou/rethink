@@ -8,7 +8,9 @@
 
 
 # local env files
-/.env.*
+/.env.development
+/.env.production
+/.env.local
 
 # Editor directories and files
 .DS_Store
