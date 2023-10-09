@@ -34,6 +34,7 @@ def set_client():
         if not os.path.exists(conf.LOCAL_STORAGE_PATH):
             raise FileNotFoundError(f"Path not exists: {conf.LOCAL_STORAGE_PATH}")
         dot_data_path = os.path.join(conf.LOCAL_STORAGE_PATH, ".data")
+        os.makedirs(dot_data_path, exist_ok=True)
         CLIENT = MongitaClientDisk(dot_data_path)
     else:
         CLIENT = MongoClient(
