@@ -1,7 +1,7 @@
 # Rethink
 
 ---
-[![Unittest](https://github.com/MorvanZhou/rethink/actions/workflows/python-package.yml/badge.svg)](https://github.com/MorvanZhou/rethink/actions/workflows/python-package.yml)
+[![Unittest](https://github.com/MorvanZhou/rethink/actions/workflows/python-app.yml/badge.svg)](https://github.com/MorvanZhou/rethink/actions/workflows/python-app.yml)
 [![GitHub license](https://img.shields.io/github/license/MorvanZhou/rethink)](https://github.com/MorvanZhou/rethink/blob/master/LICENSE)
 
 A note-taking app dependent on python.
