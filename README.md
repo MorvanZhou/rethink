@@ -16,17 +16,18 @@ pip install rethink-note
 ## Usage
 
 ```python
-import rethink_note
+import rethink
 
-rethink_note.run()
+rethink.run()
 ```
 
 ```python
-import rethink_note
+import rethink
 
-rethink_note.run(
+rethink.run(
     path='.',
-    host='localhost',
+    host="127.0.0.1",
     port=8080,
+    language="zh"
 )
 ```

@@ -22,8 +22,9 @@ class TestRun(unittest.TestCase):
 
     def test_run(self):
         port = 8001
-        p = multiprocessing.Process(target=run, kwargs={"path": self.path, "port": port})
+        p = multiprocessing.Process(target=run, kwargs={"path": self.path, "port": port, "language": "zh"})
         p.start()
+        # p.join()
         while True:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(2)

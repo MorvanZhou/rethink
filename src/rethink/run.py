@@ -15,7 +15,7 @@ def run(
     Run the server.
 
     Args:
-        path: local storage path, default is current working directory.
+        path: rethink will create .data folder in this path, default is current working directory.
         host: server host, default is the localhost.
         port: server port, default is 8000.
         language: website language, default is English.
