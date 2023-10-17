@@ -15,7 +15,7 @@ router = APIRouter(
 
 
 @router.post(
-    path="/cursorQuery",
+    path="/search/cursor",
     response_model=schemas.search.CursorQueryResponse,
 )
 @measure_time_spend
@@ -30,7 +30,7 @@ async def cursor_query(
 
 
 @router.post(
-    path="/searchUserNodes",
+    path="/search/node",
     response_model=schemas.node.NodesInfoResponse,
 )
 @measure_time_spend
@@ -45,7 +45,7 @@ async def search_user_nodes(
 
 
 @router.put(
-    path="/cursorSearchSelect",
+    path="/search/cursorSelect",
     response_model=schemas.base.AcknowledgeResponse,
 )
 @measure_time_spend
@@ -56,4 +56,19 @@ async def cursor_search_select(
     return node_search.add_to_recent_search_history(
         td=token_decode,
         req=req,
+    )
+
+
+@router.get(
+    path="/search/recentQueries",
+    response_model=schemas.search.RecentSearchQueriesResponse,
+)
+@measure_time_spend
+async def get_recent_search_queries(
+        rid: str,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.search.RecentSearchQueriesResponse:
+    return node_search.get_recent_search_queries(
+        td=token_decode,
+        rid=rid,
     )

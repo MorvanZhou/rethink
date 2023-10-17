@@ -1,6 +1,6 @@
 import datetime
 import re
-from typing import List, Optional, Sequence, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -8,6 +8,7 @@ from bson.tz_util import utc
 from rethink import config, const
 from . import user, tps, utils, db_ops
 from .database import COLL
+from .search import user_node
 
 AT_PTN = re.compile(r'\[@[\w ]+?]\(([\w/]+?)\)', re.MULTILINE)
 TITLE_PTN = re.compile(r'^#*?\s*?(.+?)\s*$', re.MULTILINE)
@@ -210,7 +211,7 @@ def cursor_query(
         except ValueError:
             pass
         return query, list(COLL.nodes.find({"id": {"$in": rn}}))
-    return query, search_user_node(
+    nodes_found, _ = user_node(
         uid=uid,
         query=query,
         sort_key="modifiedAt",
@@ -219,6 +220,7 @@ def cursor_query(
         page_size=8,
         nid_exclude=[nid],
     )
+    return query, nodes_found
 
 
 def to_trash(uid: str, nid: str) -> const.Code:
@@ -247,10 +249,10 @@ def to_trash(uid: str, nid: str) -> const.Code:
     return const.Code.OK
 
 
-def get_nodes_in_trash(uid: str, page: int, page_size: int) -> List[tps.Node]:
+def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.Node], int]:
     unids, code = user.get_node_ids(uid=uid)
     if code != const.Code.OK:
-        return []
+        return [], 0
 
     condition = {
         "id": {"$in": unids},
@@ -258,11 +260,11 @@ def get_nodes_in_trash(uid: str, page: int, page_size: int) -> List[tps.Node]:
         "inTrash": True,
     }
     docs = COLL.nodes.find(condition).sort("inTrashAt", direction=-1)
-
+    total = COLL.nodes.count_documents(condition)
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
 
-    return list(docs)
+    return list(docs), total
 
 
 def restore_from_trash(uid: str, nid: str) -> const.Code:
@@ -321,106 +323,7 @@ def disable(
     return const.Code.OK
 
 
-def search_user_node(
-        uid: str,
-        query: str = "",
-        sort_key: str = "createAt",
-        sort_order: int = -1,
-        page: int = 0,
-        page_size: int = 0,
-        nid_exclude: Sequence[str] = None,
-) -> List[tps.Node]:
-    unids, code = user.get_node_ids(uid=uid)
-    if code != const.Code.OK:
-        return []
 
-    if nid_exclude is None or len(nid_exclude) == 0:
-        nids = unids
-    else:
-        nid_exclude = nid_exclude or []
-        nid_exclude = set(nid_exclude)
-        nids = set(unids)
-        nids.difference_update(nid_exclude)
-        nids = list(nids)
-
-    condition = {
-        "id": {"$in": nids},
-        "disabled": False,
-        "inTrash": False,
-    }
-    query = query.strip().lower()
-
-    # on remote mongodb
-    if query != "" and not config.is_local_db():
-        condition["$or"] = [
-            {"searchKeys": {"$regex": query}},
-            {"text": {"$regex": query}},
-        ]
-
-    docs = COLL.nodes.find(condition)
-
-    if sort_key != "":
-        if sort_key == "createAt":
-            sort_key = "_id"
-        elif sort_key == "similarity":
-            sort_key = "_id"  # TODO: sort by similarity
-        docs = docs.sort(sort_key, direction=sort_order)
-
-    if page_size > 0:
-        docs = docs.skip(page * page_size).limit(page_size)
-
-    if config.is_local_db() and query != "":
-        return [doc for doc in docs if query in doc["searchKeys"] or query in doc["text"]]
-    return list(docs)
-
-
-def add_to_recent_history(
-        uid: str,
-        nid: str,
-        to_nid: str,
-) -> const.Code:
-    # add selected node to recentSearchedNodeIds
-    user_c = {"id": uid}
-    unid_c = {"id": uid}
-
-    # on remote mongodb
-    if not config.is_local_db():
-        user_c.update({"disabled": False})
-        unid_c.update({"nodeIds": {"$in": [nid, to_nid]}})
-
-    # try finding user
-    u = COLL.users.find_one(user_c)
-    if u is None:
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-
-    # try finding node
-    unids = COLL.unids.find_one(unid_c)
-    if unids is None:
-        return const.Code.NODE_NOT_EXIST
-
-    # do it on local db
-    if config.is_local_db():
-        if u["disabled"]:
-            return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-        if nid not in unids["nodeIds"] or to_nid not in unids["nodeIds"]:
-            return const.Code.NODE_NOT_EXIST
-
-    rns = u["recentSearchedNodeIds"]
-    if to_nid in rns:
-        rns.remove(to_nid)
-    rns.insert(0, to_nid)
-    if len(rns) > 10:
-        rns = rns[:10]
-
-    # add to recentSearchedNodeIds
-    res = COLL.users.update_one(
-        {"id": uid},
-        {"$set": {"recentSearchedNodeIds": rns}}
-    )
-    if res.matched_count != 1:
-        return const.Code.OPERATION_FAILED
-
-    return const.Code.OK
 
 
 def new_user_add_default_nodes(language: str, uid: str) -> const.Code:

@@ -37,6 +37,7 @@ def add(
         "modifiedAt": oid.generation_time,
         "nodeIds": [],
         "recentSearchedNodeIds": [],
+        "recentSearchQueries": [],
         "language": language,
     }
     res = COLL.users.insert_one(data)

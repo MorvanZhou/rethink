@@ -119,6 +119,7 @@ def init():
             "nickname": const.DEFAULT_USER["nickname"],
             "modifiedAt": datetime.datetime.now(tz=utc),
             "recentSearchedNodeIds": [n0["id"], n1["id"]],
+            "recentSearchQueries": [],
             "language": language,
         }
         _ = COLL.users.insert_one(u)

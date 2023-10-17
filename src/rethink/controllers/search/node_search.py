@@ -50,7 +50,7 @@ def search_user_nodes(
             requestId=req.requestId,
             nodes=[],
         )
-    nodes = models.node.search_user_node(
+    nodes, total = models.search.user_node(
         uid=td.uid,
         query=req.query,
         sort_key=req.sortKey,
@@ -64,14 +64,7 @@ def search_user_nodes(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        nodes=[schemas.node.NodesInfoResponse.NodeInfo(
-            id=n["id"],
-            title=n["title"],
-            snippet=n["snippet"],
-            type=n["type"],
-            createdAt=datetime2str(n["_id"].generation_time),
-            modifiedAt=datetime2str(n["modifiedAt"]),
-        ) for n in nodes],
+        data=schemas.node.parse_nodes_info(nodes, total),
     )
 
 
@@ -85,9 +78,30 @@ def add_to_recent_search_history(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = models.node.add_to_recent_history(uid=td.uid, nid=req.nid, to_nid=req.toNid)
+    code = models.search.add_recent_search_nid(uid=td.uid, nid=req.nid, to_nid=req.toNid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
+    )
+
+
+def get_recent_search_queries(
+        td: TokenDecode,
+        rid: str,
+) -> schemas.search.RecentSearchQueriesResponse:
+    if td.code != const.Code.OK:
+        return schemas.search.RecentSearchQueriesResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=rid,
+            queries=[],
+        )
+    queries = models.search.get_recent_search_queries(uid=td.uid)
+    code = const.Code.OK
+    return schemas.search.RecentSearchQueriesResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=rid,
+        queries=queries,
     )

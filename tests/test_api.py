@@ -96,11 +96,35 @@ class TokenApiTest(unittest.TestCase):
 
     def test_node(self):
         resp = self.client.post(
-            "/api/searchUserNodes",
-            json={"requestId": "xxx", "sortKey": "createdAt", "sortOrder": -1, "page": 0, "pageSize": 5},
+            "/api/search/node",
+            json={
+                "query": "",
+                "requestId": "xxx",
+                "sortKey": "createdAt",
+                "sortOrder": -1, "page": 0, "pageSize": 5},
             headers={"token": self.token})
         rj = resp.json()
-        self.assertGreater(len(rj["nodes"]), 0)
+        self.assertGreater(len(rj["data"]["nodes"]), 0)
+
+        self.client.post(
+            "/api/search/node",
+            json={
+                "query": "qqq",
+                "requestId": "xxx",
+                "sortKey": "createdAt",
+                "sortOrder": -1, "page": 0, "pageSize": 5},
+            headers={"token": self.token})
+
+        resp = self.client.get(
+            "/api/search/recentQueries",
+            params={"rid": "xxx"},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(len(rj["queries"]), 1)
+        self.assertEqual(rj["queries"][0], "qqq")
 
         resp = self.client.put("/api/node", json={
             "requestId": "xxx",
@@ -169,7 +193,7 @@ class TokenApiTest(unittest.TestCase):
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
-        self.assertEqual(1, len(rj["nodes"]))
+        self.assertEqual(1, len(rj["data"]["nodes"]))
 
         resp = self.client.post(
             "/api/trashRestore",
