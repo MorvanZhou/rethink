@@ -94,6 +94,35 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual("http://new.avatar/aa.png", rj["user"]["avatar"])
         self.assertEqual("xxx", rj["requestId"])
 
+    def test_recent_search(self):
+        resp = self.client.put("/api/node", json={
+            "requestId": "xxx",
+            "fulltext": "node1\ntext",
+            "type": const.NodeType.MARKDOWN.value,
+        }, headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+
+        resp = self.client.put(
+            "/api/search/recent",
+            json={
+                "requestId": "xxx",
+                "nid": rj["node"]["id"],
+            }, headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+
+        resp = self.client.get(
+            "/api/search/recent",
+            params={"rid": "xxx"},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(len(rj["nodes"]), 1)
+        self.assertEqual(rj["nodes"][0]["title"], "node1")
+
     def test_node(self):
         resp = self.client.post(
             "/api/search/node",
@@ -109,22 +138,11 @@ class TokenApiTest(unittest.TestCase):
         self.client.post(
             "/api/search/node",
             json={
-                "query": "qqq",
+                "query": "",
                 "requestId": "xxx",
                 "sortKey": "createdAt",
                 "sortOrder": -1, "page": 0, "pageSize": 5},
             headers={"token": self.token})
-
-        resp = self.client.get(
-            "/api/search/recentQueries",
-            params={"rid": "xxx"},
-            headers={"token": self.token}
-        )
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
-        self.assertEqual(len(rj["queries"]), 1)
-        self.assertEqual(rj["queries"][0], "qqq")
 
         resp = self.client.put("/api/node", json={
             "requestId": "xxx",

@@ -44,8 +44,8 @@ class UserMeta(TypedDict):
     hashed: str
     disabled: bool
     modifiedAt: datetime.datetime
-    recentSearchQueries: List[str]
-    recentSearchedNodeIds: List[str]
+    recentSearch: List[str]
+    recentCursorSearchSelectedNIds: List[str]
     language: str
 
 

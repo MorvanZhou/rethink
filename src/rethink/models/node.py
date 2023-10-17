@@ -205,12 +205,12 @@ def cursor_query(
         u = COLL.users.find_one({"id": uid})
         if u is None:
             return query, []
-        rn = u["recentSearchedNodeIds"]
+        rn = u["recentCursorSearchSelectedNIds"]
         try:
             rn.remove(nid)
         except ValueError:
             pass
-        return query, list(COLL.nodes.find({"id": {"$in": rn}}))
+        return query, sorted(list(COLL.nodes.find({"id": {"$in": rn}})), key=lambda x: rn.index(x["id"]))
     nodes_found, _ = user_node(
         uid=uid,
         query=query,
@@ -231,12 +231,12 @@ def to_trash(uid: str, nid: str) -> const.Code:
     # remove node
     u = COLL.users.find_one({"id": uid})
     try:
-        u["recentSearchedNodeIds"].remove(nid)
+        u["recentCursorSearchSelectedNIds"].remove(nid)
     except ValueError:
         pass
     else:
         res = COLL.users.update_one({"id": uid}, {"$set": {
-            "recentSearchedNodeIds": u["recentSearchedNodeIds"]
+            "recentCursorSearchSelectedNIds": u["recentCursorSearchSelectedNIds"]
         }})
         if res.modified_count != 1:
             return const.Code.OPERATION_FAILED

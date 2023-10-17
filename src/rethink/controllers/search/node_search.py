@@ -68,7 +68,7 @@ def search_user_nodes(
     )
 
 
-def add_to_recent_search_history(
+def add_to_recent_cursor_search(
         td: TokenDecode,
         req: schemas.search.AddToRecentSearchHistRequest
 ) -> schemas.base.AcknowledgeResponse:
@@ -78,7 +78,7 @@ def add_to_recent_search_history(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = models.search.add_recent_search_nid(uid=td.uid, nid=req.nid, to_nid=req.toNid)
+    code = models.search.add_recent_cursor_search(uid=td.uid, nid=req.nid, to_nid=req.toNid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -86,22 +86,47 @@ def add_to_recent_search_history(
     )
 
 
-def get_recent_search_queries(
+def get_recent(
         td: TokenDecode,
         rid: str,
-) -> schemas.search.RecentSearchQueriesResponse:
+) -> schemas.search.GetRecentSearchResponse:
     if td.code != const.Code.OK:
-        return schemas.search.RecentSearchQueriesResponse(
+        return schemas.search.GetRecentSearchResponse(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
             requestId=rid,
             queries=[],
         )
-    queries = models.search.get_recent_search_queries(uid=td.uid)
+    nodes = models.search.get_recent_search(uid=td.uid)
     code = const.Code.OK
-    return schemas.search.RecentSearchQueriesResponse(
+    return schemas.search.GetRecentSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=rid,
-        queries=queries,
+        nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
+            id=n["id"],
+            title=n["title"],
+            snippet=n["snippet"],
+            type=n["type"],
+            createdAt=datetime2str(n["_id"].generation_time),
+            modifiedAt=datetime2str(n["modifiedAt"]),
+        ) for n in nodes]
+    )
+
+
+def put_recent(
+        td: TokenDecode,
+        req: schemas.search.PutRecentSearchRequest,
+) -> schemas.base.AcknowledgeResponse:
+    if td.code != const.Code.OK:
+        return schemas.base.AcknowledgeResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+        )
+    code = models.search.put_recent_search(uid=td.uid, nid=req.nid)
+    return schemas.base.AcknowledgeResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
     )

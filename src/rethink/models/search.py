@@ -55,31 +55,17 @@ def user_node(
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
 
-    # add to recentSearchQueries
-    if query != "":
-        u, code = user.get(uid=uid)
-        if code == const.Code.OK:
-            rqs = u["recentSearchQueries"]
-            if query not in rqs:
-                rqs.insert(0, query)
-            if len(rqs) > 10:
-                rqs = rqs[:10]
-
-            _ = COLL.users.update_one(
-                {"id": uid},
-                {"$set": {"recentSearchQueries": rqs}}
-            )
     if config.is_local_db() and query != "":
         return [doc for doc in docs if query in doc["searchKeys"] or query in doc["text"]], total
     return list(docs), total
 
 
-def add_recent_search_nid(
+def add_recent_cursor_search(
         uid: str,
         nid: str,
         to_nid: str,
 ) -> const.Code:
-    # add selected node to recentSearchedNodeIds
+    # add selected node to recentCursorSearchSelectedNIds
     user_c = {"id": uid}
     unid_c = {"id": uid}
 
@@ -105,17 +91,17 @@ def add_recent_search_nid(
         if nid not in unids["nodeIds"] or to_nid not in unids["nodeIds"]:
             return const.Code.NODE_NOT_EXIST
 
-    rns = u["recentSearchedNodeIds"]
+    rns = u["recentCursorSearchSelectedNIds"]
     if to_nid in rns:
         rns.remove(to_nid)
     rns.insert(0, to_nid)
     if len(rns) > 10:
         rns = rns[:10]
 
-    # add to recentSearchedNodeIds
+    # add to recentCursorSearchSelectedNIds
     res = COLL.users.update_one(
         {"id": uid},
-        {"$set": {"recentSearchedNodeIds": rns}}
+        {"$set": {"recentCursorSearchSelectedNIds": rns}}
     )
     if res.matched_count != 1:
         return const.Code.OPERATION_FAILED
@@ -123,8 +109,30 @@ def add_recent_search_nid(
     return const.Code.OK
 
 
-def get_recent_search_queries(uid: str) -> List[str]:
+def get_recent_search(uid: str) -> List[tps.Node]:
     if not user.is_exist(uid=uid):
         return []
     doc = COLL.users.find_one({"id": uid})
-    return doc["recentSearchQueries"]
+    nodes = COLL.nodes.find({"id": {"$in": doc["recentSearch"]}})
+    return sorted(list(nodes), key=lambda x: doc["recentSearch"].index(x["id"]))
+
+
+def put_recent_search(uid: str, nid: str) -> const.Code:
+    if not user.is_exist(uid=uid):
+        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
+    doc = COLL.users.find_one({"id": uid})
+    if COLL.unids.count_documents({"id": uid, "nodeIds": {"$in": [nid]}}) == 0:
+        return const.Code.NODE_NOT_EXIST
+    rns = doc["recentSearch"]
+    try:
+        rns.remove(nid)
+    except ValueError:
+        pass
+    rns.insert(0, nid)
+    if len(rns) > 20:
+        rns = rns[:20]
+    _ = COLL.users.update_one(
+        {"id": uid},
+        {"$set": {"recentSearch": rns}}
+    )
+    return const.Code.OK

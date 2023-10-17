@@ -36,8 +36,8 @@ def add(
         "nickname": nickname,
         "modifiedAt": oid.generation_time,
         "nodeIds": [],
-        "recentSearchedNodeIds": [],
-        "recentSearchQueries": [],
+        "recentCursorSearchSelectedNIds": [],
+        "recentSearch": [],
         "language": language,
     }
     res = COLL.users.insert_one(data)

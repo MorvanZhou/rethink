@@ -38,8 +38,13 @@ class AddToRecentSearchHistRequest(BaseModel):
     toNid: str
 
 
-class RecentSearchQueriesResponse(BaseModel):
+class PutRecentSearchRequest(BaseModel):
+    requestId: str
+    nid: str
+
+
+class GetRecentSearchResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
-    queries: List[str]
+    nodes: List[NodesInfoResponse.Data.NodeInfo]

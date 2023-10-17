@@ -123,9 +123,6 @@ ffq
         found, total = models.search.user_node(uid=self.uid, query="我")
         self.assertEqual(2, len(found), msg=found)
         self.assertEqual(5, total)
-        search_hist = models.search.get_recent_search_queries(self.uid)
-        self.assertEqual(1, len(search_hist))
-        self.assertEqual("我", search_hist[0])
 
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -204,7 +201,7 @@ ffq
         self.assertEqual("", q)
         self.assertEqual(2, len(recom))
 
-        code = models.search.add_recent_search_nid(self.uid, n1["id"], n2["id"])
+        code = models.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
         self.assertEqual(const.Code.OK, code)
 
         q, recom = models.node.cursor_query(
@@ -214,7 +211,7 @@ ffq
         )
         self.assertEqual("", q)
         self.assertEqual(3, len(recom))
-        self.assertEqual("title2", recom[2]["title"])
+        self.assertEqual("Welcome to Rethink", recom[2]["title"])
 
     def test_to_trash(self):
         n1, code = models.node.add(
@@ -243,3 +240,18 @@ ffq
         nodes, total = models.search.user_node(self.uid)
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
+
+    def test_search(self):
+        code = models.search.put_recent_search(self.uid, "a")
+        self.assertEqual(const.Code.NODE_NOT_EXIST, code)
+
+        n1, code = models.node.add(
+            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+        code = models.search.put_recent_search(self.uid, n1["id"])
+        self.assertEqual(const.Code.OK, code)
+
+        nodes = models.search.get_recent_search(self.uid)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(n1["id"], nodes[0]["id"])

@@ -49,26 +49,41 @@ async def search_user_nodes(
     response_model=schemas.base.AcknowledgeResponse,
 )
 @measure_time_spend
-async def cursor_search_select(
+async def add_to_recent_cursor_search(
         req: schemas.search.AddToRecentSearchHistRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.base.AcknowledgeResponse:
-    return node_search.add_to_recent_search_history(
+    return node_search.add_to_recent_cursor_search(
         td=token_decode,
         req=req,
     )
 
 
 @router.get(
-    path="/search/recentQueries",
-    response_model=schemas.search.RecentSearchQueriesResponse,
+    path="/search/recent",
+    response_model=schemas.search.GetRecentSearchResponse,
 )
 @measure_time_spend
-async def get_recent_search_queries(
+async def get_recent_search(
         rid: str,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
-) -> schemas.search.RecentSearchQueriesResponse:
-    return node_search.get_recent_search_queries(
+) -> schemas.search.GetRecentSearchResponse:
+    return node_search.get_recent(
         td=token_decode,
         rid=rid,
+    )
+
+
+@router.put(
+    path="/search/recent",
+    response_model=schemas.base.AcknowledgeResponse,
+)
+@measure_time_spend
+async def put_recent_search(
+        req: schemas.search.PutRecentSearchRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.base.AcknowledgeResponse:
+    return node_search.put_recent(
+        td=token_decode,
+        req=req,
     )
