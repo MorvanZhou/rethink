@@ -827,14 +827,12 @@ h1[data-v-73578860] {
   padding: 20px 10px;
   flex: 1;
 }
-
 .work-place[data-v-1b028d16] {
   display: flex;
   flex-direction: row;
   height: 100%;
   padding-top: 10px;
 }
-
 .md-editor[data-v-1b028d16] {
   flex: 1;
   height: 100%;
@@ -842,7 +840,6 @@ h1[data-v-73578860] {
   border-radius: 5px;
   padding: 5px;
 }
-
 .at-search-results[data-v-1b028d16] {
   position: absolute;
   width: 300px;
@@ -850,14 +847,12 @@ h1[data-v-73578860] {
   border-radius: 5px;
   background-color: #fff;
 }
-
 .linked-nodes[data-v-1b028d16] {
   flex: 0.5;
   height: 100%;
   width: 300px;
   overflow-y: auto;
 }
-
 .linked-node[data-v-1b028d16] {
   padding: 0 5px 5px 5px;
   border: 1px solid #eaeaea;
@@ -865,37 +860,31 @@ h1[data-v-73578860] {
   margin: 0 5px 5px 5px;
   overflow: hidden;
 }
-
 .node-header[data-v-1b028d16] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 5px 0 5px 0;
 }
-
 .title[data-v-1b028d16] {
   font-size: 1.2em;
   font-weight: bold;
   color: #333333;
 }
-
 .right-buttons[data-v-1b028d16] {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .right-buttons img[data-v-1b028d16] {
   width: 25px;
   height: 25px;
   cursor: pointer;
   margin-left: 5px;
 }
-
 .right-buttons img[data-v-1b028d16]:hover {
   filter: invert(0.5);
 }
-
 .snippet[data-v-1b028d16] {
   max-height: 150px;
   font-size: 0.9em;
@@ -906,7 +895,6 @@ h1[data-v-73578860] {
   white-space: break-spaces;
   overflow-wrap: break-word;
 }
-
 .snippet-expanded[data-v-1b028d16] {
   max-height: 400px;
   overflow-y: auto;
@@ -927,7 +915,6 @@ h1[data-v-73578860] {
   background: #efebeb;
   padding: 0 30px;
 }
-
 .search-icon[data-v-e7a792da] {
   height: 1em;
   width: 1em;
@@ -950,11 +937,9 @@ h1[data-v-73578860] {
   font-size: 0.9em;
   padding: 0 30px;
 }
-
 .create-node[data-v-b6321d82]:hover {
   background: #f64324;
 }
-
 .create-node-img[data-v-b6321d82] {
   height: 60%;
   display: flex;
@@ -1076,7 +1061,6 @@ h1[data-v-73578860] {
   justify-content: space-between;
   align-items: center;
 }
-
 .left-group span[data-v-6459f500] {
   font-size: 0.9em;
   color: #333333;
@@ -1091,17 +1075,14 @@ h1[data-v-73578860] {
   min-width: 25px;
   position: relative;
 }
-
 .more-hide[data-v-6484916a] {
   opacity: 0;
 }
-
 img[data-v-6484916a] {
   width: 20px;
   height: 20px;
   border-radius: 3px;
 }
-
 img[data-v-6484916a]:hover {
   background-color: #e8e7e7;
   cursor: default;
@@ -1243,6 +1224,7 @@ td[data-v-97a6cb86] {
 }
 
 
+
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nodesDisplay/toolBar/DropdownButton.vue?vue&type=style&index=0&id=b449eeb2&scoped=true&lang=css ***!
   \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1333,7 +1315,6 @@ td[data-v-97a6cb86] {
   margin: 1em 0;
   height: 2em;
 }
-
 .app-title[data-v-33a71f57] {
   margin: 5px;
   font-size: 1.6em;
@@ -1352,7 +1333,6 @@ td[data-v-97a6cb86] {
   overflow-y: auto;
   padding-top: 13px;
 }
-
 .search-result[data-v-af00126a] {
   border: 1px solid #eaeaea;
   border-radius: 5px;
@@ -1360,20 +1340,17 @@ td[data-v-97a6cb86] {
   cursor: default;
   margin-bottom: 10px;
 }
-
 .node-title[data-v-af00126a] {
   font-size: 1.2em;
   font-weight: 700;
   padding-top: 5px;
   color: #333;
 }
-
 .node-time[data-v-af00126a] {
   font-size: 0.8em;
   padding-top: 20px;
   color: #666;
 }
-
 .node-content[data-v-af00126a] {
   font-size: 0.9em;
   padding-top: 8px;
@@ -1388,13 +1365,11 @@ td[data-v-97a6cb86] {
   width: 100%;
   padding: 10px;
 }
-
 .header[data-v-f85c6760] {
   font-size: 1em;
   padding-bottom: 5px;
   border-bottom: 1px solid #eaeaea;
 }
-
 .group[data-v-f85c6760] {
   -moz-column-count: 2;
   column-count: 2;
@@ -1402,20 +1377,17 @@ td[data-v-97a6cb86] {
   column-gap: 10px;
   padding-top: 10px;
 }
-
 .item[data-v-f85c6760] {
   display: flex;
   align-items: center;
   padding: 5px;
   cursor: pointer;
 }
-
 .recent-icon[data-v-f85c6760] {
   width: 20px;
   height: 20px;
   margin-right: 5px;
 }
-
 .recent-text[data-v-f85c6760] {
   font-size: 0.9em;
   color: #333;
@@ -1432,7 +1404,6 @@ td[data-v-97a6cb86] {
   width: 100%;
   height: 100%
 }
-
 .header[data-v-21bac5db] {
   width: 100%;
   height: 50px;
@@ -1440,7 +1411,6 @@ td[data-v-97a6cb86] {
   align-items: center;
   justify-content: space-between;
 }
-
 .input-wrapper[data-v-21bac5db] {
   flex: 1;
   display: flex;
@@ -1453,7 +1423,6 @@ td[data-v-97a6cb86] {
   padding: 5px;
   margin: 0 auto;
 }
-
 .search-input[data-v-21bac5db] {
   width: 100%;
   height: 100%;
@@ -1464,12 +1433,10 @@ td[data-v-97a6cb86] {
   outline: none;
   background: transparent;
 }
-
 .search-icon[data-v-21bac5db] {
   height: 20px;
   width: 20px;
 }
-
 .cross-icon[data-v-21bac5db] {
   opacity: 0;
   height: 20px;
@@ -1477,7 +1444,6 @@ td[data-v-97a6cb86] {
   cursor: pointer;
   margin-right: 5px;
 }
-
 .cancel[data-v-21bac5db] {
   font-size: 1em;
   color: #056de8;
