@@ -2,8 +2,8 @@ import unittest
 
 from bson import ObjectId
 
-from rethink import const, models
-from rethink.controllers.auth import register_user, jwt_encode
+from rethink import const, models, config
+from rethink.controllers.auth import register_user
 from . import utils
 
 
@@ -26,7 +26,10 @@ class RemoteModelsTest(unittest.TestCase):
             password=self.default_pwd,
             language=const.Language.EN.value)
         self.assertEqual(const.Code.OK, code)
-        self.token = jwt_encode(uid, const.Language.EN.value)
+        self.token = models.utils.jwt_encode(
+            exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+            data={"uid": uid, "language": const.Language.EN.value},
+        )
         self.uid = uid
 
     def tearDown(self) -> None:

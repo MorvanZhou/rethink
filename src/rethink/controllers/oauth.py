@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import Request
 
-from rethink import config, const, models, controllers
+from rethink import config, const, models
 from rethink.sso.base import SSOLoginError
 from rethink.sso.facebook import FacebookSSO
 from rethink.sso.github import GithubSSO
@@ -59,9 +59,9 @@ async def callback_github(req: Request) -> LoginResponse:
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
-            token=controllers.auth.jwt_encode(
-                uid=u["id"],
-                language=u["language"],
+            token=models.utils.jwt_encode(
+                exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+                data={"uid": u["id"], "language": u["language"]},
             ),
         )
 
@@ -83,9 +83,9 @@ async def callback_github(req: Request) -> LoginResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    token = controllers.auth.jwt_encode(
-        uid=uid,
-        language=language,
+    token = models.utils.jwt_encode(
+        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+        data={"uid": uid, "language": language},
     )
     code = models.node.new_user_add_default_nodes(language=language, uid=uid)
 
@@ -141,9 +141,9 @@ async def callback_facebook(req: Request) -> LoginResponse:
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
-            token=controllers.auth.jwt_encode(
-                uid=u["id"],
-                language=u["language"],
+            token=models.utils.jwt_encode(
+                exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+                data={"uid": u["id"], "language": u["language"]},
             ),
         )
 
@@ -165,9 +165,9 @@ async def callback_facebook(req: Request) -> LoginResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    token = controllers.auth.jwt_encode(
-        uid=uid,
-        language=language,
+    token = models.utils.jwt_encode(
+        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+        data={"uid": uid, "language": language},
     )
     code = models.node.new_user_add_default_nodes(language=language, uid=uid)
     return LoginResponse(

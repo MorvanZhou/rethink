@@ -27,29 +27,33 @@ class Code(Enum):
     INVALID_LANGUAGE = auto()  # 12
     ONE_USER_MODE = auto()  # 13
     INVALID_PASSWORD = auto()  # 14
+    CAPTCHA_ERROR = auto()  # 15
+    CAPTCHA_EXPIRED = auto()  # 16
 
 
 @dataclass
 class CodeMessage:
-    cn: str
+    zh: str
     en: str
 
 
 CODE_MESSAGES = {
-    Code.OK: CodeMessage(cn="成功", en="OK"),
-    Code.ACCOUNT_OR_PASSWORD_ERROR: CodeMessage(cn="账号不存在或者密码错误", en="No such user or password error"),
-    Code.INVALID_AUTH: CodeMessage(cn="无效的认证信息", en="Invalid authentication information"),
-    Code.EXPIRED_AUTH: CodeMessage(cn="认证信息已过期", en="Authentication information has expired"),
-    Code.USER_EXIST: CodeMessage(cn="用户已存在", en="User already exists"),
-    Code.NODE_EXIST: CodeMessage(cn="节点已存在", en="Node already exists"),
-    Code.NODE_NOT_EXIST: CodeMessage(cn="节点不存在", en="Node does not exist"),
-    Code.OPERATION_FAILED: CodeMessage(cn="操作失败", en="Operation failed"),
-    Code.EMAIL_OCCUPIED: CodeMessage(cn="邮箱已被占用", en="Email is occupied"),
-    Code.EMPTY_CONTENT: CodeMessage(cn="内容不能为空", en="Content cannot be empty"),
-    Code.INVALID_TITLE: CodeMessage(cn="标题格式错误", en="Title format error"),
-    Code.INVALID_LANGUAGE: CodeMessage(cn="无效的语言", en="Invalid language"),
-    Code.ONE_USER_MODE: CodeMessage(cn="单用户模式，不支持注册", en="Single user mode, registration is not supported"),
-    Code.INVALID_PASSWORD: CodeMessage(cn="密码格式错误", en="Password format error"),
+    Code.OK: CodeMessage(zh="成功", en="OK"),
+    Code.ACCOUNT_OR_PASSWORD_ERROR: CodeMessage(zh="账号不存在或者密码错误", en="No such user or password error"),
+    Code.INVALID_AUTH: CodeMessage(zh="无效的认证信息", en="Invalid authentication information"),
+    Code.EXPIRED_AUTH: CodeMessage(zh="认证信息已过期", en="Authentication information has expired"),
+    Code.USER_EXIST: CodeMessage(zh="用户已存在", en="User already exists"),
+    Code.NODE_EXIST: CodeMessage(zh="节点已存在", en="Node already exists"),
+    Code.NODE_NOT_EXIST: CodeMessage(zh="节点不存在", en="Node does not exist"),
+    Code.OPERATION_FAILED: CodeMessage(zh="操作失败", en="Operation failed"),
+    Code.EMAIL_OCCUPIED: CodeMessage(zh="邮箱已被占用", en="Email is occupied"),
+    Code.EMPTY_CONTENT: CodeMessage(zh="内容不能为空", en="Content cannot be empty"),
+    Code.INVALID_TITLE: CodeMessage(zh="标题格式错误", en="Title format error"),
+    Code.INVALID_LANGUAGE: CodeMessage(zh="无效的语言", en="Invalid language"),
+    Code.ONE_USER_MODE: CodeMessage(zh="单用户模式，不支持注册", en="Single user mode, registration is not supported"),
+    Code.INVALID_PASSWORD: CodeMessage(zh="密码格式错误", en="Password format error"),
+    Code.CAPTCHA_ERROR: CodeMessage(zh="验证码输入错误", en="Captcha not match"),
+    Code.CAPTCHA_EXPIRED: CodeMessage(zh="验证码已过期", en="Captcha expired"),
 }
 
 DEFAULT_USER = {
@@ -88,7 +92,7 @@ class Language(Enum):
 def get_msg_by_code(code: Code, language: str = Language.EN.value):
     msg = CODE_MESSAGES[code]
     if language == Language.ZH.value:
-        return msg.cn
+        return msg.zh
     elif language == Language.EN.value:
         return msg.en
     else:

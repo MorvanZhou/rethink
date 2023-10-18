@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from rethink import const
 from rethink.logger import logger
 from .models import database
-from .routes import user, oauth, node, search, trash
+from .routes import user, oauth, node, search, trash, verification
 
 app = FastAPI(
     docs_url="/docs",
@@ -31,6 +31,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Captcha-Token"],
 )
 
 app.include_router(node.router)
@@ -38,6 +39,7 @@ app.include_router(user.router)
 app.include_router(oauth.router)
 app.include_router(search.router)
 app.include_router(trash.router)
+app.include_router(verification.router)
 
 
 @app.on_event("startup")

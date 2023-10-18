@@ -3,4 +3,5 @@ from . import (
     user,
     node,
     search,
+    verification,
 )

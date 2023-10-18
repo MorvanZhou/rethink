@@ -1,3 +1,4 @@
+import datetime
 from functools import lru_cache
 from typing import Optional
 
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     JWT_KEY: bytes = Field(env='JWT_KEY', default=b"")
     JWT_KEY_PUB: bytes = Field(env='JWT_KEY_PUB', default=b"")
     JWT_EXPIRED_DAYS: int = Field(default=1, env='JWT_EXPIRED_DAYS')
+    JWT_EXPIRED_DELTA: datetime.timedelta = Field(default=datetime.timedelta(days=1), env='JWT_EXPIRED_DELTA')
     OAUTH_REDIRECT_URL: str = Field(env='OAUTH_REDIRECT_URL', default="")
     OAUTH_CLIENT_ID_GITHUB: str = Field(env='OAUTH_CLIENT_ID_GITHUB', default="")
     OAUTH_CLIENT_SEC_GITHUB: str = Field(env='OAUTH_CLIENT_SEC_GITHUB', default="")
@@ -57,6 +59,7 @@ class Settings(BaseSettings):
                 crypto_serialization.Encoding.OpenSSH,
                 crypto_serialization.PublicFormat.OpenSSH
             )
+        self.JWT_EXPIRED_DELTA = datetime.timedelta(days=self.JWT_EXPIRED_DAYS)
 
 
 @lru_cache()

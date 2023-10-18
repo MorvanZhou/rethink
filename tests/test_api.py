@@ -7,6 +7,7 @@ from httpx import Response
 from rethink import const
 from rethink.application import app
 from rethink.models import database
+from rethink.models.utils import jwt_decode
 from . import utils
 
 
@@ -269,3 +270,24 @@ class TokenApiTest(unittest.TestCase):
         )
         rj = resp.json()
         self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
+
+    def test_captcha(self):
+        resp = self.client.get(
+            "/api/captcha/img",
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual("image/png", resp.headers["content-type"])
+        self.assertGreater(len(resp.headers["x-captcha-token"]), 0)
+
+        code_str = jwt_decode(resp.headers["x-captcha-token"])["code"]
+        resp = self.client.post(
+            "/api/captcha/img",
+            json={
+                "requestId": "xxx",
+                "token": resp.headers["x-captcha-token"],
+                "codeStr": code_str,
+            }
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])

@@ -1,6 +1,7 @@
-from rethink import const, models
-from rethink.controllers import auth, schemas
+from rethink import const, models, config
+from rethink.controllers import schemas, auth
 from rethink.controllers.utils import TokenDecode, datetime2str
+from rethink.models.utils import jwt_encode
 
 
 def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
@@ -17,9 +18,9 @@ def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
             token="",
         )
 
-    token = auth.jwt_encode(
-        uid=new_user_id,
-        language=req.language,
+    token = jwt_encode(
+        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+        data={"uid": new_user_id, "language": req.language},
     )
     return schemas.user.LoginResponse(
         requestId=req.requestId,
@@ -46,7 +47,10 @@ def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
             message=const.get_msg_by_code(code, u["language"]),
             token="",
         )
-    token = auth.jwt_encode(u["id"], u["language"])
+    token = jwt_encode(
+        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
+        data={"uid": u["id"], "language": u["language"]},
+    )
     return schemas.user.LoginResponse(
         requestId=req.requestId,
         code=code.value,

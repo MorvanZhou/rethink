@@ -1,5 +1,4 @@
 import base64
-import datetime
 import hashlib
 import re
 import traceback
@@ -10,41 +9,12 @@ import jwt
 from fastapi import Header
 
 from rethink import config, const, models
+from rethink.controllers.utils import TokenDecode
 from rethink.logger import logger
-from .utils import TokenDecode
-
-HEADERS = {
-    'typ': 'jwt',
-    'alg': 'RS256'
-}
+from rethink.models.utils import jwt_decode
 
 # at least 6 characters, at most 20 characters, at least one letter and one number
 VALID_PASSWORD_PTN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{6,20}$")
-
-
-def jwt_encode(uid: str, language: str) -> str:
-    """
-    Create token
-
-    Args:
-        uid: user id
-        language: user language
-
-    Returns:
-        str: token
-    """
-    payload = {
-        "id": uid,
-        "language": language,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=config.get_settings().JWT_EXPIRED_DAYS)
-    }
-    token = jwt.encode(
-        payload=payload,
-        key=config.get_settings().JWT_KEY,
-        algorithm=HEADERS["alg"],
-        headers=HEADERS,
-    )
-    return token
 
 
 def token2uid(token: str = Header(...)) -> TokenDecode:
@@ -52,15 +22,10 @@ def token2uid(token: str = Header(...)) -> TokenDecode:
     err = ""
     language = const.Language.EN.value
     try:
-        payload = jwt.decode(
-            token,
-            key=config.get_settings().JWT_KEY_PUB,
-            algorithms=[HEADERS["alg"]],
-            options={"verify_exp": True}
-        )
-        u, code = models.user.get(uid=payload["id"])
+        payload = jwt_decode(token=token)
+        u, code = models.user.get(uid=payload["uid"])
         if code != const.Code.OK:
-            logger.error(f"models.user.get err: {const.CODE_MESSAGES[code].cn}")
+            logger.error(f"models.user.get err: {const.CODE_MESSAGES[code].zh}")
             return TokenDecode(code=code, language=language)
         uid = u["id"]
         language = u["language"]
