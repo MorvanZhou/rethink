@@ -224,6 +224,22 @@ class TokenApiTest(unittest.TestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
 
+        resp = self.client.post(
+            "/api/search/cursor",
+            json={
+                "requestId": "xxx",
+                "nid": node["id"],
+                "textBeforeCursor": "@How",
+            },
+            headers={"token": self.token},
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual("How", rj["result"]["query"])
+        self.assertEqual(1, len(rj["result"]["nodes"]))
+        self.assertEqual("How do I record", rj["result"]["nodes"][0]["title"])
+
         self.client.put(
             "/api/trash",
             json={

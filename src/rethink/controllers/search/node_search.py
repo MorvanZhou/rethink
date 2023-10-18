@@ -25,7 +25,7 @@ def cursor_query(
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
         result=schemas.search.CursorQueryResponse.Result(
-            nodes=[schemas.node.NodesInfoResponse.NodeInfo(
+            nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
                 id=n["id"],
                 title=n["title"],
                 snippet=n["snippet"],
