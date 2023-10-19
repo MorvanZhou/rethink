@@ -11,17 +11,16 @@ from .database import COLL
 from .search import user_node
 
 AT_PTN = re.compile(r'\[@[\w ]+?]\(([\w/]+?)\)', re.MULTILINE)
-TITLE_PTN = re.compile(r'^#*?\s*?(.+?)\s*$', re.MULTILINE)
 CURSOR_AT_PTN = re.compile(r'\s+?@([\w ]*)$')
 
 
-def __get_linked_nodes(new_text) -> Tuple[set, const.Code]:
+def __get_linked_nodes(new_md) -> Tuple[set, const.Code]:
     # last first
     cache_current_to_nid: Set[str] = set()
 
-    for match in list(AT_PTN.finditer(new_text))[::-1]:
+    for match in list(AT_PTN.finditer(new_md))[::-1]:
         l0, l1 = match.span(1)
-        link = new_text[l0:l1]
+        link = new_md[l0:l1]
         if link.startswith("/n/"):
             # check existed nodes
             to_nid = link[3:]
@@ -32,9 +31,9 @@ def __get_linked_nodes(new_text) -> Tuple[set, const.Code]:
 def __flush_to_node_ids(
         nid: str,
         orig_to_nid: List[str],
-        new_text: str
+        new_md: str
 ) -> Tuple[List[str], const.Code]:
-    new_to_nid, code = __get_linked_nodes(new_text=new_text)
+    new_to_nid, code = __get_linked_nodes(new_md=new_md)
     if code != const.Code.OK:
         return [], code
 
@@ -50,26 +49,16 @@ def __flush_to_node_ids(
     return list(new_to_nid), const.Code.OK
 
 
-def __verify_title(title: str) -> bool:
-    if title == "":
-        return True
-    found = TITLE_PTN.match(title)
-    if found is None:
-        return False
-    return True
-
-
 def add(
         uid: str,
-        title: str,
-        text: str,
+        md: str,
         type_: int = const.NodeType.MARKDOWN.value,
         from_nid: str = "",
 ) -> Tuple[Optional[tps.Node], const.Code]:
-    title = title.strip()
-    if __verify_title(title=title) is False:
-        return None, const.Code.INVALID_TITLE
-    text = text.strip()
+    if len(md) > const.MD_MAX_LENGTH:
+        return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+    title, snippet = utils.preprocess_md(md)
+
     onid = utils.short_uuid()
 
     from_nids = []
@@ -80,8 +69,8 @@ def add(
             return None, const.Code.OPERATION_FAILED
 
     new_to_node_ids = []
-    if text != "":
-        new_to_node_ids, code = __flush_to_node_ids(nid=onid, orig_to_nid=[], new_text=text)
+    if md != "":
+        new_to_node_ids, code = __flush_to_node_ids(nid=onid, orig_to_nid=[], new_md=md)
         if code != const.Code.OK:
             return None, code
     _id = ObjectId()
@@ -89,8 +78,8 @@ def add(
         "_id": _id,
         "id": onid,
         "title": title,
-        "text": text,
-        "snippet": utils.md2txt(text=text)[:200],
+        "snippet": snippet,
+        "md": md,
         "type": type_,
         "disabled": False,
         "inTrash": False,
@@ -98,7 +87,7 @@ def add(
         "inTrashAt": None,
         "fromNodeIds": from_nids,
         "toNodeIds": new_to_node_ids,
-        "searchKeys": utils.text2search_keys(title),
+        "searchKeys": utils.txt2search_keys(title),
     }
     res = COLL.nodes.insert_one(data)
     if not res.acknowledged:
@@ -142,30 +131,30 @@ def get(
 def update(
         uid: str,
         nid: str,
-        title: str = "",
-        text: str = "",
+        md: str,
 ) -> Tuple[Optional[tps.Node], const.Code]:
-    title = title.strip()
-    if __verify_title(title=title) is False:
-        return None, const.Code.INVALID_TITLE
-    text = text.strip()
+    if len(md) > const.MD_MAX_LENGTH:
+        return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+    title, snippet = utils.preprocess_md(md)
 
     if not user.is_exist(uid=uid):
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     n, code = get(uid=uid, nid=nid)
     if code != const.Code.OK:
         return None, code
-    if n["title"] == title and n["text"] == text:
+    if n["md"] == md:
         return n, const.Code.OK
-    new_data = {"title": title, "searchKeys": utils.text2search_keys(title), }
-    if text != n["text"]:
-        new_data["toNodeIds"], code = __flush_to_node_ids(
-            nid=n["id"], orig_to_nid=n["toNodeIds"], new_text=text)
-        if code != const.Code.OK:
-            return None, code
-        new_data["text"] = text
-        new_data["snippet"] = utils.md2txt(text=text)[:200]
-    new_data["modifiedAt"] = datetime.datetime.now(tz=utc)
+    new_data = {
+        "title": title,
+        "searchKeys": utils.txt2search_keys(title),
+        "md": md,
+        "snippet": snippet,
+        "modifiedAt": datetime.datetime.now(tz=utc),
+    }
+    new_data["toNodeIds"], code = __flush_to_node_ids(
+        nid=n["id"], orig_to_nid=n["toNodeIds"], new_md=md)
+    if code != const.Code.OK:
+        return None, code
 
     if not config.is_local_db():
         doc = COLL.nodes.find_one_and_update(
@@ -323,21 +312,16 @@ def disable(
     return const.Code.OK
 
 
-
-
-
 def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
     lns = const.NEW_USER_DEFAULT_NODES[language]
     n, code = add(
         uid=uid,
-        title=lns[0]["title"],
-        text=lns[0]["text"],
+        md=lns[0],
     )
     if code != const.Code.OK:
         return code
     _, code = add(
         uid=uid,
-        title=lns[1]["title"],
-        text=lns[1]["text"].format(n["id"]),
+        md=lns[1].format(n["id"]),
     )
     return code

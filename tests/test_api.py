@@ -48,10 +48,10 @@ class TokenApiTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
-        database.init()
-        cls.client = TestClient(app)
 
     def setUp(self) -> None:
+        database.init()
+        self.client = TestClient(app)
         resp = self.client.post("/api/login", json={
             "email": const.DEFAULT_USER["email"],
             "password": "",
@@ -60,9 +60,11 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.token = rj["token"]
 
+    def tearDown(self) -> None:
+        database.drop_all()
+
     @classmethod
     def tearDownClass(cls) -> None:
-        database.drop_all()
         utils.drop_env(".env.test.local")
 
     def test_get_user(self):
@@ -98,7 +100,7 @@ class TokenApiTest(unittest.TestCase):
     def test_recent_search(self):
         resp = self.client.put("/api/node", json={
             "requestId": "xxx",
-            "fulltext": "node1\ntext",
+            "md": "node1\ntext",
             "type": const.NodeType.MARKDOWN.value,
         }, headers={"token": self.token})
         rj = resp.json()
@@ -147,7 +149,7 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.put("/api/node", json={
             "requestId": "xxx",
-            "fulltext": "node1\ntext",
+            "md": "node1\ntext",
             "type": const.NodeType.MARKDOWN.value,
         }, headers={"token": self.token})
         rj = resp.json()
@@ -165,7 +167,7 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual("xxx", rj["requestId"])
         n = rj["node"]
         self.assertEqual("node1", n["title"], msg=rj)
-        self.assertEqual("text", n["text"])
+        self.assertEqual("node1\ntext", n["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
         resp = self.client.post(
@@ -173,7 +175,7 @@ class TokenApiTest(unittest.TestCase):
             json={
                 "requestId": "xxx",
                 "nid": node["id"],
-                "fulltext": "node2\ntext"
+                "md": "node2\ntext"
             },
             headers={"token": self.token}
         )
@@ -191,7 +193,7 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual("node2", n["title"])
-        self.assertEqual("text", n["text"])
+        self.assertEqual("node2\ntext", n["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
         resp = self.client.put(

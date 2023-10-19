@@ -5,6 +5,7 @@ from textwrap import dedent
 
 RETHINK_DIR = Path(__file__).parent
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
+MD_MAX_LENGTH = 100000
 
 
 class NodeType(Enum):
@@ -29,6 +30,7 @@ class Code(Enum):
     INVALID_PASSWORD = auto()  # 14
     CAPTCHA_ERROR = auto()  # 15
     CAPTCHA_EXPIRED = auto()  # 16
+    NOTE_EXCEED_MAX_LENGTH = auto()  # 17
 
 
 @dataclass
@@ -54,11 +56,12 @@ CODE_MESSAGES = {
     Code.INVALID_PASSWORD: CodeMessage(zh="密码格式错误", en="Password format error"),
     Code.CAPTCHA_ERROR: CodeMessage(zh="验证码输入错误", en="Captcha not match"),
     Code.CAPTCHA_EXPIRED: CodeMessage(zh="验证码已过期", en="Captcha expired"),
+    Code.NOTE_EXCEED_MAX_LENGTH: CodeMessage(zh="内容超过最大长度", en="Content exceed max length"),
 }
 
 DEFAULT_USER = {
     "nickname": "rethink",
-    "email": "rethink@rethink.com",
+    "email": "rethink@rethink.run",
     "avatar": "",
 }
 
@@ -108,6 +111,7 @@ class UserSource(Enum):
     FACEBOOK = auto()  # 4
     WECHAT = auto()  # 5
     GITHUB = auto()  # 6
+    LOCAL = auto()  # 7
 
     def __str__(self):
         return self.value
@@ -115,42 +119,31 @@ class UserSource(Enum):
 
 NEW_USER_DEFAULT_NODES = {
     Language.EN.value: [
-        {
+        dedent("""# How do I record
+        
+        I like to record freely and without any restrictions.
+        """),
+        dedent("""Welcome to Rethink
+        
+        Rethink is a knowledge management system. You can take node and manage your them here.
 
-            "title": "How do I record",
-            "text": dedent("""
-            # How do I record
-            I like to record freely and without any restrictions.
-            """)
-        },
-        {
-            "title": "Welcome to Rethink",
-            "text": dedent("""
-            Rethink is a knowledge management system. You can take node and manage your them here.
+        Use @, you can link any record to create associations. For example [@How do I record](/n/{}) .
 
-            Use @, you can link any record to create associations. For example [@How do I record](/n/{}) .
-
-            Rethink also supports markdown syntax, allowing you to record richer expressions.
-            """),
-        },
+        Rethink also supports markdown syntax, allowing you to record richer expressions.
+        """),
     ],
     Language.ZH.value: [
-        {
-            "title": "我如何记录",
-            "text": dedent("""
-            # 我如何记录
-            我喜欢自由自在的记录，不受任何限制。
-            """)
-        },
-        {
-            "title": "欢迎使用 Rethink",
-            "text": dedent("""
-            Rethink 是一个知识管理系统，你可以在这里记录你的知识，管理你的记录。
+        dedent("""# 我如何记录
+        
+        我喜欢自由自在的记录，不受任何限制。
+        """),
+        dedent("""欢迎使用 Rethink
+        
+        Rethink 是一个知识管理系统，你可以在这里记录你的知识，管理你的记录。
 
-            使用 @，你就可以链接任意的记录，创建联想。比如 [@我如何记录](/n/{}) 。
+        使用 @，你就可以链接任意的记录，创建联想。比如 [@我如何记录](/n/{}) 。
 
-            Rethink 同样也支持 markdown 语法，让你可以记录更丰富的表达。
-            """),
-        }
+        Rethink 同样也支持 markdown 语法，让你可以记录更丰富的表达。
+        """),
     ]
 }

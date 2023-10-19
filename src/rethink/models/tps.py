@@ -8,8 +8,8 @@ from typing_extensions import TypedDict
 class LinkedNode(TypedDict):
     _id: ObjectId
     id: str
+    md: str
     title: str
-    text: str
     type: int  # const.NodeType.MARKDOWN.value
     disabled: bool
     modifiedAt: datetime.datetime
@@ -18,11 +18,11 @@ class LinkedNode(TypedDict):
 class Node(TypedDict):
     _id: ObjectId
     id: str
+    md: str
     title: str
-    searchKeys: str
-    text: str
     snippet: str
     type: int  # const.NodeType.MARKDOWN.value
+    searchKeys: str
     disabled: bool
     inTrash: bool
     modifiedAt: datetime.datetime

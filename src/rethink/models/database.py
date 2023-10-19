@@ -79,13 +79,14 @@ def init():
         language = os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value)
         ns = const.NEW_USER_DEFAULT_NODES[language]
 
-        def create_node(text, title):
+        def create_node(md: str):
+            title_, snippet_ = utils.preprocess_md(md)
             n: Node = {
                 "_id": ObjectId(),
                 "id": utils.short_uuid(),
-                "title": title,
-                "text": text,
-                "snippet": utils.md2txt(text=text)[:200],
+                "title": title_,
+                "snippet": snippet_,
+                "md": md,
                 "type": const.NodeType.MARKDOWN.value,
                 "disabled": False,
                 "inTrash": False,
@@ -93,24 +94,21 @@ def init():
                 "inTrashAt": None,
                 "fromNodeIds": [],
                 "toNodeIds": [],
-                "searchKeys": utils.text2search_keys(title),
+                "searchKeys": utils.txt2search_keys(title_),
             }
             res = COLL.nodes.insert_one(n)
             if not res.acknowledged:
                 raise ValueError("cannot insert default node")
             return n
 
-        text = ns[0]["text"]
-        title = ns[0]["title"]
-        n0 = create_node(text, title)
-        text = ns[1]["text"].format(n0["id"])
-        title = ns[1]["title"]
-        n1 = create_node(text, title)
+        n0 = create_node(ns[0])
+        _md = ns[1].format(n0["id"])
+        n1 = create_node(_md)
 
         u: UserMeta = {
             "_id": ObjectId(),
             "id": utils.short_uuid(),
-            "source": const.UserSource.EMAIL.value,
+            "source": const.UserSource.LOCAL.value,
             "account": const.DEFAULT_USER["email"],
             "email": const.DEFAULT_USER["email"],
             "hashed": "",

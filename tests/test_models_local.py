@@ -1,4 +1,5 @@
 import unittest
+from textwrap import dedent
 
 from rethink import const, models
 from rethink.models.utils import short_uuid
@@ -67,24 +68,31 @@ class LocalModelsTest(unittest.TestCase):
 
     def test_node(self):
         node, code = models.node.add(
-            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="a" * (const.MD_MAX_LENGTH + 1), type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.NOTE_EXCEED_MAX_LENGTH, code)
+        self.assertIsNone(node)
+
+        node, code = models.node.add(
+            uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title", n["title"])
+        self.assertEqual("body", n["snippet"])
 
         ns, total = models.search.user_node(uid=self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        n, code = models.node.update(uid=self.uid, nid=node["id"], title="title2", text="text2")
+        n, code = models.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
-        self.assertEqual("text2", n["text"])
-        self.assertEqual(1, n["type"])
+        self.assertEqual("title2\nbody2", n["md"])
+        self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
         code = models.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -102,19 +110,19 @@ class LocalModelsTest(unittest.TestCase):
 
     def test_parse_at(self):
         nid1, _ = models.node.add(
-            uid=self.uid, title="c", text="", type_=const.NodeType.MARKDOWN.value,
+            uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
         )
         nid2, _ = models.node.add(
-            uid=self.uid, title="我133", text="", type_=const.NodeType.MARKDOWN.value,
+            uid=self.uid, md="我133", type_=const.NodeType.MARKDOWN.value,
         )
-        text = f"""
-fffqw [@c](/n/{nid1['id']})
-fff 
-[@我133](/n/{nid2['id']})
-ffq
-"""
+        md = dedent(f"""title
+        fffqw [@c](/n/{nid1['id']})
+        fff 
+        [@我133](/n/{nid2['id']})
+        ffq
+        """)
         node, code = models.node.add(
-            uid=self.uid, title="title", text=text, type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
         nodes, total = models.search.user_node(uid=self.uid)
@@ -128,16 +136,16 @@ ffq
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(2, len(n["toNodeIds"]))
 
-        tmp_text = n["text"]
-        n, code = models.node.update(uid=self.uid, nid=node["id"], text=tmp_text + "xxxx", title=n["title"])
+        cache = n["md"]
+        n, code = models.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
         self.assertEqual(const.Code.OK, code)
-        self.assertEqual(tmp_text + "xxxx", n["text"])
+        self.assertEqual(cache + "xxxx", n["md"])
 
         n, code = models.node.get(uid=self.uid, nid=nid1['id'])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, code = models.node.update(uid=self.uid, nid=node["id"], text="", title=n["title"])
+        n, code = models.node.update(uid=self.uid, nid=node["id"], md=n["title"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
@@ -147,7 +155,7 @@ ffq
 
     def test_add_set(self):
         node, code = models.node.add(
-            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(0, len(node["toNodeIds"]))
         self.assertEqual(const.Code.OK, code)
@@ -160,11 +168,11 @@ ffq
 
     def test_cursor_text(self):
         n1, code = models.node.add(
-            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
         n2, code = models.node.add(
-            uid=self.uid, title="title2", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
@@ -215,11 +223,11 @@ ffq
 
     def test_to_trash(self):
         n1, code = models.node.add(
-            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
         n2, code = models.node.add(
-            uid=self.uid, title="title2", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
@@ -246,7 +254,7 @@ ffq
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
 
         n1, code = models.node.add(
-            uid=self.uid, title="title", text="text", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
         code = models.search.put_recent_search(self.uid, n1["id"])

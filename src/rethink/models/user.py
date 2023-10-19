@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import const
+from rethink import const, config
 from . import tps, utils
 from .database import COLL
 
@@ -125,7 +125,11 @@ def enable(uid: str) -> const.Code:
 
 
 def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    return get_account(account=email, source=const.UserSource.EMAIL.value)
+    if config.get_settings().ONE_USER:
+        source = const.UserSource.LOCAL.value
+    else:
+        source = const.UserSource.EMAIL.value
+    return get_account(account=email, source=source)
 
 
 def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta], const.Code]:

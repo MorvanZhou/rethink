@@ -22,7 +22,7 @@ class AuthTest(unittest.TestCase):
 
     def test_verify(self):
         password = "123abc"
-        email = "rethink@rethink.com"
+        email = "rethink@rethink.run"
         bpw = auth._base_password(password=password, email=email)
         token_str = bcrypt.hashpw(bpw, self.salt).decode("utf-8")
         hashed = auth._base_password(password=password, email=email)
@@ -30,15 +30,20 @@ class AuthTest(unittest.TestCase):
         self.assertTrue(match)
 
     def test_hash(self):
-        pwd = "123abc&&rethink@rethink.com"
+        pwd = "123abc&&rethink@rethink.run"
         pwd_bt = pwd.encode("utf-8")
         hashed = bcrypt.hashpw(pwd_bt, self.salt)
         # print(hashed)
         match = bcrypt.checkpw(pwd_bt, hashed)
         self.assertTrue(match)
 
+    def test_one_user(self):
+        uid, code = auth.register_user("a@q.com", "rethink", const.Language.EN.value)
+        self.assertEqual(const.Code.ONE_USER_MODE, code)
+        self.assertEqual("", uid)
+
     def test_verify_user(self):
-        u, err = auth.get_user_by_email("rethink@rethink.com")
+        u, err = auth.get_user_by_email("rethink@rethink.run")
         self.assertEqual(const.Code.OK, err)
         ok = auth.verify_user(u, "rethink")
         self.assertTrue(ok)

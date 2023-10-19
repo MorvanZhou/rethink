@@ -40,7 +40,7 @@ def user_node(
     if query != "" and not config.is_local_db():
         condition["$or"] = [
             {"searchKeys": {"$regex": query}},
-            {"text": {"$regex": query}},
+            {"md": {"$regex": query}},
         ]
 
     docs = COLL.nodes.find(condition)
@@ -56,7 +56,7 @@ def user_node(
         docs = docs.skip(page * page_size).limit(page_size)
 
     if config.is_local_db() and query != "":
-        return [doc for doc in docs if query in doc["searchKeys"] or query in doc["text"]], total
+        return [doc for doc in docs if query in doc["searchKeys"] or query in doc["md"]], total
     return list(docs), total
 
 

@@ -5,16 +5,6 @@ from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode, datetime2str
 
 
-def __split_title_text(text: str) -> (str, str):
-    title_text = text.split("\n", maxsplit=1)
-    title = title_text[0].strip()
-    try:
-        text = title_text[1].strip()
-    except IndexError:
-        text = ""
-    return title, text
-
-
 def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
     from_nodes: List[schemas.node.NodeData.LinkedNode] = []
     to_nodes: List[schemas.node.NodeData.LinkedNode] = []
@@ -26,7 +16,7 @@ def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
                 schemas.node.NodeData.LinkedNode(
                     id=_n["id"],
                     title=_n["title"],
-                    text=_n["text"],
+                    md=_n["md"],
                     snippet=_n["snippet"],
                     type=_n["type"],
                     disabled=_n["disabled"],
@@ -36,8 +26,8 @@ def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
             )
     return schemas.node.NodeData(
         id=n["id"],
+        md=n["md"],
         title=n["title"],
-        text=n["text"],
         type=n["type"],
         disabled=n["disabled"],
         createdAt=datetime2str(n["_id"].generation_time),
@@ -59,11 +49,9 @@ def put_node(
             node=None
         )
 
-    title, text = __split_title_text(text=req.fulltext)
     n, code = models.node.add(
         uid=td.uid,
-        title=title,
-        text=text,
+        md=req.md,
         type_=req.type,
         from_nid=req.fromNid,
     )
@@ -114,12 +102,10 @@ def update_node(
             requestId=req.requestId,
             node=None
         )
-    title, text = __split_title_text(text=req.fulltext)
     n, code = models.node.update(
         uid=td.uid,
         nid=req.nid,
-        title=title,
-        text=text,
+        md=req.md,
     )
     return schemas.node.GetResponse(
         code=code.value,

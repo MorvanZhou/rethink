@@ -9,7 +9,7 @@ class NodeData(BaseModel):
     class LinkedNode(BaseModel):
         id: str
         title: str
-        text: str
+        md: str
         snippet: str
         type: NonNegativeInt
         disabled: bool
@@ -17,8 +17,8 @@ class NodeData(BaseModel):
         modifiedAt: str
 
     id: str
+    md: str
     title: str
-    text: str
     type: NonNegativeInt
     disabled: bool
     createdAt: str
@@ -28,7 +28,7 @@ class NodeData(BaseModel):
 
 
 class PutRequest(BaseModel):
-    fulltext: str
+    md: str
     type: NonNegativeInt
     requestId: str = ""
     fromNid: str = ""
@@ -50,7 +50,7 @@ class GetResponse(BaseModel):
 
 class UpdateRequest(BaseModel):
     nid: str
-    fulltext: str
+    md: str
     requestId: str = ""
 
 

@@ -3,6 +3,7 @@ import math
 import re
 import uuid
 from io import StringIO
+from typing import Tuple
 
 import jwt
 import pypinyin
@@ -54,19 +55,37 @@ __md = Markdown(output_format="plain")
 __md.stripTopLevelTags = False
 
 
-def md2txt(text):
-    for found in list(__code_pattern.finditer(text))[::-1]:
+def md2txt(md: str) -> str:
+    for found in list(__code_pattern.finditer(md))[::-1]:
         span = found.span()
         code = found.group(1)
-        text = f"{text[: span[0]]}{code}{text[span[1]:]}"
-    return __md.convert(text)
+        md = f"{md[: span[0]]}{code}{md[span[1]:]}"
+    return __md.convert(md)
 
 
-def text2search_keys(text: str) -> str:
-    s1 = "".join(pypinyin.lazy_pinyin(text))
-    s2 = "".join(pypinyin.lazy_pinyin(text, style=pypinyin.Style.BOPOMOFO))
-    s = {s1, s2, text}
+def preprocess_md(md: str) -> Tuple[str, str]:
+    title, body = split_title_body(fulltext=md)
+    title = md2txt(title.strip())
+    body = body.strip()
+    snippet = md2txt(md=body)[:200]
+    return title, snippet
+
+
+def txt2search_keys(txt: str) -> str:
+    s1 = "".join(pypinyin.lazy_pinyin(txt))
+    s2 = "".join(pypinyin.lazy_pinyin(txt, style=pypinyin.Style.BOPOMOFO))
+    s = {s1, s2, txt}
     return " ".join(s).lower()
+
+
+def split_title_body(fulltext: str) -> (str, str):
+    title_body = fulltext.split("\n", maxsplit=1)
+    title = title_body[0].strip()
+    try:
+        body = title_body[1].strip()
+    except IndexError:
+        body = ""
+    return title, body
 
 
 def jwt_encode(exp_delta: datetime.timedelta, data: dict) -> str:
