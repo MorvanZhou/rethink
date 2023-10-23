@@ -13,6 +13,7 @@ class NodeData(BaseModel):
         snippet: str
         type: NonNegativeInt
         disabled: bool
+        inTrash: bool
         createdAt: str
         modifiedAt: str
 

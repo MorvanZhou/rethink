@@ -20,6 +20,7 @@ def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
                     snippet=_n["snippet"],
                     type=_n["type"],
                     disabled=_n["disabled"],
+                    inTrash=_n["inTrash"],
                     createdAt=datetime2str(_n["_id"].generation_time),
                     modifiedAt=datetime2str(_n["modifiedAt"]),
                 )

@@ -119,11 +119,13 @@ class UserSource(Enum):
 
 NEW_USER_DEFAULT_NODES = {
     Language.EN.value: [
-        dedent("""# How do I record
+        dedent("""\
+        # How do I record
         
         I like to record freely and without any restrictions.
         """),
-        dedent("""Welcome to Rethink
+        dedent("""\
+        Welcome to Rethink
         
         Rethink is a knowledge management system. You can take node and manage your them here.
 
@@ -133,11 +135,13 @@ NEW_USER_DEFAULT_NODES = {
         """),
     ],
     Language.ZH.value: [
-        dedent("""# 我如何记录
+        dedent("""\
+        # 我如何记录
         
         我喜欢自由自在的记录，不受任何限制。
         """),
-        dedent("""欢迎使用 Rethink
+        dedent("""\
+        欢迎使用 Rethink
         
         Rethink 是一个知识管理系统，你可以在这里记录你的知识，管理你的记录。
 

@@ -74,8 +74,8 @@ body,
 .rethink-app {
   display: flex;
   flex-direction: row;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 .right-app-section {
@@ -83,11 +83,10 @@ body,
   max-width: 1200px;
   margin: 0 auto;
   padding: 10px;
+  height: auto;
   display: flex;
   flex-direction: column;
-  height: 100vh;
 }
-
 .right-app-section-sm {
   width: 100%;
   padding: 5px;
@@ -625,7 +624,6 @@ h1[data-v-73578860] {
   cursor: pointer;
   border-radius: 20%;
 }
-
 .show-left-icon[data-v-3847297d]:hover {
   opacity: 0.5;
 }
@@ -639,15 +637,12 @@ h1[data-v-73578860] {
   width: 15px;
   height: 15px;
 }
-
 .collapsed[data-v-3dc47c63] {
   margin: 0 auto;
 }
-
 .no-collapsed[data-v-3dc47c63] {
   margin-right: 10px;
 }
-
 .left-side-item-text[data-v-3dc47c63] {
   font-size: 1em;
   color: #5d5c5c;
@@ -660,18 +655,15 @@ h1[data-v-73578860] {
 .left-side-items[data-v-9c8cfb28] {
   margin-top: 1em;
 }
-
 .left-side-item[data-v-9c8cfb28] {
   padding: 10px 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
 }
-
 .collapsed[data-v-9c8cfb28] {
   justify-content: center;
 }
-
 .no-collapsed[data-v-9c8cfb28] {
   justify-content: left;
 }
@@ -686,11 +678,9 @@ h1[data-v-73578860] {
   border-radius: 50%;
   cursor: pointer;
 }
-
 .user-img[data-v-85dbde90]:hover {
   opacity: 0.5;
 }
-
 .user-menu[data-v-85dbde90] {
   position: absolute;
   top: 0.5em;
@@ -701,7 +691,6 @@ h1[data-v-73578860] {
   box-shadow: 0 0 5px #ccc;
   z-index: 1;
 }
-
 .user-info[data-v-85dbde90] {
   display: flex;
   align-items: center;
@@ -709,24 +698,20 @@ h1[data-v-73578860] {
   border-bottom: 1px solid #e7e5e5;
   height: 3em;
 }
-
 .user-info-img[data-v-85dbde90] {
   height: 100%;
   border-radius: 50%;
 }
-
 .user-info-nickname[data-v-85dbde90] {
   margin-left: 5px;
   font-size: 1em;
   font-weight: 400;
 }
-
 .menu-item[data-v-85dbde90] {
   padding: 10px;
   border-bottom: 1px solid #e7e5e5;
   cursor: pointer;
 }
-
 .menu-item-text[data-v-85dbde90] {
   font-size: 0.9em;
   color: #5d5c5c;
@@ -746,23 +731,19 @@ h1[data-v-73578860] {
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.4);
   z-index: 3;
 }
-
 .no-collapsed[data-v-573bae43] {
   width: 200px;
   transform: translateX(0);
 }
-
 .collapsed[data-v-573bae43] {
   transform: translateX(-100%);
 }
-
 .no-collapsed-header-bar[data-v-573bae43] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin: 15px 10px 10px 15px;
 }
-
 .collapsed-header-bar[data-v-573bae43] {
   display: flex;
   justify-content: center;
@@ -780,22 +761,18 @@ h1[data-v-73578860] {
   transition: width 0.5s ease;
   flex-shrink: 0;
 }
-
 .no-collapsed[data-v-4c3820ee] {
   width: 200px;
 }
-
 .collapsed[data-v-4c3820ee] {
   width: 50px;
 }
-
 .no-collapsed-header-bar[data-v-4c3820ee] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin: 15px 10px 10px 15px;
 }
-
 .collapsed-header-bar[data-v-4c3820ee] {
   display: flex;
   justify-content: center;
@@ -803,50 +780,10 @@ h1[data-v-73578860] {
   margin: 15px auto;
 }
 
-/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/RecentSearchedList.vue?vue&type=style&index=0&id=55bf934d&scoped=true&lang=css ***!
-  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.at-search-result-group[data-v-55bf934d] {
-  padding: 5px 0;
-}
-.at-search-result-group-label[data-v-55bf934d] {
-  font-weight: 500;
-  font-size: 0.9em;
-  color: #51a1f8;
-  padding: 0 0 5px 5px;
-}
-.at-search-result[data-v-55bf934d] {
-  padding: 5px 5px 5px 15px;
-  cursor: pointer;
-}
-.at-search-result[data-v-55bf934d]:hover {
-  background-color: #eeeeee;
-}
-.at-search-result .result-title[data-v-55bf934d] {
-  font-weight: 500;
-  font-size: 0.9em;
-  color: #333;
-  padding-bottom: 5px;
-}
-.at-search-result .result-snippet[data-v-55bf934d] {
-  font-size: 0.8em;
-  color: #666;
-}
-
 /*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/SearchResults.vue?vue&type=style&index=0&id=5527cb1e&scoped=true&lang=css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.at-search-result-group[data-v-5527cb1e] {
-  padding: 5px 0;
-}
-.at-search-result-group-label[data-v-5527cb1e] {
-  font-weight: 500;
-  font-size: 0.9em;
-  color: #51a1f8;
-  padding: 0 0 5px 5px;
-}
 .at-search-result[data-v-5527cb1e] {
   padding: 5px 5px 5px 15px;
   cursor: pointer;
@@ -866,119 +803,180 @@ h1[data-v-73578860] {
   color: #666;
 }
 
-/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/CreateNewNode.vue?vue&type=style&index=0&id=13593c69&scoped=true&lang=css ***!
-  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/SearchResultsGroup.vue?vue&type=style&index=0&id=e789ed84&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.at-search-result-group[data-v-13593c69] {
+.at-search-result-group[data-v-e789ed84] {
   padding: 5px 0;
 }
-.at-search-result-group-label[data-v-13593c69] {
+
+.at-search-result-group-label[data-v-e789ed84] {
   font-weight: 500;
   font-size: 0.9em;
   color: #51a1f8;
   padding: 0 0 5px 5px;
 }
-.at-search-result[data-v-13593c69] {
-  padding: 5px 5px 5px 15px;
-  cursor: pointer;
-}
-.at-search-result[data-v-13593c69]:hover {
-  background-color: #eeeeee;
-}
-.at-search-result .result-title[data-v-13593c69] {
-  font-weight: 500;
-  font-size: 0.9em;
-  color: #333;
-  padding-bottom: 5px;
-}
-.at-search-result .result-snippet[data-v-13593c69] {
-  font-size: 0.8em;
-  color: #666;
-}
 
-/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/AppNodeEditPanel.vue?vue&type=style&index=0&id=1b028d16&scoped=true&lang=css ***!
-  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.main[data-v-1b028d16] {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 0;
-  flex: 1;
-}
-.work-place[data-v-1b028d16] {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-  padding-top: 10px;
-}
-.md-editor[data-v-1b028d16] {
-  flex: 1;
-  height: 100%;
-  border: 1px solid #e5e5e5;
-}
-.at-search-results[data-v-1b028d16] {
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/SearchWindow.vue?vue&type=style&index=0&id=d043d176&scoped=true&lang=css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.at-search-results[data-v-d043d176] {
   position: absolute;
   width: 300px;
   border: 1px solid #e5e5e5;
   border-radius: 5px;
   background-color: #fff;
 }
-.linked-nodes[data-v-1b028d16] {
-  flex: 0.5;
-  height: 100%;
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/LinkedNodes.vue?vue&type=style&index=0&id=399c6114&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.linked-nodes-vertical[data-v-399c6114] {
   width: 300px;
+  height: calc(100% - 100px);
   overflow-y: auto;
 }
-.linked-node[data-v-1b028d16] {
+
+.linked-nodes-horizontal[data-v-399c6114] {
+  display: flex;
+  flex: 0.5;
+  padding-top: 5px;
+  overflow-x: scroll;
+}
+
+.no-linked-node[data-v-399c6114] {
+  max-width: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20%;
+  color: #919090;
+  font-size: 1em;
+}
+
+.no-linked-node-sm[data-v-399c6114] {
+  display: block;
+  padding: 20px 0 10px 5px;
+  height: auto;
+}
+
+.linked-node[data-v-399c6114] {
   padding: 0 5px 5px 5px;
   border: 1px solid #eaeaea;
   border-radius: 5px;
   margin: 0 5px 5px 5px;
   overflow: hidden;
 }
-.node-header[data-v-1b028d16] {
+
+.linked-node-sm[data-v-399c6114] {
+  padding: 0 5px 5px 5px;
+  margin: 0 2px;
+  max-width: 150px;
+  min-width: 100px;
+  height: 120px;
+}
+
+.node-header[data-v-399c6114] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 5px 0 5px 0;
 }
-.title[data-v-1b028d16] {
+
+.node-header-sm[data-v-399c6114] {
+  padding: 0;
+}
+
+.title[data-v-399c6114] {
   font-size: 1.2em;
   font-weight: bold;
   color: #333333;
 }
-.right-buttons[data-v-1b028d16] {
+
+.title-sm[data-v-399c6114] {
+  font-size: 1em;
+  overflow-x: hidden;
+  white-space: nowrap;
+}
+
+.right-buttons[data-v-399c6114] {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.right-buttons img[data-v-1b028d16] {
+
+.right-buttons img[data-v-399c6114] {
   width: 25px;
   height: 25px;
   cursor: pointer;
   margin-left: 5px;
 }
-.right-buttons img[data-v-1b028d16]:hover {
+
+.right-buttons img[data-v-399c6114]:hover {
   filter: invert(0.5);
 }
-.snippet[data-v-1b028d16] {
+
+.snippet[data-v-399c6114] {
   max-height: 150px;
   font-size: 0.9em;
   text-align: left;
-  padding: 0 0 8px 5px;
+  padding: 0 0 8px 0;
   line-height: 1.5em;
   color: #919090;
   white-space: break-spaces;
   overflow-wrap: break-word;
 }
-.snippet-expanded[data-v-1b028d16] {
+
+.snippet-expanded[data-v-399c6114] {
   max-height: 400px;
   overflow-y: auto;
   white-space: break-spaces;
   overflow-wrap: break-word;
 }
+
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/AppNodeEditPanel.vue?vue&type=style&index=0&id=220b40cb&scoped=true&lang=css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.main[data-v-220b40cb] {
+  height: 100%;
+  padding-top: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-sm[data-v-220b40cb] {
+  padding-top: 0;
+  width: 100%;
+}
+
+.work-place[data-v-220b40cb] {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.work-place-sm[data-v-220b40cb] {
+  flex-direction: column;
+  height: 100%;
+}
+
+.md-editor[data-v-220b40cb] {
+  flex: 1;
+  border: 1px solid #e5e5e5;
+  min-width: 500px;
+}
+
+.md-editor-sm[data-v-220b40cb] {
+  min-width: auto;
+}
+
 
 /*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/search/SearchToolSM.vue?vue&type=style&index=0&id=dc336a26&scoped=true&lang=css ***!
@@ -993,7 +991,6 @@ h1[data-v-73578860] {
   background: #dfdfdf;
   padding: 0 30px;
 }
-
 .search-icon[data-v-dc336a26] {
   height: 1em;
   width: 1em;
@@ -1017,11 +1014,9 @@ h1[data-v-73578860] {
   padding: 0 30px;
   height: 30px;
 }
-
 .create-node[data-v-0c69ff34]:hover {
   background: #f64324;
 }
-
 .create-node-img[data-v-0c69ff34] {
   height: 60%;
   display: flex;
@@ -1044,7 +1039,6 @@ h1[data-v-73578860] {
   background: white;
   padding: 0 5px;
 }
-
 .search-input[data-v-48038053] {
   width: 100%;
   height: 100%;
@@ -1055,12 +1049,10 @@ h1[data-v-73578860] {
   outline: none;
   background: transparent;
 }
-
 .search-icon[data-v-48038053] {
   height: 1em;
   width: 1em;
 }
-
 .cross-icon[data-v-48038053] {
   opacity: 0;
   height: 1em;
@@ -1068,7 +1060,6 @@ h1[data-v-73578860] {
   cursor: pointer;
   margin-right: 5px;
 }
-
 .search-results[data-v-48038053] {
   position: absolute;
   top: 100%;
@@ -1083,18 +1074,15 @@ h1[data-v-73578860] {
   z-index: 2;
   padding: 5px 0;
 }
-
 .search-result[data-v-48038053] {
   cursor: pointer;
   padding: 10px 10px 10px 10px;
 }
-
 .node-title[data-v-48038053] {
   font-size: 0.9em;
   font-weight: 500;
   color: #333;
 }
-
 .node-content[data-v-48038053] {
   font-size: 0.8em;
   padding: 5px 0 0 5px;
@@ -1111,7 +1099,6 @@ h1[data-v-73578860] {
   display: flex;
   align-items: center;
 }
-
 .menu[data-v-2f83367a] {
   margin: 0 20px 0 5px;
   padding: 0 5px;
@@ -1174,11 +1161,9 @@ h1[data-v-73578860] {
   display: flex;
   justify-content: flex-end;
 }
-
 .node-more-ops-hide[data-v-6484916a] {
   opacity: 0;
 }
-
 img[data-v-6484916a] {
   width: 20px;
   height: 20px;
@@ -1218,33 +1203,27 @@ img[data-v-6484916a]:hover {
   justify-content: space-between;
   padding: 4px 0 20px 5px;
 }
-
 .block-header-sm[data-v-e1905aa2] {
   padding: 4px 0 10px 5px;
 }
-
 .title[data-v-e1905aa2] {
   font-size: 1.2em;
   font-weight: bold;
   text-align: left;
 }
-
 .title-sm[data-v-e1905aa2] {
   font-size: 1em;
 }
-
 .time[data-v-e1905aa2] {
   font-size: 0.9em;
   text-align: left;
   color: #666;
   padding: 0 0 10px 5px;
 }
-
 .time-sm[data-v-e1905aa2] {
   font-size: 0.8em;
   padding: 0 0 5px 5px
 }
-
 .snippet[data-v-e1905aa2] {
   font-size: 1em;
   text-align: left;
@@ -1265,25 +1244,22 @@ img[data-v-6484916a]:hover {
   gap: 20px;
   overflow-y: auto;
 }
-
 .view-sm[data-v-8d77f9b6] {
   gap: 10px;
 }
-
 .item[data-v-8d77f9b6] {
   border: 1px solid #eaeaea;
   border-radius: 5px;
   padding: 10px;
   cursor: default;
 }
-
 .item-sm[data-v-8d77f9b6] {
   padding: 3px;
 }
-
 .item[data-v-8d77f9b6]:hover {
   border: 1px solid #c7c7c7;
 }
+
 
 
 /*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -1300,42 +1276,34 @@ table.view {
   overflow-y: auto;
   display: block;
 }
-
 tr {
   height: 3.5em;
   border-bottom: 1px solid #efefef;
 }
-
 tr:first-child {
   position: sticky;
   top: 0;
   background-color: #fff;
   z-index: 1;
 }
-
 tr.tr-sm {
   font-size: 1em;
 }
-
 td.title {
   width: 45%;
   padding-left: 8px;
   padding-right: 10px;
 }
-
 tr.tr-sm td.title {
   width: 60%;
   padding-left: 3px;
 }
-
 td.time {
   width: 20%;
 }
-
 tr.tr-sm td.time {
   width: 30%;
 }
-
 td.snippet {
   width: 35%;
   max-width: 300px;
@@ -1344,7 +1312,6 @@ td.snippet {
   white-space: nowrap;
   padding-right: 20px;
 }
-
 tr.tr-sm .node-more-ops {
   margin-right: 0;
 }
@@ -1430,17 +1397,18 @@ tr.tr-sm .node-more-ops {
 }
 
 
-/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/AppNodeDisplayPanel.vue?vue&type=style&index=0&id=33a71f57&scoped=true&lang=css ***!
-  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nodesDisplay/AppNodeDisplayPanel.vue?vue&type=style&index=0&id=12cdb325&scoped=true&lang=css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.tool-bar-left[data-v-33a71f57] {
+.tool-bar-left[data-v-12cdb325] {
   display: flex;
   align-items: center;
   margin: 1em 0;
   height: 2em;
 }
-.app-title[data-v-33a71f57] {
+
+.app-title[data-v-12cdb325] {
   margin: 5px;
   font-size: 1.6em;
   font-weight: 700;
@@ -1456,7 +1424,7 @@ tr.tr-sm .node-more-ops {
   width: 100%;
   height: 80px;
   background-color: #fff;
-  border: 1px solid #eaeaea;
+  border: 2px solid rgb(0 160 75 / 40%);
   border-radius: 5px;
   box-sizing: border-box;
   padding: 10px 5px 5px 10px;
@@ -1464,10 +1432,10 @@ tr.tr-sm .node-more-ops {
   flex-shrink: 0;
 }
 .quick-post-panel[data-v-dc31438a]:hover {
-  border: 1px solid #818181;
+  border: 2px solid rgb(0 160 75 / 90%);
 }
 .focus-expand[data-v-dc31438a] {
-  border: 1px solid #818181;
+  border: 2px solid rgb(0 160 75 / 90%);
   height: 150px;
 }
 .quick-post[data-v-dc31438a] {
@@ -1491,14 +1459,12 @@ tr.tr-sm .node-more-ops {
   align-items: center;
   height: 30px;
 }
-
 .word-count[data-v-dc31438a] {
   margin-left: 0;
   margin-right: auto;
   font-size: 0.8em;
   color: #d7d5d5;
 }
-
 .too-long[data-v-dc31438a] {
   margin-left: 0;
   margin-right: auto;
@@ -1507,7 +1473,6 @@ tr.tr-sm .node-more-ops {
   color: #ff5e4d;
   cursor: pointer;
 }
-
 .to-node-page-icon[data-v-dc31438a] {
   width: 25px;
   height: 25px;
@@ -1515,16 +1480,14 @@ tr.tr-sm .node-more-ops {
   cursor: pointer;
   opacity: 0.6;
 }
-
 .to-node-page-icon-disable[data-v-dc31438a] {
   opacity: 0.2;
   cursor: not-allowed;
 }
-
 .btn[data-v-dc31438a] {
   border: none;
   border-radius: 5px;
-  margin-right: 5px;
+  margin-right: 2px;
   padding: 5px 15px;
   cursor: pointer;
 }
@@ -1551,7 +1514,6 @@ tr.tr-sm .node-more-ops {
   overflow-y: auto;
   padding-top: 13px;
 }
-
 .search-result[data-v-19c64c31] {
   border: 1px solid #eaeaea;
   border-radius: 5px;
@@ -1559,20 +1521,17 @@ tr.tr-sm .node-more-ops {
   cursor: default;
   margin-bottom: 10px;
 }
-
 .node-title[data-v-19c64c31] {
   font-size: 1.2em;
   font-weight: 700;
   padding-top: 5px;
   color: #333;
 }
-
 .node-time[data-v-19c64c31] {
   font-size: 0.8em;
   padding-top: 20px;
   color: #666;
 }
-
 .node-content[data-v-19c64c31] {
   font-size: 0.9em;
   padding-top: 8px;
@@ -1587,13 +1546,12 @@ tr.tr-sm .node-more-ops {
   width: 100%;
   padding: 10px;
 }
-
 .header[data-v-ece83eac] {
   font-size: 1em;
   padding-bottom: 5px;
+  margin-left: 7px;
   border-bottom: 1px solid #eaeaea;
 }
-
 .group[data-v-ece83eac] {
   -moz-column-count: 2;
   column-count: 2;
@@ -1601,20 +1559,17 @@ tr.tr-sm .node-more-ops {
   column-gap: 10px;
   padding-top: 10px;
 }
-
 .item[data-v-ece83eac] {
   display: flex;
   align-items: center;
   padding: 5px;
   cursor: pointer;
 }
-
 .recent-icon[data-v-ece83eac] {
   width: 20px;
   height: 20px;
   margin-right: 5px;
 }
-
 .recent-text[data-v-ece83eac] {
   font-size: 0.9em;
   color: #333;
@@ -1631,7 +1586,6 @@ tr.tr-sm .node-more-ops {
   width: 100%;
   height: 100%
 }
-
 .header[data-v-6fddd196] {
   width: 100%;
   height: 40px;
@@ -1639,7 +1593,6 @@ tr.tr-sm .node-more-ops {
   align-items: center;
   justify-content: space-between;
 }
-
 .input-wrapper[data-v-6fddd196] {
   flex: 1;
   display: flex;
@@ -1652,7 +1605,6 @@ tr.tr-sm .node-more-ops {
   padding: 3px;
   margin: 0 auto;
 }
-
 .search-input[data-v-6fddd196] {
   width: 100%;
   height: 100%;
@@ -1663,12 +1615,10 @@ tr.tr-sm .node-more-ops {
   outline: none;
   background: transparent;
 }
-
 .search-icon[data-v-6fddd196] {
   height: 20px;
   width: 20px;
 }
-
 .cross-icon[data-v-6fddd196] {
   opacity: 0;
   height: 20px;
@@ -1676,7 +1626,6 @@ tr.tr-sm .node-more-ops {
   cursor: pointer;
   margin-right: 5px;
 }
-
 .cancel[data-v-6fddd196] {
   font-size: 1em;
   color: #056de8;

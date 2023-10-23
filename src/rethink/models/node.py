@@ -102,9 +102,20 @@ def add(
     return data, const.Code.OK
 
 
-def __set_linked_nodes(doc: tps.Node):
-    doc["fromNodes"] = list(COLL.nodes.find({"id": {"$in": doc["fromNodeIds"]}}))
-    doc["toNodes"] = list(COLL.nodes.find({"id": {"$in": doc["toNodeIds"]}}))
+def __set_linked_nodes(
+        doc: tps.Node,
+        with_disabled: bool = False,
+):
+    doc["fromNodes"] = list(
+        COLL.nodes.find({
+            "id": {"$in": doc["fromNodeIds"]},
+            "disabled": with_disabled,
+        }))
+    doc["toNodes"] = list(
+        COLL.nodes.find({
+            "id": {"$in": doc["toNodeIds"]},
+            "disabled": with_disabled,
+        }))
 
 
 def get(
@@ -124,7 +135,10 @@ def get(
     if doc is None:
         return None, const.Code.NODE_NOT_EXIST
 
-    __set_linked_nodes(doc=doc)
+    __set_linked_nodes(
+        doc=doc,
+        with_disabled=with_disabled,
+    )
     return doc, const.Code.OK
 
 
@@ -173,7 +187,10 @@ def update(
 
     if doc is None:
         return None, const.Code.NODE_NOT_EXIST
-    __set_linked_nodes(doc=doc)
+    __set_linked_nodes(
+        doc=doc,
+        with_disabled=False,
+    )
     return doc, const.Code.OK
 
 
