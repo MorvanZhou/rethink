@@ -12,9 +12,9 @@ def cursor_query(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
-            result=None
+            nodes=None
         )
-    query, recommended_nodes = models.node.cursor_query(
+    recommended_nodes = models.node.cursor_query(
         uid=td.uid,
         nid=req.nid,
         cursor_text=req.textBeforeCursor,
@@ -24,18 +24,14 @@ def cursor_query(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        result=schemas.search.CursorQueryResponse.Result(
-            nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
-                id=n["id"],
-                title=n["title"],
-                snippet=n["snippet"],
-                type=n["type"],
-                createdAt=datetime2str(n["_id"].generation_time),
-                modifiedAt=datetime2str(n["modifiedAt"]),
-            ) for n in recommended_nodes
-            ],
-            query=query,
-        )
+        nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
+            id=n["id"],
+            title=n["title"],
+            snippet=n["snippet"],
+            type=n["type"],
+            createdAt=datetime2str(n["_id"].generation_time),
+            modifiedAt=datetime2str(n["modifiedAt"]),
+        ) for n in recommended_nodes],
     )
 
 

@@ -176,48 +176,28 @@ class LocalModelsTest(unittest.TestCase):
         )
         self.assertEqual(const.Code.OK, code)
 
-        q, recom = models.node.cursor_query(
+        recom = models.node.cursor_query(
             uid=self.uid,
             nid=n2["id"],
             cursor_text="te",
         )
-        self.assertEqual(0, len(recom))
-        self.assertEqual(None, q)
-
-        q, recom = models.node.cursor_query(
-            uid=self.uid,
-            nid=n2["id"],
-            cursor_text="@te",
-        )
         self.assertEqual(2, len(recom))
-        self.assertEqual("te", q)
 
-        q, recom = models.node.cursor_query(
+        recom = models.node.cursor_query(
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
-            cursor_text="sw21 @te",
+            cursor_text="",
         )
-        self.assertEqual("te", q)
-        self.assertEqual(2, len(recom))
-        self.assertEqual("title", recom[1]["title"])
-
-        q, recom = models.node.cursor_query(
-            uid=self.uid,
-            nid=n2["id"],  # exclude the second node
-            cursor_text="sw21 @",
-        )
-        self.assertEqual("", q)
         self.assertEqual(2, len(recom))
 
         code = models.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
         self.assertEqual(const.Code.OK, code)
 
-        q, recom = models.node.cursor_query(
+        recom = models.node.cursor_query(
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
-            cursor_text="sw21 @",
+            cursor_text="",
         )
-        self.assertEqual("", q)
         self.assertEqual(3, len(recom))
         self.assertEqual("Welcome to Rethink", recom[2]["title"])
 

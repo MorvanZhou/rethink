@@ -232,16 +232,15 @@ class TokenApiTest(unittest.TestCase):
             json={
                 "requestId": "xxx",
                 "nid": node["id"],
-                "textBeforeCursor": "@How",
+                "textBeforeCursor": "How",
             },
             headers={"token": self.token},
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
-        self.assertEqual("How", rj["result"]["query"])
-        self.assertEqual(1, len(rj["result"]["nodes"]))
-        self.assertEqual("How do I record", rj["result"]["nodes"][0]["title"])
+        self.assertEqual(1, len(rj["nodes"]))
+        self.assertEqual("How do I record", rj["nodes"][0]["title"])
 
         self.client.put(
             "/api/trash",

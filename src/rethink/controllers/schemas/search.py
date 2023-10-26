@@ -22,14 +22,10 @@ class CursorQueryRequest(BaseModel):
 
 
 class CursorQueryResponse(BaseModel):
-    class Result(BaseModel):
-        nodes: List[NodesInfoResponse.Data.NodeInfo]
-        query: Optional[str]
-
     code: NonNegativeInt
     message: str
     requestId: str
-    result: Optional[Result]
+    nodes: List[NodesInfoResponse.Data.NodeInfo]
 
 
 class AddToRecentSearchHistRequest(BaseModel):

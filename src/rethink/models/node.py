@@ -198,25 +198,27 @@ def cursor_query(
         uid: str,
         nid: str,
         cursor_text: str,
-) -> Tuple[Optional[str], List[tps.Node]]:
-    if cursor_text.startswith("@"):
-        query = cursor_text[1:].strip()
-    else:
-        found = CURSOR_AT_PTN.search(cursor_text)
-        if found is None:
-            return None, []
-        query = found.group(1).strip()
+) -> List[tps.Node]:
+    # if cursor_text.startswith("@"):
+    #     query = cursor_text[1:].strip()
+    # else:
+    #     found = CURSOR_AT_PTN.search(cursor_text)
+    #     if found is None:
+    #         return None, []
+    #     query = found.group(1).strip()
+
+    query = cursor_text.strip()
 
     if query == "":
         u = COLL.users.find_one({"id": uid})
         if u is None:
-            return query, []
+            return []
         rn = u["recentCursorSearchSelectedNIds"]
         try:
             rn.remove(nid)
         except ValueError:
             pass
-        return query, sorted(list(COLL.nodes.find({"id": {"$in": rn}})), key=lambda x: rn.index(x["id"]))
+        return sorted(list(COLL.nodes.find({"id": {"$in": rn}})), key=lambda x: rn.index(x["id"]))
     nodes_found, _ = user_node(
         uid=uid,
         query=query,
@@ -226,7 +228,7 @@ def cursor_query(
         page_size=8,
         nid_exclude=[nid],
     )
-    return query, nodes_found
+    return nodes_found
 
 
 def to_trash(uid: str, nid: str) -> const.Code:
