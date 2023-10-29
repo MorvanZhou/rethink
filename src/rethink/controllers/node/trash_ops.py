@@ -21,6 +21,24 @@ def move_to_trash(
     )
 
 
+def move_batch_to_trash(
+        td: TokenDecode,
+        req: schemas.node.BatchNodeIdsRequest,
+) -> schemas.base.AcknowledgeResponse:
+    if td.code != const.Code.OK:
+        return schemas.base.AcknowledgeResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+        )
+    code = models.node.batch_to_trash(uid=td.uid, nids=req.nids)
+    return schemas.base.AcknowledgeResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
+    )
+
+
 def get_from_trash(
         td: TokenDecode,
         p: int = 0,
@@ -55,6 +73,24 @@ def restore_from_trash(
     )
 
 
+def restore_batch_from_trash(
+        td: TokenDecode,
+        req: schemas.node.BatchNodeIdsRequest,
+) -> schemas.base.AcknowledgeResponse:
+    if td.code != const.Code.OK:
+        return schemas.base.AcknowledgeResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+        )
+    code = models.node.restore_batch_from_trash(uid=td.uid, nids=req.nids)
+    return schemas.base.AcknowledgeResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
+    )
+
+
 def delete_node(
         td: TokenDecode,
         nid: str,
@@ -70,4 +106,22 @@ def delete_node(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId="",
+    )
+
+
+def delete_batch_node(
+        td: TokenDecode,
+        req: schemas.node.BatchNodeIdsRequest,
+) -> schemas.base.AcknowledgeResponse:
+    if td.code != const.Code.OK:
+        return schemas.base.AcknowledgeResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+        )
+    code = models.node.batch_delete(uid=td.uid, nids=req.nids)
+    return schemas.base.AcknowledgeResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
     )

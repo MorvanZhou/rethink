@@ -103,19 +103,20 @@ def add(
 
 
 def __set_linked_nodes(
-        doc: tps.Node,
+        docs: List[tps.Node],
         with_disabled: bool = False,
 ):
-    doc["fromNodes"] = list(
-        COLL.nodes.find({
-            "id": {"$in": doc["fromNodeIds"]},
-            "disabled": with_disabled,
-        }))
-    doc["toNodes"] = list(
-        COLL.nodes.find({
-            "id": {"$in": doc["toNodeIds"]},
-            "disabled": with_disabled,
-        }))
+    for doc in docs:
+        doc["fromNodes"] = list(
+            COLL.nodes.find({
+                "id": {"$in": doc["fromNodeIds"]},
+                "disabled": with_disabled,
+            }))
+        doc["toNodes"] = list(
+            COLL.nodes.find({
+                "id": {"$in": doc["toNodeIds"]},
+                "disabled": with_disabled,
+            }))
 
 
 def get(
@@ -124,22 +125,38 @@ def get(
         with_disabled: bool = False,
         in_trash: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
+    docs, code = get_batch(
+        uid=uid,
+        nids=[nid],
+        with_disabled=with_disabled,
+        in_trash=in_trash,
+    )
+    return docs[0] if len(docs) > 0 else None, code
+
+
+def get_batch(
+        uid: str,
+        nids: List[str],
+        with_disabled: bool = False,
+        in_trash: bool = False,
+) -> Tuple[List[tps.Node], const.Code]:
     unids, code = user.get_node_ids(uid=uid)
     if code != const.Code.OK:
-        return None, code
-    if nid not in unids:
-        return None, const.Code.NODE_NOT_EXIST
+        return [], code
+    for nid in nids:
+        if nid not in unids:
+            return [], const.Code.NODE_NOT_EXIST
     assert_conditions = {} if with_disabled else {"disabled": False}
     assert_conditions.update({"inTrash": in_trash})
-    doc = db_ops.node_get(id_=nid, assert_conditions=assert_conditions)
-    if doc is None:
-        return None, const.Code.NODE_NOT_EXIST
+    docs = db_ops.nodes_get(ids=nids, assert_conditions=assert_conditions)
+    if len(docs) != len(nids):
+        return [], const.Code.NODE_NOT_EXIST
 
     __set_linked_nodes(
-        doc=doc,
+        docs=docs,
         with_disabled=with_disabled,
     )
-    return doc, const.Code.OK
+    return docs, const.Code.OK
 
 
 def update(
@@ -188,7 +205,7 @@ def update(
     if doc is None:
         return None, const.Code.NODE_NOT_EXIST
     __set_linked_nodes(
-        doc=doc,
+        docs=[doc],
         with_disabled=False,
     )
     return doc, const.Code.OK
@@ -232,27 +249,32 @@ def cursor_query(
 
 
 def to_trash(uid: str, nid: str) -> const.Code:
-    n, code = get(uid=uid, nid=nid, with_disabled=True, in_trash=False)
+    return batch_to_trash(uid=uid, nids=[nid])
+
+
+def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
+    ns, code = get_batch(uid=uid, nids=nids, with_disabled=True, in_trash=False)
     if code != const.Code.OK:
         return code
-
-    # remove node
     u = COLL.users.find_one({"id": uid})
-    try:
-        u["recentCursorSearchSelectedNIds"].remove(nid)
-    except ValueError:
-        pass
-    else:
+    changed = False
+    for n in ns:
+        try:
+            u["recentCursorSearchSelectedNIds"].remove(n["id"])
+            changed = True
+        except ValueError:
+            pass
+    if changed:
         res = COLL.users.update_one({"id": uid}, {"$set": {
             "recentCursorSearchSelectedNIds": u["recentCursorSearchSelectedNIds"]
         }})
         if res.modified_count != 1:
             return const.Code.OPERATION_FAILED
-    res = COLL.nodes.update_one({"id": nid}, {"$set": {
+    res = COLL.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": True,
         "inTrashAt": datetime.datetime.now(tz=utc)
     }})
-    if res.modified_count != 1:
+    if res.modified_count != len(nids):
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
@@ -276,43 +298,52 @@ def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.No
 
 
 def restore_from_trash(uid: str, nid: str) -> const.Code:
-    n, code = get(uid=uid, nid=nid, with_disabled=False, in_trash=True)
+    return restore_batch_from_trash(uid=uid, nids=[nid])
+
+
+def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
+    ns, code = get_batch(uid=uid, nids=nids, with_disabled=False, in_trash=True)
     if code != const.Code.OK:
         return code
 
-    # remove node
-    res = COLL.nodes.update_one({"id": nid}, {"$set": {
+    # remove nodes
+    res = COLL.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": False,
         "inTrashAt": None,
     }})
-    if res.modified_count != 1:
+    if res.modified_count != len(nids):
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
 
 def delete(uid: str, nid: str) -> const.Code:
-    n, code = get(uid=uid, nid=nid, with_disabled=True, in_trash=True)
+    return batch_delete(uid=uid, nids=[nid])
+
+
+def batch_delete(uid: str, nids: List[str]) -> const.Code:
+    ns, code = get_batch(uid=uid, nids=nids, with_disabled=True, in_trash=True)
     if code != const.Code.OK:
         return code
 
     # remove fromNodes for linked nodes, not necessary
-    # for linked_nid in n["fromNodeIds"]:
-    #     db_ops.remove_to_node(from_nid=linked_nid, to_nid=nid)
+    # for n in ns:
+    #     for linked_nid in n["fromNodeIds"]:
+    #         db_ops.remove_to_node(from_nid=linked_nid, to_nid=n["id"])
 
     # remove toNodes for linked nodes
-    for linked_nid in n["toNodeIds"]:
-        db_ops.remove_from_node(from_nid=nid, to_nid=linked_nid)
+    for n in ns:
+        for linked_nid in n["toNodeIds"]:
+            db_ops.remove_from_node(from_nid=n["id"], to_nid=linked_nid)
 
     # remove node
-    res = COLL.nodes.delete_one({"id": nid})
-    if res.deleted_count != 1:
+    res = COLL.nodes.delete_many({"id": {"$in": nids}})
+    if res.deleted_count != len(nids):
         return const.Code.OPERATION_FAILED
 
     # update user nodeIds
-    res = db_ops.unids_pull(uid, "nodeIds", nid)
+    res = db_ops.remove_nids(uid, nids)
     if res.matched_count != 1:
         return const.Code.OPERATION_FAILED
-
     return const.Code.OK
 
 

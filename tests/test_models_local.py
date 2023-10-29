@@ -253,3 +253,36 @@ class LocalModelsTest(unittest.TestCase):
         nodes = models.search.get_recent_search(self.uid)
         self.assertEqual(1, len(nodes))
         self.assertEqual(n1["id"], nodes[0]["id"])
+
+    def test_batch(self):
+        ns = []
+        for i in range(10):
+            n, code = models.node.add(
+                uid=self.uid, md=f"title{i}\ntext", type_=const.NodeType.MARKDOWN.value
+            )
+            self.assertEqual(const.Code.OK, code)
+            ns.append(n)
+
+        base_count = 2
+
+        code = models.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
+        self.assertEqual(const.Code.OK, code)
+        nodes, total = models.search.user_node(self.uid)
+        self.assertEqual(6 + base_count, len(nodes))
+        self.assertEqual(6 + base_count, total)
+
+        tns, total = models.node.get_nodes_in_trash(self.uid, 0, 10)
+        self.assertEqual(4, total)
+        self.assertEqual(4, len(tns))
+
+        code = models.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
+        self.assertEqual(const.Code.OK, code)
+        nodes, total = models.search.user_node(self.uid)
+        self.assertEqual(8 + base_count, len(nodes))
+        self.assertEqual(8 + base_count, total)
+
+        code = models.node.batch_delete(self.uid, [n["id"] for n in ns[2:4]])
+        self.assertEqual(const.Code.OK, code)
+        tns, total = models.node.get_nodes_in_trash(self.uid, 0, 10)
+        self.assertEqual(0, total)
+        self.assertEqual(0, len(tns))

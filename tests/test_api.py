@@ -294,3 +294,86 @@ class TokenApiTest(unittest.TestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
+
+    def test_batch(self):
+        base_count = 2
+        for i in range(10):
+            resp = self.client.put("/api/node", json={
+                "requestId": "xxx",
+                "md": f"node{i}\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            }, headers={"token": self.token})
+            rj = resp.json()
+            self.assertEqual(0, rj["code"])
+        resp = self.client.post(
+            "/api/search/node",
+            json={
+                "query": "",
+                "requestId": "xxx",
+                "sortKey": "createdAt",
+                "sortOrder": -1, "page": 0, "pageSize": 5},
+            headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(5, len(rj["data"]["nodes"]))
+        self.assertEqual(10 + base_count, rj["data"]["total"])
+
+        resp = self.client.put(
+            "/api/trash/batch",
+            json={
+                "requestId": "xxx",
+                "nids": [n["id"] for n in rj["data"]["nodes"][:3]],
+            },
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        resp = self.client.get(
+            "/api/trash",
+            params={"rid": "xxx", "p": 0, "ps": 10},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(3, len(rj["data"]["nodes"]))
+        self.assertEqual(3, rj["data"]["total"])
+
+        resp = self.client.post(
+            "/api/trashRestore/batch",
+            json={
+                "requestId": "xxx",
+                "nids": [n["id"] for n in rj["data"]["nodes"][:2]],
+            },
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        resp = self.client.get(
+            "/api/trash",
+            params={"rid": "xxx", "p": 0, "ps": 10},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(1, len(rj["data"]["nodes"]))
+        self.assertEqual(1, rj["data"]["total"])
+
+        resp = self.client.post(
+            "/api/trashDelete/batch",
+            json={
+                "requestId": "xxx",
+                "nids": [n["id"] for n in rj["data"]["nodes"]],
+            },
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        resp = self.client.get(
+            "/api/trash",
+            params={"rid": "xxx", "p": 0, "ps": 10},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(0, len(rj["data"]["nodes"]))
+        self.assertEqual(0, rj["data"]["total"])

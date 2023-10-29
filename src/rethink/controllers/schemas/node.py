@@ -79,12 +79,6 @@ class RestoreFromTrashRequest(BaseModel):
     nid: str
 
 
-class GetFromBinRequest(BaseModel):
-    requestId: str
-    page: NonNegativeInt = 0
-    pageSize: NonNegativeInt = 0
-
-
 class GetFromTrashResponse(BaseModel):
     code: NonNegativeInt
     message: str
@@ -105,3 +99,8 @@ def parse_nodes_info(nodes, total):
         total=total,
     )
     return data
+
+
+class BatchNodeIdsRequest(BaseModel):
+    requestId: str
+    nids: List[str]

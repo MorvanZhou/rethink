@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List
 
 from mongita.results import UpdateResult
 
@@ -72,41 +72,39 @@ def node_add_to_set(id_: str, key: str, value: Any) -> UpdateResult:
     return res
 
 
-def node_get(
-        id_: str,
+def nodes_get(
+        ids: List[str],
         assert_conditions: Dict[str, Any]
-) -> Optional[Node]:
-    c = {"id": id_}
+) -> List[Node]:
+    c = {"id": {"$in": ids}}
     if not config.is_local_db():
         c.update(assert_conditions)
 
-    doc = COLL.nodes.find_one(c)
-    if doc is None:
-        return None
+    docs = list(COLL.nodes.find(c))
     if config.is_local_db():
         for k, c in assert_conditions.items():
-            if doc[k] != c:
-                return None
-    return doc
+            for i in range(len(docs) - 1, -1, -1):
+                if docs[i][k] != c:
+                    docs.pop(i)
+    return docs
 
 
-def unids_pull(id_: str, key: str, value: Any) -> UpdateResult:
+def remove_nids(uid: str, nids: List[str]) -> UpdateResult:
     res = UpdateResult(0, 0)
     if config.is_local_db():
-        doc = COLL.unids.find_one({"id": id_})
+        doc = COLL.unids.find_one({"id": uid})
         if doc is None:
             return res
-        if key not in doc:
-            doc[key] = []
-        if value in doc[key]:
-            doc[key].remove(value)
-            res = COLL.unids.update_one(
-                {"id": id_},
-                {"$set": {key: doc[key]}}
-            )
+        for nid in nids:
+            if nid in doc["nodeIds"]:
+                doc["nodeIds"].remove(nid)
+        res = COLL.unids.update_one(
+            {"id": uid},
+            {"$set": {"nodeIds": doc["nodeIds"]}}
+        )
     else:
-        res = COLL.users.update_one(
-            {"id": id_},
-            {"$pull": {key: value}}
+        res = COLL.unids.update_one(
+            {"id": uid},
+            {"$pull": {"nodeIds": {"$in": nids}}}
         )
     return res
