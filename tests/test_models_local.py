@@ -40,7 +40,15 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("ccc", u["nickname"])
 
-        u, code = models.user.update(uid=_id, email="a@a.com", hashed="1", nickname="2", avatar="3")
+        u, code = models.user.update(
+            uid=_id,
+            email="a@a.com",
+            hashed="1",
+            nickname="2",
+            avatar="3",
+            language="zh",
+            node_display_method=const.NodeDisplayMethod.LIST.value,
+        )
         self.assertEqual(const.Code.OK, code)
 
         u, code = models.user.get(_id)
@@ -49,6 +57,8 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual("1", u["hashed"])
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])
+        self.assertEqual("zh", u["language"])
+        self.assertEqual(const.NodeDisplayMethod.LIST.value, u["nodeDisplayMethod"])
 
         code = models.user.disable(uid=_id)
         self.assertEqual(const.Code.OK, code)

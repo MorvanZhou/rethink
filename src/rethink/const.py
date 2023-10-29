@@ -31,6 +31,7 @@ class Code(Enum):
     CAPTCHA_ERROR = auto()  # 15
     CAPTCHA_EXPIRED = auto()  # 16
     NOTE_EXCEED_MAX_LENGTH = auto()  # 17
+    INVALID_NODE_DISPLAY_METHOD = auto()  # 18
 
 
 @dataclass
@@ -57,6 +58,7 @@ CODE_MESSAGES = {
     Code.CAPTCHA_ERROR: CodeMessage(zh="验证码输入错误", en="Captcha not match"),
     Code.CAPTCHA_EXPIRED: CodeMessage(zh="验证码已过期", en="Captcha expired"),
     Code.NOTE_EXCEED_MAX_LENGTH: CodeMessage(zh="内容超过最大长度", en="Content exceed max length"),
+    Code.INVALID_NODE_DISPLAY_METHOD: CodeMessage(zh="无效的展示方式", en="Invalid display method"),
 }
 
 DEFAULT_USER = {
@@ -151,3 +153,8 @@ NEW_USER_DEFAULT_NODES = {
         """),
     ]
 }
+
+
+class NodeDisplayMethod(Enum):
+    CARD = 0
+    LIST = auto()  # 1

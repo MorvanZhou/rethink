@@ -87,6 +87,7 @@ def get_user(
             avatar=u["avatar"],
             createdAt=datetime2str(u["_id"].generation_time),
             language=u["language"],
+            nodeDisplayMethod=u["nodeDisplayMethod"],
         )
     )
 
@@ -107,6 +108,7 @@ def update_user(
         nickname=req.nickname,
         avatar=req.avatar,
         language=req.language,
+        node_display_method=req.nodeDisplayMethod,
     )
     return schemas.user.UserInfoResponse(
         requestId=req.requestId,
@@ -118,5 +120,6 @@ def update_user(
             avatar=u["avatar"],
             createdAt=datetime2str(u["_id"].generation_time),
             language=u["language"],
+            nodeDisplayMethod=u["nodeDisplayMethod"],
         ),
     )

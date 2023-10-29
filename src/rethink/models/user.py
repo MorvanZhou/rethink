@@ -39,6 +39,7 @@ def add(
         "recentCursorSearchSelectedNIds": [],
         "recentSearch": [],
         "language": language,
+        "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
     }
     res = COLL.users.insert_one(data)
     if not res.acknowledged:
@@ -61,6 +62,7 @@ def update(
         nickname: str = "",
         avatar: str = "",
         language: str = "",
+        node_display_method: int = -1,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u, code = get(uid=uid)
     if code != const.Code.OK:
@@ -87,6 +89,12 @@ def update(
     elif not const.Language.is_valid(language):
         return None, const.Code.INVALID_LANGUAGE
 
+    if node_display_method == -1:
+        node_display_method = u["nodeDisplayMethod"]
+    else:
+        if node_display_method > len(const.NodeDisplayMethod) or node_display_method < 0:
+            return None, const.Code.INVALID_NODE_DISPLAY_METHOD
+
     res = COLL.users.update_one(
         {"id": uid},
         {"$set": {
@@ -96,6 +104,7 @@ def update(
             "avatar": avatar,
             "modifiedAt": datetime.datetime.now(tz=utc),
             "language": language,
+            "nodeDisplayMethod": node_display_method,
         }}
     )
     if res.modified_count != 1:

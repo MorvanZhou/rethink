@@ -17,6 +17,7 @@ class UserInfoResponse(BaseModel):
         avatar: Annotated[str, AfterValidator(empty_str_to_http_url)]
         createdAt: str
         language: Literal["en", "zh"]
+        nodeDisplayMethod: NonNegativeInt
 
     code: NonNegativeInt
     message: str
@@ -49,4 +50,5 @@ class UpdateRequest(BaseModel):
     nickname: str = ""
     avatar: str = ""
     language: Literal["en", "zh"] = ""
+    nodeDisplayMethod: int = -1
     requestId: str = ""

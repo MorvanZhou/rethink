@@ -119,6 +119,7 @@ def init():
             "recentCursorSearchSelectedNIds": [n0["id"], n1["id"]],
             "recentSearch": [],
             "language": language,
+            "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
         }
         _ = COLL.users.insert_one(u)
         unids: UserNodeIds = {

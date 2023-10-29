@@ -47,6 +47,7 @@ class UserMeta(TypedDict):
     recentSearch: List[str]
     recentCursorSearchSelectedNIds: List[str]
     language: str
+    nodeDisplayMethod: int
 
 
 class UserNodeIds(TypedDict):
