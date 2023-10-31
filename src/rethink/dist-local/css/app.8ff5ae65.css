@@ -60,9 +60,12 @@ body,
   gap: 10px;
   cursor: pointer;
   max-width: 80px;
+  padding: 5px 10px;
+  border-radius: 4px;
 }
 .go-back:hover {
   opacity: 0.8;
+  background: #f6f6f6;
 }
 .go-back img {
   width: 20px;
@@ -731,7 +734,7 @@ h1[data-v-73578860] {
   position: fixed;
   top: 0;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.4);
-  z-index: 3;
+  z-index: 4;
 }
 .no-collapsed[data-v-573bae43] {
   width: 200px;
@@ -775,7 +778,6 @@ h1[data-v-73578860] {
   align-items: center;
   margin: 15px 10px 10px 15px;
 }
-
 .collapsed-header-bar[data-v-4c3820ee] {
   display: flex;
   justify-content: center;
@@ -792,21 +794,18 @@ h1[data-v-73578860] {
   align-items: center;
   height: 40px;
 }
-
 .close-icon[data-v-a7f024e4] {
   position: absolute;
   width: 20px;
   height: 20px;
   margin: 10px;
 }
-
 .title[data-v-a7f024e4] {
   font-size: 1rem;
   font-weight: bold;
   padding: 10px;
   text-align: center;
 }
-
 .search-bar[data-v-a7f024e4] {
   padding: 0 7px 10px 10px;
   display: flex;
@@ -814,7 +813,6 @@ h1[data-v-73578860] {
   align-items: center;
   justify-content: space-between;
 }
-
 .search-bar input[data-v-a7f024e4] {
   flex: 1;
   height: 30px;
@@ -823,11 +821,9 @@ h1[data-v-73578860] {
   border-radius: 5px;
   outline: none;
 }
-
 .search-bar input[data-v-a7f024e4]:focus {
   border-color: #51a1f8;
 }
-
 .search-bar button[data-v-a7f024e4] {
   float: right;
   margin-left: 5px;
@@ -839,7 +835,6 @@ h1[data-v-73578860] {
   cursor: pointer;
   height: 100%;
 }
-
 .search-bar button[data-v-a7f024e4]:disabled {
   background-color: #e0e0e0;
   border-color: #e0e0e0;
@@ -857,25 +852,21 @@ h1[data-v-73578860] {
   cursor: pointer;
   min-height: 2.5em;
 }
-
 .at-search-result[data-v-5527cb1e]:hover {
   background-color: #eeeeee;
 }
-
 .header[data-v-5527cb1e] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 5px;
 }
-
 .result-title[data-v-5527cb1e] {
   font-weight: 500;
   font-size: 0.9em;
   color: #333;
   overflow: hidden;
 }
-
 .tab[data-v-5527cb1e] {
   opacity: 0;
   display: flex;
@@ -883,20 +874,16 @@ h1[data-v-73578860] {
   font-size: 0.8em;
   color: #333;
 }
-
 .show-tab[data-v-5527cb1e] {
   opacity: 1;
 }
-
 .tab span[data-v-5527cb1e] {
   margin-right: 2px;
 }
-
 .tab img[data-v-5527cb1e] {
   width: 10px;
   height: 10px;
 }
-
 .result-snippet[data-v-5527cb1e] {
   font-size: 0.8em;
   color: #666;
@@ -912,14 +899,12 @@ h1[data-v-73578860] {
   padding: 5px 0 0 0;
   border-bottom: 1px solid #e5e5e5;
 }
-
 .at-search-result-group-label[data-v-e789ed84] {
   font-weight: 500;
   font-size: 0.9em;
   color: #51a1f8;
   padding: 0 0 5px 5px;
 }
-
 .no-search-result[data-v-e789ed84] {
   padding: 5px;
   font-size: 0.9em;
@@ -978,6 +963,13 @@ h1[data-v-73578860] {
   width: 300px;
   height: calc(100% - 100px);
   overflow-y: auto;
+  --mask: linear-gradient(to bottom,
+  rgba(0, 0, 0, 1) 0,
+  rgba(0, 0, 0, 1) 80%,
+  rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask: var(--mask);
+  mask: var(--mask);
 }
 .linked-nodes-horizontal[data-v-399c6114] {
   display: flex;
@@ -986,6 +978,13 @@ h1[data-v-73578860] {
   width: 100%;
   padding-top: 5px;
   overflow-x: scroll;
+  --mask: linear-gradient(to right,
+  rgba(0, 0, 0, 1) 0,
+  rgba(0, 0, 0, 1) 80%,
+  rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask: var(--mask);
+  mask: var(--mask);
 }
 .no-linked-node[data-v-399c6114] {
   max-width: 300px;
@@ -1142,12 +1141,10 @@ h1[data-v-73578860] {
 .create-node[data-v-0c69ff34]:hover {
   background: #f64324;
 }
-
 .create-node-img[data-v-0c69ff34] {
   height: 60%;
   background: transparent;
 }
-
 .create-node span[data-v-0c69ff34] {
   margin-left: 5px;
   display: block;
@@ -1199,7 +1196,6 @@ h1[data-v-73578860] {
   z-index: 2;
   padding: 5px 0;
 }
-
 .no-result[data-v-48038053] {
   display: flex;
   justify-content: center;
@@ -1207,7 +1203,6 @@ h1[data-v-73578860] {
   color: #666;
   height: 3em;
 }
-
 .search-result[data-v-48038053] {
   cursor: pointer;
   padding: 10px 10px 10px 10px;
@@ -1387,39 +1382,14 @@ img[data-v-6484916a]:hover {
   padding: 10px;
   cursor: default;
 }
-
 .item-sm[data-v-8d77f9b6] {
   padding: 3px;
 }
-
 .item[data-v-8d77f9b6]:hover {
   border: 1px solid #c7c7c7;
 }
 
 
-/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nodesDisplay/display/ListNode.vue?vue&type=style&index=0&id=97a6cb86&scoped=true&lang=css ***!
-  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.cb-hide[data-v-97a6cb86] {
-  display: none;
-}
-
-.checkbox[data-v-97a6cb86] {
-  margin: 0;
-  padding: 0;
-  border: 1px solid #eaeaea;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.checkbox[data-v-97a6cb86]:checked {
-  background-color: #00a04b;
-}
-
-.checkbox[data-v-97a6cb86]:hover {
-  background-color: #eaeaea;
-}
 
 /*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nodesDisplay/display/ListDisplay.vue?vue&type=style&index=0&id=5a8668d7&lang=css ***!
@@ -1435,6 +1405,7 @@ table.view {
   overflow-y: auto;
   display: block;
 }
+
 tr {
   height: 3.5em;
   border-bottom: 1px solid #efefef;
@@ -1445,6 +1416,26 @@ tr:first-child {
   top: 0;
   background-color: #fff;
   z-index: 1;
+}
+
+.cb-hide {
+  display: none;
+}
+
+.checkbox {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #eaeaea;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.checkbox:checked {
+  background-color: #00a04b;
+}
+
+.checkbox:hover {
+  background-color: #eaeaea;
 }
 
 .pointer {
@@ -1460,17 +1451,14 @@ td.multi-select {
   width: 2%;
   min-width: 15px;
 }
-
 td.title {
   width: 45%;
   padding-left: 8px;
   padding-right: 10px;
 }
-
 .default-cursor {
   cursor: default;
 }
-
 tr.tr-sm td.title {
   width: 60%;
   padding-left: 3px;
@@ -1570,7 +1558,6 @@ tr.tr-sm .node-more-ops {
   background: transparent;
   border: none;
 }
-
 .dropdown-menu button[data-v-1f3d58bc]:hover {
   background: #ececec;
 }
@@ -1585,7 +1572,6 @@ tr.tr-sm .node-more-ops {
   justify-content: flex-end;
   margin: 0 0 0 1rem;
 }
-
 .batch-ops button[data-v-0e836fc1] {
   padding: 4px 10px;
   border-bottom: 1px solid #e7e7e7;
@@ -1596,16 +1582,13 @@ tr.tr-sm .node-more-ops {
   font-size: 0.9em;
   color: #616161;
 }
-
 .batch-ops .first-btn[data-v-0e836fc1] {
   border-radius: 5px 0 0 5px;
   border-left: 1px solid #e7e7e7;
 }
-
 .batch-ops .last-btn[data-v-0e836fc1] {
   border-radius: 0 5px 5px 0;
 }
-
 .batch-ops button[data-v-0e836fc1]:hover {
   background-color: #e7e7e7;
 }
@@ -1728,7 +1711,6 @@ tr.tr-sm .node-more-ops {
   align-items: center;
   color: #666;
 }
-
 .search-results[data-v-19c64c31] {
   flex: 1;
   width: 100%;
@@ -1794,12 +1776,10 @@ tr.tr-sm .node-more-ops {
   height: 20px;
   margin-right: 5px;
 }
-
 .recent-text[data-v-ece83eac] {
   font-size: 0.9em;
   color: #333;
 }
-
 .no-search-result[data-v-ece83eac] {
   flex: 1;
   width: 100%;
@@ -1840,12 +1820,10 @@ tr.tr-sm .node-more-ops {
   padding: 3px;
   margin: 0 auto;
 }
-
 .search-icon[data-v-6fddd196] {
   height: 20px;
   width: 20px;
 }
-
 .search-input[data-v-6fddd196] {
   width: 100%;
   height: 100%;
@@ -1856,12 +1834,300 @@ tr.tr-sm .node-more-ops {
   outline: none;
   background: transparent;
 }
+
 .cancel[data-v-6fddd196] {
   font-size: 1em;
   color: #056de8;
   margin-left: 7px;
   cursor: pointer;
   text-align: center;
+}
+
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/tools/DropFile.vue?vue&type=style&index=0&id=a421d7c6&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.dropzone-container[data-v-a421d7c6] {
+  padding: 4rem 2rem;
+  border-color: rgba(107, 143, 242, 0.5);
+  border-style: dashed;
+  background-color: rgba(237, 242, 255, 0.5);
+  color: rgb(59, 109, 241);
+  outline: none;
+  border-width: 2px;
+  border-radius: 8px;
+}
+
+.hidden-input[data-v-a421d7c6] {
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.file-label[data-v-a421d7c6] {
+  font-size: 1.3em;
+  font-weight: 300;
+  display: block;
+  text-align: center;
+  cursor: pointer;
+}
+
+.click-upload[data-v-a421d7c6] {
+  text-underline-offset: 0.1em;
+  text-decoration: underline;
+}
+
+.preview-container[data-v-a421d7c6] {
+  display: flex;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  max-height: 400px;
+  overflow-y: auto;
+  color: #666;
+}
+
+.preview-card[data-v-a421d7c6] {
+  display: flex;
+  align-items: center;
+  border: 1px solid #a2a2a2;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px 5px 0 0;
+}
+
+.preview-img[data-v-a421d7c6] {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  border: 1px solid #a2a2a2;
+  background-color: #a2a2a2;
+}
+
+.filename[data-v-a421d7c6] {
+  margin: 0 0 0 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ml-2[data-v-a421d7c6] {
+  margin-left: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.ml-2[data-v-a421d7c6]:hover {
+  color: #ff0000;
+}
+
+.submit-div[data-v-a421d7c6] {
+  display: flex;
+  justify-content: center;
+}
+
+.submit[data-v-a421d7c6] {
+  margin: 0.5rem auto;
+  padding: 1rem 1rem;
+  font-size: 1em;
+  border: none;
+  border-radius: 5px;
+  background-color: #3182ce;
+  color: #fff;
+  cursor: pointer;
+  width: 400px;
+}
+
+.submit[data-v-a421d7c6]:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/dataImport/ObsidianImport.vue?vue&type=style&index=0&id=1f422cd2&scoped=true&lang=css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.upload-back[data-v-1f422cd2] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-window[data-v-1f422cd2] {
+  width: 80%;
+  max-width: 600px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.close[data-v-1f422cd2] {
+  width: 20px;
+  height: 20px;
+  align-self: flex-end;
+  cursor: pointer;
+}
+
+.title[data-v-1f422cd2] {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.description[data-v-1f422cd2] {
+  font-size: 1em;
+  color: #666;
+}
+
+.requirements[data-v-1f422cd2] {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.requirements ol[data-v-1f422cd2] {
+  margin: 5px 5px 5px 20px;
+  padding-left: 10px;
+}
+
+.requirements li[data-v-1f422cd2] {
+  margin: 5px 0;
+}
+
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/dataImport/TextImport.vue?vue&type=style&index=0&id=3614a3b8&scoped=true&lang=css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.upload-back[data-v-3614a3b8] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-window[data-v-3614a3b8] {
+  width: 80%;
+  max-width: 600px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.close[data-v-3614a3b8] {
+  width: 20px;
+  height: 20px;
+  align-self: flex-end;
+  cursor: pointer;
+}
+
+.title[data-v-3614a3b8] {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.description[data-v-3614a3b8] {
+  font-size: 1em;
+  color: #666;
+}
+
+.requirements[data-v-3614a3b8] {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.requirements ol[data-v-3614a3b8] {
+  margin: 5px 5px 5px 20px;
+  padding-left: 10px;
+}
+
+.requirements li[data-v-3614a3b8] {
+  margin: 5px 0;
+}
+
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/ImportDataView.vue?vue&type=style&index=0&id=7637bc9c&scoped=true&lang=css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.import-view[data-v-7637bc9c] {
+  margin: 30px auto;
+  width: 80%;
+  max-width: 1200px;
+}
+
+h1[data-v-7637bc9c] {
+  text-align: center;
+  margin-bottom: 90px;
+}
+
+.import-methods[data-v-7637bc9c] {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 70px;
+  margin: 10px auto;
+}
+
+.method[data-v-7637bc9c] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.method img[data-v-7637bc9c] {
+  width: 50px;
+  height: 50px;
+}
+
+.middle-text[data-v-7637bc9c] {
+  text-align: left;
+  margin: 5px 10px 5px 20px;
+  width: 200px;
+}
+
+.middle-text h3[data-v-7637bc9c] {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.middle-text p[data-v-7637bc9c] {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.method button[data-v-7637bc9c] {
+  width: 100px;
+  height: 50px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background: white;
+  padding: 10px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.method button[data-v-7637bc9c]:hover {
+  background: #eee;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -1923,7 +2189,7 @@ tr.tr-sm .node-more-ops {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 1000;
   display: flex;
   justify-content: center;
