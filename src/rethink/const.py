@@ -32,6 +32,11 @@ class Code(Enum):
     CAPTCHA_EXPIRED = auto()  # 16
     NOTE_EXCEED_MAX_LENGTH = auto()  # 17
     INVALID_NODE_DISPLAY_METHOD = auto()  # 18
+    TOO_MANY_FILES = auto()  # 19
+    TOO_LARGE_FILE = auto()  # 20
+    INVALID_FILE_TYPE = auto()  # 21
+    FILE_OPEN_ERROR = auto()  # 22
+    FILENAME_EXIST = auto()  # 23
 
 
 @dataclass
@@ -59,6 +64,11 @@ CODE_MESSAGES = {
     Code.CAPTCHA_EXPIRED: CodeMessage(zh="验证码已过期", en="Captcha expired"),
     Code.NOTE_EXCEED_MAX_LENGTH: CodeMessage(zh="内容超过最大长度", en="Content exceed max length"),
     Code.INVALID_NODE_DISPLAY_METHOD: CodeMessage(zh="无效的展示方式", en="Invalid display method"),
+    Code.TOO_MANY_FILES: CodeMessage(zh="文件数量过多", en="Too many files"),
+    Code.TOO_LARGE_FILE: CodeMessage(zh="文件过大", en="Too large file"),
+    Code.INVALID_FILE_TYPE: CodeMessage(zh="无效的文件类型", en="Invalid file type"),
+    Code.FILE_OPEN_ERROR: CodeMessage(zh="文件打开失败", en="File open error"),
+    Code.FILENAME_EXIST: CodeMessage(zh="文件名已存在", en="Filename already exists"),
 }
 
 DEFAULT_USER = {

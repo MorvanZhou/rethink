@@ -3,7 +3,7 @@ import math
 import re
 import uuid
 from io import StringIO
-from typing import Tuple
+from typing import Tuple, Dict
 
 import jwt
 import pypinyin
@@ -119,3 +119,18 @@ def jwt_decode(token: str) -> dict:
         algorithms=[HEADERS["alg"]],
         options={"verify_exp": True}
     )
+
+
+INTERNAL_LINK_PTN = re.compile(r"\[\[(.*?)]]")
+
+
+def replace_inner_link(md: str, filename2nid: Dict[str, str]) -> str:
+    for match in list(INTERNAL_LINK_PTN.finditer(md))[::-1]:
+        span = match.span()
+        filename = match.group(1)
+        nid = filename2nid.get(filename)
+        if nid is None:
+            nid = short_uuid()
+            filename2nid[filename] = nid
+        md = f"{md[: span[0]]}[@{filename}](/n/{nid}){md[span[1]:]}"
+    return md

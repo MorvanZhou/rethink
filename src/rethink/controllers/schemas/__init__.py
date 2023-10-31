@@ -4,4 +4,5 @@ from . import (
     node,
     search,
     verification,
+    files,
 )

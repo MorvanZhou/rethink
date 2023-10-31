@@ -6,5 +6,6 @@ from . import (
     tps,
     db_ops,
     verification,
+    files,
     utils,
 )

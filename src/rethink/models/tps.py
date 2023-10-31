@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from bson import ObjectId
 from typing_extensions import TypedDict
@@ -54,3 +54,9 @@ class UserNodeIds(TypedDict):
     _id: ObjectId
     id: str
     nodeIds: List[str]
+
+
+class ImportData(TypedDict):
+    _id: ObjectId
+    uid: str
+    obsidian: Dict[str, str]  # filename: nid

@@ -1,4 +1,5 @@
 import datetime
+import os
 import unittest
 
 from fastapi.testclient import TestClient
@@ -377,3 +378,81 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.assertEqual(0, len(rj["data"]["nodes"]))
         self.assertEqual(0, rj["data"]["total"])
+
+    def test_update_obsidian(self):
+        os.makedirs("temp", exist_ok=True)
+        f1 = open("temp/test1.md", "wb+")
+        f1.write("test\n[[qa]]".encode("utf-8"))
+        f2 = open("temp/test2.md", "wb+")
+        f2.write("test2\n\nasdq[[test]]".encode("utf-8"))
+
+        resp = self.client.post(
+            "/api/files/obsidian",
+            files=[
+                ("files", f1),
+                ("files", f2),
+            ],
+            headers={
+                "token": self.token
+            },
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("", rj["failedFilename"])
+
+        resp = self.client.post(
+            "/api/search/node",
+            json={
+                "query": "",
+                "requestId": "xxx",
+                "sortKey": "createdAt",
+                "sortOrder": -1, "page": 0, "pageSize": 5},
+            headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(4, len(rj["data"]["nodes"]))
+
+        f1.close()
+        f2.close()
+        os.remove("temp/test1.md")
+        os.remove("temp/test2.md")
+        os.rmdir("temp")
+
+    def test_upload_text(self):
+        os.makedirs("temp", exist_ok=True)
+        f1 = open("temp/test1.txt", "wb+")
+        f1.write("dasd".encode("utf-8"))
+        f2 = open("temp/test2.txt", "wb+")
+        f2.write("asdq".encode("utf-8"))
+
+        resp = self.client.post(
+            "/api/files/text",
+            files=[
+                ("files", f1),
+                ("files", f2),
+            ],
+            headers={
+                "token": self.token
+            },
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("", rj["failedFilename"])
+
+        resp = self.client.post(
+            "/api/search/node",
+            json={
+                "query": "",
+                "requestId": "xxx",
+                "sortKey": "createdAt",
+                "sortOrder": -1, "page": 0, "pageSize": 5},
+            headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(4, len(rj["data"]["nodes"]))
+
+        f1.close()
+        f2.close()
+        os.remove("temp/test1.txt")
+        os.remove("temp/test2.txt")
+        os.rmdir("temp")

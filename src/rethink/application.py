@@ -8,7 +8,15 @@ from fastapi.staticfiles import StaticFiles
 from rethink import const
 from rethink.logger import logger
 from .models import database
-from .routes import user, oauth, node, search, trash, verification
+from .routes import (
+    user,
+    oauth,
+    node,
+    search,
+    trash,
+    verification,
+    files,
+)
 
 app = FastAPI(
     docs_url="/docs",
@@ -40,6 +48,7 @@ app.include_router(oauth.router)
 app.include_router(search.router)
 app.include_router(trash.router)
 app.include_router(verification.router)
+app.include_router(files.router)
 
 
 @app.on_event("startup")

@@ -10,7 +10,7 @@ from . import user, tps, utils, db_ops
 from .database import COLL
 from .search import user_node
 
-AT_PTN = re.compile(r'\[@[\w ]+?]\(([\w/]+?)\)', re.MULTILINE)
+AT_PTN = re.compile(r'\[@[ \w\u4e00-\u9fa5！？。，￥【】「」]+?]\(([\w/]+?)\)', re.MULTILINE)
 CURSOR_AT_PTN = re.compile(r'\s+?@([\w ]*)$')
 
 
@@ -59,24 +59,24 @@ def add(
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
     title, snippet = utils.preprocess_md(md)
 
-    onid = utils.short_uuid()
+    nid = utils.short_uuid()
 
     from_nids = []
     if from_nid != "":
         from_nids.append(from_nid)
-        res = db_ops.node_add_to_set(from_nid, "toNodeIds", onid)
+        res = db_ops.node_add_to_set(from_nid, "toNodeIds", nid)
         if res.modified_count != 1:
             return None, const.Code.OPERATION_FAILED
 
     new_to_node_ids = []
     if md != "":
-        new_to_node_ids, code = __flush_to_node_ids(nid=onid, orig_to_nid=[], new_md=md)
+        new_to_node_ids, code = __flush_to_node_ids(nid=nid, orig_to_nid=[], new_md=md)
         if code != const.Code.OK:
             return None, code
     _id = ObjectId()
     data: tps.Node = {
         "_id": _id,
-        "id": onid,
+        "id": nid,
         "title": title,
         "snippet": snippet,
         "md": md,
@@ -94,7 +94,7 @@ def add(
         return None, const.Code.OPERATION_FAILED
     res = COLL.unids.update_one(
         {"id": uid},
-        {"$push": {"nodeIds": onid}}
+        {"$push": {"nodeIds": nid}}
     )
     if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED
@@ -163,6 +163,7 @@ def update(
         uid: str,
         nid: str,
         md: str,
+        refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
@@ -173,7 +174,7 @@ def update(
     n, code = get(uid=uid, nid=nid)
     if code != const.Code.OK:
         return None, code
-    if n["md"] == md:
+    if n["md"] == md and not refresh_on_same_md:
         return n, const.Code.OK
     new_data = {
         "title": title,
