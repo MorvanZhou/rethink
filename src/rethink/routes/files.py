@@ -44,3 +44,18 @@ async def upload_obsidian_files(
         td=token_decode,
         files=files,
     )
+
+
+@router.get(
+    path="/files/uploadProcess",
+    response_model=schemas.files.FileUploadProcessResponse,
+)
+@measure_time_spend
+async def get_upload_process(
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        rid: str,
+) -> schemas.files.FileUploadProcessResponse:
+    return upload_files.get_upload_process(
+        td=token_decode,
+        rid=rid,
+    )

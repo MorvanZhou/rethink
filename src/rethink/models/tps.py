@@ -59,4 +59,8 @@ class UserNodeIds(TypedDict):
 class ImportData(TypedDict):
     _id: ObjectId
     uid: str
+    process: int
+    type: str
+    startAt: datetime.datetime
+    running: bool
     obsidian: Dict[str, str]  # filename: nid

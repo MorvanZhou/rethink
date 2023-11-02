@@ -37,6 +37,7 @@ class Code(Enum):
     INVALID_FILE_TYPE = auto()  # 21
     FILE_OPEN_ERROR = auto()  # 22
     FILENAME_EXIST = auto()  # 23
+    IMPORT_PROCESS_NOT_FINISHED = auto()  # 24
 
 
 @dataclass
@@ -69,6 +70,9 @@ CODE_MESSAGES = {
     Code.INVALID_FILE_TYPE: CodeMessage(zh="无效的文件类型", en="Invalid file type"),
     Code.FILE_OPEN_ERROR: CodeMessage(zh="文件打开失败", en="File open error"),
     Code.FILENAME_EXIST: CodeMessage(zh="文件名已存在", en="Filename already exists"),
+    Code.IMPORT_PROCESS_NOT_FINISHED: CodeMessage(
+        zh="正在完成上一批数据导入，请稍后再试",
+        en="Last import process not finished, please try again later"),
 }
 
 DEFAULT_USER = {

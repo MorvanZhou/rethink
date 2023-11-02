@@ -1,5 +1,9 @@
+import datetime
 import unittest
 from textwrap import dedent
+
+from bson import ObjectId
+from bson.tz_util import utc
 
 from rethink import const, models
 from rethink.models.utils import short_uuid
@@ -286,3 +290,28 @@ class LocalModelsTest(unittest.TestCase):
         tns, total = models.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(0, total)
         self.assertEqual(0, len(tns))
+
+    def test_files_upload_process(self):
+        now = datetime.datetime.now(tz=utc)
+        doc: models.tps.ImportData = {
+            "_id": ObjectId(),
+            "uid": "xxx",
+            "process": 0,
+            "type": "text",
+            "startAt": now,
+            "running": True,
+            "obsidian": {},
+        }
+        res = models.database.COLL.import_data.insert_one(doc)
+        self.assertTrue(res.acknowledged)
+
+        doc, code = models.files.update_process("xxx", "obsidian", 10)
+        self.assertEqual(const.Code.OK, code)
+
+        process, ty, start_at, running = models.files.get_upload_process("xxx")
+        self.assertEqual(10, process)
+        self.assertEqual("obsidian", ty)
+        self.assertEqual(now, start_at)
+        self.assertTrue(running)
+
+        models.database.COLL.import_data.delete_one({"uid": "xxx"})

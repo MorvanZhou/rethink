@@ -62,6 +62,12 @@ def init():
                 {"_id": doc["_id"]},
                 {"$set": {"modifiedAt": doc["modifiedAt"].replace(tzinfo=utc)}},
             )
+        docs = COLL.import_data.find()
+        for doc in docs:
+            COLL.import_data.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {"startAt": doc["startAt"].replace(tzinfo=utc)}},
+            )
 
     if isinstance(CLIENT, MongoClient):
         # try creating index
