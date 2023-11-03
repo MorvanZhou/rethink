@@ -93,20 +93,13 @@ def get_recent(
             requestId=rid,
             queries=[],
         )
-    nodes = models.search.get_recent_search(uid=td.uid)
+    queries = models.search.get_recent_search(uid=td.uid)
     code = const.Code.OK
     return schemas.search.GetRecentSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=rid,
-        nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
-            id=n["id"],
-            title=n["title"],
-            snippet=n["snippet"],
-            type=n["type"],
-            createdAt=datetime2str(n["_id"].generation_time),
-            modifiedAt=datetime2str(n["modifiedAt"]),
-        ) for n in nodes]
+        queries=queries,
     )
 
 
@@ -120,7 +113,7 @@ def put_recent(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = models.search.put_recent_search(uid=td.uid, nid=req.nid)
+    code = models.search.put_recent_search(uid=td.uid, query=req.query)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),

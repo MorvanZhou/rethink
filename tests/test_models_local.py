@@ -245,18 +245,12 @@ class LocalModelsTest(unittest.TestCase):
 
     def test_search(self):
         code = models.search.put_recent_search(self.uid, "a")
-        self.assertEqual(const.Code.NODE_NOT_EXIST, code)
-
-        n1, code = models.node.add(
-            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
-        )
         self.assertEqual(const.Code.OK, code)
-        code = models.search.put_recent_search(self.uid, n1["id"])
-        self.assertEqual(const.Code.OK, code)
+        models.search.put_recent_search(self.uid, "c")
+        models.search.put_recent_search(self.uid, "b")
 
-        nodes = models.search.get_recent_search(self.uid)
-        self.assertEqual(1, len(nodes))
-        self.assertEqual(n1["id"], nodes[0]["id"])
+        queries = models.search.get_recent_search(self.uid)
+        self.assertEqual(["b", "c", "a"], queries)
 
     def test_batch(self):
         ns = []

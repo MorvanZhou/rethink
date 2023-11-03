@@ -109,26 +109,23 @@ def add_recent_cursor_search(
     return const.Code.OK
 
 
-def get_recent_search(uid: str) -> List[tps.Node]:
-    if not user.is_exist(uid=uid):
+def get_recent_search(uid: str) -> List[str]:
+    doc = COLL.users.find_one({"id": uid})
+    if doc is None:
         return []
+    return doc["recentSearch"]
+
+
+def put_recent_search(uid: str, query: str) -> const.Code:
     doc = COLL.users.find_one({"id": uid})
-    nodes = COLL.nodes.find({"id": {"$in": doc["recentSearch"]}})
-    return sorted(list(nodes), key=lambda x: doc["recentSearch"].index(x["id"]))
-
-
-def put_recent_search(uid: str, nid: str) -> const.Code:
-    if not user.is_exist(uid=uid):
+    if doc is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    doc = COLL.users.find_one({"id": uid})
-    if COLL.unids.count_documents({"id": uid, "nodeIds": {"$in": [nid]}}) == 0:
-        return const.Code.NODE_NOT_EXIST
     rns = doc["recentSearch"]
     try:
-        rns.remove(nid)
+        rns.remove(query)
     except ValueError:
         pass
-    rns.insert(0, nid)
+    rns.insert(0, query)
     if len(rns) > 20:
         rns = rns[:20]
     _ = COLL.users.update_one(

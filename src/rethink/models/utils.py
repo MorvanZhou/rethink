@@ -122,9 +122,17 @@ def jwt_decode(token: str) -> dict:
 
 
 INTERNAL_LINK_PTN = re.compile(r"\[\[(.*?)]]")
+INTERNAL_IMG_PTN = re.compile(r"!\[\[(.*?)]]")
 
 
 def replace_inner_link(md: str, filename2nid: Dict[str, str]) -> str:
+    # image
+    for match in list(INTERNAL_IMG_PTN.finditer(md))[::-1]:
+        span = match.span()
+        filepath = match.group(1)
+        md = f"{md[: span[0]]}![{filepath}](/img/{filepath}){md[span[1]:]}"
+
+    # link
     for match in list(INTERNAL_LINK_PTN.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)

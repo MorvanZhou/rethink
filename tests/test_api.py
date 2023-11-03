@@ -101,19 +101,11 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual("xxx", rj["requestId"])
 
     def test_recent_search(self):
-        resp = self.client.put("/api/node", json={
-            "requestId": "xxx",
-            "md": "node1\ntext",
-            "type": const.NodeType.MARKDOWN.value,
-        }, headers={"token": self.token})
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-
         resp = self.client.put(
             "/api/search/recent",
             json={
                 "requestId": "xxx",
-                "nid": rj["node"]["id"],
+                "query": "aaa",
             }, headers={"token": self.token})
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -126,8 +118,7 @@ class TokenApiTest(unittest.TestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
-        self.assertEqual(len(rj["nodes"]), 1)
-        self.assertEqual(rj["nodes"][0]["title"], "node1")
+        self.assertEqual(["aaa"], rj["queries"])
 
     def test_node(self):
         resp = self.client.post(

@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from typing import List, Sequence
 
 from pydantic import Field, BaseModel, NonNegativeInt
 
@@ -36,11 +36,11 @@ class AddToRecentSearchHistRequest(BaseModel):
 
 class PutRecentSearchRequest(BaseModel):
     requestId: str
-    nid: str
+    query: str
 
 
 class GetRecentSearchResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
-    nodes: List[NodesInfoResponse.Data.NodeInfo]
+    queries: List[str]
