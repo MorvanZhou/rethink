@@ -143,11 +143,18 @@ NEW_USER_DEFAULT_NODES = {
         dedent("""\
         Welcome to Rethink
         
-        Rethink is a knowledge management system. You can take node and manage your them here.
+        Rethink is a Knowledge Management System. You can take node and manage them here.
 
-        Use @, you can link any record to create associations. For example [@How do I record](/n/{}) .
+        Use @ to link between notes. For example [@How do I record](/n/{}) .
 
-        Rethink also supports markdown syntax, allowing you to record richer expressions.
+        Rethink also supports markdown syntax, for example:
+        
+        # My task list
+        
+        - [x] task 1
+        - [ ] task 2
+        - [ ] task 3
+        
         """),
     ],
     Language.ZH.value: [
@@ -163,7 +170,14 @@ NEW_USER_DEFAULT_NODES = {
 
         使用 @，你就可以链接任意的记录，创建联想。比如 [@我如何记录](/n/{}) 。
 
-        Rethink 同样也支持 markdown 语法，让你可以记录更丰富的表达。
+        Rethink 同样也支持 markdown 语法，让你可以记录更丰富的表达。比如：
+        
+        # 我的任务清单
+        
+        - [x] 任务 1
+        - [ ] 任务 2
+        - [ ] 任务 3
+        
         """),
     ]
 }
