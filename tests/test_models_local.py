@@ -309,3 +309,19 @@ class LocalModelsTest(unittest.TestCase):
         self.assertTrue(running)
 
         models.database.COLL.import_data.delete_one({"uid": "xxx"})
+
+    def test_update_title_and_from_nodes_updates(self):
+        n1, code = models.node.add(
+            uid=self.uid, md=f"title1\ntext", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+        n2, code = models.node.add(
+            uid=self.uid, md=f"title2\n[@title1](/n/{n1['id']})", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+
+        n1, code = models.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
+        self.assertEqual(const.Code.OK, code)
+        n2, code = models.node.get(uid=self.uid, nid=n2["id"])
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(f"title2\n[@title1Changed](/n/{n1['id']})", n2["md"])

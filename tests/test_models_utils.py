@@ -55,3 +55,29 @@ class UtilsTest(unittest.TestCase):
             """), res)
 
         self.assertIn("我哦", filename2nid)
+
+    def test_change_link_title(self):
+        md = dedent("""\
+            # 123
+            ddd qwd [@我是谁](/n/sqaaq) 345
+            [@ssw](/n/weee)
+            """)
+
+        new_md = utils.change_link_title(md, nid="sqaaq", new_title="哇塞")
+        self.assertEqual(dedent(f"""\
+            # 123
+            ddd qwd [@哇塞](/n/sqaaq) 345
+            [@ssw](/n/weee)
+            """), new_md)
+
+        md = dedent("""\
+            # 123
+            ddd qwd [@我是谁](/n/sqaaq) 345
+            [@我是谁](/n/sqaaq)
+            """)
+        new_md = utils.change_link_title(md, nid="sqaaq", new_title="哇塞")
+        self.assertEqual(dedent(f"""\
+            # 123
+            ddd qwd [@哇塞](/n/sqaaq) 345
+            [@哇塞](/n/sqaaq)
+            """), new_md)

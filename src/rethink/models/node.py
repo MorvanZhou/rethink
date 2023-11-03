@@ -6,6 +6,7 @@ from bson import ObjectId
 from bson.tz_util import utc
 
 from rethink import config, const
+from rethink.logger import logger
 from . import user, tps, utils, db_ops
 from .database import COLL
 from .search import user_node
@@ -176,6 +177,16 @@ def update(
         return None, code
     if n["md"] == md and not refresh_on_same_md:
         return n, const.Code.OK
+
+    if n["title"] != title:
+        # update it's title in fromNodes md's link
+        from_nodes = COLL.nodes.find({"id": {"$in": n["fromNodeIds"]}})
+        for from_node in from_nodes:
+            new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
+            res = COLL.nodes.update_one({"id": from_node["id"]}, {"$set": {"md": new_md}})
+            if res.modified_count != 1:
+                logger.info(f"update fromNode {from_node['id']} failed")
+
     new_data = {
         "title": title,
         "searchKeys": utils.txt2search_keys(title),
@@ -200,6 +211,7 @@ def update(
             {"$set": new_data}
         )
         if res.modified_count != 1:
+            logger.error(f"update node {nid} failed")
             return None, const.Code.OPERATION_FAILED
         doc = COLL.nodes.find_one({"id": nid})
 
@@ -270,12 +282,14 @@ def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
             "recentCursorSearchSelectedNIds": u["recentCursorSearchSelectedNIds"]
         }})
         if res.modified_count != 1:
+            logger.error(f"update user {uid} failed")
             return const.Code.OPERATION_FAILED
     res = COLL.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": True,
         "inTrashAt": datetime.datetime.now(tz=utc)
     }})
     if res.modified_count != len(nids):
+        logger.error(f"update nodes {nids} failed")
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
@@ -313,6 +327,7 @@ def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
         "inTrashAt": None,
     }})
     if res.modified_count != len(nids):
+        logger.error(f"restore nodes {nids} failed")
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
@@ -339,11 +354,13 @@ def batch_delete(uid: str, nids: List[str]) -> const.Code:
     # remove node
     res = COLL.nodes.delete_many({"id": {"$in": nids}})
     if res.deleted_count != len(nids):
+        logger.error(f"delete nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
     # update user nodeIds
     res = db_ops.remove_nids(uid, nids)
     if res.matched_count != 1:
+        logger.error(f"update user {uid} failed")
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
@@ -359,6 +376,7 @@ def disable(
         {"$set": {"disabled": True}}
     )
     if res.modified_count != 1:
+        logger.error(f"disable node {nid} failed")
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
