@@ -3,9 +3,8 @@ import shutil
 import socket
 import time
 import unittest
+import urllib.request
 from pathlib import Path
-
-import requests
 
 from rethink import run
 
@@ -46,10 +45,10 @@ class TestRun(unittest.TestCase):
             "/r/import",
             "/n/123",
         ]:
-            resp = requests.get(f"http://127.0.0.1:{port}{url}")
-            self.assertEqual(200, resp.status_code, msg=f"failed to get {url}")
+            resp = urllib.request.urlopen(f"http://127.0.0.1:{port}{url}")
+            self.assertEqual(200, resp.status, msg=f"failed to get {url}")
             self.assertEqual("text/html; charset=utf-8", resp.headers["content-type"])
-            self.assertIn("Rethink", resp.text)
+            self.assertIn("Rethink", resp.read().decode())
 
         p.kill()
         self.assertTrue(self.path.exists())
