@@ -21,6 +21,8 @@
 
 ![editor](/img/editor-zh.png)
 
+![phone](/img/phone.png)
+
 ## 安装
 
 ```shell

@@ -20,6 +20,8 @@ The official web version can be found at [https://rethink.run](https://rethink.r
 
 ![editor](/img/editor.png)
 
+![phone](/img/phone.png)
+
 ## Install
 
 ```shell
