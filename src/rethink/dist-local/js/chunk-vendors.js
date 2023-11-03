@@ -1339,18 +1339,6 @@
     /***/
   }),
 
-  /***/ "./node_modules/vditor/dist/index.css":
-  /*!********************************************!*\
-    !*** ./node_modules/vditor/dist/index.css ***!
-    \********************************************/
-  /***/ (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-    "use strict";
-    eval("__webpack_require__.r(__webpack_exports__);\n// extracted by mini-css-extract-plugin\n\n\n//# sourceURL=webpack://rethink/./node_modules/vditor/dist/index.css?");
-
-    /***/
-  }),
-
   /***/ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js":
   /*!*******************************************************************!*\
     !*** ./node_modules/@babel/runtime/helpers/esm/defineProperty.js ***!

@@ -31,7 +31,7 @@ pip install -U rethink-note
 
 ## 使用
 
-使用默认设置运行：
+使用 `rethink.run()` 方式，快速启动笔记 web 服务：
 
 ```python
 import rethink
@@ -39,7 +39,7 @@ import rethink
 rethink.run()
 ```
 
-使用自定义设置运行：
+如果需要更多自定义运行设置，可以使用 `rethink.run()` 的参数：
 
 ```python
 import rethink
@@ -51,3 +51,8 @@ rethink.run(
     language="zh"  # 语言，默认为英语。可选值：zh, en
 )
 ```
+
+所有笔记都会被存储在 `path` 路径下，默认会在当前目录下创建 `.data`
+文件夹。如果你想在其他路径创建数据文件夹，可以使用 `path` 参数。
+
+当前语言暂时只英语和中文，且默认为英文 `en`，如果你想使用中文 `zh`，可以使用 `language` 参数。

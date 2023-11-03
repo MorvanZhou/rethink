@@ -5,6 +5,8 @@ import time
 import unittest
 from pathlib import Path
 
+import requests
+
 from rethink import run
 
 
@@ -33,6 +35,21 @@ class TestRun(unittest.TestCase):
             if result == 0:
                 break
             time.sleep(0.1)
+
+        for url in [
+            "",
+            "/login",
+            "/about",
+            "/r",
+            "/r/settings",
+            "/r/user",
+            "/r/import",
+            "/n/123",
+        ]:
+            resp = requests.get(f"http://127.0.0.1:{port}{url}")
+            self.assertEqual(200, resp.status_code, msg=f"failed to get {url}")
+            self.assertEqual("text/html; charset=utf-8", resp.headers["content-type"])
+            self.assertIn("Rethink", resp.text)
 
         p.kill()
         self.assertTrue(self.path.exists())

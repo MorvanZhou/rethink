@@ -30,7 +30,7 @@ pip install -U rethink-note
 
 ## Usage
 
-Run with default settings:
+Quickly start the note web service with `rethink.run()`:
 
 ```python
 import rethink
@@ -38,7 +38,7 @@ import rethink
 rethink.run()
 ```
 
-Run with custom settings:
+If you need more custom running settings, you can use the parameters of `rethink.run()`:
 
 ```python
 import rethink
@@ -50,3 +50,10 @@ rethink.run(
     language="zh"  # language, default is English, optional: zh, en
 )
 ```
+
+All notes will be stored in the path specified by `path`,
+and the `.data` folder will be created in the current directory by default.
+If you want to create a data folder in another path, you can use the `path` parameter.
+
+English and Chinese languages are supported, and the default is English `en`.
+If you want to use Chinese `zh`, you can use `language="zh"` parameter.

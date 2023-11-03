@@ -70,6 +70,13 @@ class UtilsTest(unittest.TestCase):
             [@ssw](/n/weee)
             """), new_md)
 
+        new_md = utils.change_link_title(md, nid="weee", new_title="哇塞")
+        self.assertEqual(dedent(f"""\
+            # 123
+            ddd qwd [@我是谁](/n/sqaaq) 345
+            [@哇塞](/n/weee)
+            """), new_md)
+
         md = dedent("""\
             # 123
             ddd qwd [@我是谁](/n/sqaaq) 345
@@ -80,4 +87,16 @@ class UtilsTest(unittest.TestCase):
             # 123
             ddd qwd [@哇塞](/n/sqaaq) 345
             [@哇塞](/n/sqaaq)
+            """), new_md)
+
+        md = dedent("""\
+            # 123
+            ddd qwd 345
+            [@我](/n/1) [@我](/n/2)
+            """)
+        new_md = utils.change_link_title(md, nid="2", new_title="哇塞")
+        self.assertEqual(dedent(f"""\
+            # 123
+            ddd qwd 345
+            [@我](/n/1) [@哇塞](/n/2)
             """), new_md)

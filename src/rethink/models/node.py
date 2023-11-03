@@ -183,8 +183,8 @@ def update(
         from_nodes = COLL.nodes.find({"id": {"$in": n["fromNodeIds"]}})
         for from_node in from_nodes:
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
-            res = COLL.nodes.update_one({"id": from_node["id"]}, {"$set": {"md": new_md}})
-            if res.modified_count != 1:
+            n, code = update(uid=uid, nid=from_node["id"], md=new_md)
+            if code != const.Code.OK:
                 logger.info(f"update fromNode {from_node['id']} failed")
 
     new_data = {

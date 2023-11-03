@@ -75,9 +75,11 @@ app.mount(
 
 
 @app.get("/", response_class=HTMLResponse)
-@app.get("/r", response_class=HTMLResponse)
-@app.get("/user", response_class=HTMLResponse)
 @app.get("/login", response_class=HTMLResponse)
+@app.get("/about", response_class=HTMLResponse)
+@app.get("/r", response_class=HTMLResponse)
+@app.get("/r/{path}", response_class=HTMLResponse)
+@app.get("/n/{nid}", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
     content = (const.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
     content += f"<script>window.VUE_APP_API_PORT = {os.getenv('VUE_APP_API_PORT')}</script>"

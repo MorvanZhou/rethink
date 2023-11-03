@@ -146,9 +146,8 @@ def replace_inner_link(md: str, filename2nid: Dict[str, str]) -> str:
 
 def change_link_title(md: str, nid: str, new_title: str) -> str:
     new_md = re.sub(
-        r"\[@(.*?)]\(/n/{}/?\)".format(nid),
+        r"\[@[^].]*?]\(/n/{}/?\)".format(nid),
         f"[@{new_title}](/n/{nid})",
         md,
-        flags=re.MULTILINE | re.DOTALL
     )
     return new_md
