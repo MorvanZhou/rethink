@@ -16,6 +16,10 @@
 A note-taking app dependent on python.
 The official web version can be found at [https://rethink.run](https://rethink.run).
 
+![image](/img/notes-page.png)
+
+![editor](/img/editor.png)
+
 ## Install
 
 ```shell
@@ -30,7 +34,7 @@ pip install -U rethink-note
 
 ## Usage
 
-Quickly start the note web service with `rethink.run()`:
+Quickly start the note web service with `rethink.run()`, and save your note data locally:
 
 ```python
 import rethink
@@ -38,7 +42,7 @@ import rethink
 rethink.run()
 ```
 
-If you need more custom running settings, you can use the parameters of `rethink.run()`:
+If you need to customize settings, you can set the parameters in `rethink.run()`:
 
 ```python
 import rethink
@@ -52,8 +56,7 @@ rethink.run(
 ```
 
 All notes will be stored in the path specified by `path`,
-and the `.data` folder will be created in the current directory by default.
-If you want to create a data folder in another path, you can use the `path` parameter.
+and the `.data` folder will be created in your `path` directory.
 
 English and Chinese languages are supported, and the default is English `en`.
 If you want to use Chinese `zh`, you can use `language="zh"` parameter.

@@ -17,6 +17,10 @@
 一个依赖于 Python 的笔记应用。
 官方网页版可以在 [https://rethink.run](https://rethink.run) 找到。
 
+![image](/img/notes-page-zh.png)
+
+![editor](/img/editor-zh.png)
+
 ## 安装
 
 ```shell
@@ -31,7 +35,7 @@ pip install -U rethink-note
 
 ## 使用
 
-使用 `rethink.run()` 方式，快速启动笔记 web 服务：
+使用 `rethink.run()` 方式，快速启动笔记 web 服务，并将你的笔记数据本地化保存：
 
 ```python
 import rethink
