@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 from pydantic import BaseModel, NonNegativeInt
 
 
@@ -16,3 +18,13 @@ class FileUploadProcessResponse(BaseModel):
     type: str
     startAt: str
     running: bool
+
+
+class ImageUploadResponse(BaseModel):
+    class Data(BaseModel):
+        errFiles: List[str]
+        succMap: Dict[str, str]
+
+    code: NonNegativeInt
+    msg: str
+    data: Data

@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import math
 import re
 import uuid
@@ -7,6 +8,7 @@ from typing import Tuple, Dict
 
 import jwt
 import pypinyin
+from fastapi import UploadFile
 from markdown import Markdown
 
 from rethink import config
@@ -151,3 +153,19 @@ def change_link_title(md: str, nid: str, new_title: str) -> str:
         md,
     )
     return new_md
+
+
+md5 = hashlib.md5()
+
+
+# General-purpose solution that can process large files
+def file_hash(file: UploadFile) -> str:
+    # https://stackoverflow.com/questions/22058048/hashing-a-file-in-python
+
+    while True:
+        data = file.file.read(65536)  # arbitrary number to reduce RAM usage
+        if not data:
+            break
+        md5.update(data)
+    file.file.seek(0)
+    return md5.hexdigest()

@@ -85,3 +85,21 @@ def get_upload_process(
         startAt=datetime2str(start_at),
         running=running,
     )
+
+
+def upload_image(
+        td: TokenDecode,
+        file: UploadFile,
+) -> schemas.files.ImageUploadResponse:
+    if td.code != const.Code.OK:
+        return schemas.files.ImageUploadResponse(
+            code=td.code.value,
+            msg=const.get_msg_by_code(td.code, td.language),
+            data={},
+        )
+    res = models.files.upload_image(uid=td.uid, files=[file])
+    return schemas.files.ImageUploadResponse(
+        code=const.Code.OK.value,
+        msg=const.get_msg_by_code(const.Code.OK, td.language),
+        data=res,
+    )

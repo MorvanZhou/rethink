@@ -1,18 +1,23 @@
 import datetime
+import io
+from pathlib import Path
 from typing import List, Tuple, Optional
 
 import pymongo.errors
+from PIL import Image
 from bson import ObjectId
 from bson.tz_util import utc
 from fastapi import UploadFile
 
 from rethink import const, models
-from rethink.config import is_local_db
+from rethink.config import is_local_db, get_settings
+from rethink.models import utils
 from rethink.models.database import COLL
 from rethink.models.tps import ImportData
 
 MAX_FILE_SIZE = 1024 * 512  # 512 kb
 MAX_FILE_COUNT = 200
+MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
 
 
 def update_process(
@@ -39,10 +44,8 @@ def update_process(
 
 
 def upload_obsidian(uid: str, files: List[UploadFile]) -> Tuple[str, const.Code]:
-    first_import = False
     doc = COLL.import_data.find_one({"uid": uid})
     if doc is None:
-        first_import = True
         doc: ImportData = {
             "_id": ObjectId(),
             "uid": uid,
@@ -240,3 +243,47 @@ def get_upload_process(uid: str) -> Tuple[int, str, datetime.datetime, bool]:
             {"$set": {"running": False}}
         )
     return doc["process"], doc["type"], doc["startAt"], running
+
+
+def upload_image(uid: str, files: List[UploadFile]) -> dict:
+    res = {
+        "errFiles": [],
+        "succMap": {},
+    }
+    u, code = models.user.get(uid=uid)
+    if code != const.Code.OK:
+        res["errFiles"] = [file.filename for file in files]
+        return res
+
+    if is_local_db():
+        img_dir = get_settings().LOCAL_STORAGE_PATH / ".data" / "images"
+        img_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        img_dir = const.RETHINK_DIR.parent.parent / ".data" / "images"  # TODO: replace to cos
+        img_dir.mkdir(parents=True, exist_ok=True)
+    for file in files:
+        filename = file.filename
+        if not file.content_type.startswith("image/"):
+            res["errFiles"].append(filename)
+            continue
+        if file.size > MAX_IMAGE_SIZE:
+            res["errFiles"].append(filename)
+            continue
+        fn = Path(filename)
+        ext = fn.suffix
+        hashed = utils.file_hash(file)
+        img_path = img_dir / (hashed + ext)
+        if img_path.exists():
+            # skip the same image
+            res["succMap"][filename] = f"http://127.0.0.1:8000/i/{img_path.name}"
+            continue
+
+        try:
+            image = Image.open(io.BytesIO(file.file.read()))
+            image.save(img_path, quality=50, optimize=True)
+        except Exception:
+            res["errFiles"].append(filename)
+            continue
+
+        res["succMap"][filename] = f"http://127.0.0.1:8000/i/{img_path.name}"
+    return res

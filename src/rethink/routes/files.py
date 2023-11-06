@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends, APIRouter, UploadFile
+from fastapi import Depends, APIRouter, UploadFile, Request
 from typing_extensions import Annotated
 
 from rethink.controllers import schemas
@@ -58,4 +58,21 @@ async def get_upload_process(
     return upload_files.get_upload_process(
         td=token_decode,
         rid=rid,
+    )
+
+
+@router.post(
+    path="/files/image",
+    response_model=schemas.files.ImageUploadResponse,
+)
+@measure_time_spend
+async def upload_image(
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        req: Request,
+) -> schemas.files.ImageUploadResponse:
+    form = await req.form()
+    file = form.get("file[]")
+    return upload_files.upload_image(
+        td=token_decode,
+        file=file,
     )

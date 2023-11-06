@@ -2,10 +2,10 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from rethink import const
+from rethink import const, config
 from rethink.logger import logger
 from .models import database
 from .routes import (
@@ -86,4 +86,23 @@ async def index() -> HTMLResponse:
     return HTMLResponse(
         content=content,
         status_code=200,
+    )
+
+
+@app.get("/i/{path}", response_class=FileResponse)
+async def img(
+        path: str,
+) -> FileResponse:
+    if config.is_local_db():
+        prefix = config.get_settings().LOCAL_STORAGE_PATH
+    else:
+        prefix = const.RETHINK_DIR.parent.parent
+    return FileResponse(
+        path=prefix / ".data" / "images" / path,
+        status_code=200,
+    )
+
+    return RedirectResponse(
+        url=f"https://rethink.run/api/files/{path}",
+        status_code=302,
     )
