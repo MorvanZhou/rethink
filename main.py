@@ -13,8 +13,10 @@ parser.add_argument("--env-file", type=str, default=".env.local", help="Environm
 args = parser.parse_args()
 
 if __name__ == "__main__":
+    os.environ["VUE_APP_API_HOST"] = args.host
     os.environ["VUE_APP_API_PORT"] = str(args.port)
-    os.environ["VUE_APP_MODE"] = args.mode
+    if os.environ.get("VUE_APP_MODE") is None:
+        os.environ["VUE_APP_MODE"] = args.mode
     uvicorn.run(
         "rethink.application:app",
         host=args.host,

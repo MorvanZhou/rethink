@@ -2,6 +2,7 @@ import datetime
 import os
 import unittest
 
+from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
 
@@ -446,4 +447,25 @@ class TokenApiTest(unittest.TestCase):
         f2.close()
         os.remove("temp/test1.txt")
         os.remove("temp/test2.txt")
+        os.rmdir("temp")
+
+    def test_upload_image(self):
+        os.makedirs("temp", exist_ok=True)
+        image = Image.new('RGB', (4, 4))
+        image.save("temp/test.png", format='PNG')
+        f1 = open("temp/test.png", "rb")
+        resp = self.client.post(
+            "/api/files/imageUploadVditor",
+            files={"file[]": f1},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual({
+            'errFiles': [],
+            'succMap': {
+                'test.png': 'http://127.0.0.1:8000/i/3acca26d4f9d111694d7dbda2d1e6a40.png'
+            }}, rj["data"])
+        f1.close()
+        os.remove("temp/test.png")
         os.rmdir("temp")

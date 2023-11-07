@@ -87,19 +87,40 @@ def get_upload_process(
     )
 
 
-def upload_image(
+def upload_image_vditor(
         td: TokenDecode,
         file: UploadFile,
-) -> schemas.files.ImageUploadResponse:
+) -> schemas.files.ImageVditorUploadResponse:
     if td.code != const.Code.OK:
-        return schemas.files.ImageUploadResponse(
+        return schemas.files.ImageVditorUploadResponse(
             code=td.code.value,
             msg=const.get_msg_by_code(td.code, td.language),
             data={},
         )
-    res = models.files.upload_image(uid=td.uid, files=[file])
-    return schemas.files.ImageUploadResponse(
+    res = models.files.upload_image_vditor(uid=td.uid, files=[file])
+    return schemas.files.ImageVditorUploadResponse(
         code=const.Code.OK.value,
         msg=const.get_msg_by_code(const.Code.OK, td.language),
         data=res,
+    )
+
+
+def fetch_image_vditor(
+        td: TokenDecode,
+        req: schemas.files.ImageVditorFetchRequest,
+) -> schemas.files.ImageVditorFetchResponse:
+    if td.code != const.Code.OK:
+        return schemas.files.ImageVditorFetchResponse(
+            code=td.code.value,
+            msg=const.get_msg_by_code(td.code, td.language),
+            data={},
+        )
+    new_url, code = models.files.fetch_image_vditor(uid=td.uid, url=req.url)
+    return schemas.files.ImageVditorFetchResponse(
+        code=const.Code.OK.value,
+        msg=const.get_msg_by_code(const.Code.OK, td.language),
+        data=schemas.files.ImageVditorFetchResponse.Data(
+            originalURL=req.url,
+            url=new_url,
+        ),
     )

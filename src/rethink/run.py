@@ -32,6 +32,7 @@ def run(
     if not path.is_dir():
         raise NotADirectoryError(f"Path is not a directory: {path}")
     os.environ["LOCAL_STORAGE_PATH"] = str(path)
+    os.environ["VUE_APP_API_HOST"] = host
     os.environ["VUE_APP_API_PORT"] = str(port)
     os.environ["VUE_APP_MODE"] = "local"
     os.environ["VUE_APP_LANGUAGE"] = language

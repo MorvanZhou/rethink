@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg fill="#999" height="800px" width="800px" version="1.1" id="Layer_1"
+     xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 512 512" xml:space="preserve">
+<g>
+	<g>
+		<path d="M256,0C114.608,0,0,114.608,0,256s114.608,256,256,256s256-114.608,256-256S397.392,0,256,0z M256,496
+			C123.664,496,16,388.336,16,256S123.664,16,256,16s240,107.664,240,240S388.336,496,256,496z"/>
+	</g>
+</g>
+    <g>
+	<g>
+		<polygon
+                points="362.224,155.76 212.016,322.656 148.72,259.36 137.408,270.672 212.64,345.904 374.128,166.464 		"/>
+	</g>
+</g>
+</svg>

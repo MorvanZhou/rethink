@@ -1,13 +1,16 @@
 import datetime
 import io
+import os
 from pathlib import Path
 from typing import List, Tuple, Optional
 
 import pymongo.errors
+import requests
 from PIL import Image
 from bson import ObjectId
 from bson.tz_util import utc
 from fastapi import UploadFile
+from starlette.datastructures import Headers
 
 from rethink import const, models
 from rethink.config import is_local_db, get_settings
@@ -18,6 +21,7 @@ from rethink.models.tps import ImportData
 MAX_FILE_SIZE = 1024 * 512  # 512 kb
 MAX_FILE_COUNT = 200
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
+MIN_IMAGE_SIZE = 1024 * 128  # 128 kb
 
 
 def update_process(
@@ -245,7 +249,54 @@ def get_upload_process(uid: str) -> Tuple[int, str, datetime.datetime, bool]:
     return doc["process"], doc["type"], doc["startAt"], running
 
 
-def upload_image(uid: str, files: List[UploadFile]) -> dict:
+def __save_image(file: UploadFile) -> Tuple[str, int]:
+    fn = Path(file.filename)
+    ext = fn.suffix.lower()
+    hashed = utils.file_hash(file.file)
+
+    if file.size > MIN_IMAGE_SIZE:
+        # reduce image size
+        out_bytes = io.BytesIO()
+        image = Image.open(file.file)
+        image.save(out_bytes, format=file.content_type.split("/")[-1].upper(), quality=50, optimize=True)
+        out_bytes.seek(0)
+    else:
+        out_bytes = file.file
+
+    if is_local_db():
+        host = os.environ["VUE_APP_API_HOST"]
+        port = os.environ["VUE_APP_API_PORT"]
+        if not host.startswith("http"):
+            host = "http://" + host
+        # upload to local storage
+        img_dir = get_settings().LOCAL_STORAGE_PATH / ".data" / "images"
+        img_dir.mkdir(parents=True, exist_ok=True)
+        img_path = img_dir / (hashed + ext)
+        if img_path.exists():
+            # skip the same image
+            return f"{host}:{port}/i/{img_path.name}", 0
+
+        try:
+            Image.open(out_bytes).save(img_path)
+        except Exception:
+            return file.filename, 1
+
+        return f"{host}:{port}/i/{img_path.name}", 0
+    else:
+        # upload to cos
+        try:
+            url = models.files.cos.upload_from_bytes(
+                out_bytes.read(),
+                filename=hashed + ext,
+                content_type=file.content_type,
+            )
+        except Exception:
+            return file.filename, 1
+
+        return url, 0
+
+
+def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
     res = {
         "errFiles": [],
         "succMap": {},
@@ -255,12 +306,6 @@ def upload_image(uid: str, files: List[UploadFile]) -> dict:
         res["errFiles"] = [file.filename for file in files]
         return res
 
-    if is_local_db():
-        img_dir = get_settings().LOCAL_STORAGE_PATH / ".data" / "images"
-        img_dir.mkdir(parents=True, exist_ok=True)
-    else:
-        img_dir = const.RETHINK_DIR.parent.parent / ".data" / "images"  # TODO: replace to cos
-        img_dir.mkdir(parents=True, exist_ok=True)
     for file in files:
         filename = file.filename
         if not file.content_type.startswith("image/"):
@@ -269,21 +314,29 @@ def upload_image(uid: str, files: List[UploadFile]) -> dict:
         if file.size > MAX_IMAGE_SIZE:
             res["errFiles"].append(filename)
             continue
-        fn = Path(filename)
-        ext = fn.suffix
-        hashed = utils.file_hash(file)
-        img_path = img_dir / (hashed + ext)
-        if img_path.exists():
-            # skip the same image
-            res["succMap"][filename] = f"http://127.0.0.1:8000/i/{img_path.name}"
-            continue
-
-        try:
-            image = Image.open(io.BytesIO(file.file.read()))
-            image.save(img_path, quality=50, optimize=True)
-        except Exception:
+        url, code = __save_image(file)
+        if code != 0:
             res["errFiles"].append(filename)
             continue
-
-        res["succMap"][filename] = f"http://127.0.0.1:8000/i/{img_path.name}"
+        res["succMap"][filename] = url
     return res
+
+
+def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
+    u, code = models.user.get(uid=uid)
+    if code != const.Code.OK:
+        return "", code
+
+    r = requests.get(url)
+    if r.status_code != 200:
+        return "", const.Code.FILE_OPEN_ERROR
+    file = UploadFile(
+        filename=url.split("/")[-1],
+        file=io.BytesIO(r.content),
+        headers=Headers(r.headers),
+        size=len(r.content),
+    )
+    url, code = __save_image(file)
+    if code != 0:
+        return "", const.Code.FILE_OPEN_ERROR
+    return url, const.Code.OK

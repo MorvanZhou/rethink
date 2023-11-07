@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     OAUTH_CLIENT_SEC_QQ: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
     OAUTH_CLIENT_ID_FACEBOOK: str = Field(env='OAUTH_CLIENT_ID_QQ', default="")
     OAUTH_CLIENT_SEC_FACEBOOK: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
+    COS_SECRET_ID: str = Field(env='COS_SECRET_ID', default="")
+    COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
+    COS_REGION: str = Field(env="COS_REGION", default="")
+    COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
+    COS_KEY_PREFIX: str = Field(env="COS_KEY_PREFIX", default="")
 
     model_config = SettingsConfigDict(
         env_file=".env",

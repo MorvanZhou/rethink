@@ -1,8 +1,8 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from rethink import const, config
@@ -96,13 +96,8 @@ async def img(
     if config.is_local_db():
         prefix = config.get_settings().LOCAL_STORAGE_PATH
     else:
-        prefix = const.RETHINK_DIR.parent.parent
+        raise HTTPException(status_code=404, detail="only support local storage")
     return FileResponse(
         path=prefix / ".data" / "images" / path,
         status_code=200,
-    )
-
-    return RedirectResponse(
-        url=f"https://rethink.run/api/files/{path}",
-        status_code=302,
     )

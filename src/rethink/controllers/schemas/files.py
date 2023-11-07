@@ -20,10 +20,24 @@ class FileUploadProcessResponse(BaseModel):
     running: bool
 
 
-class ImageUploadResponse(BaseModel):
+class ImageVditorUploadResponse(BaseModel):
     class Data(BaseModel):
         errFiles: List[str]
         succMap: Dict[str, str]
+
+    code: NonNegativeInt
+    msg: str
+    data: Data
+
+
+class ImageVditorFetchRequest(BaseModel):
+    url: str
+
+
+class ImageVditorFetchResponse(BaseModel):
+    class Data(BaseModel):
+        originalURL: str
+        url: str
 
     code: NonNegativeInt
     msg: str

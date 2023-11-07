@@ -1,9 +1,14 @@
 import datetime
 import unittest
+from io import BytesIO
+from pathlib import Path
 from textwrap import dedent
 
+from PIL import Image
 from bson import ObjectId
 from bson.tz_util import utc
+from fastapi import UploadFile
+from starlette.datastructures import Headers
 
 from rethink import const, models
 from rethink.models.utils import short_uuid
@@ -325,3 +330,26 @@ class LocalModelsTest(unittest.TestCase):
         n2, code = models.node.get(uid=self.uid, nid=n2["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(f"title2\n[@title1Changed](/n/{n1['id']})", n2["md"])
+
+    def test_upload_image_vditor(self):
+        image = Image.new('RGB', (4, 4))
+        img_byte_arr = BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img = UploadFile(img_byte_arr, filename="xxx.png", size=img_byte_arr.tell(),
+                         headers=Headers({"content-type": "image/png"}))
+        res = models.files.upload_image_vditor(self.uid, [img])
+        self.assertIn("xxx.png", res["succMap"])
+        self.assertTrue(".png" in res["succMap"]["xxx.png"])
+        local_file = Path(__file__).parent / "tmp" / ".data" / "images" / res["succMap"]["xxx.png"].rsplit("/")[-1]
+        self.assertTrue(local_file.exists())
+        local_file.unlink()
+
+    def test_fetch_image_vditor(self):
+        url = "https://www.baidu.com/img/flexible/logo/pc/peak-result.png"
+        new_url, code = models.files.fetch_image_vditor(self.uid, url)
+        self.assertEqual(const.Code.OK, code)
+        self.assertTrue(new_url.endswith(".png"))
+        self.assertTrue(new_url.startswith("http://127.0.0.1"))
+        local_file = Path(__file__).parent / "tmp" / ".data" / "images" / new_url.rsplit("/")[-1]
+        self.assertTrue(local_file.exists())
+        local_file.unlink()
