@@ -106,6 +106,10 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
+        ns, total = models.search.user_node(uid=self.uid, page_size=5, page=12)
+        self.assertEqual(0, len(ns))
+        self.assertEqual(3, total)
+
         n, code = models.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
@@ -300,6 +304,8 @@ class LocalModelsTest(unittest.TestCase):
             "startAt": now,
             "running": True,
             "obsidian": {},
+            "problemFiles": [],
+            "code": const.Code.OK.value,
         }
         res = models.database.COLL.import_data.insert_one(doc)
         self.assertTrue(res.acknowledged)
@@ -307,11 +313,11 @@ class LocalModelsTest(unittest.TestCase):
         doc, code = models.files.update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
-        process, ty, start_at, running = models.files.get_upload_process("xxx")
-        self.assertEqual(10, process)
-        self.assertEqual("obsidian", ty)
-        self.assertEqual(now, start_at)
-        self.assertTrue(running)
+        doc = models.files.get_upload_process("xxx")
+        self.assertEqual(10, doc["process"])
+        self.assertEqual("obsidian", doc["type"])
+        self.assertEqual(now, doc["startAt"])
+        self.assertTrue(doc["running"])
 
         models.database.COLL.import_data.delete_one({"uid": "xxx"})
 

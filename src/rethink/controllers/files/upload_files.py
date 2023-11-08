@@ -19,19 +19,12 @@ def upload_obsidian_files(
             requestId="",
             failedFilename="",
         )
-    problem_file, code = models.files.upload_obsidian(uid=td.uid, files=files)
-    if code != const.Code.OK:
-        return schemas.files.FileUploadResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, td.language),
-            requestId="",
-            failedFilename=problem_file,
-        )
+    code = models.files.upload_obsidian(uid=td.uid, zipped_files=files)
+
     return schemas.files.FileUploadResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
         requestId="",
-        failedFilename="",
     )
 
 
@@ -46,17 +39,10 @@ def upload_text_files(
             requestId="",
             failedFilename="",
         )
-    problem_file, code = models.files.upload_text(uid=td.uid, files=files)
-    if code != const.Code.OK:
-        return schemas.files.FileUploadResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, td.language),
-            requestId="",
-            failedFilename=problem_file,
-        )
+    code = models.files.upload_text(uid=td.uid, files=files)
     return schemas.files.FileUploadResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
         requestId="",
         failedFilename="",
     )
@@ -74,16 +60,31 @@ def get_upload_process(
             process=0.,
             type="",
             startAt="",
+            running=False,
+            problemFiles=[],
         )
-    process, ty, start_at, running = models.files.get_upload_process(uid=td.uid)
+    doc = models.files.get_upload_process(uid=td.uid)
+    if doc is None:
+        return schemas.files.FileUploadProcessResponse(
+            code=const.Code.OK.value,
+            message=const.get_msg_by_code(const.Code.OK, td.language),
+            requestId=rid,
+            process=0.,
+            type="",
+            startAt="",
+            running=False,
+            problemFiles=[],
+        )
+    code = const.INT_CODE_MAP[doc["code"]]
     return schemas.files.FileUploadProcessResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
         requestId=rid,
-        process=process,
-        type=ty,
-        startAt=datetime2str(start_at),
-        running=running,
+        process=doc["process"],
+        type=doc["type"],
+        startAt=datetime2str(doc["startAt"]),
+        running=doc["running"],
+        problemFiles=doc["problemFiles"],
     )
 
 

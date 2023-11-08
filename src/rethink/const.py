@@ -38,6 +38,12 @@ class Code(Enum):
     FILE_OPEN_ERROR = auto()  # 22
     FILENAME_EXIST = auto()  # 23
     IMPORT_PROCESS_NOT_FINISHED = auto()  # 24
+    UPLOAD_TASK_TIMEOUT = auto()  # 25
+
+
+INT_CODE_MAP = {
+    c.value: c for c in Code
+}
 
 
 @dataclass
@@ -73,6 +79,7 @@ CODE_MESSAGES = {
     Code.IMPORT_PROCESS_NOT_FINISHED: CodeMessage(
         zh="正在完成上一批数据导入，请稍后再试",
         en="Last import process not finished, please try again later"),
+    Code.UPLOAD_TASK_TIMEOUT: CodeMessage(zh="文件上传任务超时", en="Upload task timeout"),
 }
 
 DEFAULT_USER = {

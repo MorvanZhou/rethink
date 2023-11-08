@@ -9,5 +9,5 @@ logging.basicConfig(
     format="%(levelname)s | %(asctime)s | %(name)s | %(filename)s[line:%(lineno)d]: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("root")
+logger = logging.getLogger("rethink")
 logger.setLevel(logging.INFO)

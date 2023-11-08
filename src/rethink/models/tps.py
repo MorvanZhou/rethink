@@ -63,4 +63,6 @@ class ImportData(TypedDict):
     type: str
     startAt: datetime.datetime
     running: bool
+    problemFiles: List[str]
+    code: int
     obsidian: Dict[str, str]  # filename: nid

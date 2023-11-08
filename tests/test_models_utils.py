@@ -30,7 +30,13 @@ class UtilsTest(unittest.TestCase):
         o1 = str(ObjectId())
         o2 = str(ObjectId())
         filename2nid = {"123": o1, "我哦": o2}
-        res = utils.replace_inner_link(md, filename2nid=filename2nid)
+        res = utils.replace_inner_link(
+            md,
+            exist_filename2nid=filename2nid,
+            img_path_dict={},
+            img_name_dict={},
+            min_img_size=0,
+        )
         self.assertEqual(dedent(f"""\
             # 123
             ddd qwd [@123](/n/{o1}) 345
@@ -48,7 +54,13 @@ class UtilsTest(unittest.TestCase):
 
         o1 = str(ObjectId())
         filename2nid = {"123": o1}
-        res = utils.replace_inner_link(md, filename2nid=filename2nid)
+        res = utils.replace_inner_link(
+            md,
+            exist_filename2nid=filename2nid,
+            img_path_dict={},
+            img_name_dict={},
+            min_img_size=0,
+        )
         self.assertEqual(dedent(f"""\
             # 123
             ddd qwd [@123](/n/{o1}) 345

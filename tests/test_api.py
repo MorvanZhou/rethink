@@ -1,6 +1,10 @@
 import datetime
+import io
 import os
+import time
 import unittest
+from typing import Dict
+from zipfile import ZipFile
 
 from PIL import Image
 from fastapi.testclient import TestClient
@@ -372,25 +376,49 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["data"]["total"])
 
     def test_update_obsidian(self):
-        os.makedirs("temp", exist_ok=True)
-        f1 = open("temp/test1.md", "wb+")
-        f1.write("test\n[[qa]]".encode("utf-8"))
-        f2 = open("temp/test2.md", "wb+")
-        f2.write("test2\n\nasdq[[test]]".encode("utf-8"))
+        image = Image.new('RGB', (4, 4))
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        orig_data: Dict[str, bytes] = {
+            "test1.md": "111\n[[qa]] ![img/p.png](img/p.png)".encode("utf-8"),
+            "test2.md": "111\n\nasdq[[test]] ![[Pasted image 20230810112909.png]]".encode("utf-8"),
+            "test3.md": "111\n\n![[Pasted image 20230810112931.png]]".encode("utf-8"),
+            "20230810112909.png": img_byte_arr.getvalue(),
+            "img/p.png": img_byte_arr.getvalue(),
+            "img/20230810112931.png": img_byte_arr.getvalue(),
+        }
+        # write dummy zip file
+        zip_bytes = ZipFile("test.zip", "w")
+        for k, v in orig_data.items():
+            zip_bytes.writestr(k, v)
+        zip_bytes.close()
+        f = open("test.zip", "rb")
 
         resp = self.client.post(
             "/api/files/obsidian",
             files=[
-                ("files", f1),
-                ("files", f2),
+                ("files", f),
             ],
             headers={
                 "token": self.token
             },
         )
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("", rj["failedFilename"])
+        self.assertEqual(0, rj["code"], msg=rj)
+
+        for _ in range(8):
+            time.sleep(0.1)
+            resp = self.client.get(
+                "/api/files/uploadProcess",
+                params={"rid": "xxx"},
+                headers={"token": self.token}
+            )
+            rj = resp.json()
+            self.assertEqual("obsidian", rj["type"], msg=rj)
+            self.assertEqual([], rj["problemFiles"], msg=rj)
+            if rj["process"] == 100:
+                break
+        self.assertFalse(rj["running"], msg=rj)
 
         resp = self.client.post(
             "/api/search/node",
@@ -402,13 +430,11 @@ class TokenApiTest(unittest.TestCase):
             headers={"token": self.token})
         rj = resp.json()
         self.assertEqual(0, rj["code"])
-        self.assertEqual(4, len(rj["data"]["nodes"]))
+        self.assertEqual(5, len(rj["data"]["nodes"]))
+        self.assertEqual(5, rj["data"]["total"])
 
-        f1.close()
-        f2.close()
-        os.remove("temp/test1.md")
-        os.remove("temp/test2.md")
-        os.rmdir("temp")
+        f.close()
+        os.remove("test.zip")
 
     def test_upload_text(self):
         os.makedirs("temp", exist_ok=True)
@@ -429,7 +455,20 @@ class TokenApiTest(unittest.TestCase):
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
-        self.assertEqual("", rj["failedFilename"])
+
+        for _ in range(8):
+            time.sleep(0.1)
+            resp = self.client.get(
+                "/api/files/uploadProcess",
+                params={"rid": "xxx"},
+                headers={"token": self.token}
+            )
+            rj = resp.json()
+            self.assertEqual("text", rj["type"], msg=rj)
+            self.assertEqual([], rj["problemFiles"], msg=rj)
+            if rj["process"] == 100:
+                break
+        self.assertFalse(rj["running"], msg=rj)
 
         resp = self.client.post(
             "/api/search/node",

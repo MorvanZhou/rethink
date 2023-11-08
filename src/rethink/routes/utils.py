@@ -24,6 +24,7 @@ def measure_time_spend(func):
         if "token_decode" in kwargs:
             uid = kwargs["token_decode"].uid
             code = kwargs["token_decode"].code
+        req_s = req_s[:200] + "..." if len(req_s) > 200 else req_s
         logger.info(f"REQ: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | code='{code}' | req='{req_s}'")
 
         resp = await func(*args, **kwargs)

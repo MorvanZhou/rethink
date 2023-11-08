@@ -1,4 +1,3 @@
-from . import cos
 from .upload import (
     upload_image_vditor,
     get_upload_process,

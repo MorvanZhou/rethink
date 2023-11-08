@@ -7,7 +7,6 @@ class FileUploadResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
-    failedFilename: str
 
 
 class FileUploadProcessResponse(BaseModel):
@@ -18,6 +17,7 @@ class FileUploadProcessResponse(BaseModel):
     type: str
     startAt: str
     running: bool
+    problemFiles: List[str]
 
 
 class ImageVditorUploadResponse(BaseModel):
