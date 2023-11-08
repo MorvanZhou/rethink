@@ -60,14 +60,15 @@ def __set_running_false(uid: str, code: const.Code, problem_files: List[str] = N
 
 def upload_obsidian_thread(
         uid: str,
-        zipped_file: UploadFile,
+        bytes_data: bytes,
+        filename: str,
         doc: dict,
         max_file_size: int,
 ) -> None:
     try:
-        unzipped_files = unzip_file(zipped_file.file.read())
+        unzipped_files = unzip_file(bytes_data)
     except zipfile.BadZipFile:
-        __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [zipped_file.filename])
+        __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [filename])
         return
     filtered_files = {}
     existed_filename2nid = doc["obsidian"].copy()
@@ -240,7 +241,7 @@ def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Code:
 
     td = threading.Thread(
         target=upload_obsidian_thread,
-        args=(uid, zipped_file, doc, max_file_size),
+        args=(uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size),
         daemon=True,
     )
     td.start()
