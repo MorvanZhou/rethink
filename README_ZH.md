@@ -17,11 +17,11 @@
 一个依赖于 Python 的笔记应用。
 官方网页版可以在 [https://rethink.run](https://rethink.run) 找到。
 
-![image](/img/notes-page-zh.png)
+![image](https://github.com/MorvanZhou/rethink/blob/main/img/notes-page.png?raw=true)
 
-![editor](/img/editor-zh.png)
+![editor](https://github.com/MorvanZhou/rethink/blob/main/img/editor.png?raw=true)
 
-![phone](/img/phone.png)
+![phone](https://github.com/MorvanZhou/rethink/blob/main/img/phone.png?raw=true)
 
 ## 安装
 

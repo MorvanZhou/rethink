@@ -16,11 +16,11 @@
 A note-taking app dependent on python.
 The official web version can be found at [https://rethink.run](https://rethink.run).
 
-![image](/img/notes-page.png)
+![image](https://github.com/MorvanZhou/rethink/blob/main/img/notes-page.png?raw=true)
 
-![editor](/img/editor.png)
+![editor](https://github.com/MorvanZhou/rethink/blob/main/img/editor.png?raw=true)
 
-![phone](/img/phone.png)
+![phone](https://github.com/MorvanZhou/rethink/blob/main/img/phone.png?raw=true)
 
 ## Install
 
