@@ -1,5 +1,6 @@
 import io
 import zipfile
+from platform import system
 from typing import Dict
 
 
@@ -9,7 +10,12 @@ def unzip_file(zip_bytes: bytes) -> Dict[str, bytes]:
         extracted_files = {}
         for filepath in filepaths:
             try:
-                _filepath = filepath.encode('cp437').decode('utf-8')
+                if system() in ["Darwin", "Linux"]:
+                    _filepath = filepath.encode('cp437').decode('utf-8')
+                elif system() == "Windows":
+                    _filepath = filepath.encode('utf-8').decode('uft-8')
+                else:
+                    _filepath = filepath
             except UnicodeEncodeError:
                 _filepath = filepath
             sp = _filepath.split("/")
