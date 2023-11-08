@@ -28,10 +28,10 @@ class UnzipTest(unittest.TestCase):
         # unzip
         with open("test.zip", "rb") as f:
             extracted_files = unzip.unzip_file(f.read())
-        for filename, content in extracted_files.items():
+        for filename, data in extracted_files.items():
             self.assertEqual(
                 self.orig_folder_data[os.path.join("a", *filename.split("/"))],
-                content,
+                data["file"],
                 msg=str(self.orig_folder_data))
         os.remove("test.zip")
 
@@ -44,6 +44,6 @@ class UnzipTest(unittest.TestCase):
         # unzip
         with open("test.zip", "rb") as f:
             extracted_files = unzip.unzip_file(f.read())
-        for filename, content in extracted_files.items():
-            self.assertEqual(self.orig_data[filename], content)
+        for filename, data in extracted_files.items():
+            self.assertEqual(self.orig_data[filename], data["file"])
         os.remove("test.zip")

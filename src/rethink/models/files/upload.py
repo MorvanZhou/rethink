@@ -69,24 +69,24 @@ def upload_obsidian_thread(
     img_path_dict = {}
     img_name_dict = {}
     md_count = 0
-    for filepath, file_bytes in unzipped_files.items():
+    for filepath, data in unzipped_files.items():
         try:
             base_name, ext = filepath.rsplit(".", 1)
         except ValueError:
             continue
         if ext not in ["md", "txt", "png", "jpg", "jpeg", "gif", "svg"]:
             continue
-        if len(file_bytes) > max_file_size:
+        if data["size"] > max_file_size:
             __set_running_false(uid, const.Code.TOO_LARGE_FILE, [filepath], )
             return
         if ext in ["md", "txt"]:
             if len(filepath.split("/")) > 1:
                 continue
             md_count += 1
-            filtered_files[filepath] = file_bytes
+            filtered_files[filepath] = data["file"]
         else:
-            img_path_dict[filepath] = file_bytes
-            img_name_dict[os.path.basename(filepath)] = file_bytes
+            img_path_dict[filepath] = data["file"]
+            img_name_dict[os.path.basename(filepath)] = data["file"]
 
     # add new md files
     for i, (filepath, file_bytes) in enumerate(filtered_files.items()):
