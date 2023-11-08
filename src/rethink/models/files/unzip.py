@@ -13,7 +13,7 @@ def unzip_file(zip_bytes: bytes) -> Dict[str, bytes]:
                 if system() in ["Darwin", "Linux"]:
                     _filepath = filepath.encode('cp437').decode('utf-8')
                 elif system() == "Windows":
-                    _filepath = filepath.encode('utf-8').decode('uft-8')
+                    _filepath = filepath.encode('utf-8').decode('utf-8')
                 else:
                     _filepath = filepath
             except UnicodeEncodeError:
