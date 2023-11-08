@@ -5,6 +5,7 @@
 /src/rethink/.data
 /**/*.egg-info
 /dist
+**/__pycache__
 
 
 # local env files
