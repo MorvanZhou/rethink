@@ -384,8 +384,8 @@ class TokenApiTest(unittest.TestCase):
             "test2.md": "111\n\nasdq[[test]] ![[Pasted image 20230810112909.png]]".encode("utf-8"),
             "test3.md": "111\n\n![[Pasted image 20230810112931.png]]".encode("utf-8"),
             "20230810112909.png": img_byte_arr.getvalue(),
-            "img/p.png": img_byte_arr.getvalue(),
-            "img/20230810112931.png": img_byte_arr.getvalue(),
+            os.path.join("img", "p.png"): img_byte_arr.getvalue(),
+            os.path.join("img", "20230810112931.png"): img_byte_arr.getvalue(),
         }
         # write dummy zip file
         zip_bytes = ZipFile("test.zip", "w")

@@ -14,7 +14,7 @@ def unzip_file(zip_bytes: bytes) -> Dict[str, bytes]:
             except UnicodeEncodeError:
                 _filepath = filepath
             sp = _filepath.split(os.path.sep)
-            if sp[0] in ["__MACOSX/", ".DS_Store"]:
+            if sp[0] in ["__MACOSX", ".DS_Store"]:
                 continue
             if len(sp) > 1:
                 _filepath = os.path.sep.join(sp[1:])

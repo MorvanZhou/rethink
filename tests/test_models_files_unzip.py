@@ -9,9 +9,9 @@ class UnzipTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.orig_folder_data = {
-            "a/test.txt": b"hello world",
-            "a/a.txt": b"a",
-            "a/v/q文档.txt": "阿斯顿请问".encode("utf-8"),
+            os.path.join("a", "test.txt"): b"hello world",
+            os.path.join("a", "a.txt"): b"a",
+            os.path.join("a", "v", "q文档.txt"): "阿斯顿请问".encode("utf-8"),
         }
         cls.orig_data = {
             "test.txt": b"hello world",
@@ -29,7 +29,7 @@ class UnzipTest(unittest.TestCase):
         with open("test.zip", "rb") as f:
             extracted_files = unzip.unzip_file(f.read())
         for filename, content in extracted_files.items():
-            self.assertEqual(self.orig_folder_data["a/" + filename], content)
+            self.assertEqual(self.orig_folder_data[os.path.join("a", filename)], content)
         os.remove("test.zip")
 
     def test_unzip_files(self):
