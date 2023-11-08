@@ -1,6 +1,6 @@
 import os
 import unittest
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipFile
 
 from rethink.models.files import unzip
 
@@ -46,4 +46,12 @@ class UnzipTest(unittest.TestCase):
             extracted_files = unzip.unzip_file(f.read())
         for filename, data in extracted_files.items():
             self.assertEqual(self.orig_data[filename], data["file"])
+        os.remove("test.zip")
+
+    def test_unzip_not_zip(self):
+        with open("test.zip", "wb") as f:
+            f.write(b"hello world")
+        with open("test.zip", "rb") as f:
+            with self.assertRaises(BadZipFile):
+                _ = unzip.unzip_file(f.read())
         os.remove("test.zip")

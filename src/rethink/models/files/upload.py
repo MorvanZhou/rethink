@@ -2,6 +2,7 @@ import datetime
 import io
 import os
 import threading
+import zipfile
 from typing import List, Tuple, Optional
 
 import pymongo.errors
@@ -63,7 +64,11 @@ def upload_obsidian_thread(
         doc: dict,
         max_file_size: int,
 ) -> None:
-    unzipped_files = unzip_file(zipped_file.file.read())
+    try:
+        unzipped_files = unzip_file(zipped_file.file.read())
+    except zipfile.BadZipFile:
+        __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [zipped_file.filename])
+        return
     filtered_files = {}
     existed_filename2nid = doc["obsidian"].copy()
     img_path_dict = {}
