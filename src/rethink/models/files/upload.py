@@ -229,7 +229,7 @@ def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Code:
     if not zipped_file.filename.endswith(".zip"):
         __set_running_false(uid, const.Code.INVALID_FILE_TYPE)
         return const.Code.INVALID_FILE_TYPE
-    if zipped_file.content_type != "application/zip":
+    if zipped_file.content_type not in ["application/zip", "application/octet-stream", "application/x-zip-compressed"]:
         __set_running_false(uid, const.Code.INVALID_FILE_TYPE)
         return const.Code.INVALID_FILE_TYPE
 
