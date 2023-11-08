@@ -34,7 +34,6 @@ class Settings(BaseSettings):
     COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
     COS_REGION: str = Field(env="COS_REGION", default="")
     COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
-    COS_KEY_PREFIX: str = Field(env="COS_KEY_PREFIX", default="")
 
     model_config = SettingsConfigDict(
         env_file=".env",

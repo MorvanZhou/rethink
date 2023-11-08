@@ -321,7 +321,7 @@ def upload_path_to_cos(path: str):
     settings = config.get_settings()
     with open(path, "rb") as fp:
         filename = path.split("/")[-1]
-        key = f"{settings.COS_KEY_PREFIX}/user/img/{filename}"
+        key = f"user/img/{filename}"
         response = client.put_object(
             Bucket=settings.COS_BUCKET_NAME,
             Body=fp,
@@ -341,7 +341,7 @@ def upload_bytes_to_cos(
         filename: str) -> str:
     client = __get_cos_client()
     settings = config.get_settings()
-    key = f"{settings.COS_KEY_PREFIX}/user/img/{filename}"
+    key = f"user/img/{filename}"
 
     url = f"https://{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com/{key}"
 
