@@ -50,7 +50,7 @@ def user_node(
             sort_key = "_id"
         elif sort_key == "similarity":
             sort_key = "_id"  # TODO: sort by similarity
-        docs = docs.sort(sort_key, direction=sort_order)
+        docs = docs.sort([(sort_key, sort_order), ("_id", -1)])
 
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)

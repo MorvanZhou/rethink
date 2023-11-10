@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 from textwrap import dedent
 
+import requests
 from PIL import Image
 from bson import ObjectId
 from bson.tz_util import utc
@@ -92,10 +93,16 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(const.Code.NOTE_EXCEED_MAX_LENGTH, code)
         self.assertIsNone(node)
 
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        used_space = u["usedSpace"]
         node, code = models.node.add(
             uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space + len(node["md"].encode("utf-8")), u["usedSpace"])
 
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -110,12 +117,22 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        used_space = u["usedSpace"]
         n, code = models.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("title2\nbody2", n["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
+
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space + (
+                len(n["md"].encode("utf-8")) -
+                len(node["md"].encode("utf-8"))
+        ), u["usedSpace"])
 
         code = models.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -130,6 +147,10 @@ class LocalModelsTest(unittest.TestCase):
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertIsNone(n)
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
+
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
     def test_parse_at(self):
         nid1, _ = models.node.add(
@@ -288,7 +309,7 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 
-        code = models.node.batch_delete(self.uid, [n["id"] for n in ns[2:4]])
+        code = models.node.batch_delete(self.uid, [n["id"] for n in tns[2:4]])
         self.assertEqual(const.Code.OK, code)
         tns, total = models.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(0, total)
@@ -338,24 +359,58 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(f"title2\n[@title1Changed](/n/{n1['id']})", n2["md"])
 
     def test_upload_image_vditor(self):
-        image = Image.new('RGB', (4, 4))
-        img_byte_arr = BytesIO()
-        image.save(img_byte_arr, format='PNG')
-        img = UploadFile(img_byte_arr, filename="xxx.png", size=img_byte_arr.tell(),
-                         headers=Headers({"content-type": "image/png"}))
-        res = models.files.upload_image_vditor(self.uid, [img])
-        self.assertIn("xxx.png", res["succMap"])
-        self.assertTrue(".png" in res["succMap"]["xxx.png"])
-        local_file = Path(__file__).parent / "tmp" / ".data" / "images" / res["succMap"]["xxx.png"].rsplit("/")[-1]
+        u, code = models.user.get(self.uid)
+        used_space = u["usedSpace"]
+
+        p = Path(__file__).parent.parent / "img" / "phone-notes.png"
+        image = Image.open(p)
+        buf = BytesIO()
+        image.save(buf, format="png")
+        size = buf.tell()
+        img_file = UploadFile(
+            buf, filename="phone-notes.png", size=size,
+            headers=Headers({"content-type": "image/png"})
+        )
+        res = models.files.upload_image_vditor(self.uid, [img_file])
+        self.assertIn("phone-notes.png", res["succMap"])
+        self.assertTrue(".png" in res["succMap"]["phone-notes.png"])
+        local_file = Path(__file__).parent / "tmp" / ".data" / "/".join(
+            res["succMap"]["phone-notes.png"].rsplit("/")[-3:])
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
+        u, code = models.user.get(self.uid)
+        self.assertEqual(used_space + size, u["usedSpace"])
+
     def test_fetch_image_vditor(self):
-        url = "https://www.baidu.com/img/flexible/logo/pc/peak-result.png"
+        u, code = models.user.get(self.uid)
+        used_space = u["usedSpace"]
+
+        url = "https://rethink.run/favicon.ico"
         new_url, code = models.files.fetch_image_vditor(self.uid, url)
         self.assertEqual(const.Code.OK, code)
-        self.assertTrue(new_url.endswith(".png"))
+        self.assertTrue(new_url.endswith(".ico"))
         self.assertTrue(new_url.startswith("http://127.0.0.1"))
-        local_file = Path(__file__).parent / "tmp" / ".data" / "images" / new_url.rsplit("/")[-1]
+        local_file = Path(__file__).parent / "tmp" / ".data" / "/".join(new_url.rsplit("/")[-3:])
         self.assertTrue(local_file.exists())
         local_file.unlink()
+
+        u, code = models.user.get(self.uid)
+        r = requests.get(url)
+        self.assertEqual(used_space + len(r.content), u["usedSpace"])
+
+    def test_update_used_space(self):
+        u, code = models.user.get(self.uid)
+        base_used_space = u["usedSpace"]
+        for delta, value in [
+            (100, 100),
+            (100, 200),
+            (0, 200),
+            (-300, 0),
+            (20.1, 20.1),
+        ]:
+            code = models.user.update_used_space(self.uid, delta)
+            self.assertEqual(const.Code.OK, code)
+            u, code = models.user.get(self.uid)
+            self.assertEqual(const.Code.OK, code)
+            self.assertAlmostEqual(value, u["usedSpace"] - base_used_space, msg=f"delta: {delta}, value: {value}")

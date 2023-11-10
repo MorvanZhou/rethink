@@ -58,6 +58,14 @@ def add(
 ) -> Tuple[Optional[tps.Node], const.Code]:
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+    u, code = user.get(uid=uid)
+    if code != const.Code.OK:
+        return None, code
+
+    new_size = len(md.encode("utf-8"))
+    if user.user_space_not_enough(u=u):
+        return None, const.Code.USER_SPACE_NOT_ENOUGH
+
     title, snippet = utils.preprocess_md(md)
 
     nid = utils.short_uuid()
@@ -99,6 +107,8 @@ def add(
     )
     if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED
+
+    user.update_used_space(uid=uid, delta=new_size)
 
     return data, const.Code.OK
 
@@ -168,15 +178,21 @@ def update(
 ) -> Tuple[Optional[tps.Node], const.Code]:
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+    u, code = user.get(uid=uid)
+    if code != const.Code.OK:
+        return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
+    if user.user_space_not_enough(u=u):
+        return None, const.Code.USER_SPACE_NOT_ENOUGH
+
     title, snippet = utils.preprocess_md(md)
 
-    if not user.is_exist(uid=uid):
-        return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     n, code = get(uid=uid, nid=nid)
     if code != const.Code.OK:
         return None, code
     if n["md"] == md and not refresh_on_same_md:
         return n, const.Code.OK
+
+    old_md_size = len(n["md"].encode("utf-8"))
 
     if n["title"] != title:
         # update it's title in fromNodes md's link
@@ -221,6 +237,7 @@ def update(
         docs=[doc],
         with_disabled=False,
     )
+    user.update_used_space(uid=uid, delta=len(md.encode("utf-8")) - old_md_size)
     return doc, const.Code.OK
 
 
@@ -304,7 +321,7 @@ def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.No
         "disabled": False,
         "inTrash": True,
     }
-    docs = COLL.nodes.find(condition).sort("inTrashAt", direction=-1)
+    docs = COLL.nodes.find(condition).sort([("inTrashAt", -1), ("_id", -1)])
     total = COLL.nodes.count_documents(condition)
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
@@ -346,10 +363,15 @@ def batch_delete(uid: str, nids: List[str]) -> const.Code:
     #     for linked_nid in n["fromNodeIds"]:
     #         db_ops.remove_to_node(from_nid=linked_nid, to_nid=n["id"])
 
+    used_space_delta = 0
     # remove toNodes for linked nodes
     for n in ns:
+        used_space_delta -= len(n["md"].encode("utf-8"))
         for linked_nid in n["toNodeIds"]:
             db_ops.remove_from_node(from_nid=n["id"], to_nid=linked_nid)
+
+    # delete user file
+    user.update_used_space(uid=uid, delta=used_space_delta)
 
     # remove node
     res = COLL.nodes.delete_many({"id": {"$in": nids}})
@@ -362,6 +384,7 @@ def batch_delete(uid: str, nids: List[str]) -> const.Code:
     if res.matched_count != 1:
         logger.error(f"update user {uid} failed")
         return const.Code.OPERATION_FAILED
+
     return const.Code.OK
 
 

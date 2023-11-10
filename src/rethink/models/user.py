@@ -40,6 +40,8 @@ def add(
         "recentSearch": [],
         "language": language,
         "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+        "usedSpace": 0,
+        "type": const.USER_TYPE.NORMAL.id,
     }
     res = COLL.users.insert_one(data)
     if not res.acknowledged:
@@ -152,6 +154,14 @@ def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u = COLL.users.find_one({"id": uid, "disabled": False})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
+    if u["usedSpace"] < 0:
+        # reset usedSpace to 0
+        COLL.users.update_one(
+            {"id": uid},
+            {"$set": {"usedSpace": 0}}
+        )
+        u["usedSpace"] = 0
+
     return u, const.Code.OK
 
 
@@ -175,3 +185,25 @@ def get_node_ids(uid: str) -> Tuple[List[str], const.Code]:
         return [], const.Code.ACCOUNT_OR_PASSWORD_ERROR
     doc = COLL.unids.find_one({"id": uid})
     return doc["nodeIds"], const.Code.OK
+
+
+def update_used_space(uid: str, delta: int) -> const.Code:
+    if not is_exist(uid=uid):
+        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
+    res = COLL.users.update_one(
+        {"id": uid},
+        {"$inc": {"usedSpace": delta}}
+    )
+    return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
+
+
+def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool:
+    if uid is None and u is None:
+        raise ValueError("uid and u cannot be None at the same time")
+    if config.is_local_db():
+        return False
+    if uid is not None:
+        u, code = get(uid=uid)
+        if code != const.Code.OK:
+            return True
+    return u["usedSpace"] > const.USER_TYPE.id2config(u["type"]).max_store_space

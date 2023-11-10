@@ -48,12 +48,22 @@ class UserMeta(TypedDict):
     recentCursorSearchSelectedNIds: List[str]
     language: str
     nodeDisplayMethod: int
+    usedSpace: int
+    type: int
 
 
 class UserNodeIds(TypedDict):
     _id: ObjectId
     id: str
     nodeIds: List[str]
+
+
+class UserFile(TypedDict):
+    _id: ObjectId
+    uid: str
+    fid: str
+    filename: str
+    size: int
 
 
 class ImportData(TypedDict):

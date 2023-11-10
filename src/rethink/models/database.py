@@ -22,6 +22,7 @@ class Collections:
     unids: Union[Collection, RemoteCollection] = None
     nodes: Union[Collection, RemoteCollection] = None
     import_data: Union[Collection, RemoteCollection] = None
+    user_file: Union[Collection, RemoteCollection] = None
 
 
 COLL = Collections()
@@ -53,6 +54,7 @@ def init():
     COLL.unids = db["unids"]
     COLL.nodes = db["nodes"]
     COLL.import_data = db["importData"]
+    COLL.user_file = db["userFile"]
 
     if config.is_local_db():
         # try fix TypeError: can't compare offset-naive and offset-aware datetimes
@@ -76,6 +78,7 @@ def init():
         COLL.nodes.create_index("id", unique=True)
         COLL.unids.create_index("id", unique=True)
         COLL.import_data.create_index("uid", unique=True)
+        COLL.user_file.create_index(["uid", "fid"], unique=True)
 
     # try add default user
     if config.get_settings().ONE_USER:
@@ -129,6 +132,8 @@ def init():
             "recentSearch": [],
             "language": language,
             "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+            "usedSpace": 0,
+            "type": const.USER_TYPE.NORMAL.id,
         }
         _ = COLL.users.insert_one(u)
         unids: UserNodeIds = {

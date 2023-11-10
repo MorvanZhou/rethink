@@ -15,13 +15,12 @@ from starlette.datastructures import Headers
 from rethink import const, models
 from rethink.config import is_local_db
 from rethink.logger import logger
-from rethink.models import utils
 from rethink.models.database import COLL
 from rethink.models.tps import ImportData
-from .unzip import unzip_file
+from . import file_ops
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
-MIN_IMAGE_SIZE = 1024 * 128  # 128 kb
+RESIZE_IMG_THRESHOLD = 1024 * 128  # 128 kb
 
 
 def update_process(
@@ -50,7 +49,11 @@ def update_process(
     return doc, const.Code.OK
 
 
-def __set_running_false(uid: str, code: const.Code, problem_files: List[str] = None) -> None:
+def __set_running_false(
+        uid: str,
+        code: const.Code,
+        problem_files: List[str] = None,
+) -> None:
     COLL.import_data.update_one({"uid": uid}, {"$set": {
         "running": False,
         "problemFiles": problem_files if problem_files is not None else [],
@@ -66,7 +69,7 @@ def upload_obsidian_thread(
         max_file_size: int,
 ) -> None:
     try:
-        unzipped_files = unzip_file(bytes_data)
+        unzipped_files = file_ops.unzip_file(bytes_data)
     except zipfile.BadZipFile:
         __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [filename])
         return
@@ -80,7 +83,9 @@ def upload_obsidian_thread(
             base_name, ext = filepath.rsplit(".", 1)
         except ValueError:
             continue
-        if ext not in ["md", "txt", "png", "jpg", "jpeg", "gif", "svg"]:
+        valid_file = {"md", "txt"}
+        valid_file.update(file_ops.VALID_IMG_EXT)
+        if ext not in valid_file:
             continue
         if data["size"] > max_file_size:
             __set_running_false(uid, const.Code.TOO_LARGE_FILE, [filepath], )
@@ -129,12 +134,13 @@ def upload_obsidian_thread(
             __set_running_false(uid, const.Code.FILE_OPEN_ERROR, [filepath], )
             return
 
-        md = models.utils.replace_inner_link(
+        md = file_ops.replace_inner_link_and_upload_image(
+            uid=uid,
             md=md,
             exist_filename2nid=existed_filename2nid,
             img_path_dict=img_path_dict,
             img_name_dict=img_name_dict,
-            min_img_size=MIN_IMAGE_SIZE,
+            resize_threshold=RESIZE_IMG_THRESHOLD,
         )
         md = base_name + "\n\n" + md
         nid = existed_filename2nid[base_name]
@@ -375,58 +381,56 @@ def get_upload_process(uid: str) -> Optional[dict]:
     return doc
 
 
-def __save_image(file: UploadFile) -> Tuple[str, int]:
-    # return (url, code)
-    return utils.save_image(
-        filename=file.filename,
-        file=file.file,
-        file_size=file.size,
-        content_type=file.content_type,
-        min_img_size=MIN_IMAGE_SIZE,
-    )
-
-
 def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
     res = {
         "errFiles": [],
         "succMap": {},
+        "code": const.Code.OK,
     }
     u, code = models.user.get(uid=uid)
     if code != const.Code.OK:
         res["errFiles"] = [file.filename for file in files]
+        res["code"] = code
+        return res
+    if models.user.user_space_not_enough(u=u):
+        res["errFiles"] = [file.filename for file in files]
+        res["code"] = const.Code.USER_SPACE_NOT_ENOUGH
         return res
 
-    for file in files:
-        filename = file.filename
-        if not file.content_type.startswith("image/"):
-            res["errFiles"].append(filename)
-            continue
-        if file.size > MAX_IMAGE_SIZE:
-            res["errFiles"].append(filename)
-            continue
-        url, code = __save_image(file)
-        if code != 0:
-            res["errFiles"].append(filename)
-            continue
-        res["succMap"][filename] = url
-    return res
+    return file_ops.save_upload_files(
+        uid=uid,
+        files=files,
+        max_image_size=MAX_IMAGE_SIZE,
+        resize_threshold=RESIZE_IMG_THRESHOLD,
+    )
 
 
 def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
     u, code = models.user.get(uid=uid)
     if code != const.Code.OK:
         return "", code
+    if models.user.user_space_not_enough(u=u):
+        return "", const.Code.USER_SPACE_NOT_ENOUGH
 
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.RequestException:
+        return url, const.Code.OK
+
     if r.status_code != 200:
         return "", const.Code.FILE_OPEN_ERROR
     file = UploadFile(
         filename=url.split("/")[-1],
         file=io.BytesIO(r.content),
         headers=Headers(r.headers),
-        size=len(r.content),
+        size=len(r.content)
     )
-    url, code = __save_image(file)
-    if code != 0:
+    res = file_ops.save_upload_files(
+        uid=uid,
+        files=[file],
+        max_image_size=MAX_IMAGE_SIZE,
+        resize_threshold=RESIZE_IMG_THRESHOLD,
+    )
+    if len(res["errFiles"]) > 0:
         return "", const.Code.FILE_OPEN_ERROR
-    return url, const.Code.OK
+    return res["succMap"][file.filename], const.Code.OK

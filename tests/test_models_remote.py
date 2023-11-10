@@ -76,10 +76,16 @@ class RemoteModelsTest(unittest.TestCase):
         self.assertEqual(const.Code.OK, code)
 
     def test_node(self):
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        used_space = u["usedSpace"]
         node, code = models.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space + len(node["md"].encode("utf-8")), u["usedSpace"])
 
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -89,11 +95,21 @@ class RemoteModelsTest(unittest.TestCase):
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        used_space = u["usedSpace"]
         n, code = models.node.update(uid=self.uid, nid=node["id"], md="# title2\ntext2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("text2", n["snippet"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
+
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space + (
+                len(n["md"].encode("utf-8")) -
+                len(node["md"].encode("utf-8"))
+        ), u["usedSpace"])
 
         code = models.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -107,6 +123,10 @@ class RemoteModelsTest(unittest.TestCase):
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertIsNone(n)
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
+
+        u, code = models.user.get(self.uid)
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
     def test_parse_at(self):
         nid1, _ = models.node.add(
@@ -223,8 +243,24 @@ class RemoteModelsTest(unittest.TestCase):
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 
-        code = models.node.batch_delete(self.uid, [n["id"] for n in ns[2:4]])
+        code = models.node.batch_delete(self.uid, [n["id"] for n in tns[2:4]])
         self.assertEqual(const.Code.OK, code)
         tns, total = models.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(0, total)
         self.assertEqual(0, len(tns))
+
+    def test_update_used_space(self):
+        u, code = models.user.get(self.uid)
+        base_used_space = u["usedSpace"]
+        for delta, value in [
+            (100, 100),
+            (100, 200),
+            (0, 200),
+            (-300, -100),
+            (20.1, -79.9),
+        ]:
+            code = models.user.update_used_space(self.uid, delta)
+            self.assertEqual(const.Code.OK, code)
+            u, code = models.user.get(self.uid)
+            self.assertEqual(const.Code.OK, code)
+            self.assertAlmostEqual(value, u["usedSpace"] - base_used_space, msg=f"delta: {delta}, value: {value}")

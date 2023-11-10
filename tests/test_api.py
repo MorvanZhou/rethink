@@ -503,7 +503,8 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual({
             'errFiles': [],
             'succMap': {
-                'test.png': 'http://127.0.0.1:8000/i/3acca26d4f9d111694d7dbda2d1e6a40.png'
+                'test.png': f"http://127.0.0.1:8000"
+                            f"/userData/{jwt_decode(self.token)['uid']}/3acca26d4f9d111694d7dbda2d1e6a40.png"
             }}, rj["data"])
         f1.close()
         os.remove("temp/test.png")

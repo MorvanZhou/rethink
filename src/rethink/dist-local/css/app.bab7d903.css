@@ -432,41 +432,91 @@ footer {
 
 .user-page[data-v-708d9590] {
   margin: 0 auto;
-  width: 60%;
-  max-width: 400px;
+  width: 95%;
+  max-width: 600px;
 }
+
 h1[data-v-708d9590] {
   text-align: center;
   margin-bottom: 20px;
 }
+
+label[data-v-708d9590] {
+  font-weight: bold;
+}
+
 .user-img[data-v-708d9590] {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.user-img img[data-v-708d9590] {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  margin: 0 auto;
 }
-.user-meta[data-v-708d9590] {
+
+.section[data-v-708d9590] {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 10px auto;
+  margin: 0 auto;
+  padding: 10px 0 40px 0;
+  border-bottom: 1px solid #e7e7e7;
 }
-.user-meta label[data-v-708d9590] {
-  font-weight: bold;
-}
+
 .user-meta input[data-v-708d9590] {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
+
 .user-meta input[data-v-708d9590]:focus {
   outline: none;
   border: 1px solid #3d3d3d;
 }
+
 .user-meta select[data-v-708d9590] {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #ccc;
+}
+
+.storage-usage[data-v-708d9590] {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.storage-usage span[data-v-708d9590] {
+  font-size: 0.8rem;
+}
+
+.progress-info[data-v-708d9590] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-bar[data-v-708d9590] {
+  width: 100%;
+  height: 13px;
+  background-color: #e7e7e7;
+  border-radius: 5px;
+}
+
+.progress[data-v-708d9590] {
+  height: 100%;
+  background-color: #55bb8e;
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+.percentage[data-v-708d9590] {
+  text-align: right;
+  font-size: 0.7rem;
+  padding-left: 5px;
 }
 
 /*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -784,8 +834,8 @@ h1[data-v-708d9590] {
 
 .user-page[data-v-9a15286a] {
   margin: 0 auto;
-  width: 60%;
-  max-width: 400px;
+  width: 95%;
+  max-width: 600px;
 }
 h1[data-v-9a15286a] {
   text-align: center;
@@ -3457,12 +3507,25 @@ img[data-v-4f42ee16] {
   height: 15px;
   margin-right: 5px;
 }
+
 .status span[data-v-6e2de383] {
-  color: #999;
+  color: #818181;
   font-weight: 200;
   overflow-x: hidden;
   white-space: nowrap;
 }
+
+.status-sm[data-v-6e2de383] {
+  margin: 0 0 0 10px;
+  font-size: 0.8em;
+}
+
+.status-sm img[data-v-6e2de383] {
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+}
+
 
 /*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/EditorHeader.vue?vue&type=style&index=0&id=55779ec4&scoped=true&lang=css ***!
@@ -3473,12 +3536,18 @@ img[data-v-4f42ee16] {
   margin: 5px 5px 5px 0;
   display: flex;
   align-items: center;
+  width: 97%;
+  overflow-x: clip;
 }
+
 .menu[data-v-55779ec4] {
   margin: 0 20px 0 5px;
   padding: 0 5px;
 }
 
+.menu-sm[data-v-55779ec4] {
+  margin: 0 10px 0 0;
+}
 
 /*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/EditorView.vue?vue&type=style&index=0&id=5cd56b1a&scoped=true&lang=css ***!
@@ -3916,7 +3985,7 @@ tr.tr-sm .node-more-ops {
   box-sizing: border-box;
   overflow-y: auto;
   color: #333;
-  line-height: 1.2em;
+  line-height: 1.4em;
 }
 .quick-post-footer[data-v-dc31438a] {
   display: flex;

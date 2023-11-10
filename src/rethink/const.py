@@ -5,7 +5,7 @@ from textwrap import dedent
 
 RETHINK_DIR = Path(__file__).parent
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
-MD_MAX_LENGTH = 100000
+MD_MAX_LENGTH = 100_000
 
 
 class NodeType(Enum):
@@ -39,6 +39,7 @@ class Code(Enum):
     FILENAME_EXIST = auto()  # 23
     IMPORT_PROCESS_NOT_FINISHED = auto()  # 24
     UPLOAD_TASK_TIMEOUT = auto()  # 25
+    USER_SPACE_NOT_ENOUGH = auto()  # 26
 
 
 INT_CODE_MAP = {
@@ -80,6 +81,7 @@ CODE_MESSAGES = {
         zh="正在完成上一批数据导入，请稍后再试",
         en="Last import process not finished, please try again later"),
     Code.UPLOAD_TASK_TIMEOUT: CodeMessage(zh="文件上传任务超时", en="Upload task timeout"),
+    Code.USER_SPACE_NOT_ENOUGH: CodeMessage(zh="用户空间不足", en="User space not enough"),
 }
 
 DEFAULT_USER = {
@@ -193,3 +195,31 @@ NEW_USER_DEFAULT_NODES = {
 class NodeDisplayMethod(Enum):
     CARD = 0
     LIST = auto()  # 1
+
+
+@dataclass
+class UserConfig:
+    id: int
+    max_store_space: int
+
+
+class UserType:
+    NORMAL = UserConfig(
+        id=0,
+        max_store_space=1024 * 1024 * 500,  # 500MB
+    )
+    ADMIN = UserConfig(
+        id=1,
+        max_store_space=1024 * 1024 * 1024 * 100,  # 100GB
+    )
+
+    def id2config(self, _id: int):
+        if _id == self.NORMAL.id:
+            return self.NORMAL
+        elif _id == self.ADMIN.id:
+            return self.ADMIN
+        else:
+            raise ValueError(f"Invalid user type: {_id}")
+
+
+USER_TYPE = UserType()

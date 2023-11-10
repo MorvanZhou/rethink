@@ -76,7 +76,10 @@ def get_user(
             code=code.value,
             message=const.get_msg_by_code(code, td.language),
         )
-
+    if config.is_local_db():
+        max_space = 0
+    else:
+        max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
     return schemas.user.UserInfoResponse(
         requestId=req_id,
         code=code.value,
@@ -88,6 +91,8 @@ def get_user(
             createdAt=datetime2str(u["_id"].generation_time),
             language=u["language"],
             nodeDisplayMethod=u["nodeDisplayMethod"],
+            usedSpace=u["usedSpace"],
+            maxSpace=max_space,
         )
     )
 

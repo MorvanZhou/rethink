@@ -18,6 +18,8 @@ class UserInfoResponse(BaseModel):
         createdAt: str
         language: Literal["en", "zh"]
         nodeDisplayMethod: NonNegativeInt
+        usedSpace: NonNegativeInt = 0
+        maxSpace: NonNegativeInt = 0
 
     code: NonNegativeInt
     message: str
