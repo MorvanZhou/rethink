@@ -380,10 +380,9 @@ def upload_to_local_storage(
     if not host.startswith("http"):
         host = "http://" + host
     # upload to local storage
-    key = Path("userData") / uid / fid
-    img_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / key
+    img_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "userData" / uid / fid
     img_path.parent.mkdir(parents=True, exist_ok=True)
-    url = f"{host}:{port}/{key}"
+    url = f"{host}:{port}/userData/{uid}/{fid}"
     if img_path.exists():
         # skip the same image
         return url

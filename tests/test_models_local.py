@@ -1,4 +1,5 @@
 import datetime
+import os
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -374,7 +375,7 @@ class LocalModelsTest(unittest.TestCase):
         res = models.files.upload_image_vditor(self.uid, [img_file])
         self.assertIn("phone-notes.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["phone-notes.png"])
-        local_file = Path(__file__).parent / "tmp" / ".data" / "/".join(
+        local_file = Path(__file__).parent / "tmp" / ".data" / os.path.sep.join(
             res["succMap"]["phone-notes.png"].rsplit("/")[-3:])
         self.assertTrue(local_file.exists())
         local_file.unlink()
@@ -391,7 +392,7 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertTrue(new_url.endswith(".ico"))
         self.assertTrue(new_url.startswith("http://127.0.0.1"))
-        local_file = Path(__file__).parent / "tmp" / ".data" / "/".join(new_url.rsplit("/")[-3:])
+        local_file = Path(__file__).parent / "tmp" / ".data" / os.path.sep.join(new_url.rsplit("/")[-3:])
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
