@@ -12,14 +12,18 @@ def empty_str_to_http_url(v: str) -> HttpUrl:
 
 class UserInfoResponse(BaseModel):
     class User(BaseModel):
+        class LastState(BaseModel):
+            nodeDisplayMethod: NonNegativeInt
+            nodeDisplaySortKey: str
+
         email: str
         nickname: str
         avatar: Annotated[str, AfterValidator(empty_str_to_http_url)]
         createdAt: str
         language: Literal["en", "zh"]
-        nodeDisplayMethod: NonNegativeInt
         usedSpace: NonNegativeInt = 0
         maxSpace: NonNegativeInt = 0
+        lastState: LastState
 
     code: NonNegativeInt
     message: str
@@ -53,4 +57,5 @@ class UpdateRequest(BaseModel):
     avatar: str = ""
     language: Literal["en", "zh"] = ""
     nodeDisplayMethod: int = -1
+    nodeDisplaySortKey: str = ""
     requestId: str = ""

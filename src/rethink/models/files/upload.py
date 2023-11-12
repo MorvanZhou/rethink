@@ -72,6 +72,7 @@ def upload_obsidian_thread(
         unzipped_files = file_ops.unzip_file(bytes_data)
     except zipfile.BadZipFile:
         __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [filename])
+        logger.info(f"invalid file type: {filename}, uid: {uid}")
         return
     filtered_files = {}
     existed_filename2nid = doc["obsidian"].copy()
@@ -89,6 +90,7 @@ def upload_obsidian_thread(
             continue
         if data["size"] > max_file_size:
             __set_running_false(uid, const.Code.TOO_LARGE_FILE, [filepath], )
+            logger.info(f"too large file: {filepath}, uid: {uid}")
             return
         if ext in ["md", "txt"]:
             if len(filepath.split("/")) > 1:
@@ -114,12 +116,14 @@ def upload_obsidian_thread(
             continue
         if code != const.Code.OK:
             __set_running_false(uid, code, [filepath], )
+            logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
             return
         existed_filename2nid[base_name] = n["id"]
         if i % 20 == 0:
             doc, code = update_process(uid, "obsidian", int(i / md_count * 10))
             if code != const.Code.OK:
                 __set_running_false(uid, code, [filepath], )
+                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
@@ -132,6 +136,7 @@ def upload_obsidian_thread(
         except (FileNotFoundError, OSError, UnicodeDecodeError) as e:
             logger.error(f"error: {e}. filepath: {filepath}")
             __set_running_false(uid, const.Code.FILE_OPEN_ERROR, [filepath], )
+            logger.info(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {filepath}, uid: {uid}")
             return
 
         md = file_ops.replace_inner_link_and_upload_image(
@@ -152,11 +157,13 @@ def upload_obsidian_thread(
         )
         if code != const.Code.OK:
             __set_running_false(uid, code, [filepath])
+            logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
             return
         if i % 20 == 0:
             doc, code = update_process(uid, "obsidian", int(i / md_count * 40 + 10))
             if code != const.Code.OK:
                 __set_running_false(uid, code, [filepath])
+                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
@@ -180,6 +187,7 @@ def upload_obsidian_thread(
             doc, code = update_process(uid, "obsidian", int(count / len(doc["obsidian"]) * 50 + 50))
             if code != const.Code.OK:
                 __set_running_false(uid, code)
+                logger.info(f"error: {code}, uid: {uid}")
                 return
             if not doc["running"]:
                 break

@@ -80,6 +80,7 @@ def get_user(
         max_space = 0
     else:
         max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
+    last_state = u["lastState"]
     return schemas.user.UserInfoResponse(
         requestId=req_id,
         code=code.value,
@@ -90,9 +91,12 @@ def get_user(
             avatar=u["avatar"],
             createdAt=datetime2str(u["_id"].generation_time),
             language=u["language"],
-            nodeDisplayMethod=u["nodeDisplayMethod"],
             usedSpace=u["usedSpace"],
             maxSpace=max_space,
+            lastState=schemas.user.UserInfoResponse.User.LastState(
+                nodeDisplayMethod=last_state["nodeDisplayMethod"],
+                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
+            ),
         )
     )
 
@@ -114,7 +118,9 @@ def update_user(
         avatar=req.avatar,
         language=req.language,
         node_display_method=req.nodeDisplayMethod,
+        node_display_sort_key=req.nodeDisplaySortKey,
     )
+    last_state = u["lastState"]
     return schemas.user.UserInfoResponse(
         requestId=req.requestId,
         code=code.value,
@@ -125,6 +131,9 @@ def update_user(
             avatar=u["avatar"],
             createdAt=datetime2str(u["_id"].generation_time),
             language=u["language"],
-            nodeDisplayMethod=u["nodeDisplayMethod"],
+            lastState=schemas.user.UserInfoResponse.User.LastState(
+                nodeDisplayMethod=last_state["nodeDisplayMethod"],
+                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
+            ),
         ),
     )

@@ -36,12 +36,15 @@ def add(
         "nickname": nickname,
         "modifiedAt": oid.generation_time,
         "nodeIds": [],
-        "recentCursorSearchSelectedNIds": [],
-        "recentSearch": [],
         "language": language,
-        "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
         "usedSpace": 0,
         "type": const.USER_TYPE.NORMAL.id,
+        "lastState": {
+            "recentCursorSearchSelectedNIds": [],
+            "recentSearch": [],
+            "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+            "nodeDisplaySortKey": "modifiedAt"
+        }
     }
     res = COLL.users.insert_one(data)
     if not res.acknowledged:
@@ -65,6 +68,7 @@ def update(
         avatar: str = "",
         language: str = "",
         node_display_method: int = -1,
+        node_display_sort_key: str = "",
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u, code = get(uid=uid)
     if code != const.Code.OK:
@@ -92,11 +96,15 @@ def update(
         return None, const.Code.INVALID_LANGUAGE
 
     if node_display_method == -1:
-        node_display_method = u["nodeDisplayMethod"]
+        node_display_method = u["lastState"]["nodeDisplayMethod"]
     else:
         if node_display_method > len(const.NodeDisplayMethod) or node_display_method < 0:
             return None, const.Code.INVALID_NODE_DISPLAY_METHOD
-
+    if node_display_sort_key == "":
+        node_display_sort_key = u["lastState"]["nodeDisplaySortKey"]
+    else:
+        if node_display_sort_key not in ["modifiedAt", "createdAt", "title"]:
+            return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
     res = COLL.users.update_one(
         {"id": uid},
         {"$set": {
@@ -106,8 +114,9 @@ def update(
             "avatar": avatar,
             "modifiedAt": datetime.datetime.now(tz=utc),
             "language": language,
-            "nodeDisplayMethod": node_display_method,
-        }}
+            "lastState.nodeDisplayMethod": node_display_method,
+            "lastState.nodeDisplaySortKey": node_display_sort_key,
+        }},
     )
     if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED

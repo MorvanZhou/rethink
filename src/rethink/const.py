@@ -40,6 +40,7 @@ class Code(Enum):
     IMPORT_PROCESS_NOT_FINISHED = auto()  # 24
     UPLOAD_TASK_TIMEOUT = auto()  # 25
     USER_SPACE_NOT_ENOUGH = auto()  # 26
+    INVALID_NODE_DISPLAY_SORT_KEY = auto()  # 27
 
 
 INT_CODE_MAP = {
@@ -82,6 +83,7 @@ CODE_MESSAGES = {
         en="Last import process not finished, please try again later"),
     Code.UPLOAD_TASK_TIMEOUT: CodeMessage(zh="文件上传任务超时", en="Upload task timeout"),
     Code.USER_SPACE_NOT_ENOUGH: CodeMessage(zh="用户空间不足", en="User space not enough"),
+    Code.INVALID_NODE_DISPLAY_SORT_KEY: CodeMessage(zh="无效的排序方式", en="Invalid sort key"),
 }
 
 DEFAULT_USER = {

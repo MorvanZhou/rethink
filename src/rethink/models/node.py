@@ -260,7 +260,7 @@ def cursor_query(
         u = COLL.users.find_one({"id": uid})
         if u is None:
             return []
-        rn = u["recentCursorSearchSelectedNIds"]
+        rn = u["lastState"]["recentCursorSearchSelectedNIds"]
         try:
             rn.remove(nid)
         except ValueError:
@@ -290,13 +290,13 @@ def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
     changed = False
     for n in ns:
         try:
-            u["recentCursorSearchSelectedNIds"].remove(n["id"])
+            u["lastState"]["recentCursorSearchSelectedNIds"].remove(n["id"])
             changed = True
         except ValueError:
             pass
     if changed:
         res = COLL.users.update_one({"id": uid}, {"$set": {
-            "recentCursorSearchSelectedNIds": u["recentCursorSearchSelectedNIds"]
+            "lastState.recentCursorSearchSelectedNIds": u["lastState"]["recentCursorSearchSelectedNIds"]
         }})
         if res.modified_count != 1:
             logger.error(f"update user {uid} failed")

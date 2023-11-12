@@ -8,7 +8,7 @@ from .database import COLL
 def user_node(
         uid: str,
         query: str = "",
-        sort_key: str = "createAt",
+        sort_key: str = "createdAt",
         sort_order: int = -1,
         page: int = 0,
         page_size: int = 0,
@@ -46,7 +46,7 @@ def user_node(
     docs = COLL.nodes.find(condition)
 
     if sort_key != "":
-        if sort_key == "createAt":
+        if sort_key == "createdAt":
             sort_key = "_id"
         elif sort_key == "similarity":
             sort_key = "_id"  # TODO: sort by similarity
@@ -57,6 +57,7 @@ def user_node(
 
     if config.is_local_db() and query != "":
         return [doc for doc in docs if query in doc["searchKeys"] or query in doc["md"]], total
+
     return list(docs), total
 
 
@@ -91,7 +92,7 @@ def add_recent_cursor_search(
         if nid not in unids["nodeIds"] or to_nid not in unids["nodeIds"]:
             return const.Code.NODE_NOT_EXIST
 
-    rns = u["recentCursorSearchSelectedNIds"]
+    rns = u["lastState"]["recentCursorSearchSelectedNIds"]
     if to_nid in rns:
         rns.remove(to_nid)
     rns.insert(0, to_nid)
@@ -101,7 +102,7 @@ def add_recent_cursor_search(
     # add to recentCursorSearchSelectedNIds
     res = COLL.users.update_one(
         {"id": uid},
-        {"$set": {"recentCursorSearchSelectedNIds": rns}}
+        {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
     )
     if res.matched_count != 1:
         return const.Code.OPERATION_FAILED
@@ -113,14 +114,14 @@ def get_recent_search(uid: str) -> List[str]:
     doc = COLL.users.find_one({"id": uid})
     if doc is None:
         return []
-    return doc["recentSearch"]
+    return doc["lastState"]["recentSearch"]
 
 
 def put_recent_search(uid: str, query: str) -> const.Code:
     doc = COLL.users.find_one({"id": uid})
     if doc is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    rns = doc["recentSearch"]
+    rns = doc["lastState"]["recentSearch"]
     try:
         rns.remove(query)
     except ValueError:
@@ -130,6 +131,6 @@ def put_recent_search(uid: str, query: str) -> const.Code:
         rns = rns[:20]
     _ = COLL.users.update_one(
         {"id": uid},
-        {"$set": {"recentSearch": rns}}
+        {"$set": {"lastState.recentSearch": rns}}
     )
     return const.Code.OK

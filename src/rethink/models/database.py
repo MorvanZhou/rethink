@@ -128,12 +128,15 @@ def init():
             "disabled": False,
             "nickname": const.DEFAULT_USER["nickname"],
             "modifiedAt": datetime.datetime.now(tz=utc),
-            "recentCursorSearchSelectedNIds": [n0["id"], n1["id"]],
-            "recentSearch": [],
             "language": language,
-            "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
             "usedSpace": 0,
             "type": const.USER_TYPE.NORMAL.id,
+            "lastState": {
+                "recentCursorSearchSelectedNIds": [n0["id"], n1["id"]],
+                "recentSearch": [],
+                "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+                "nodeDisplaySortKey": "modifiedAt"
+            }
         }
         _ = COLL.users.insert_one(u)
         unids: UserNodeIds = {

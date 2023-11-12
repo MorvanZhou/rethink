@@ -69,7 +69,7 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])
         self.assertEqual("zh", u["language"])
-        self.assertEqual(const.NodeDisplayMethod.LIST.value, u["nodeDisplayMethod"])
+        self.assertEqual(const.NodeDisplayMethod.LIST.value, u["lastState"]["nodeDisplayMethod"])
 
         code = models.user.disable(uid=_id)
         self.assertEqual(const.Code.OK, code)
@@ -104,6 +104,7 @@ class LocalModelsTest(unittest.TestCase):
         u, code = models.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space + len(node["md"].encode("utf-8")), u["usedSpace"])
+        self.assertEqual("modifiedAt", u["lastState"]["nodeDisplaySortKey"])
 
         n, code = models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -114,12 +115,17 @@ class LocalModelsTest(unittest.TestCase):
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        ns, total = models.search.user_node(uid=self.uid, page_size=5, page=12)
+        ns, total = models.search.user_node(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
-        u, code = models.user.get(self.uid)
+        u, code = models.user.update(
+            uid=self.uid,
+            node_display_sort_key="createdAt",
+        )
+
         self.assertEqual(const.Code.OK, code)
+        self.assertEqual("createdAt", u["lastState"]["nodeDisplaySortKey"])
         used_space = u["usedSpace"]
         n, code = models.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)

@@ -102,7 +102,7 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.assertEqual("new nickname", rj["user"]["nickname"])
         self.assertEqual("http://new.avatar/aa.png", rj["user"]["avatar"])
-        self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["nodeDisplayMethod"])
+        self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
         self.assertEqual("xxx", rj["requestId"])
 
     def test_recent_search(self):

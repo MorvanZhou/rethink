@@ -8,7 +8,7 @@ from .node import NodesInfoResponse
 class SearchUserNodesRequest(BaseModel):
     requestId: str
     query: str = ""
-    sortKey: str = "createAt"
+    sortKey: str = "createdAt"
     sortOrder: int = -1
     page: NonNegativeInt = 0
     pageSize: NonNegativeInt = 0

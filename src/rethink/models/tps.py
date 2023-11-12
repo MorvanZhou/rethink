@@ -33,6 +33,13 @@ class Node(TypedDict):
     toNodes: Optional[List[LinkedNode]]
 
 
+class _LastState(TypedDict):
+    nodeDisplayMethod: int
+    nodeDisplaySortKey: str
+    recentSearch: List[str]
+    recentCursorSearchSelectedNIds: List[str]
+
+
 class UserMeta(TypedDict):
     _id: ObjectId
     id: str
@@ -44,12 +51,10 @@ class UserMeta(TypedDict):
     hashed: str
     disabled: bool
     modifiedAt: datetime.datetime
-    recentSearch: List[str]
-    recentCursorSearchSelectedNIds: List[str]
     language: str
-    nodeDisplayMethod: int
     usedSpace: int
     type: int
+    lastState: _LastState
 
 
 class UserNodeIds(TypedDict):
