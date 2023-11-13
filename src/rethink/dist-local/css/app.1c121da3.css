@@ -435,27 +435,22 @@ footer {
   width: 95%;
   max-width: 600px;
 }
-
 h1[data-v-708d9590] {
   text-align: center;
   margin-bottom: 20px;
 }
-
 label[data-v-708d9590] {
   font-weight: bold;
 }
-
 .user-img[data-v-708d9590] {
   margin: 0 auto;
   text-align: center;
 }
-
 .user-img img[data-v-708d9590] {
   width: 50px;
   height: 50px;
   border-radius: 50%;
 }
-
 .section[data-v-708d9590] {
   display: flex;
   flex-direction: column;
@@ -464,55 +459,46 @@ label[data-v-708d9590] {
   padding: 10px 0 40px 0;
   border-bottom: 1px solid #e7e7e7;
 }
-
 .user-meta input[data-v-708d9590] {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
-
 .user-meta input[data-v-708d9590]:focus {
   outline: none;
   border: 1px solid #3d3d3d;
 }
-
 .user-meta select[data-v-708d9590] {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
-
 .storage-usage[data-v-708d9590] {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-
 .storage-usage span[data-v-708d9590] {
   font-size: 0.8rem;
 }
-
 .progress-info[data-v-708d9590] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 5px;
 }
-
 .progress-bar[data-v-708d9590] {
   width: 100%;
   height: 13px;
   background-color: #e7e7e7;
   border-radius: 5px;
 }
-
 .progress[data-v-708d9590] {
   height: 100%;
   background-color: #55bb8e;
   border-radius: 5px;
   transition: width 0.5s ease-in-out;
 }
-
 .percentage[data-v-708d9590] {
   text-align: right;
   font-size: 0.7rem;
@@ -3507,19 +3493,16 @@ img[data-v-4f42ee16] {
   height: 15px;
   margin-right: 5px;
 }
-
 .status span[data-v-6e2de383] {
   color: #818181;
   font-weight: 200;
   overflow-x: hidden;
   white-space: nowrap;
 }
-
 .status-sm[data-v-6e2de383] {
   margin: 0 0 0 10px;
   font-size: 0.8em;
 }
-
 .status-sm img[data-v-6e2de383] {
   width: 13px;
   height: 13px;
@@ -3539,12 +3522,10 @@ img[data-v-4f42ee16] {
   width: 97%;
   overflow-x: clip;
 }
-
 .menu[data-v-55779ec4] {
   margin: 0 20px 0 5px;
   padding: 0 5px;
 }
-
 .menu-sm[data-v-55779ec4] {
   margin: 0 10px 0 0;
 }
@@ -3662,7 +3643,7 @@ img[data-v-6484916a]:hover {
   padding: 4px 0 10px 5px;
 }
 .title[data-v-e1905aa2] {
-  font-size: 1.2em;
+  font-size: 1em;
   font-weight: bold;
   text-align: left;
 }
@@ -3925,12 +3906,18 @@ tr.tr-sm .node-more-ops {
   margin: 1em 0;
   height: 2em;
 }
+
 .app-title[data-v-12cdb325] {
   margin: 5px;
   font-size: 1.6em;
   font-weight: 700;
   color: #333;
   width: 100px;
+}
+
+.app-title-sm[data-v-12cdb325] {
+  font-size: 1em;
+  width: 80px;
 }
 
 /*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
