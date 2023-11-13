@@ -15,13 +15,19 @@ def run(
     Run the server.
 
     Args:
-        path: rethink will create .data folder in this path, default is current working directory.
-        host: server host, default is the localhost.
-        port: server port, default is 8000.
-        language: website language, default is English.
+        path (str): the database path for text and file data.
+         Rethink will create .data folder in this path, default is current working directory.
+        host (str): server host, default is the localhost.
+        port (int): server port, default is 8000.
+        language (str): website language, default is English.
+         Possible values are "en" and "zh".
 
     Returns:
         None
+
+    Raises:
+        FileNotFoundError: if the path not exists.
+        NotADirectoryError: if the path is not a directory.
     """
     if path is None:
         path = os.getcwd()

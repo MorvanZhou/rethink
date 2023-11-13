@@ -1,4 +1,6 @@
-from fastapi import Depends, APIRouter
+from typing import Optional
+
+from fastapi import Depends, APIRouter, Header
 from typing_extensions import Annotated
 
 from rethink.controllers import schemas
@@ -37,7 +39,7 @@ async def put_node(
 async def get_node(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         nid: str,
-        rid: str = "",
+        rid: Optional[str] = Header(None),
 ) -> schemas.node.GetResponse:
     return node_ops.get_node(
         td=token_decode,

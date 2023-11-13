@@ -76,8 +76,7 @@ class TokenApiTest(unittest.TestCase):
     def test_get_user(self):
         resp = self.client.get(
             "/api/user",
-            params={"rid": "xxx"},
-            headers={"token": self.token})
+            headers={"token": self.token, "rid": "xxx"})
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("rethink", rj["user"]["nickname"])
@@ -97,7 +96,10 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
 
-        resp = self.client.get("/api/user", params={"rid": "xxx"}, headers={"token": self.token})
+        resp = self.client.get(
+            "/api/user",
+            headers={"token": self.token, "rid": "xxx"}
+        )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("new nickname", rj["user"]["nickname"])
@@ -117,8 +119,7 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.get(
             "/api/search/recent",
-            params={"rid": "xxx"},
-            headers={"token": self.token}
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -158,8 +159,8 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.get(
             "/api/node",
-            params={"rid": "xxx", "nid": node["id"]},
-            headers={"token": self.token}
+            params={"nid": node["id"]},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -184,8 +185,8 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.get(
             "/api/node",
-            params={"rid": "xxx", "nid": node["id"]},
-            headers={"token": self.token}
+            params={"nid": node["id"]},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         n = rj["node"]
@@ -208,8 +209,8 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.get(
             "/api/trash",
-            params={"rid": "xxx", "p": 0, "ps": 10},
-            headers={"token": self.token}
+            params={"p": 0, "ps": 10},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -265,8 +266,8 @@ class TokenApiTest(unittest.TestCase):
 
         resp = self.client.get(
             "/api/node",
-            params={"rid": "xxx", "nid": node["id"]},
-            headers={"token": self.token}
+            params={"nid": node["id"]},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
@@ -327,8 +328,8 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         resp = self.client.get(
             "/api/trash",
-            params={"rid": "xxx", "p": 0, "ps": 10},
-            headers={"token": self.token}
+            params={"p": 0, "ps": 10},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -347,8 +348,8 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         resp = self.client.get(
             "/api/trash",
-            params={"rid": "xxx", "p": 0, "ps": 10},
-            headers={"token": self.token}
+            params={"p": 0, "ps": 10},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -367,8 +368,8 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         resp = self.client.get(
             "/api/trash",
-            params={"rid": "xxx", "p": 0, "ps": 10},
-            headers={"token": self.token}
+            params={"p": 0, "ps": 10},
+            headers={"token": self.token, "rid": "xxx"}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -410,8 +411,7 @@ class TokenApiTest(unittest.TestCase):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/uploadProcess",
-                params={"rid": "xxx"},
-                headers={"token": self.token}
+                headers={"token": self.token, "rid": "xxx"}
             )
             rj = resp.json()
             self.assertEqual("obsidian", rj["type"], msg=rj)
@@ -460,8 +460,7 @@ class TokenApiTest(unittest.TestCase):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/uploadProcess",
-                params={"rid": "xxx"},
-                headers={"token": self.token}
+                headers={"token": self.token, "rid": "xxx"}
             )
             rj = resp.json()
             self.assertEqual("text", rj["type"], msg=rj)

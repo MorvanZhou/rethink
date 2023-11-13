@@ -1,4 +1,6 @@
-from fastapi import Depends, APIRouter
+from typing import Optional
+
+from fastapi import Depends, APIRouter, Header
 from typing_extensions import Annotated
 
 from rethink.controllers import schemas
@@ -38,11 +40,13 @@ async def get_from_trash(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         p: int = 0,
         ps: int = 10,
+        rid: Optional[str] = Header(None),
 ) -> schemas.node.GetFromTrashResponse:
     return trash_ops.get_from_trash(
         td=token_decode,
         p=p,
         ps=ps,
+        rid=rid,
     )
 
 

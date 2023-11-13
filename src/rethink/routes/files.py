@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import Depends, APIRouter, UploadFile, Request
+from fastapi import Depends, APIRouter, UploadFile, Request, Header
 from typing_extensions import Annotated
 
 from rethink.controllers import schemas
@@ -53,7 +53,7 @@ async def upload_obsidian_files(
 @measure_time_spend
 async def get_upload_process(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        rid: str,
+        rid: Optional[str] = Header(None),
 ) -> schemas.files.FileUploadProcessResponse:
     return upload_files.get_upload_process(
         td=token_decode,

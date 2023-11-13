@@ -1,4 +1,6 @@
-from fastapi import Depends, APIRouter
+from typing import Optional
+
+from fastapi import Depends, APIRouter, Header
 from typing_extensions import Annotated
 
 from rethink.controllers import schemas
@@ -65,8 +67,8 @@ async def add_to_recent_cursor_search(
 )
 @measure_time_spend
 async def get_recent_search(
-        rid: str,
-        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        rid: Optional[str] = Header(None),
 ) -> schemas.search.GetRecentSearchResponse:
     return node_search.get_recent(
         td=token_decode,
