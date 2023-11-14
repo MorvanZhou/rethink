@@ -7,19 +7,18 @@ from bson import ObjectId
 from bson.tz_util import utc
 from mongita import MongitaClientDisk
 from mongita.collection import Collection
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
 from pymongo.collection import Collection as RemoteCollection
 
 from rethink import config, const
 from rethink.logger import logger
 from . import utils
-from .tps import UserMeta, UserNodeIds, Node
+from .tps import UserMeta, Node
 
 
 @dataclass
 class Collections:
     users: Union[Collection, RemoteCollection] = None
-    unids: Union[Collection, RemoteCollection] = None
     nodes: Union[Collection, RemoteCollection] = None
     import_data: Union[Collection, RemoteCollection] = None
     user_file: Union[Collection, RemoteCollection] = None
@@ -47,11 +46,57 @@ def set_client():
         )
 
 
+def try_build_index():
+    # try creating index
+    if isinstance(CLIENT, MongoClient):
+        users_info = COLL.users.index_information()
+        if "id_1" not in users_info:
+            COLL.users.create_index("id", unique=True)
+        if "account_1_source_1" not in users_info:
+            COLL.users.create_index(["account", "source"], unique=True)
+
+        nodes_info = COLL.nodes.index_information()
+        if "id_1" not in nodes_info:
+            COLL.nodes.create_index("id", unique=True)
+        if "uid_1_id_-1_modifiedAt_-1" not in nodes_info:
+            COLL.nodes.create_index(
+                [("uid", 1), ("id", -1), ("modifiedAt", -1)],
+                unique=True,
+            )
+        if "uid_1_id_-1_inTrash_-1" not in nodes_info:
+            COLL.nodes.create_index(
+                [("uid", 1), ("id", -1), ("inTrash", -1)],
+                unique=True,
+            )
+        if "uid_1_id_-1" not in nodes_info:
+            # created at
+            COLL.nodes.create_index(
+                [("uid", 1), ("id", -1)],
+                unique=True,
+            )
+        if "uid_1_id_-1_title_1" not in nodes_info:
+            COLL.nodes.create_index(
+                [("uid", 1), ("id", -1), ("title", 1)],
+                unique=True,
+            )
+        if "uid_1_id_-1_searchKeys_1" not in nodes_info:
+            COLL.nodes.create_index(
+                [("uid", 1), ("searchKeys", TEXT), ("md", TEXT)],
+            )
+
+        import_data_info = COLL.import_data.index_information()
+        if "uid_1" not in import_data_info:
+            COLL.import_data.create_index("uid", unique=True)
+
+        user_file_info = COLL.user_file.index_information()
+        if "uid_1_fid_-1" not in user_file_info:
+            COLL.user_file.create_index([("uid", 1), ("fid", -1)], unique=True)
+
+
 def init():
     set_client()
     db = CLIENT[config.get_settings().DB_NAME]
     COLL.users = db["users"]
-    COLL.unids = db["unids"]
     COLL.nodes = db["nodes"]
     COLL.import_data = db["importData"]
     COLL.user_file = db["userFile"]
@@ -71,14 +116,7 @@ def init():
                 {"$set": {"startAt": doc["startAt"].replace(tzinfo=utc)}},
             )
 
-    if isinstance(CLIENT, MongoClient):
-        # try creating index
-        COLL.users.create_index("id", unique=True)
-        COLL.users.create_index(["account", "source"], unique=True)
-        COLL.nodes.create_index("id", unique=True)
-        COLL.unids.create_index("id", unique=True)
-        COLL.import_data.create_index("uid", unique=True)
-        COLL.user_file.create_index(["uid", "fid"], unique=True)
+    try_build_index()
 
     # try add default user
     if config.get_settings().ONE_USER:
@@ -89,6 +127,7 @@ def init():
 
         logger.info("running at the first time, a user with initial data will be created")
         language = os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value)
+        uid = utils.short_uuid()
         ns = const.NEW_USER_DEFAULT_NODES[language]
 
         def create_node(md: str):
@@ -96,6 +135,7 @@ def init():
             n: Node = {
                 "_id": ObjectId(),
                 "id": utils.short_uuid(),
+                "uid": uid,
                 "title": title_,
                 "snippet": snippet_,
                 "md": md,
@@ -119,7 +159,7 @@ def init():
 
         u: UserMeta = {
             "_id": ObjectId(),
-            "id": utils.short_uuid(),
+            "id": uid,
             "source": const.UserSource.LOCAL.value,
             "account": const.DEFAULT_USER["email"],
             "email": const.DEFAULT_USER["email"],
@@ -139,12 +179,6 @@ def init():
             }
         }
         _ = COLL.users.insert_one(u)
-        unids: UserNodeIds = {
-            "_id": u["_id"],
-            "id": u["id"],
-            "nodeIds": [n0["id"], n1["id"]],
-        }
-        _ = COLL.unids.insert_one(unids)
 
 
 def get_client():

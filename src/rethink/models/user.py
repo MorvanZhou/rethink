@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -54,9 +54,6 @@ def add(
         "id": data["id"],
         "nodeIds": [],
     }
-    res = COLL.unids.insert_one(un_data)
-    if not res.acknowledged:
-        return "", const.Code.OPERATION_FAILED
     return data["id"], const.Code.OK
 
 
@@ -78,45 +75,38 @@ def update(
             {"account": email, "source": const.UserSource.EMAIL.value}
     ) is not None:
         return None, const.Code.EMAIL_OCCUPIED
-    if email == "":
-        email = u["email"]
-    hashed = hashed.strip()
-    if hashed == "":
-        hashed = u["hashed"]
-    nickname = nickname.strip()
-    if nickname == "":
-        nickname = u["nickname"]
-    avatar = str(avatar).strip()
-    if avatar == "":
-        avatar = u["avatar"]
-    language = language.strip()
-    if language == "":
-        language = u["language"]
-    elif not const.Language.is_valid(language):
-        return None, const.Code.INVALID_LANGUAGE
 
-    if node_display_method == -1:
-        node_display_method = u["lastState"]["nodeDisplayMethod"]
-    else:
-        if node_display_method > len(const.NodeDisplayMethod) or node_display_method < 0:
+    new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
+    if email != "" and email != u["email"]:
+        new_data["email"] = email
+
+    hashed = hashed.strip()
+    if hashed != "" and hashed != u["hashed"]:
+        new_data["hashed"] = hashed
+    nickname = nickname.strip()
+    if nickname != "" and nickname != u["nickname"]:
+        new_data["nickname"] = nickname
+    avatar = str(avatar).strip()
+    if avatar != "" and avatar != u["avatar"]:
+        new_data["avatar"] = avatar
+    language = language.strip()
+    if language != "" and language != u["language"]:
+        if not const.Language.is_valid(language):
+            return None, const.Code.INVALID_LANGUAGE
+        new_data["language"] = language
+
+    if node_display_method != u["lastState"]["nodeDisplayMethod"] and node_display_method >= 0:
+        if node_display_method >= len(const.NodeDisplayMethod):
             return None, const.Code.INVALID_NODE_DISPLAY_METHOD
-    if node_display_sort_key == "":
-        node_display_sort_key = u["lastState"]["nodeDisplaySortKey"]
-    else:
+        new_data["lastState.nodeDisplayMethod"] = node_display_method
+    if node_display_sort_key != "" and node_display_sort_key != u["lastState"]["nodeDisplaySortKey"]:
         if node_display_sort_key not in ["modifiedAt", "createdAt", "title"]:
             return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
+        new_data["lastState.nodeDisplaySortKey"] = node_display_sort_key
+
     res = COLL.users.update_one(
         {"id": uid},
-        {"$set": {
-            "email": email,
-            "hashed": hashed,
-            "nickname": nickname,
-            "avatar": avatar,
-            "modifiedAt": datetime.datetime.now(tz=utc),
-            "language": language,
-            "lastState.nodeDisplayMethod": node_display_method,
-            "lastState.nodeDisplaySortKey": node_display_sort_key,
-        }},
+        {"$set": new_data},
     )
     if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED
@@ -187,13 +177,6 @@ def is_exist(uid: str) -> bool:
     except StopIteration:
         return False
     return True
-
-
-def get_node_ids(uid: str) -> Tuple[List[str], const.Code]:
-    if not is_exist(uid=uid):
-        return [], const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    doc = COLL.unids.find_one({"id": uid})
-    return doc["nodeIds"], const.Code.OK
 
 
 def update_used_space(uid: str, delta: int) -> const.Code:

@@ -39,11 +39,14 @@ def update_process(
     if code is not None:
         data["code"] = code
     if is_local_db():
+        # local db not support find_one_and_update
         COLL.import_data.update_one({"uid": uid}, {"$set": data})
         doc = COLL.import_data.find_one({"uid": uid})
     else:
-        doc = COLL.import_data.find_one_and_update({"uid": uid}, {
-            "$set": data})
+        doc = COLL.import_data.find_one_and_update(
+            {"uid": uid},
+            {"$set": data}
+        )
     if doc is None:
         return doc, const.Code.OPERATION_FAILED
     return doc, const.Code.OK
@@ -155,7 +158,17 @@ def upload_obsidian_thread(
             md=md,
             refresh_on_same_md=True,
         )
-        if code != const.Code.OK:
+        if code == const.Code.NODE_NOT_EXIST:
+            n, code = models.node.add(
+                uid=uid,
+                md=md,
+                type_=const.NodeType.MARKDOWN.value,
+            )
+            if code != const.Code.OK:
+                __set_running_false(uid, code, [filepath])
+                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+                return
+        elif code != const.Code.OK:
             __set_running_false(uid, code, [filepath])
             logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
             return

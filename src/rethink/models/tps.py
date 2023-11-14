@@ -18,6 +18,7 @@ class LinkedNode(TypedDict):
 class Node(TypedDict):
     _id: ObjectId
     id: str
+    uid: str
     md: str
     title: str
     snippet: str
@@ -55,12 +56,6 @@ class UserMeta(TypedDict):
     usedSpace: int
     type: int
     lastState: _LastState
-
-
-class UserNodeIds(TypedDict):
-    _id: ObjectId
-    id: str
-    nodeIds: List[str]
 
 
 class UserFile(TypedDict):

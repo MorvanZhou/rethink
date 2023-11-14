@@ -86,6 +86,7 @@ def add(
     data: tps.Node = {
         "_id": _id,
         "id": nid,
+        "uid": uid,
         "title": title,
         "snippet": snippet,
         "md": md,
@@ -100,12 +101,6 @@ def add(
     }
     res = COLL.nodes.insert_one(data)
     if not res.acknowledged:
-        return None, const.Code.OPERATION_FAILED
-    res = COLL.unids.update_one(
-        {"id": uid},
-        {"$push": {"nodeIds": nid}}
-    )
-    if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED
 
     user.update_used_space(uid=uid, delta=new_size)
@@ -151,15 +146,10 @@ def get_batch(
         with_disabled: bool = False,
         in_trash: bool = False,
 ) -> Tuple[List[tps.Node], const.Code]:
-    unids, code = user.get_node_ids(uid=uid)
-    if code != const.Code.OK:
-        return [], code
-    for nid in nids:
-        if nid not in unids:
-            return [], const.Code.NODE_NOT_EXIST
-    assert_conditions = {} if with_disabled else {"disabled": False}
-    assert_conditions.update({"inTrash": in_trash})
-    docs = db_ops.nodes_get(ids=nids, assert_conditions=assert_conditions)
+    c = {"id": {"$in": nids}, "uid": uid, "inTrash": in_trash}
+    if not with_disabled:
+        c["disabled"] = False
+    docs = list(COLL.nodes.find(c))
     if len(docs) != len(nids):
         return [], const.Code.NODE_NOT_EXIST
 
@@ -193,6 +183,9 @@ def update(
         return n, const.Code.OK
 
     old_md_size = len(n["md"].encode("utf-8"))
+    new_data = {
+        "modifiedAt": datetime.datetime.now(tz=utc),
+    }
 
     if n["title"] != title:
         # update it's title in fromNodes md's link
@@ -202,14 +195,14 @@ def update(
             n, code = update(uid=uid, nid=from_node["id"], md=new_md)
             if code != const.Code.OK:
                 logger.info(f"update fromNode {from_node['id']} failed")
+        new_data["title"] = title
+        new_data["searchKeys"] = utils.txt2search_keys(title)
 
-    new_data = {
-        "title": title,
-        "searchKeys": utils.txt2search_keys(title),
-        "md": md,
-        "snippet": snippet,
-        "modifiedAt": datetime.datetime.now(tz=utc),
-    }
+    if n["md"] != md:
+        new_data["md"] = md
+        if n["snippet"] != snippet:
+            new_data["snippet"] = snippet
+
     new_data["toNodeIds"], code = __flush_to_node_ids(
         nid=n["id"], orig_to_nid=n["toNodeIds"], new_md=md)
     if code != const.Code.OK:
@@ -222,6 +215,7 @@ def update(
             return_document=True,  # return updated doc
         )
     else:
+        # local db not support find_one_and_update
         res = COLL.nodes.update_one(
             {"id": nid},
             {"$set": new_data}
@@ -312,12 +306,8 @@ def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
 
 
 def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.Node], int]:
-    unids, code = user.get_node_ids(uid=uid)
-    if code != const.Code.OK:
-        return [], 0
-
     condition = {
-        "id": {"$in": unids},
+        "uid": uid,
         "disabled": False,
         "inTrash": True,
     }
@@ -374,15 +364,9 @@ def batch_delete(uid: str, nids: List[str]) -> const.Code:
     user.update_used_space(uid=uid, delta=used_space_delta)
 
     # remove node
-    res = COLL.nodes.delete_many({"id": {"$in": nids}})
+    res = COLL.nodes.delete_many({"id": {"$in": nids}, "uid": uid})
     if res.deleted_count != len(nids):
         logger.error(f"delete nodes {nids} failed")
-        return const.Code.OPERATION_FAILED
-
-    # update user nodeIds
-    res = db_ops.remove_nids(uid, nids)
-    if res.matched_count != 1:
-        logger.error(f"update user {uid} failed")
         return const.Code.OPERATION_FAILED
 
     return const.Code.OK
