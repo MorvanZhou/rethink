@@ -131,7 +131,7 @@ def __local_try_add_default_user():
         "account": const.DEFAULT_USER["email"],
         "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
     }
-    with open(dot_rethink_path, "w") as f:
+    with open(dot_rethink_path, "w", encoding="utf-8") as f:
         out = u_insertion.copy()
         out["_id"] = str(out["_id"])
         json.dump(out, f, indent=2, ensure_ascii=False)
@@ -209,7 +209,7 @@ def __local_restore():
     dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
     if not dot_rethink_path.exists():
         return
-    with open(dot_rethink_path, "r") as f:
+    with open(dot_rethink_path, "r", encoding="utf-8") as f:
         u_insertion = json.load(f)
 
     u: UserMeta = {

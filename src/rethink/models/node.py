@@ -56,7 +56,7 @@ def __local_usage_write_file(nid: str, md: str):
         return
     md_dir = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md"
     md_dir.mkdir(parents=True, exist_ok=True)
-    with open(md_dir / f"{nid}.md", "w") as f:
+    with open(md_dir / f"{nid}.md", "w", encoding="utf-8") as f:
         f.write(md)
 
 
