@@ -5,11 +5,13 @@ import re
 import uuid
 from typing import Tuple
 
+import httpx
 import jwt
 import pypinyin
 from markdown import Markdown
 
 from rethink import config
+from rethink.logger import logger
 
 HEADERS = {
     'typ': 'jwt',
@@ -128,3 +130,60 @@ def change_link_title(md: str, nid: str, new_title: str) -> str:
         md,
     )
     return new_md
+
+
+ONLY_HTTP_LINK_PTN = re.compile(r"^https?://\S*$")
+
+
+def contain_only_http_link(md: str) -> str:
+    content = md.strip()
+    if ONLY_HTTP_LINK_PTN.match(content) is None:
+        return ""
+    return content
+
+
+ASYNC_CLIENT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
+}
+
+
+async def get_title_description_from_link(url: str) -> Tuple[str, str]:
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                url=url,
+                headers=ASYNC_CLIENT_HEADERS,
+                timeout=3.
+            )
+        except (
+                httpx.ConnectTimeout,
+                RuntimeError,
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.HTTPError
+        ) as e:
+            logger.info(f"failed to get {url}: {e}")
+            return "", ""
+        if response.status_code in [302, 301]:
+            url = response.headers["Location"]
+            return await get_title_description_from_link(url)
+        if response.status_code != 200:
+            return "", ""
+        html = response.text[:10000]
+
+    title, description = "", ""
+    found = re.search(r'<meta[^>]*name="title"[^>]*content="([^"]*)"[^>]*>', html, re.DOTALL)
+    if found is None:
+        found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="title"[^>]*>', html, re.DOTALL)
+    if found is None:
+        found = re.search(r"<title>(.*?)</title>", html, re.DOTALL)
+    if found:
+        title = found.group(1).strip()
+
+    found = re.search(r'<meta[^>]*name="description"[^>]*content="([^"]*)"[^>]*>', html, re.DOTALL)
+    if found is None:
+        found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="description"[^>]*>', html, re.DOTALL)
+    if found:
+        description = found.group(1).strip()[:400]
+    return title, description

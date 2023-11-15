@@ -31,6 +31,21 @@ async def put_node(
     )
 
 
+@router.put(
+    path="/node/quick",
+    response_model=schemas.node.PutResponse,
+)
+@measure_time_spend
+async def put_node(
+        req: schemas.node.PutRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.node.PutResponse:
+    return await node_ops.put_quick_node(
+        td=token_decode,
+        req=req,
+    )
+
+
 @router.get(
     path="/node",
     response_model=schemas.node.GetResponse,

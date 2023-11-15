@@ -29,6 +29,7 @@ def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
         id=n["id"],
         md=n["md"],
         title=n["title"],
+        snippet=n["snippet"],
         type=n["type"],
         disabled=n["disabled"],
         createdAt=datetime2str(n["_id"].generation_time),
@@ -68,6 +69,28 @@ def put_node(
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
         node=__get_node_data(n),
+    )
+
+
+async def put_quick_node(
+        td: TokenDecode,
+        req: schemas.node.PutRequest,
+) -> schemas.node.PutResponse:
+    if td.code != const.Code.OK:
+        return schemas.node.PutResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+            node=None
+        )
+
+    if models.utils.contain_only_http_link(req.md) != "":
+        title, description = await models.utils.get_title_description_from_link(req.md)
+        req.md = f"{title}\n\n{description}\n\n[{req.md}]({req.md})"
+
+    return put_node(
+        td=td,
+        req=req,
     )
 
 

@@ -20,6 +20,7 @@ class NodeData(BaseModel):
     id: str
     md: str
     title: str
+    snippet: str
     type: NonNegativeInt
     disabled: bool
     createdAt: str

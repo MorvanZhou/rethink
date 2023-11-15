@@ -76,6 +76,7 @@ def add(
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+
     u, code = user.get(uid=uid)
     if code != const.Code.OK:
         return None, code

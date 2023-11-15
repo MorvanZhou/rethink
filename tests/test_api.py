@@ -411,7 +411,7 @@ class TokenApiTest(unittest.TestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"], msg=rj)
 
-        for _ in range(8):
+        for _ in range(10):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/uploadProcess",
@@ -511,3 +511,37 @@ class TokenApiTest(unittest.TestCase):
         f1.close()
         os.remove("temp/test.png")
         os.rmdir("temp")
+
+    def test_put_quick_node(self):
+        resp = self.client.put(
+            "/api/node/quick",
+            json={
+                "requestId": "xxx",
+                "md": "node1\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        node = rj["node"]
+        self.assertEqual("node1", node["title"])
+        self.assertEqual("node1\ntext", node["md"])
+        self.assertEqual(const.NodeType.MARKDOWN.value, node["type"])
+
+        resp = self.client.put(
+            "/api/node/quick",
+            json={
+                "requestId": "xxx",
+                "md": "https://baidu.com",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        node = rj["node"]
+        self.assertIn("https://baidu.com", node["md"])
+        self.assertIn("百度", node["md"])

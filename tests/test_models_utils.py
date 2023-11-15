@@ -63,3 +63,35 @@ class UtilsTest(unittest.TestCase):
             [@我](/n/1) [@哇塞](/n/2)
             """), new_md)
 
+    def test_contain_only_link(self):
+        for md, res in [
+            ("http://rethink.run", "http://rethink.run"),
+            ("[123](/n/123)", ""),
+            ("few", ""),
+            ("c https://rethink.run", ""),
+            (" https://rethink.run  ", "https://rethink.run"),
+            ("https://rethink.run  ", "https://rethink.run"),
+            ("https://rethink.run", "https://rethink.run"),
+            ("https://rethink.run wwq", ""),
+
+        ]:
+            self.assertEqual(res, utils.contain_only_http_link(md))
+
+
+class TestAsync(unittest.IsolatedAsyncioTestCase):
+    async def test_get_title_description_from_link(self):
+        for url, res in [
+            ("https://waa.fffffffff", False),
+            ("https://baidu.com", True),
+            ("https://rethink.run", True),
+            ("https://rethink.run/about", True),
+            ("https://baidu.com/wqwqqqqq", False),
+            ("https://mp.weixin.qq.com/s/fHrDf4XQ00a8IG-VF8-VwQ", False),
+        ]:
+            title, desc = await utils.get_title_description_from_link(url)
+            if res:
+                self.assertNotEqual(title, "", msg=f"{url} {title}")
+                self.assertNotEqual(desc, "", msg=f"{url} {desc}")
+            else:
+                self.assertEqual(title, "")
+                self.assertEqual(desc, "")
