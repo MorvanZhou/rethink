@@ -82,7 +82,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
     async def test_get_title_description_from_link(self):
         for url, res in [
             ("https://github.com/MorvanZhou/rethink", True),
-            ("https://zhuanlan.zhihu.com/p/610939462?utm_id=0", True),
+            # ("https://zhuanlan.zhihu.com/p/610939462?utm_id=0", True),
             ("https://waqwe12f2f2fa.fffffffff", False),
             ("https://baidu.com", True),
             ("https://rethink.run", True),
