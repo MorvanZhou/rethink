@@ -12,7 +12,6 @@ def set_env(file=".env.test.local"):
             tmp = Path(__file__).parent / "tmp"
             tmp.mkdir(exist_ok=True)
             os.environ["VUE_APP_MODE"] = "local"
-            os.environ["VUE_APP_API_HOST"] = "127.0.0.1"
             os.environ["VUE_APP_API_PORT"] = "8000"
             os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
@@ -24,7 +23,6 @@ def set_env(file=".env.test.local"):
 def drop_env(file=".env.test.local"):
     try:
         os.environ.pop("VUE_APP_MODE")
-        os.environ.pop("VUE_APP_API_HOST")
         os.environ.pop("VUE_APP_API_PORT")
     except KeyError:
         pass

@@ -42,12 +42,15 @@ def user_node(
             sort_key = "_id"  # TODO: sort by similarity
         docs = docs.sort([(sort_key, sort_order), ("_id", -1)])
 
+    if config.is_local_db() and query != "":
+        docs = filter(lambda d: query in d["searchKeys"] or query in d["md"], docs)
+        docs = list(docs)
+        if page_size > 0:
+            docs = docs[page * page_size: (page + 1) * page_size]
+        return docs, total
+
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
-
-    if config.is_local_db() and query != "":
-        return [doc for doc in docs if query in doc["searchKeys"] or query in doc["md"]], total
-
     return list(docs), total
 
 

@@ -1,6 +1,6 @@
 import unittest
 
-from rethink.models.search.idf import tfidf
+from rethink.models.search.idf import TFIDF
 
 docs = {
     "1": "The stop_words_ attribute can get large and increase the model size when pickling. This attribute is provided"
@@ -29,6 +29,9 @@ docs = {
 
 
 class TFIDFTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tfidf = TFIDF()
 
     def test_tokenizer(self):
         for s, t in [
@@ -39,7 +42,7 @@ class TFIDFTest(unittest.TestCase):
                     ['hospital', 'was', 'built', '2011', 'donations', 'indonesian', 'citizens', 'organisations']
             ),
         ]:
-            res = list(tfidf.tokenizer(s))
+            res = list(self.tfidf.tokenizer(s))
             self.assertEqual(t, res)
 
     def test_search(self):
@@ -49,10 +52,10 @@ class TFIDFTest(unittest.TestCase):
             _ds.append(v)
             nids.append(k)
 
-        vec = tfidf.docs2vec(_ds)
+        vec = self.tfidf.docs2vec(_ds)
         self.assertEqual((6, 555861), vec.shape)
 
-        res = tfidf.search("计算机理解句子", docs_vec=vec, n=2)
+        res = self.tfidf.search("计算机理解句子", docs_vec=vec, n=2)
         self.assertEqual(["3", "4"], [nids[i] for i in res])
-        res = tfidf.search("hospital built", docs_vec=vec, n=2)
+        res = self.tfidf.search("hospital built", docs_vec=vec, n=2)
         self.assertEqual(["6", "5"], [nids[i] for i in res])

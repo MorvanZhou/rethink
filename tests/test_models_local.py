@@ -1,5 +1,5 @@
 import datetime
-import os
+import shutil
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -34,6 +34,8 @@ class LocalModelsTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         models.database.drop_all()
+        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 
     def test_user(self):
         _id, code = models.user.add(
@@ -381,8 +383,7 @@ class LocalModelsTest(unittest.TestCase):
         res = models.files.upload_image_vditor(self.uid, [img_file])
         self.assertIn("phone-notes.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["phone-notes.png"])
-        local_file = Path(__file__).parent / "tmp" / ".data" / os.path.sep.join(
-            res["succMap"]["phone-notes.png"].rsplit("/")[-3:])
+        local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["phone-notes.png"][1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
@@ -397,8 +398,8 @@ class LocalModelsTest(unittest.TestCase):
         new_url, code = models.files.fetch_image_vditor(self.uid, url)
         self.assertEqual(const.Code.OK, code)
         self.assertTrue(new_url.endswith(".ico"))
-        self.assertTrue(new_url.startswith("http://127.0.0.1"))
-        local_file = Path(__file__).parent / "tmp" / ".data" / os.path.sep.join(new_url.rsplit("/")[-3:])
+        self.assertTrue(new_url.startswith("/"))
+        local_file = Path(__file__).parent / "tmp" / ".data" / new_url[1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
 

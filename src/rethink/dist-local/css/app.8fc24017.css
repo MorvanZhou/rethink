@@ -4171,7 +4171,7 @@ tr.tr-sm .node-more-ops {
   border-color: rgba(107, 143, 242, 0.5);
   border-style: dashed;
   background-color: rgba(237, 242, 255, 0.5);
-  color: rgb(59, 109, 241);
+  color: #3B6DF1FF;
   outline: none;
   border-width: 2px;
   border-radius: 8px;
@@ -4183,6 +4183,7 @@ tr.tr-sm .node-more-ops {
   width: 1px;
   height: 1px;
 }
+
 .file-label[data-v-a421d7c6] {
   font-size: 1.3em;
   font-weight: 300;
@@ -4190,10 +4191,24 @@ tr.tr-sm .node-more-ops {
   text-align: center;
   cursor: pointer;
 }
+
+.file-label img[data-v-a421d7c6] {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 1rem;
+}
+
+.center[data-v-a421d7c6] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .click-upload[data-v-a421d7c6] {
   text-underline-offset: 0.1em;
   text-decoration: underline;
 }
+
 .preview-container[data-v-a421d7c6] {
   display: flex;
   margin-top: 2rem;
@@ -4391,21 +4406,30 @@ h2[data-v-05a72108] {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 20px 20px 40px 20px;
+  padding: 20px 20px 20px 20px;
   width: 100px;
 }
 .title[data-v-05a72108] {
   font-size: 1.2em;
   font-weight: bold;
 }
+
 .start-at[data-v-05a72108] {
   font-size: 1em;
   color: #666;
 }
+
 .stopped[data-v-05a72108] {
   font-size: 1em;
   color: #f44336;
 }
+
+.error-msg[data-v-05a72108] {
+  font-size: 1em;
+  color: #f44336;
+  padding-left: 20px;
+}
+
 .process[data-v-05a72108] {
   width: 100%;
   height: 20px;

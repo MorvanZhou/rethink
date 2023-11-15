@@ -1,8 +1,10 @@
 import datetime
 import io
 import os
+import shutil
 import time
 import unittest
+from pathlib import Path
 from typing import Dict
 from zipfile import ZipFile
 
@@ -68,6 +70,8 @@ class TokenApiTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         database.drop_all()
+        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -502,8 +506,7 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual({
             'errFiles': [],
             'succMap': {
-                'test.png': f"http://127.0.0.1:8000"
-                            f"/userData/{jwt_decode(self.token)['uid']}/3acca26d4f9d111694d7dbda2d1e6a40.png"
+                'test.png': f"/files/3acca26d4f9d111694d7dbda2d1e6a40.png"
             }}, rj["data"])
         f1.close()
         os.remove("temp/test.png")

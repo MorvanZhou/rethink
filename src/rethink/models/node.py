@@ -1,5 +1,6 @@
 import datetime
 import re
+from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
 from bson import ObjectId
@@ -50,12 +51,29 @@ def __flush_to_node_ids(
     return list(new_to_nid), const.Code.OK
 
 
+def __local_usage_write_file(nid: str, md: str):
+    if not config.is_local_db():
+        return
+    md_dir = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md"
+    md_dir.mkdir(parents=True, exist_ok=True)
+    with open(md_dir / f"{nid}.md", "w") as f:
+        f.write(md)
+
+
+def __local_usage_delete_files(nids: List[str]):
+    for nid in nids:
+        md_dir = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md" / f"{nid}.md"
+        if md_dir.exists():
+            md_dir.unlink()
+
+
 def add(
         uid: str,
         md: str,
         type_: int = const.NodeType.MARKDOWN.value,
         from_nid: str = "",
 ) -> Tuple[Optional[tps.Node], const.Code]:
+    md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
     u, code = user.get(uid=uid)
@@ -105,6 +123,7 @@ def add(
 
     user.update_used_space(uid=uid, delta=new_size)
 
+    __local_usage_write_file(nid=nid, md=md)
     return data, const.Code.OK
 
 
@@ -166,6 +185,7 @@ def update(
         md: str,
         refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
+    md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
     u, code = user.get(uid=uid)
@@ -232,6 +252,8 @@ def update(
         with_disabled=False,
     )
     user.update_used_space(uid=uid, delta=len(md.encode("utf-8")) - old_md_size)
+
+    __local_usage_write_file(nid=nid, md=md)
     return doc, const.Code.OK
 
 
@@ -369,6 +391,7 @@ def batch_delete(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"delete nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
+    __local_usage_delete_files(nids=nids)
     return const.Code.OK
 
 

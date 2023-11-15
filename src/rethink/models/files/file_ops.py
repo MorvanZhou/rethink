@@ -1,6 +1,5 @@
 import hashlib
 import io
-import os
 import re
 import zipfile
 from pathlib import Path
@@ -110,6 +109,7 @@ def __img_ptn_replace_upload(
         ext = "jpeg"
     content_type = f"image/{ext}"
     bio_file = io.BytesIO(file)
+    bio_file.seek(0, io.SEEK_END)
     file_size_ = bio_file.tell()
     url = __save_image(
         uid=uid,
@@ -375,14 +375,10 @@ def upload_to_local_storage(
         filename: str,
         fid: str,
 ) -> str:
-    host = os.environ["VUE_APP_API_HOST"]
-    port = os.environ["VUE_APP_API_PORT"]
-    if not host.startswith("http"):
-        host = "http://" + host
     # upload to local storage
-    img_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "userData" / uid / fid
+    img_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "files" / fid
     img_path.parent.mkdir(parents=True, exist_ok=True)
-    url = f"{host}:{port}/userData/{uid}/{fid}"
+    url = f"/files/{fid}"
     if img_path.exists():
         # skip the same image
         return url

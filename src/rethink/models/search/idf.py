@@ -27,9 +27,9 @@ class TFIDF:
 
     @staticmethod
     def _load_dict():
-        sw = set(STOP_WORDS_FILE.read_text().splitlines())
-        lines = IDF_FILE.read_text().splitlines()
-        lines.extend(ENG_IDF_FILE.read_text().splitlines())
+        sw = set(STOP_WORDS_FILE.read_text(encoding="utf-8").splitlines())
+        lines = IDF_FILE.read_text(encoding="utf-8").splitlines()
+        lines.extend(ENG_IDF_FILE.read_text(encoding="utf-8").splitlines())
         vocabulary = {}
         idf = np.empty(len(lines), dtype=np.float32)
         for i, line in enumerate(lines):
@@ -68,5 +68,4 @@ class TFIDF:
         top_n = cs.ravel().argsort()[-n:][::-1]
         return top_n
 
-
-tfidf = TFIDF()
+# tfidf = TFIDF()

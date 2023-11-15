@@ -89,9 +89,8 @@ async def index() -> HTMLResponse:
     )
 
 
-@app.get("/userData/{uid}/{fid}", response_class=FileResponse)
+@app.get("/files/{fid}", response_class=FileResponse)
 async def user_data(
-        uid: str,
         fid: str,
 ) -> FileResponse:
     if config.is_local_db():
@@ -99,6 +98,6 @@ async def user_data(
     else:
         raise HTTPException(status_code=404, detail="only support local storage")
     return FileResponse(
-        path=prefix / ".data" / "userData" / uid / fid,
+        path=prefix / ".data" / "files" / fid,
         status_code=200,
     )
