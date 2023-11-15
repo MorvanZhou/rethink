@@ -81,18 +81,19 @@ class UtilsTest(unittest.TestCase):
 class TestAsync(unittest.IsolatedAsyncioTestCase):
     async def test_get_title_description_from_link(self):
         for url, res in [
+            ("https://github.com/MorvanZhou/rethink", True),
             ("https://zhuanlan.zhihu.com/p/610939462?utm_id=0", True),
-            ("https://waa.fffffffff", False),
+            ("https://waqwe12f2f2fa.fffffffff", False),
             ("https://baidu.com", True),
             ("https://rethink.run", True),
             ("https://rethink.run/about", True),
             ("https://baidu.com/wqwqqqqq", False),
-            ("https://mp.weixin.qq.com/s/fHrDf4XQ00a8IG-VF8-VwQ", False),
+            ("https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw", False),
         ]:
             title, desc = await utils.get_title_description_from_link(url)
             if res:
                 self.assertNotEqual(title, "", msg=f"{url} {title}")
                 self.assertNotEqual(desc, "", msg=f"{url} {desc}")
             else:
-                self.assertEqual(title, "")
-                self.assertEqual(desc, "")
+                self.assertEqual(title, "", msg=f"{url} {title}")
+                self.assertEqual(desc, "", msg=f"{url} {desc}")
