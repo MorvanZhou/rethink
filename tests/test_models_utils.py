@@ -81,6 +81,7 @@ class UtilsTest(unittest.TestCase):
 class TestAsync(unittest.IsolatedAsyncioTestCase):
     async def test_get_title_description_from_link(self):
         for url, res in [
+            ("https://zhuanlan.zhihu.com/p/610939462?utm_id=0", True),
             ("https://waa.fffffffff", False),
             ("https://baidu.com", True),
             ("https://rethink.run", True),

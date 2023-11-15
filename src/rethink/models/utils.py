@@ -177,7 +177,7 @@ async def get_title_description_from_link(url: str) -> Tuple[str, str]:
     if found is None:
         found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="title"[^>]*>', html, re.DOTALL)
     if found is None:
-        found = re.search(r"<title>(.*?)</title>", html, re.DOTALL)
+        found = re.search(r"<title[^>]*>(.*?)</title>", html, re.DOTALL)
     if found:
         title = found.group(1).strip()
 
