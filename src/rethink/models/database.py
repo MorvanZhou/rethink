@@ -46,6 +46,7 @@ def set_client():
             port=conf.DB_PORT,
             username=conf.DB_USER,
             password=conf.DB_PASSWORD,
+            socketTimeoutMS=1000 * 5,
         )
 
 

@@ -506,7 +506,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({
             'errFiles': [],
             'succMap': {
-                'test.png': f"/files/3acca26d4f9d111694d7dbda2d1e6a40.png"
+                'test.png': "/files/3acca26d4f9d111694d7dbda2d1e6a40.png"
             }}, rj["data"])
         f1.close()
         os.remove("temp/test.png")

@@ -36,7 +36,7 @@ async def upload_obsidian_files(
     response_model=schemas.files.FileUploadResponse,
 )
 @measure_time_spend
-async def upload_obsidian_files(
+async def upload_text_files(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         files: List[UploadFile],
 ) -> schemas.files.FileUploadResponse:

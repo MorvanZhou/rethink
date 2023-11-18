@@ -170,7 +170,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         )
         md = dedent(f"""title
         fffqw [@c](/n/{nid1['id']})
-        fff 
+        fff
         [@我133](/n/{nid2['id']})
         ffq
         """)
@@ -353,7 +353,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_update_title_and_from_nodes_updates(self):
         n1, code = await models.node.add(
-            uid=self.uid, md=f"title1\ntext", type_=const.NodeType.MARKDOWN.value
+            uid=self.uid, md="title1\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
         n2, code = await models.node.add(

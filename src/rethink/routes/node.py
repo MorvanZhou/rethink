@@ -36,7 +36,7 @@ async def put_node(
     response_model=schemas.node.PutResponse,
 )
 @measure_time_spend
-async def put_node(
+async def put_quick_node(
         req: schemas.node.PutRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.node.PutResponse:
