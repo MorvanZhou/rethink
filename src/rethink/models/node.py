@@ -61,8 +61,11 @@ def __local_usage_write_file(nid: str, md: str):
 
 
 def __local_usage_delete_files(nids: List[str]):
+    if not config.is_local_db():
+        return
+    dir_ = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md"
     for nid in nids:
-        md_dir = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md" / f"{nid}.md"
+        md_dir = dir_ / f"{nid}.md"
         if md_dir.exists():
             md_dir.unlink()
 

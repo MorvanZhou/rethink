@@ -1,6 +1,7 @@
 import unittest
 from textwrap import dedent
 
+from rethink import const
 from rethink.models import utils
 
 
@@ -88,12 +89,13 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             ("https://rethink.run", True),
             ("https://rethink.run/about", True),
             ("https://baidu.com/wqwqqqqq", False),
-            ("https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw", False),
+            ("https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw", True),
         ]:
-            title, desc = await utils.get_title_description_from_link(url)
+            title, desc = await utils.get_title_description_from_link(
+                url, language=const.Language.EN.value)
             if res:
-                self.assertNotEqual(title, "", msg=f"{url} {title}")
-                self.assertNotEqual(desc, "", msg=f"{url} {desc}")
+                self.assertNotEqual("No title found", title, msg=f"{url} {title}")
+                self.assertNotEqual("No description found", desc, msg=f"{url} {desc}")
             else:
-                self.assertEqual(title, "", msg=f"{url} {title}")
-                self.assertEqual(desc, "", msg=f"{url} {desc}")
+                self.assertEqual("No title found", title, msg=f"{url} {title}")
+                self.assertEqual("No description found", desc, msg=f"{url} {desc}")

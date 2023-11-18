@@ -10,7 +10,7 @@ import jwt
 import pypinyin
 from markdown import Markdown
 
-from rethink import config
+from rethink import config, const
 from rethink.logger import logger
 
 HEADERS = {
@@ -162,7 +162,16 @@ ASYNC_CLIENT_HEADERS = {
 }
 
 
-async def get_title_description_from_link(url: str) -> Tuple[str, str]:
+async def get_title_description_from_link(url: str, language: str) -> Tuple[str, str]:
+    if language == const.Language.ZH.value:
+        title = "网址没发现标题"
+        description = "网址没发现描述"
+    elif language == const.Language.EN.value:
+        title = "No title found"
+        description = "No description found"
+    else:
+        title = "No title found"
+        description = "No description found"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -178,15 +187,14 @@ async def get_title_description_from_link(url: str) -> Tuple[str, str]:
                 httpx.HTTPError
         ) as e:
             logger.info(f"failed to get {url}: {e}")
-            return "", ""
+            return title, description
         if response.status_code in [302, 301]:
             url = response.headers["Location"]
-            return await get_title_description_from_link(url)
+            return await get_title_description_from_link(url=url, language=language)
         if response.status_code != 200:
-            return "", ""
+            return title, description
         html = response.text
 
-    title, description = "", ""
     found = re.search(r'<meta[^>]*name="title"[^>]*content="([^"]*)"[^>]*>', html, re.DOTALL)
     if found is None:
         found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="title"[^>]*>', html, re.DOTALL)

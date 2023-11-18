@@ -85,8 +85,20 @@ async def put_quick_node(
         )
 
     if models.utils.contain_only_http_link(req.md) != "":
-        title, description = await models.utils.get_title_description_from_link(req.md)
-        req.md = f"{title}\n\n{description}\n\n[{req.md}]({req.md})"
+        title, description = await models.utils.get_title_description_from_link(
+            url=req.md,
+            language=td.language,
+        )
+        if td.language == const.Language.ZH.value:
+            desc_prefix = "**描述：**\n\n"
+            link_prefix = "*链接：*"
+        elif td.language == const.Language.EN.value:
+            desc_prefix = "**Description:**\n\n"
+            link_prefix = "*Link:* "
+        else:
+            desc_prefix = "**Description:**\n\n"
+            link_prefix = "*Link:* "
+        req.md = f"{title}\n\n{desc_prefix}{description}\n\n{link_prefix}[{req.md}]({req.md})"
 
     return put_node(
         td=td,
