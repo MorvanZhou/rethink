@@ -8,7 +8,7 @@ from rethink.models import database
 from . import utils
 
 
-class AuthTest(unittest.TestCase):
+class AuthTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         utils.set_env(".env.test.local")
@@ -17,8 +17,11 @@ class AuthTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        database.drop_all()
         utils.drop_env(".env.test.local")
+
+    async def asyncSetUp(self) -> None:
+        await database.drop_all()
+        await database.init()
 
     def test_verify(self):
         password = "123abc"
