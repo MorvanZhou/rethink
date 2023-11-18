@@ -12,7 +12,6 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         utils.set_env(".env.test.local")
-        database.init()
         cls.salt = bcrypt.gensalt(rounds=5)
 
     @classmethod
