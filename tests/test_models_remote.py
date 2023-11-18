@@ -46,7 +46,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 data={"uid": uid, "language": const.Language.EN.value},
             )
             self.uid = uid
-        except pymongo.errors.NetworkTimeout:
+        except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
             print("timeout")
 
     async def asyncTearDown(self) -> None:
@@ -56,7 +56,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             return
         try:
             await models.database.drop_all()
-        except pymongo.errors.NetworkTimeout:
+        except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
             print("timeout")
 
     @skip_no_db
