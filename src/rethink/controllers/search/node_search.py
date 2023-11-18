@@ -3,7 +3,7 @@ from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode, datetime2str
 
 
-def cursor_query(
+async def cursor_query(
         td: TokenDecode,
         req: schemas.search.CursorQueryRequest,
 ) -> schemas.search.CursorQueryResponse:
@@ -14,7 +14,7 @@ def cursor_query(
             requestId=req.requestId,
             nodes=None
         )
-    recommended_nodes = models.node.cursor_query(
+    recommended_nodes = await models.node.cursor_query(
         uid=td.uid,
         nid=req.nid,
         cursor_text=req.textBeforeCursor,
@@ -35,7 +35,7 @@ def cursor_query(
     )
 
 
-def search_user_nodes(
+async def search_user_nodes(
         td: TokenDecode,
         req: schemas.search.SearchUserNodesRequest,
 ) -> schemas.node.NodesInfoResponse:
@@ -46,7 +46,7 @@ def search_user_nodes(
             requestId=req.requestId,
             nodes=[],
         )
-    nodes, total = models.search.user_node(
+    nodes, total = await models.search.user_node(
         uid=td.uid,
         query=req.query,
         sort_key=req.sortKey,
@@ -64,7 +64,7 @@ def search_user_nodes(
     )
 
 
-def add_to_recent_cursor_search(
+async def add_to_recent_cursor_search(
         td: TokenDecode,
         req: schemas.search.AddToRecentSearchHistRequest
 ) -> schemas.base.AcknowledgeResponse:
@@ -74,7 +74,7 @@ def add_to_recent_cursor_search(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = models.search.add_recent_cursor_search(uid=td.uid, nid=req.nid, to_nid=req.toNid)
+    code = await models.search.add_recent_cursor_search(uid=td.uid, nid=req.nid, to_nid=req.toNid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -82,7 +82,7 @@ def add_to_recent_cursor_search(
     )
 
 
-def get_recent(
+async def get_recent(
         td: TokenDecode,
         rid: str,
 ) -> schemas.search.GetRecentSearchResponse:
@@ -93,7 +93,7 @@ def get_recent(
             requestId=rid,
             queries=[],
         )
-    queries = models.search.get_recent_search(uid=td.uid)
+    queries = await models.search.get_recent_search(uid=td.uid)
     code = const.Code.OK
     return schemas.search.GetRecentSearchResponse(
         code=code.value,
@@ -103,7 +103,7 @@ def get_recent(
     )
 
 
-def put_recent(
+async def put_recent(
         td: TokenDecode,
         req: schemas.search.PutRecentSearchRequest,
 ) -> schemas.base.AcknowledgeResponse:
@@ -113,7 +113,7 @@ def put_recent(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = models.search.put_recent_search(uid=td.uid, query=req.query)
+    code = await models.search.put_recent_search(uid=td.uid, query=req.query)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),

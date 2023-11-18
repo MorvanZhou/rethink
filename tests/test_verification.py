@@ -5,15 +5,17 @@ from rethink import models, const
 from . import utils
 
 
-class VerificationTest(unittest.TestCase):
+class VerificationTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
-        models.database.drop_all()
 
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
+
+    async def asyncSetUp(self) -> None:
+        await models.database.drop_all()
 
     def test_verification_img(self):
         token, data = models.verification.random_captcha()

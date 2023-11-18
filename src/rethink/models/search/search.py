@@ -5,7 +5,7 @@ from .. import tps
 from ..database import COLL
 
 
-def user_node(
+async def user_node(
         uid: str,
         query: str = "",
         sort_key: str = "createdAt",
@@ -22,7 +22,7 @@ def user_node(
     if nid_exclude is not None and len(nid_exclude) > 0:
         condition["id"] = {"$nin": nid_exclude}
 
-    total = COLL.nodes.count_documents(condition)
+    total = await COLL.nodes.count_documents(condition)
 
     query = query.strip().lower()
 
@@ -43,7 +43,7 @@ def user_node(
         docs = docs.sort([(sort_key, sort_order), ("_id", -1)])
 
     if config.is_local_db() and query != "":
-        docs = filter(lambda d: query in d["searchKeys"] or query in d["md"], docs)
+        docs = filter(lambda d: query in d["searchKeys"] or query in d["md"], await docs.to_list(length=None))
         docs = list(docs)
         if page_size > 0:
             docs = docs[page * page_size: (page + 1) * page_size]
@@ -51,10 +51,10 @@ def user_node(
 
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
-    return list(docs), total
+    return await docs.to_list(length=None), total
 
 
-def add_recent_cursor_search(
+async def add_recent_cursor_search(
         uid: str,
         nid: str,
         to_nid: str,
@@ -64,12 +64,12 @@ def add_recent_cursor_search(
     node_c = {"uid": uid, "id": {"$in": [nid, to_nid]}}
 
     # try finding user
-    u = COLL.users.find_one(user_c)
+    u = await COLL.users.find_one(user_c)
     if u is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
 
     # try finding node
-    ns = list(COLL.nodes.find(node_c))
+    ns = await COLL.nodes.find(node_c).to_list(length=None)
     if len(ns) != 2:
         return const.Code.NODE_NOT_EXIST
 
@@ -81,7 +81,7 @@ def add_recent_cursor_search(
         rns = rns[:10]
 
     # add to recentCursorSearchSelectedNIds
-    res = COLL.users.update_one(
+    res = await COLL.users.update_one(
         {"id": uid},
         {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
     )
@@ -91,15 +91,15 @@ def add_recent_cursor_search(
     return const.Code.OK
 
 
-def get_recent_search(uid: str) -> List[str]:
-    doc = COLL.users.find_one({"id": uid})
+async def get_recent_search(uid: str) -> List[str]:
+    doc = await COLL.users.find_one({"id": uid})
     if doc is None:
         return []
     return doc["lastState"]["recentSearch"]
 
 
-def put_recent_search(uid: str, query: str) -> const.Code:
-    doc = COLL.users.find_one({"id": uid})
+async def put_recent_search(uid: str, query: str) -> const.Code:
+    doc = await COLL.users.find_one({"id": uid})
     if doc is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
     rns = doc["lastState"]["recentSearch"]
@@ -110,7 +110,7 @@ def put_recent_search(uid: str, query: str) -> const.Code:
     rns.insert(0, query)
     if len(rns) > 20:
         rns = rns[:20]
-    _ = COLL.users.update_one(
+    _ = await COLL.users.update_one(
         {"id": uid},
         {"$set": {"lastState.recentSearch": rns}}
     )

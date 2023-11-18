@@ -25,7 +25,7 @@ async def cursor_query(
         req: schemas.search.CursorQueryRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.search.CursorQueryResponse:
-    return node_search.cursor_query(
+    return await node_search.cursor_query(
         td=token_decode,
         req=req,
     )
@@ -40,7 +40,7 @@ async def search_user_nodes(
         req: schemas.search.SearchUserNodesRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.node.NodesInfoResponse:
-    return node_search.search_user_nodes(
+    return await node_search.search_user_nodes(
         td=token_decode,
         req=req,
     )
@@ -55,7 +55,7 @@ async def add_to_recent_cursor_search(
         req: schemas.search.AddToRecentSearchHistRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.base.AcknowledgeResponse:
-    return node_search.add_to_recent_cursor_search(
+    return await node_search.add_to_recent_cursor_search(
         td=token_decode,
         req=req,
     )
@@ -70,7 +70,7 @@ async def get_recent_search(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         rid: Optional[str] = Header(None),
 ) -> schemas.search.GetRecentSearchResponse:
-    return node_search.get_recent(
+    return await node_search.get_recent(
         td=token_decode,
         rid=rid,
     )
@@ -85,7 +85,7 @@ async def put_recent_search(
         req: schemas.search.PutRecentSearchRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.base.AcknowledgeResponse:
-    return node_search.put_recent(
+    return await node_search.put_recent(
         td=token_decode,
         req=req,
     )

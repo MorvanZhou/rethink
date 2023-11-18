@@ -24,26 +24,26 @@ INTERNAL_IMG_PTN2 = re.compile(r"!\[(.*?)]\((?!http)(.*?)\)")
 VALID_IMG_EXT = {"jpg", "jpeg", "png", "gif", "svg"}
 
 
-def delete_file(uid: str, fid: str) -> const.Code:
-    success_deletion, failed_deletion = delete_files(uid=uid, fids=[fid])
+async def delete_file(uid: str, fid: str) -> const.Code:
+    success_deletion, failed_deletion = await delete_files(uid=uid, fids=[fid])
     if len(success_deletion) != 1:
         return const.Code.OPERATION_FAILED
     return const.Code.OK
 
 
-def delete_files(uid: str, fids: List[str]) -> Tuple[List[str], List[str]]:
+async def delete_files(uid: str, fids: List[str]) -> Tuple[List[str], List[str]]:
     success_deletion = []
     failed_deletion = []
     delta = 0
     for fid in fids:
-        doc = COLL.user_file.find_one_and_delete({"uid": uid, "fid": fid})
+        doc = await COLL.user_file.find_one_and_delete({"uid": uid, "fid": fid})
         if doc is None:
             failed_deletion.append(fid)
         else:
             success_deletion.append(fid)
             delta -= doc["size"]
 
-    update_used_space(uid=uid, delta=delta)
+    await update_used_space(uid=uid, delta=delta)
     return success_deletion, failed_deletion
 
 
@@ -79,7 +79,7 @@ def unzip_file(zip_bytes: bytes) -> Dict[str, Dict[str, Union[bytes, int]]]:
     return extracted_files
 
 
-def __img_ptn_replace_upload(
+async def __img_ptn_replace_upload(
         uid: str,
         filepath: str,
         filename: str,
@@ -111,7 +111,7 @@ def __img_ptn_replace_upload(
     bio_file = io.BytesIO(file)
     bio_file.seek(0, io.SEEK_END)
     file_size_ = bio_file.tell()
-    url = __save_image(
+    url = await __save_image(
         uid=uid,
         filename=filepath,
         file=bio_file,
@@ -124,7 +124,7 @@ def __img_ptn_replace_upload(
     return md
 
 
-def replace_inner_link_and_upload_image(
+async def replace_inner_link_and_upload_image(
         uid: str,
         md: str,
         exist_filename2nid: Dict[str, str],
@@ -150,7 +150,7 @@ def replace_inner_link_and_upload_image(
         span = match.span()
         filename = match.group(1)
         filepath = match.group(2)
-        md = __img_ptn_replace_upload(
+        md = await __img_ptn_replace_upload(
             uid=uid,
             filepath=filepath,
             filename=filename,
@@ -162,7 +162,7 @@ def replace_inner_link_and_upload_image(
     for match in list(INTERNAL_IMG_PTN.finditer(md))[::-1]:
         span = match.span()
         filepath = filename = match.group(1)
-        md = __img_ptn_replace_upload(
+        md = await __img_ptn_replace_upload(
             uid=uid,
             filepath=filepath,
             filename=filename,
@@ -210,7 +210,7 @@ def __get_out_bytes(
     return out
 
 
-def __save_image(
+async def __save_image(
         uid: str,
         filename: str,
         file: BinaryIO,
@@ -235,7 +235,7 @@ def __save_image(
     hashed = file_hash(file)
 
     if config.is_local_db():
-        url = upload_to_local_storage(
+        url = await upload_to_local_storage(
             uid=uid,
             file_size=file_size,
             content_type=content_type,
@@ -248,7 +248,7 @@ def __save_image(
     else:
         # upload to cos
         try:
-            url = upload_bytes_to_cos(
+            url = await upload_bytes_to_cos(
                 uid=uid,
                 file_size=file_size,
                 content_type=content_type,
@@ -263,7 +263,7 @@ def __save_image(
     return url
 
 
-def save_upload_files(
+async def save_upload_files(
         uid: str,
         files: List[UploadFile],
         max_image_size: int,
@@ -282,7 +282,7 @@ def save_upload_files(
         if file.size > max_image_size:
             res["errFiles"].append(filename)
             continue
-        url = __save_image(
+        url = await __save_image(
             uid=uid,
             filename=file.filename,
             file=file.file,
@@ -297,7 +297,7 @@ def save_upload_files(
     return res
 
 
-def upload_bytes_to_cos(
+async def upload_bytes_to_cos(
         uid: str,
         file_size: int,
         content_type: str,
@@ -329,7 +329,7 @@ def upload_bytes_to_cos(
 
     url = f"https://{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com/{key}"
 
-    doc = COLL.user_file.find_one({"uid": uid, "fid": fid})
+    doc = await COLL.user_file.find_one({"uid": uid, "fid": fid})
     if doc:
         return url
 
@@ -357,7 +357,7 @@ def upload_bytes_to_cos(
         EnableMD5=False,
         ContentType=content_type,
     )
-    insert_new_file(
+    await insert_new_file(
         uid=uid,
         fid=fid,
         filename=filename,
@@ -366,7 +366,7 @@ def upload_bytes_to_cos(
     return url
 
 
-def upload_to_local_storage(
+async def upload_to_local_storage(
         uid: str,
         file_size: int,
         content_type: str,
@@ -401,7 +401,7 @@ def upload_to_local_storage(
     # point move to the end
     out_bytes.seek(0, io.SEEK_END)
     size = out_bytes.tell()
-    insert_new_file(
+    await insert_new_file(
         uid=uid,
         fid=fid,
         filename=filename,
@@ -410,7 +410,7 @@ def upload_to_local_storage(
     return url
 
 
-def insert_new_file(
+async def insert_new_file(
         uid: str,
         fid: str,
         filename: str,
@@ -423,5 +423,5 @@ def insert_new_file(
         "filename": filename,
         "size": file_size,
     }
-    COLL.user_file.insert_one(doc)
-    update_used_space(uid=uid, delta=file_size)
+    await COLL.user_file.insert_one(doc)
+    await update_used_space(uid=uid, delta=file_size)

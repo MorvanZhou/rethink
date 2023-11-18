@@ -13,6 +13,7 @@ def set_env(file=".env.test.local"):
             tmp.mkdir(exist_ok=True)
             os.environ["VUE_APP_MODE"] = "local"
             os.environ["VUE_APP_API_PORT"] = "8000"
+        if file.endswith(".local"):
             os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
         for c in cs:
@@ -26,9 +27,12 @@ def drop_env(file=".env.test.local"):
         os.environ.pop("VUE_APP_API_PORT")
     except KeyError:
         pass
-    tmp = os.environ.pop("LOCAL_STORAGE_PATH")
-    if tmp:
-        shutil.rmtree(tmp, ignore_errors=True)
+    try:
+        tmp = os.environ.pop("LOCAL_STORAGE_PATH")
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
+    except KeyError:
+        pass
 
     with open(Path(__file__).parent.parent / file, "r") as f:
         cs = f.readlines()

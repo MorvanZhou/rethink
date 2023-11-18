@@ -25,7 +25,7 @@ async def move_to_trash(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.node.RestoreFromTrashRequest
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.move_to_trash(
+    return await trash_ops.move_to_trash(
         td=token_decode,
         req=req
     )
@@ -42,7 +42,7 @@ async def get_from_trash(
         ps: int = 10,
         rid: Optional[str] = Header(None),
 ) -> schemas.node.GetFromTrashResponse:
-    return trash_ops.get_from_trash(
+    return await trash_ops.get_from_trash(
         td=token_decode,
         p=p,
         ps=ps,
@@ -59,7 +59,7 @@ async def restore_node_in_trash(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.node.RestoreFromTrashRequest,
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.restore_from_trash(
+    return await trash_ops.restore_from_trash(
         td=token_decode,
         req=req,
     )
@@ -74,7 +74,7 @@ async def delete_node(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         nid: str,
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.delete_node(
+    return await trash_ops.delete_node(
         td=token_decode,
         nid=nid,
     )
@@ -89,7 +89,7 @@ async def batch_nodes_to_trash(
         req: schemas.node.BatchNodeIdsRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.move_batch_to_trash(
+    return await trash_ops.move_batch_to_trash(
         td=token_decode,
         req=req,
     )
@@ -104,7 +104,7 @@ async def restore_batch_node_in_trash(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.node.BatchNodeIdsRequest,
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.restore_batch_from_trash(
+    return await trash_ops.restore_batch_from_trash(
         td=token_decode,
         req=req,
     )
@@ -119,7 +119,7 @@ async def delete_batch_node(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.node.BatchNodeIdsRequest,
 ) -> schemas.base.AcknowledgeResponse:
-    return trash_ops.delete_batch_node(
+    return await trash_ops.delete_batch_node(
         td=token_decode,
         req=req,
     )

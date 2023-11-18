@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import datetime
 import json
@@ -8,27 +9,26 @@ from typing import Optional, Union
 
 from bson import ObjectId
 from bson.tz_util import utc
-from mongita import MongitaClientDisk
-from mongita.collection import Collection
-from pymongo import MongoClient
-from pymongo.collection import Collection as RemoteCollection
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 from rethink import config, const
 from rethink.logger import logger
+from rethink.mongita import MongitaClientDisk
+from rethink.mongita.collection import Collection
 from . import utils
 from .tps import UserMeta, Node, UserFile, ImportData
 
 
 @dataclass
 class Collections:
-    users: Union[Collection, RemoteCollection] = None
-    nodes: Union[Collection, RemoteCollection] = None
-    import_data: Union[Collection, RemoteCollection] = None
-    user_file: Union[Collection, RemoteCollection] = None
+    users: Union[Collection, AsyncIOMotorCollection] = None
+    nodes: Union[Collection, AsyncIOMotorCollection] = None
+    import_data: Union[Collection, AsyncIOMotorCollection] = None
+    user_file: Union[Collection, AsyncIOMotorCollection] = None
 
 
 COLL = Collections()
-CLIENT: Optional[Union[MongoClient, MongitaClientDisk]] = None
+CLIENT: Optional[Union[AsyncIOMotorClient, MongitaClientDisk]] = None
 
 
 def set_client():
@@ -41,7 +41,7 @@ def set_client():
         db_path.mkdir(parents=True, exist_ok=True)
         CLIENT = MongitaClientDisk(db_path)
     else:
-        CLIENT = MongoClient(
+        CLIENT = AsyncIOMotorClient(
             host=conf.DB_HOST,
             port=conf.DB_PORT,
             username=conf.DB_USER,
@@ -49,52 +49,52 @@ def set_client():
         )
 
 
-def __remote_try_build_index():
+async def __remote_try_build_index():
     # try creating index
-    if not isinstance(CLIENT, MongoClient):
+    if not isinstance(CLIENT, AsyncIOMotorClient):
         return
 
-    users_info = COLL.users.index_information()
+    users_info = await COLL.users.index_information()
     if "id_1" not in users_info:
-        COLL.users.create_index("id", unique=True)
+        await COLL.users.create_index("id", unique=True)
     if "account_1_source_1" not in users_info:
-        COLL.users.create_index(["account", "source"], unique=True)
+        await COLL.users.create_index(["account", "source"], unique=True)
 
-    nodes_info = COLL.nodes.index_information()
+    nodes_info = await COLL.nodes.index_information()
     if "id_1" not in nodes_info:
-        COLL.nodes.create_index("id", unique=True)
+        await COLL.nodes.create_index("id", unique=True)
     if "uid_1_id_-1_modifiedAt_-1" not in nodes_info:
-        COLL.nodes.create_index(
+        await COLL.nodes.create_index(
             [("uid", 1), ("id", -1), ("modifiedAt", -1)],
             unique=True,
         )
     if "uid_1_id_-1_inTrash_-1" not in nodes_info:
-        COLL.nodes.create_index(
+        await COLL.nodes.create_index(
             [("uid", 1), ("id", -1), ("inTrash", -1)],
             unique=True,
         )
     if "uid_1_id_-1" not in nodes_info:
         # created at
-        COLL.nodes.create_index(
+        await COLL.nodes.create_index(
             [("uid", 1), ("id", -1)],
             unique=True,
         )
     if "uid_1_id_-1_title_1" not in nodes_info:
-        COLL.nodes.create_index(
+        await COLL.nodes.create_index(
             [("uid", 1), ("id", -1), ("title", 1)],
             unique=True,
         )
 
-    import_data_info = COLL.import_data.index_information()
+    import_data_info = await COLL.import_data.index_information()
     if "uid_1" not in import_data_info:
-        COLL.import_data.create_index("uid", unique=True)
+        await COLL.import_data.create_index("uid", unique=True)
 
-    user_file_info = COLL.user_file.index_information()
+    user_file_info = await COLL.user_file.index_information()
     if "uid_1_fid_-1" not in user_file_info:
-        COLL.user_file.create_index([("uid", 1), ("fid", -1)], unique=True)
+        await COLL.user_file.create_index([("uid", 1), ("fid", -1)], unique=True)
 
 
-def init():
+async def init():
     set_client()
     db = CLIENT[config.get_settings().DB_NAME]
     COLL.users = db["users"]
@@ -103,24 +103,22 @@ def init():
     COLL.user_file = db["userFile"]
 
     if config.is_local_db():
-        __local_try_create_or_restore()
+        await __local_try_create_or_restore()
     else:
-        __remote_try_build_index()
+        # useful when upload files by another threading
+        CLIENT.get_io_loop = asyncio.get_running_loop
+        await __remote_try_build_index()
 
 
-def get_client():
-    return CLIENT
-
-
-def drop_all():
+async def drop_all():
     set_client()
-    for db_name in CLIENT.list_database_names():
+    for db_name in await CLIENT.list_database_names():
         if db_name == "admin":
             continue
-        CLIENT.drop_database(db_name)
+        await CLIENT.drop_database(db_name)
 
 
-def __local_try_add_default_user():
+async def __local_try_add_default_user():
     dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
     u_insertion = {
         "_id": ObjectId(),
@@ -139,7 +137,7 @@ def __local_try_add_default_user():
     logger.info("running at the first time, a user with initial data will be created")
     ns = const.NEW_USER_DEFAULT_NODES[u_insertion["language"]]
 
-    def create_node(md: str):
+    async def create_node(md: str):
         title_, snippet_ = utils.preprocess_md(md)
         n: Node = {
             "_id": ObjectId(),
@@ -157,14 +155,14 @@ def __local_try_add_default_user():
             "toNodeIds": [],
             "searchKeys": utils.txt2search_keys(title_),
         }
-        res = COLL.nodes.insert_one(n)
+        res = await COLL.nodes.insert_one(n)
         if not res.acknowledged:
             raise ValueError("cannot insert default node")
         return n
 
-    n0 = create_node(ns[0])
+    n0 = await create_node(ns[0])
     _md = ns[1].format(n0["id"])
-    n1 = create_node(_md)
+    n1 = await create_node(_md)
 
     u: UserMeta = {
         "_id": ObjectId(u_insertion["_id"]),
@@ -188,7 +186,7 @@ def __local_try_add_default_user():
             "nodeDisplaySortKey": "modifiedAt"
         }
     }
-    _ = COLL.users.insert_one(u)
+    _ = await COLL.users.insert_one(u)
 
 
 def __oid_from_datetime(dt: datetime.datetime) -> ObjectId:
@@ -204,7 +202,7 @@ def __oid_from_datetime(dt: datetime.datetime) -> ObjectId:
     return ObjectId(oid)
 
 
-def __local_restore():
+async def __local_restore():
     # restore user
     dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
     if not dot_rethink_path.exists():
@@ -234,7 +232,7 @@ def __local_restore():
             "nodeDisplaySortKey": "modifiedAt"
         }
     }
-    _ = COLL.users.insert_one(u)
+    _ = await COLL.users.insert_one(u)
 
     # restore nodes
     md_dir = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "md"
@@ -264,7 +262,7 @@ def __local_restore():
             "searchKeys": utils.txt2search_keys(title_),
         }
         ns.append(n)
-    res = COLL.nodes.insert_many(ns)
+    res = await COLL.nodes.insert_many(ns)
     if not res.acknowledged:
         raise ValueError("cannot insert default node")
     logger.info(f"restore nodes count: {len(res.inserted_ids)}")
@@ -281,13 +279,13 @@ def __local_restore():
             "filename": filename,
             "size": f.stat().st_size,
         })
-    res = COLL.user_file.insert_many(docs)
+    res = await COLL.user_file.insert_many(docs)
     if not res.acknowledged:
         raise ValueError("cannot insert default node")
     logger.info(f"restore files count: {len(res.inserted_ids)}")
 
 
-def __local_try_create_or_restore():
+async def __local_try_create_or_restore():
     if not config.get_settings().ONE_USER:
         return
 
@@ -298,44 +296,44 @@ def __local_try_create_or_restore():
         (COLL.user_file, UserFile),
         (COLL.import_data, ImportData),
     ]:
-        doc = c.find_one()
+        doc = await c.find_one()
         if doc:
             if set(doc.keys()) != set(t.__annotations__):
-                drop_all()
-                __local_restore()
+                await drop_all()
+                await __local_restore()
                 return
     # check local files count matches db
     md_dir = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "md"
     if md_dir.exists():
-        if len(list(md_dir.glob("*.md"))) != COLL.nodes.count_documents({}):
-            drop_all()
-            __local_restore()
+        if len(list(md_dir.glob("*.md"))) != await COLL.nodes.count_documents({}):
+            await drop_all()
+            await __local_restore()
             return
     files_dir = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "files"
     if files_dir.exists():
-        if len(list(files_dir.glob("*"))) != COLL.user_file.count_documents({}):
-            drop_all()
-            __local_restore()
+        if len(list(files_dir.glob("*"))) != await COLL.user_file.count_documents({}):
+            await drop_all()
+            await __local_restore()
             return
 
     # try fix TypeError: can't compare offset-naive and offset-aware datetimes
     docs = COLL.nodes.find()
-    for doc in docs:
-        COLL.nodes.update_one(
+    for doc in await docs.to_list(length=None):
+        await COLL.nodes.update_one(
             {"_id": doc["_id"]},
             {"$set": {"modifiedAt": doc["modifiedAt"].replace(tzinfo=utc)}},
         )
     docs = COLL.import_data.find()
-    for doc in docs:
-        COLL.import_data.update_one(
+    for doc in await docs.to_list(length=None):
+        await COLL.import_data.update_one(
             {"_id": doc["_id"]},
             {"$set": {"startAt": doc["startAt"].replace(tzinfo=utc)}},
         )
 
-    if COLL.users.find_one(
+    if await COLL.users.find_one(
             {"account": const.DEFAULT_USER["email"], "source": const.UserSource.EMAIL.value}
     ) is not None:
         return
 
     # no default user, create one
-    __local_try_add_default_user()
+    await __local_try_add_default_user()

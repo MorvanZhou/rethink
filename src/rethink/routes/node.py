@@ -25,7 +25,7 @@ async def put_node(
         req: schemas.node.PutRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.node.PutResponse:
-    return node_ops.put_node(
+    return await node_ops.put_node(
         td=token_decode,
         req=req,
     )
@@ -56,7 +56,7 @@ async def get_node(
         nid: str,
         rid: Optional[str] = Header(None),
 ) -> schemas.node.GetResponse:
-    return node_ops.get_node(
+    return await node_ops.get_node(
         td=token_decode,
         req_id=rid,
         nid=nid,
@@ -72,7 +72,7 @@ async def update_node(
         req: schemas.node.UpdateRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.node.GetResponse:
-    return node_ops.update_node(
+    return await node_ops.update_node(
         td=token_decode,
         req=req,
     )

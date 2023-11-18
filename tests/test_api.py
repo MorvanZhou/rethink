@@ -19,18 +19,18 @@ from rethink.models.utils import jwt_decode
 from . import utils
 
 
-class PublicApiTest(unittest.TestCase):
+class PublicApiTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
-        database.init()
 
-    def setUp(self) -> None:
+    async def asyncSetUp(self) -> None:
+        await database.drop_all()
+        await database.init()
         self.client = TestClient(app)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        database.drop_all()
         utils.drop_env(".env.test.local")
 
     def test_home(self):
@@ -52,13 +52,13 @@ class PublicApiTest(unittest.TestCase):
         self.assertEqual("xxx", rj["requestId"])
 
 
-class TokenApiTest(unittest.TestCase):
+class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
 
-    def setUp(self) -> None:
-        database.init()
+    async def asyncSetUp(self) -> None:
+        await database.init()
         self.client = TestClient(app)
         resp = self.client.post("/api/login", json={
             "email": const.DEFAULT_USER["email"],
@@ -68,8 +68,8 @@ class TokenApiTest(unittest.TestCase):
         self.assertEqual(0, rj["code"])
         self.token = rj["token"]
 
-    def tearDown(self) -> None:
-        database.drop_all()
+    async def asyncTearDown(self) -> None:
+        await database.drop_all()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 

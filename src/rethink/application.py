@@ -53,7 +53,7 @@ app.include_router(files.router)
 
 @app.on_event("startup")
 async def startup_event():
-    database.init()
+    await database.init()
     logger.info("db initialized")
 
 

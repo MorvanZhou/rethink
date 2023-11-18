@@ -9,7 +9,7 @@ from bson import ObjectId
 from rethink.models.files import file_ops
 
 
-class UnzipTest(unittest.TestCase):
+class UnzipTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.orig_folder_data = {
@@ -71,7 +71,7 @@ class UnzipTest(unittest.TestCase):
 
         self.assertEqual(b"The quick brown fox jumps over the lazy dog", bio.read())
 
-    def test_replace_inner_link(self):
+    async def test_replace_inner_link(self):
         md = dedent("""\
             # 123
             ddd qwd [[123]] 345
@@ -80,7 +80,7 @@ class UnzipTest(unittest.TestCase):
         o1 = str(ObjectId())
         o2 = str(ObjectId())
         filename2nid = {"123": o1, "我哦": o2}
-        res = file_ops.replace_inner_link_and_upload_image(
+        res = await file_ops.replace_inner_link_and_upload_image(
             uid="",
             md=md,
             exist_filename2nid=filename2nid,
@@ -95,7 +95,7 @@ class UnzipTest(unittest.TestCase):
             """), res)
         self.assertEqual({"123": o1, "我哦": o2}, filename2nid)
 
-    def test_replace_inner_link_new(self):
+    async def test_replace_inner_link_new(self):
         md = dedent("""\
             # 123
             ddd qwd [[123]] 345
@@ -104,7 +104,7 @@ class UnzipTest(unittest.TestCase):
 
         o1 = str(ObjectId())
         filename2nid = {"123": o1}
-        res = file_ops.replace_inner_link_and_upload_image(
+        res = await file_ops.replace_inner_link_and_upload_image(
             uid="",
             md=md,
             exist_filename2nid=filename2nid,

@@ -37,15 +37,15 @@ class AuthTest(unittest.TestCase):
         match = bcrypt.checkpw(pwd_bt, hashed)
         self.assertTrue(match)
 
-    def test_one_user(self):
-        uid, code = auth.register_user("a@q.com", "rethink", const.Language.EN.value)
+    async def test_one_user(self):
+        uid, code = await auth.register_user("a@q.com", "rethink", const.Language.EN.value)
         self.assertEqual(const.Code.ONE_USER_MODE, code)
         self.assertEqual("", uid)
 
-    def test_verify_user(self):
-        u, err = auth.get_user_by_email("rethink@rethink.run")
+    async def test_verify_user(self):
+        u, err = await auth.get_user_by_email("rethink@rethink.run")
         self.assertEqual(const.Code.OK, err)
-        ok = auth.verify_user(u, "rethink")
+        ok = await auth.verify_user(u, "rethink")
         self.assertTrue(ok)
 
     def test_valid_password(self):

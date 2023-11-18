@@ -9,7 +9,7 @@ from . import tps, utils
 from .database import COLL
 
 
-def add(
+async def add(
         account: str,
         source: int,
         email: str,
@@ -18,7 +18,7 @@ def add(
         avatar: str,
         language: str,
 ) -> Tuple[str, const.Code]:
-    if COLL.users.find_one({"account": account, "source": source}) is not None:
+    if await COLL.users.find_one({"account": account, "source": source}) is not None:
         return "", const.Code.EMAIL_OCCUPIED
     oid = ObjectId()
     # assert language in const.Language
@@ -46,18 +46,13 @@ def add(
             "nodeDisplaySortKey": "modifiedAt"
         }
     }
-    res = COLL.users.insert_one(data)
+    res = await COLL.users.insert_one(data)
     if not res.acknowledged:
         return "", const.Code.OPERATION_FAILED
-    un_data: tps.UserNodeIds = {
-        "_id": data["_id"],
-        "id": data["id"],
-        "nodeIds": [],
-    }
     return data["id"], const.Code.OK
 
 
-def update(
+async def update(
         uid: str,
         email: str = "",
         hashed: str = "",
@@ -67,11 +62,11 @@ def update(
         node_display_method: int = -1,
         node_display_sort_key: str = "",
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u, code = get(uid=uid)
+    u, code = await get(uid=uid)
     if code != const.Code.OK:
         return None, code
     email = email.strip()
-    if email not in ["", u["email"]] and COLL.users.find_one(
+    if email not in ["", u["email"]] and await COLL.users.find_one(
             {"account": email, "source": const.UserSource.EMAIL.value}
     ) is not None:
         return None, const.Code.EMAIL_OCCUPIED
@@ -104,58 +99,58 @@ def update(
             return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
         new_data["lastState.nodeDisplaySortKey"] = node_display_sort_key
 
-    res = COLL.users.update_one(
+    res = await COLL.users.update_one(
         {"id": uid},
         {"$set": new_data},
     )
     if res.modified_count != 1:
         return None, const.Code.OPERATION_FAILED
-    return get(uid=uid)
+    return await get(uid=uid)
 
 
-def delete(uid: str) -> const.Code:
-    res = COLL.users.delete_one({"id": uid})
+async def delete(uid: str) -> const.Code:
+    res = await COLL.users.delete_one({"id": uid})
     return const.Code.OK if res.deleted_count == 1 else const.Code.OPERATION_FAILED
 
 
-def disable(uid: str) -> const.Code:
-    res = COLL.users.update_one(
+async def disable(uid: str) -> const.Code:
+    res = await COLL.users.update_one(
         {"id": uid},
         {"$set": {"disabled": True}}
     )
     return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
 
 
-def enable(uid: str) -> const.Code:
-    res = COLL.users.update_one(
+async def enable(uid: str) -> const.Code:
+    res = await COLL.users.update_one(
         {"id": uid},
         {"$set": {"disabled": False}}
     )
     return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
 
 
-def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     if config.get_settings().ONE_USER:
         source = const.UserSource.LOCAL.value
     else:
         source = const.UserSource.EMAIL.value
-    return get_account(account=email, source=source)
+    return await get_account(account=email, source=source)
 
 
-def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u = COLL.users.find_one({"source": source, "account": account, "disabled": False})
+async def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta], const.Code]:
+    u = await COLL.users.find_one({"source": source, "account": account, "disabled": False})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     return u, const.Code.OK
 
 
-def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u = COLL.users.find_one({"id": uid, "disabled": False})
+async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
+    u = await COLL.users.find_one({"id": uid, "disabled": False})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     if u["usedSpace"] < 0:
         # reset usedSpace to 0
-        COLL.users.update_one(
+        await COLL.users.update_one(
             {"id": uid},
             {"$set": {"usedSpace": 0}}
         )
@@ -164,38 +159,40 @@ def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     return u, const.Code.OK
 
 
-def get_hash_by_uid(uid: str) -> Optional[str]:
-    u = COLL.users.find_one({"id": uid, "disabled": False})
+async def get_hash_by_uid(uid: str) -> Optional[str]:
+    u = await COLL.users.find_one({"id": uid, "disabled": False})
     if u is None:
         return None
     return u["hashed"]
 
 
-def is_exist(uid: str) -> bool:
+async def is_exist(uid: str) -> bool:
     try:
-        COLL.users.find({"id": uid, "disabled": False}, limit=1).next()
+        await COLL.users.find({"id": uid, "disabled": False}, limit=1).next()
     except StopIteration:
         return False
     return True
 
 
-def update_used_space(uid: str, delta: int) -> const.Code:
-    if not is_exist(uid=uid):
+async def update_used_space(uid: str, delta: int) -> const.Code:
+    if delta == 0:
+        return const.Code.OK
+    if not await is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    res = COLL.users.update_one(
+    res = await COLL.users.update_one(
         {"id": uid},
         {"$inc": {"usedSpace": delta}}
     )
     return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
 
 
-def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool:
+async def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool:
     if uid is None and u is None:
         raise ValueError("uid and u cannot be None at the same time")
     if config.is_local_db():
         return False
     if uid is not None:
-        u, code = get(uid=uid)
+        u, code = await get(uid=uid)
         if code != const.Code.OK:
             return True
     return u["usedSpace"] > const.USER_TYPE.id2config(u["type"]).max_store_space

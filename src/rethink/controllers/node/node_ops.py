@@ -39,7 +39,7 @@ def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
     )
 
 
-def put_node(
+async def put_node(
         td: TokenDecode,
         req: schemas.node.PutRequest,
 ) -> schemas.node.PutResponse:
@@ -51,7 +51,7 @@ def put_node(
             node=None
         )
 
-    n, code = models.node.add(
+    n, code = await models.node.add(
         uid=td.uid,
         md=req.md,
         type_=req.type,
@@ -100,18 +100,18 @@ async def put_quick_node(
             link_prefix = "*Link:* "
         req.md = f"{title}\n\n{desc_prefix}{description}\n\n{link_prefix}[{req.md}]({req.md})"
 
-    return put_node(
+    return await put_node(
         td=td,
         req=req,
     )
 
 
-def get_node(
+async def get_node(
         td: TokenDecode,
         req_id: str,
         nid: str,
 ) -> schemas.node.GetResponse:
-    n, code = models.node.get(uid=td.uid, nid=nid)
+    n, code = await models.node.get(uid=td.uid, nid=nid)
     if code != const.Code.OK:
         return schemas.node.GetResponse(
             requestId=req_id,
@@ -127,7 +127,7 @@ def get_node(
     )
 
 
-def update_node(
+async def update_node(
         td: TokenDecode,
         req: schemas.node.UpdateRequest,
 ) -> schemas.node.GetResponse:
@@ -138,7 +138,7 @@ def update_node(
             requestId=req.requestId,
             node=None
         )
-    n, code = models.node.update(
+    n, code = await models.node.update(
         uid=td.uid,
         nid=req.nid,
         md=req.md,

@@ -25,7 +25,7 @@ async def upload_obsidian_files(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         files: List[UploadFile],
 ) -> schemas.files.FileUploadResponse:
-    return upload_files.upload_obsidian_files(
+    return await upload_files.upload_obsidian_files(
         td=token_decode,
         files=files,
     )
@@ -40,7 +40,7 @@ async def upload_obsidian_files(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         files: List[UploadFile],
 ) -> schemas.files.FileUploadResponse:
-    return upload_files.upload_text_files(
+    return await upload_files.upload_text_files(
         td=token_decode,
         files=files,
     )
@@ -55,7 +55,7 @@ async def get_upload_process(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         rid: Optional[str] = Header(None),
 ) -> schemas.files.FileUploadProcessResponse:
-    return upload_files.get_upload_process(
+    return await upload_files.get_upload_process(
         td=token_decode,
         rid=rid,
     )
@@ -72,7 +72,7 @@ async def upload_image_vditor(
 ) -> schemas.files.ImageVditorUploadResponse:
     form = await req.form()
     file = form.get("file[]")
-    return upload_files.upload_image_vditor(
+    return await upload_files.upload_image_vditor(
         td=token_decode,
         file=file,
     )
@@ -87,7 +87,7 @@ async def fetch_image_vditor(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.files.ImageVditorFetchRequest,
 ) -> schemas.files.ImageVditorFetchResponse:
-    return upload_files.fetch_image_vditor(
+    return await upload_files.fetch_image_vditor(
         td=token_decode,
         req=req,
     )

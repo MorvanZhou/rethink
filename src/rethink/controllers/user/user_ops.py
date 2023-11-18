@@ -4,8 +4,8 @@ from rethink.controllers.utils import TokenDecode, datetime2str
 from rethink.models.utils import jwt_encode
 
 
-def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
-    new_user_id, code = auth.register_user(
+async def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
+    new_user_id, code = await auth.register_user(
         req.email,
         req.password,
         req.language,
@@ -30,8 +30,8 @@ def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
     )
 
 
-def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
-    u, code = auth.get_user_by_email(req.email)
+async def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
+    u, code = await auth.get_user_by_email(req.email)
     if code != const.Code.OK:
         return schemas.user.LoginResponse(
             requestId=req.requestId,
@@ -39,7 +39,7 @@ def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    if not auth.verify_user(u, req.password):
+    if not await auth.verify_user(u, req.password):
         code = const.Code.ACCOUNT_OR_PASSWORD_ERROR
         return schemas.user.LoginResponse(
             requestId=req.requestId,
@@ -59,7 +59,7 @@ def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
     )
 
 
-def get_user(
+async def get_user(
         req_id: str,
         td: TokenDecode,
 ) -> schemas.user.UserInfoResponse:
@@ -69,7 +69,7 @@ def get_user(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
         )
-    u, code = models.user.get(uid=td.uid)
+    u, code = await models.user.get(uid=td.uid)
     if code != const.Code.OK:
         return schemas.user.UserInfoResponse(
             requestId=req_id,
@@ -101,7 +101,7 @@ def get_user(
     )
 
 
-def update_user(
+async def update_user(
         td: TokenDecode,
         req: schemas.user.UpdateRequest,
 ) -> schemas.user.UserInfoResponse:
@@ -111,7 +111,7 @@ def update_user(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
         )
-    u, code = models.user.update(
+    u, code = await models.user.update(
         uid=td.uid,
         email=req.email,
         nickname=req.nickname,

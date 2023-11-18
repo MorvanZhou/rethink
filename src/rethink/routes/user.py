@@ -24,7 +24,7 @@ router = APIRouter(
 async def login(
         req: schemas.user.LoginRequest
 ) -> schemas.user.LoginResponse:
-    return user_ops.login(req=req)
+    return await user_ops.login(req=req)
 
 
 @router.put(
@@ -35,7 +35,7 @@ async def login(
 async def register(
         req: schemas.user.RegisterRequest
 ) -> schemas.user.LoginResponse:
-    return user_ops.put(req=req)
+    return await user_ops.put(req=req)
 
 
 @router.get(
@@ -47,7 +47,7 @@ async def get_user(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         rid: Optional[str] = Header(None),
 ) -> schemas.user.UserInfoResponse:
-    return user_ops.get_user(
+    return await user_ops.get_user(
         req_id=rid, td=token_decode
     )
 
@@ -61,7 +61,7 @@ async def update_user(
         req: schemas.user.UpdateRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
 ) -> schemas.user.UserInfoResponse:
-    return user_ops.update_user(
+    return await user_ops.update_user(
         td=token_decode,
         req=req,
     )

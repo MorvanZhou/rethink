@@ -8,7 +8,7 @@ from rethink.controllers.utils import TokenDecode
 from ..utils import datetime2str
 
 
-def upload_obsidian_files(
+async def upload_obsidian_files(
         td: TokenDecode,
         files: List[UploadFile]
 ) -> schemas.files.FileUploadResponse:
@@ -19,7 +19,7 @@ def upload_obsidian_files(
             requestId="",
             failedFilename="",
         )
-    code = models.files.upload_obsidian(uid=td.uid, zipped_files=files)
+    code = await models.files.upload_obsidian(uid=td.uid, zipped_files=files)
 
     return schemas.files.FileUploadResponse(
         code=code.value,
@@ -28,7 +28,7 @@ def upload_obsidian_files(
     )
 
 
-def upload_text_files(
+async def upload_text_files(
         td: TokenDecode,
         files: List[UploadFile]
 ) -> schemas.files.FileUploadResponse:
@@ -39,7 +39,7 @@ def upload_text_files(
             requestId="",
             failedFilename="",
         )
-    code = models.files.upload_text(uid=td.uid, files=files)
+    code = await models.files.upload_text(uid=td.uid, files=files)
     return schemas.files.FileUploadResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -48,7 +48,7 @@ def upload_text_files(
     )
 
 
-def get_upload_process(
+async def get_upload_process(
         td: TokenDecode,
         rid: str,
 ) -> schemas.files.FileUploadProcessResponse:
@@ -63,7 +63,7 @@ def get_upload_process(
             running=False,
             problemFiles=[],
         )
-    doc = models.files.get_upload_process(uid=td.uid)
+    doc = await models.files.get_upload_process(uid=td.uid)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
             code=const.Code.OK.value,
@@ -88,7 +88,7 @@ def get_upload_process(
     )
 
 
-def upload_image_vditor(
+async def upload_image_vditor(
         td: TokenDecode,
         file: UploadFile,
 ) -> schemas.files.ImageVditorUploadResponse:
@@ -98,7 +98,7 @@ def upload_image_vditor(
             msg=const.get_msg_by_code(td.code, td.language),
             data={},
         )
-    res = models.files.upload_image_vditor(uid=td.uid, files=[file])
+    res = await models.files.upload_image_vditor(uid=td.uid, files=[file])
     return schemas.files.ImageVditorUploadResponse(
         code=const.Code.OK.value,
         msg=const.get_msg_by_code(const.Code.OK, td.language),
@@ -106,7 +106,7 @@ def upload_image_vditor(
     )
 
 
-def fetch_image_vditor(
+async def fetch_image_vditor(
         td: TokenDecode,
         req: schemas.files.ImageVditorFetchRequest,
 ) -> schemas.files.ImageVditorFetchResponse:
@@ -116,7 +116,7 @@ def fetch_image_vditor(
             msg=const.get_msg_by_code(td.code, td.language),
             data={},
         )
-    new_url, code = models.files.fetch_image_vditor(uid=td.uid, url=req.url)
+    new_url, code = await models.files.fetch_image_vditor(uid=td.uid, url=req.url)
     return schemas.files.ImageVditorFetchResponse(
         code=const.Code.OK.value,
         msg=const.get_msg_by_code(const.Code.OK, td.language),

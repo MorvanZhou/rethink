@@ -60,7 +60,7 @@ body,
   gap: 10px;
   cursor: pointer;
   max-width: 80px;
-  padding: 5px 0;
+  padding: 5px;
   border-radius: 4px;
 }
 .go-back:hover {
@@ -91,9 +91,71 @@ body,
   display: flex;
   flex-direction: column;
 }
+
 .right-app-section-sm {
   width: 100%;
   padding: 5px;
+}
+
+.msg-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.msg-box-content {
+  width: 60%;
+  max-width: 400px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.msg-box-p {
+  font-size: 1.1em;
+  line-height: 1.5em;
+}
+
+.msg-box-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.msg-box-button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-left: 15px;
+  border: none;
+  color: #1a73e8;
+  background: transparent;
+  cursor: pointer;
+}
+
+.msg-box-button:hover {
+  background-color: #f1f4fc;
+  color: #0156c9;
+}
+
+.button-bg {
+  background-color: #e3f1ff !important;
+}
+
+.button-bg:hover {
+  color: #0156c9 !important;
+}
+
+.error-msg-box-border {
+  border: 4px solid #ff6666;
 }
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -4533,103 +4595,6 @@ h1[data-v-90e7b346] {
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/messageBox/ErrorMsgBox.vue?vue&type=style&index=0&id=c7e8e852&lang=css ***!
-  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.error-popup-box {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.error-popup-box-content {
-  border: 4px solid #ff6666;
-  width: 60%;
-  max-width: 400px;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.error-popup-box-content-title {
-  font-size: 1.2em;
-  font-weight: bold;
-}
-.error-popup-box-content-body {
-  font-size: 0.9em;
-}
-.error-popup-box-content-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-.error-popup-box-content-footer-button {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-}
-.error-popup-box-content-footer-button:hover {
-  background-color: #EBEBEB;
-}
-
-/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/messageBox/InfoMsgBox.vue?vue&type=style&index=0&id=7d1b5b7a&lang=css ***!
-  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.info-popup-box {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.info-popup-box-content {
-  width: 60%;
-  max-width: 400px;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.info-popup-box-content-title {
-  font-size: 1.2em;
-  font-weight: bold;
-}
-.info-popup-box-content-body {
-  font-size: 0.9em;
-}
-.info-popup-box-content-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-.info-popup-box-content-footer-button {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-}
-.info-popup-box-content-footer-button:hover {
-  background-color: #EBEBEB;
-}
-
-/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/messageBox/FlashMsgBox.vue?vue&type=style&index=0&id=21d867bf&lang=css ***!
   \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
@@ -4643,7 +4608,7 @@ h1[data-v-90e7b346] {
 }
 .flash-popup-box-content {
   width: 100%;
-  max-width: 200px;
+  max-width: 500px;
   margin: 0 auto;
   padding: 5px 10px;
   border-radius: 5px;
