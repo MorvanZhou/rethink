@@ -219,7 +219,7 @@ async def upload_obsidian_thread(
         }})
 
 
-def between_callback(*args, **kwargs):
+def between_obsidian_callback(*args, **kwargs):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -276,7 +276,7 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
         return const.Code.INVALID_FILE_TYPE
 
     td = threading.Thread(
-        target=between_callback,
+        target=between_obsidian_callback,
         args=(uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size),
         daemon=True,
     )
@@ -334,6 +334,14 @@ async def update_text_thread(
         }})
 
 
+def between_text_callback(*args, **kwargs):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(update_text_thread(*args, **kwargs))
+    loop.close()
+
+
 async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
@@ -380,8 +388,8 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     } for file in files]
 
     td = threading.Thread(
-        target=asyncio.run,
-        args=(update_text_thread(uid, file_list, max_file_size),),
+        target=between_text_callback,
+        args=(uid, file_list, max_file_size),
         daemon=True,
     )
     td.start()
