@@ -9,6 +9,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import Field, DirectoryPath
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from rethink.logger import logger
+
 
 class Settings(BaseSettings):
     ONE_USER: bool = Field(default=1, env='ONE_USER')
@@ -43,6 +45,7 @@ class Settings(BaseSettings):
 
     def __init__(self):
         super().__init__()
+        logger.info(f'config - LOCAL_STORAGE_PATH: {self.LOCAL_STORAGE_PATH}')
         if self.LOCAL_STORAGE_PATH is None and self.DB_HOST == "":
             raise ValueError("LOCAL_STORAGE_PATH and DB_HOST cannot be empty at the same time")
         if self.DB_SALT == b"":

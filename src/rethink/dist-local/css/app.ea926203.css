@@ -91,12 +91,10 @@ body,
   display: flex;
   flex-direction: column;
 }
-
 .right-app-section-sm {
   width: 100%;
   padding: 5px;
 }
-
 .msg-box {
   position: fixed;
   top: 0;
@@ -109,7 +107,6 @@ body,
   justify-content: center;
   align-items: center;
 }
-
 .msg-box-content {
   width: 60%;
   max-width: 400px;
@@ -120,17 +117,14 @@ body,
   flex-direction: column;
   gap: 30px;
 }
-
 .msg-box-p {
   font-size: 1.1em;
   line-height: 1.5em;
 }
-
 .msg-box-footer {
   display: flex;
   justify-content: flex-end;
 }
-
 .msg-box-button {
   padding: 10px 20px;
   border-radius: 5px;
@@ -140,20 +134,16 @@ body,
   background: transparent;
   cursor: pointer;
 }
-
 .msg-box-button:hover {
   background-color: #f1f4fc;
   color: #0156c9;
 }
-
 .button-bg {
   background-color: #e3f1ff !important;
 }
-
 .button-bg:hover {
   color: #0156c9 !important;
 }
-
 .error-msg-box-border {
   border: 4px solid #ff6666;
 }
