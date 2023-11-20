@@ -11,10 +11,7 @@ from . import utils
 
 def skip_no_db(f):
     async def wrapper(*args, **kwargs):
-        try:
-            args[0].uid
-        except AttributeError:
-            print("No database connection")
+        if args[0].skip:
             return
         return await f(*args, **kwargs)
 
@@ -26,6 +23,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        cls.skip = False
         utils.set_env(".env.test.development")
 
     @classmethod
@@ -33,6 +31,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.development")
 
     async def asyncSetUp(self) -> None:
+        if self.skip:
+            return
         try:
             await models.database.drop_all()
             await models.database.init()
@@ -48,11 +48,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             self.uid = uid
         except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
             print("timeout")
+            self.skip = True
 
     async def asyncTearDown(self) -> None:
-        try:
-            self.uid
-        except AttributeError:
+        if self.skip:
             return
         try:
             await models.database.drop_all()

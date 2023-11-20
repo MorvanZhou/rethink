@@ -6,12 +6,14 @@ from zipfile import ZipFile, BadZipFile
 
 from bson import ObjectId
 
+from rethink import config
 from rethink.models.files import file_ops
 
 
 class UnzipTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        config.get_settings.cache_clear()
         cls.orig_folder_data = {
             os.path.join("a", "test.txt"): b"hello world",
             os.path.join("a", "a.txt"): b"a",
@@ -22,6 +24,10 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
             "a.txt": b"a",
             "q文档.txt": "阿斯顿请问".encode("utf-8"),
         }
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        config.get_settings.cache_clear()
 
     def test_unzip_folder(self):
         zip_bytes = ZipFile("test.zip", "w")

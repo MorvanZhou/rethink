@@ -6,7 +6,7 @@ import unittest
 import urllib.request
 from pathlib import Path
 
-from rethink import run
+from rethink import run, config
 
 
 class TestRun(unittest.TestCase):
@@ -14,12 +14,14 @@ class TestRun(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        config.get_settings.cache_clear()
         cls.path = p = Path(__file__).parent / "tmp"
         p.mkdir(exist_ok=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(str(cls.path), ignore_errors=True)
+        config.get_settings.cache_clear()
 
     def test_run(self):
         port = 8001

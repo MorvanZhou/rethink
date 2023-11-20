@@ -1,11 +1,19 @@
 import unittest
 from textwrap import dedent
 
-from rethink import const
+from rethink import const, config
 from rethink.models import utils
 
 
 class UtilsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        config.get_settings.cache_clear()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        config.get_settings.cache_clear()
+
     def test_short_uuid(self):
         for _ in range(10):
             uid = utils.short_uuid()
@@ -80,6 +88,10 @@ class UtilsTest(unittest.TestCase):
 
 
 class TestAsync(unittest.IsolatedAsyncioTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        config.get_settings.cache_clear()
+
     async def test_get_title_description_from_link(self):
         for url, res in [
             ("https://github.com/MorvanZhou/rethink", True),

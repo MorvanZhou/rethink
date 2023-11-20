@@ -53,10 +53,10 @@ app.include_router(files.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info(f'startup_event LOCAL_STORAGE_PATH: {os.environ["LOCAL_STORAGE_PATH"]}')
-    logger.info(f'startup_event VUE_APP_MODE: {os.environ["VUE_APP_MODE"]}')
-    logger.info(f'startup_event VUE_APP_API_PORT: {os.environ["VUE_APP_API_PORT"]}')
-    logger.info(f'startup_event VUE_APP_LANGUAGE: {os.environ["VUE_APP_LANGUAGE"]}')
+    logger.debug(f'startup_event LOCAL_STORAGE_PATH: {os.environ["LOCAL_STORAGE_PATH"]}')
+    logger.debug(f'startup_event VUE_APP_MODE: {os.environ["VUE_APP_MODE"]}')
+    logger.debug(f'startup_event VUE_APP_API_PORT: {os.environ["VUE_APP_API_PORT"]}')
+    logger.debug(f'startup_event VUE_APP_LANGUAGE: {os.environ["VUE_APP_LANGUAGE"]}')
     await database.init()
     logger.info("db initialized")
 

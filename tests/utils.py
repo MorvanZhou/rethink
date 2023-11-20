@@ -22,6 +22,7 @@ def set_env(file=".env.test.local"):
 
 
 def drop_env(file=".env.test.local"):
+    config.get_settings.cache_clear()
     try:
         os.environ.pop("VUE_APP_MODE")
         os.environ.pop("VUE_APP_API_PORT")

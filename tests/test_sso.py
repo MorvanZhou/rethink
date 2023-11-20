@@ -1,9 +1,18 @@
 import unittest
 
+from rethink import config
 from rethink.sso.github import GithubSSO
 
 
 class SSOTest(unittest.IsolatedAsyncioTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        config.get_settings.cache_clear()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        config.get_settings.cache_clear()
+
     async def test_github(self):
         sso = GithubSSO(
             client_id="",
