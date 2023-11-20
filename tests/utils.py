@@ -9,11 +9,11 @@ def set_env(file=".env.test.local"):
     config.get_settings.cache_clear()
     with open(Path(__file__).parent.parent / file, "r") as f:
         if file.startswith(".env.test"):
-            tmp = Path(__file__).parent / "tmp"
-            tmp.mkdir(exist_ok=True)
             os.environ["VUE_APP_MODE"] = "local"
             os.environ["VUE_APP_API_PORT"] = "8000"
         if file.endswith(".local"):
+            tmp = Path(__file__).parent / "tmp"
+            tmp.mkdir(exist_ok=True)
             os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
         for c in cs:
