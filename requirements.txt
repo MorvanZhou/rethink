@@ -4,7 +4,6 @@ pydantic-settings>=2.0.3
 uvicorn[standard]
 pyjwt[crypto]>=2.8.0
 bcrypt>=4.0.1
-mongita>=1.2.0
 pymongo>=4.6.0
 motor>=3.3.2
 markdown>=3.4.4

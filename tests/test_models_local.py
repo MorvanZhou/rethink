@@ -386,6 +386,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["phone-notes.png"][1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
+        image.close()
+        buf.close()
 
         u, code = await models.user.get(self.uid)
         self.assertEqual(used_space + size, u["usedSpace"])
