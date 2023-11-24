@@ -66,7 +66,7 @@ async def register_user(
         language: str = const.Language.EN.value,
 ) -> Tuple[str, const.Code]:
     if config.get_settings().ONE_USER:
-        logger.warning("on ONE_USER mode, user registration will be ignored")
+        logger.warning("on ONE_USER mode, user registration will be skipped")
         return "", const.Code.ONE_USER_MODE
     if VALID_PASSWORD_PTN.match(password) is None:
         return "", const.Code.INVALID_PASSWORD

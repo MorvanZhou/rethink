@@ -96,7 +96,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
     def tearDownClass(cls) -> None:
         config.get_settings.cache_clear()
 
-    @unittest.skip("skip")
+    @unittest.skip("skip outer connection test")
     async def test_get_title_description_from_link(self):
         for url, res in [
             ("https://github.com/MorvanZhou/rethink", True),

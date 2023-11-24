@@ -5,9 +5,6 @@
 /**/*.egg-info
 /dist
 **/__pycache__
-/src/rethink/models/search/data/*.csv
-/src/rethink/models/search/data/words.txt
-
 
 # local env files
 /.env.development
