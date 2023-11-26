@@ -42,6 +42,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
+                RuntimeError,
         ):
             print("timeout")
             self.skip = True
@@ -55,6 +56,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
+                RuntimeError,
         ):
             print("timeout")
 

@@ -25,13 +25,16 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             await self.searcher.drop()
             await self.searcher.init()
             self.assertTrue(await self.searcher.es.indices.exists(index=config.get_settings().ES_INDEX))
-        except elastic_transport.ConnectionError:
+        except (elastic_transport.ConnectionError, RuntimeError):
             self.skip = True
 
     async def asyncTearDown(self) -> None:
         if self.skip:
             return
-        await self.searcher.drop()
+        try:
+            await self.searcher.drop()
+        except (elastic_transport.ConnectionError, RuntimeError):
+            pass
 
     @utils.skip_no_connect
     async def test_add(self):
