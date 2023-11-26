@@ -1,6 +1,7 @@
 import unittest
 from textwrap import dedent
 
+import elastic_transport
 import pymongo.errors
 from bson import ObjectId
 
@@ -37,7 +38,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 data={"uid": uid, "language": const.Language.EN.value},
             )
             self.uid = uid
-        except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
+        except (
+                pymongo.errors.NetworkTimeout,
+                pymongo.errors.ServerSelectionTimeoutError,
+                elastic_transport.ConnectionError,
+        ):
             print("timeout")
             self.skip = True
 
@@ -46,7 +51,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             return
         try:
             await models.database.drop_all()
-        except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
+        except (
+                pymongo.errors.NetworkTimeout,
+                pymongo.errors.ServerSelectionTimeoutError,
+                elastic_transport.ConnectionError,
+        ):
             print("timeout")
 
     @utils.skip_no_connect

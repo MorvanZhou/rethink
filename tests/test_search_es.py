@@ -88,8 +88,8 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             ) for i in range(20)
         ])
         self.assertEqual(const.Code.OK, code)
-
         await self.searcher.refresh()
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",
@@ -175,3 +175,30 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(9, len(docs))
         self.assertEqual(9, total)
         self.assertEqual("nid18", docs[0].nid)
+
+    @utils.skip_no_connect
+    async def test_multi_user(self):
+        for uid in ["uid1", "uid2"]:
+            code = await self.searcher.add_batch(uid=uid, docs=[
+                SearchDoc(
+                    nid=f"{uid}nid{i}",
+                    title=f"title{i}",
+                    body=f"this is {i} doc, 这是第 {i} 个文档",
+                ) for i in range(20)
+            ])
+            self.assertEqual(const.Code.OK, code)
+
+        await self.searcher.refresh()
+
+        for uid in ["uid1", "uid2"]:
+            docs, total = await self.searcher.search(
+                uid=uid,
+                query="doc",
+                sort_key="createdAt",
+                reverse=True,
+                page=0,
+                page_size=10,
+            )
+            self.assertEqual(10, len(docs))
+            self.assertEqual(20, total)
+            self.assertEqual(f"{uid}nid19", docs[0].nid)

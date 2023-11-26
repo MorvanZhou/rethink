@@ -293,6 +293,8 @@ class ESSearcher(BaseEngine):
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
             d = doc.__dict__
+            d["inTrash"] = False
+            d["disabled"] = False
             d["createdAt"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
             d["modifiedAt"] = d["createdAt"]
             d["uid"] = uid
@@ -305,7 +307,11 @@ class ESSearcher(BaseEngine):
                 "_source": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        resp = await helpers.async_bulk(client=self.es, actions=actions)
+        try:
+            resp = await helpers.async_bulk(client=self.es, actions=actions)
+        except helpers.BulkIndexError as e:
+            logger.error(f"add batch failed, resp: {e.args[0]}")
+            return const.Code.OPERATION_FAILED
         if resp[0] != len(actions):
             logger.error(f"add batch failed, resp: {resp}")
             return const.Code.OPERATION_FAILED
@@ -358,7 +364,11 @@ class ESSearcher(BaseEngine):
                 "doc": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        resp = await helpers.async_bulk(client=self.es, actions=actions)
+        try:
+            resp = await helpers.async_bulk(client=self.es, actions=actions)
+        except helpers.BulkIndexError as e:
+            logger.error(f"update batch failed, resp: {e.args[0]}")
+            return const.Code.OPERATION_FAILED
         if resp[0] != len(actions):
             logger.error(f"update batch failed, resp: {resp}")
             return const.Code.OPERATION_FAILED
@@ -448,6 +458,46 @@ class ESSearcher(BaseEngine):
                 "sort": [sort],
                 "from": page * page_size,
                 "size": page_size,
+                "highlight": {
+                    "pre_tags": [
+                        f"<{self.hl_tag_name} class=\"{self.hl_class_name} {self.hl_term_prefix}{i}\">"
+                        for i in range(5)
+                    ],
+                    "post_tags": [f"</{self.hl_tag_name}>" for _ in range(5)],
+                    "fields": {
+                        "body": {},
+                        "title": {},
+                    }
+                },
+            })
+        hits = resp["hits"]["hits"]
+        total = resp["hits"]["total"]["value"]
+        return [
+            SearchResult(
+                nid=hit["_id"],
+                score=hit["_score"] if hit["_score"] is not None else 0.,
+                titleHighlight=self.get_hl(hit, "title", first=True, default=hit["_source"]["title"]),
+                bodyHighlights=self.get_hl(hit, "body", first=False, default=""),
+            ) for hit in hits
+        ], total
+
+    async def all(self, uid: str) -> Tuple[List[SearchResult], int]:
+        resp = await self.es.search(
+            index=self.index_name,
+            body={
+                "query": {
+                    "term": {"uid": uid}
+                },
+                "sort": [
+                    {
+                        "modifiedAt": {
+                            "order": "desc",
+                            "format": "strict_date_optional_time_nanos",
+                        }
+                    }
+                ],
+                "from": 0,
+                "size": 10000,
                 "highlight": {
                     "pre_tags": [
                         f"<{self.hl_tag_name} class=\"{self.hl_class_name} {self.hl_term_prefix}{i}\">"
