@@ -60,7 +60,8 @@ async def set_client():
             password=conf.DB_PASSWORD,
             socketTimeoutMS=1000 * 5,
         )
-    await SEARCHER.init()
+    if SEARCHER:
+        await SEARCHER.init()
 
 
 def set_coll():
@@ -87,9 +88,13 @@ async def drop_all():
     for db_name in await CLIENT.list_database_names():
         if db_name == "admin":
             continue
+        elif not db_name.endswith("_test"):
+            continue
         await CLIENT.drop_database(db_name)
+    global SEARCHER
     if SEARCHER:
         await SEARCHER.drop()
+        SEARCHER = None
 
 
 async def __remote_try_build_index():
@@ -135,8 +140,6 @@ async def __remote_try_build_index():
     user_file_info = await COLL.user_file.index_information()
     if "uid_1_fid_-1" not in user_file_info:
         await COLL.user_file.create_index([("uid", 1), ("fid", -1)], unique=True)
-
-
 
 
 async def __local_try_add_default_user():

@@ -18,7 +18,6 @@ def get_utc_now() -> str:
 
 class ESSearcher(BaseEngine):
     es: AsyncElasticsearch
-    index_name = "nodes"
     properties = {
         "uid": {
             "type": "keyword"
@@ -100,10 +99,10 @@ class ESSearcher(BaseEngine):
         if info.body["version"]["number"] != "8.11.0":
             raise ValueError("please install es 8.11.0")
 
-        if not await self.es.indices.exists(index=self.index_name):
+        if not await self.es.indices.exists(index=get_settings().ES_INDEX):
             # install ik plugin: https://github.com/medcl/elasticsearch-analysis-ik
             resp = await self.es.indices.create(
-                index=self.index_name,
+                index=get_settings().ES_INDEX,
                 body={
                     "settings": {
                         "index": {
@@ -123,15 +122,15 @@ class ESSearcher(BaseEngine):
 
     async def drop(self):
         self.connect()
-        if await self.es.indices.exists(index=self.index_name):
-            await self.es.indices.delete(index=self.index_name)
+        if await self.es.indices.exists(index=get_settings().ES_INDEX):
+            await self.es.indices.delete(index=get_settings().ES_INDEX)
         await self.es.close()
         del self.es
 
     async def add(self, uid: str, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.index(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             document={
                 "uid": uid,
                 "title": doc.title,
@@ -151,7 +150,7 @@ class ESSearcher(BaseEngine):
     async def update(self, uid: str, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.update(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=doc.nid,
             body={
                 "doc": {
@@ -169,7 +168,7 @@ class ESSearcher(BaseEngine):
 
     async def to_trash(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
             body={
                 "doc": {
@@ -188,7 +187,7 @@ class ESSearcher(BaseEngine):
             actions=[
                 {
                     "_op_type": "update",
-                    "_index": self.index_name,
+                    "_index": get_settings().ES_INDEX,
                     "_id": nid,
                     "doc": {
                         "inTrash": True,
@@ -204,7 +203,7 @@ class ESSearcher(BaseEngine):
 
     async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
             body={
                 "doc": {
@@ -223,7 +222,7 @@ class ESSearcher(BaseEngine):
             actions=[
                 {
                     "_op_type": "update",
-                    "_index": self.index_name,
+                    "_index": get_settings().ES_INDEX,
                     "_id": nid,
                     "doc": {
                         "inTrash": False,
@@ -239,7 +238,7 @@ class ESSearcher(BaseEngine):
 
     async def disable(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
             body={
                 "doc": {
@@ -254,7 +253,7 @@ class ESSearcher(BaseEngine):
 
     async def enable(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
             body={
                 "doc": {
@@ -269,7 +268,7 @@ class ESSearcher(BaseEngine):
 
     async def delete(self, uid: str, nid: str) -> const.Code:
         doc = await self.es.get(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
         )
         if doc["_source"]["uid"] != uid:
@@ -280,7 +279,7 @@ class ESSearcher(BaseEngine):
             return const.Code.OPERATION_FAILED
 
         resp = await self.es.delete(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             id=nid,
         )
         if resp.meta.status != 201:
@@ -302,7 +301,7 @@ class ESSearcher(BaseEngine):
             # insert a creation operation
             actions.append({
                 "_op_type": "create",
-                "_index": self.index_name,
+                "_index": get_settings().ES_INDEX,
                 "_id": nid,
                 "_source": d
             })
@@ -319,7 +318,7 @@ class ESSearcher(BaseEngine):
 
     async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
         resp = await self.es.delete_by_query(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             body={
                 "query": {
                     "bool": {
@@ -359,7 +358,7 @@ class ESSearcher(BaseEngine):
             nid = d.pop("nid")
             actions.append({
                 "_op_type": "update",
-                "_index": self.index_name,
+                "_index": get_settings().ES_INDEX,
                 "_id": nid,
                 "doc": d
             })
@@ -452,7 +451,7 @@ class ESSearcher(BaseEngine):
             }]
 
         resp = await self.es.search(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             body={
                 "query": query_dict,
                 "sort": [sort],
@@ -483,7 +482,7 @@ class ESSearcher(BaseEngine):
 
     async def all(self, uid: str) -> Tuple[List[SearchResult], int]:
         resp = await self.es.search(
-            index=self.index_name,
+            index=get_settings().ES_INDEX,
             body={
                 "query": {
                     "term": {"uid": uid}
@@ -522,7 +521,7 @@ class ESSearcher(BaseEngine):
         ], total
 
     async def refresh(self):
-        await self.es.indices.refresh(index=self.index_name)
+        await self.es.indices.refresh(index=get_settings().ES_INDEX)
 
     @staticmethod
     def get_hl(hit: dict, key: str, first: bool, default: str = ""):

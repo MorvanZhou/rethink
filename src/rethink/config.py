@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     ES_USER: str = Field(env='ES_USER', default="")
     ES_PASSWORD: str = Field(env='ES_PASSWORD', default="")
     ES_HOSTS: str = Field(env='ES_HOSTS', default="")
+    ES_INDEX: str = Field(env='ES_INDEX', default="")
     JWT_KEY: bytes = Field(env='JWT_KEY', default=b"")
     JWT_KEY_PUB: bytes = Field(env='JWT_KEY_PUB', default=b"")
     JWT_EXPIRED_DAYS: int = Field(default=1, env='JWT_EXPIRED_DAYS')

@@ -2,7 +2,7 @@ import unittest
 
 import elastic_transport
 
-from rethink import const
+from rethink import const, config
 from rethink.models.search_engine.engine_es import ESSearcher, SearchDoc
 from . import utils
 
@@ -24,7 +24,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         try:
             await self.searcher.drop()
             await self.searcher.init()
-            self.assertTrue(await self.searcher.es.indices.exists(index=self.searcher.index_name))
+            self.assertTrue(await self.searcher.es.indices.exists(index=config.get_settings().ES_INDEX))
         except elastic_transport.ConnectionError:
             self.skip = True
 
@@ -175,6 +175,19 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(9, len(docs))
         self.assertEqual(9, total)
         self.assertEqual("nid18", docs[0].nid)
+
+        docs, total = await self.searcher.search(
+            uid="uid",
+            query="doc",
+            sort_key="title",
+            reverse=False,
+            page=0,
+            page_size=10,
+            exclude_nids=[f"nid19"]
+        )
+        self.assertEqual(9, len(docs))
+        self.assertEqual(9, total)
+        self.assertEqual("nid10", docs[0].nid)
 
     @utils.skip_no_connect
     async def test_multi_user(self):

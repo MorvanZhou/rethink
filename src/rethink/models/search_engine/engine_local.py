@@ -198,9 +198,9 @@ class LocalSearcher(BaseEngine):
             return [
                 SearchResult(
                     nid=hit["nid"],
-                    score=hit.score,
-                    titleHighlight=self.get_hl(hl, hit, "title", return_list=False),
-                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True),
+                    score=hit.score if sort_key != "title" else 0.,
+                    titleHighlight=self.get_hl(hl, hit, "title", return_list=False, default=hit["title"]),
+                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=""),
                 ) for hit in hits
             ], hits.total
 
@@ -208,10 +208,12 @@ class LocalSearcher(BaseEngine):
         raise NotImplementedError
 
     @staticmethod
-    def get_hl(hl: Highlighter, hit: dict, key: str, return_list: bool):
+    def get_hl(hl: Highlighter, hit: dict, key: str, return_list: bool, default: str = ""):
         hl_str = hl.highlight_hit(hit, key)
         if return_list:
             if hl_str == "":
                 return []
             return [hl_str]
+        if hl_str == "":
+            return default
         return hl_str

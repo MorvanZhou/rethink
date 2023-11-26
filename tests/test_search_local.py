@@ -156,3 +156,16 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(9, len(docs))
         self.assertEqual(9, total)
         self.assertEqual("nid18", docs[0].nid)
+
+        docs, total = await self.searcher.search(
+            uid="uid",
+            query="doc",
+            sort_key="title",
+            reverse=False,
+            page=0,
+            page_size=10,
+            exclude_nids=[f"nid19"]
+        )
+        self.assertEqual(9, len(docs))
+        self.assertEqual(9, total)
+        self.assertEqual("nid10", docs[0].nid)
