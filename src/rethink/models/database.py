@@ -60,8 +60,6 @@ async def set_client():
             password=conf.DB_PASSWORD,
             socketTimeoutMS=1000 * 5,
         )
-    if SEARCHER:
-        await SEARCHER.init()
 
 
 def set_coll():
@@ -74,6 +72,7 @@ def set_coll():
 
 async def init():
     await set_client()
+    await SEARCHER.init()
     set_coll()
 
     if config.is_local_db():
