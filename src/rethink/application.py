@@ -61,6 +61,15 @@ async def startup_event():
     logger.info("db initialized")
 
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        await database.searcher().es.close()
+    except (AttributeError, ValueError):
+        pass
+    logger.info("db closed")
+
+
 app.mount(
     "/css",
     StaticFiles(directory=const.FRONTEND_DIR / "css"),

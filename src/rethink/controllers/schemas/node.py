@@ -2,8 +2,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
-from ..utils import datetime2str
-
 
 class NodeData(BaseModel):
     class LinkedNode(BaseModel):
@@ -56,17 +54,20 @@ class UpdateRequest(BaseModel):
     requestId: str = ""
 
 
-class NodesInfoResponse(BaseModel):
+class NodesSearchResponse(BaseModel):
     class Data(BaseModel):
-        class NodeInfo(BaseModel):
+        class Node(BaseModel):
             id: str
             title: str
             snippet: str
+            titleHighlight: str
+            bodyHighlights: List[str]
+            score: float
             type: int
             createdAt: str
             modifiedAt: str
 
-        nodes: List[NodeInfo]
+        nodes: List[Node]
         total: NonNegativeInt
 
     code: NonNegativeInt
@@ -84,22 +85,7 @@ class GetFromTrashResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
-    data: NodesInfoResponse.Data
-
-
-def parse_nodes_info(nodes, total):
-    data = NodesInfoResponse.Data(
-        nodes=[NodesInfoResponse.Data.NodeInfo(
-            id=n["id"],
-            title=n["title"],
-            snippet=n["snippet"],
-            type=n["type"],
-            createdAt=datetime2str(n["_id"].generation_time),
-            modifiedAt=datetime2str(n["modifiedAt"]),
-        ) for n in nodes],
-        total=total,
-    )
-    return data
+    data: NodesSearchResponse.Data
 
 
 class BatchNodeIdsRequest(BaseModel):

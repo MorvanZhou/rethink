@@ -113,11 +113,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("title", n["title"])
         self.assertEqual("body", n["snippet"])
 
-        ns, total = await models.search.user_node(uid=self.uid)
+        ns, total = await models.database.searcher().search(uid=self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        ns, total = await models.search.user_node(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
+        ns, total = await models.database.searcher().search(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
@@ -178,12 +178,20 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(uid=self.uid)
+        nodes, total = await models.database.searcher().search(
+            uid=self.uid,
+            query="",
+            sort_key="createdAt",
+            reverse=True,
+            page=0,
+            page_size=10,
+            exclude_nids=[],
+        )
         self.assertEqual(5, len(nodes))
         self.assertEqual(5, total)
-        found, total = await models.search.user_node(uid=self.uid, query="我")
+        found, total = await models.database.searcher().search(uid=self.uid, query="我")
         self.assertEqual(2, len(found), msg=found)
-        self.assertEqual(5, total)
+        self.assertEqual(2, total)
 
         n, code = await models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -229,30 +237,33 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(const.Code.OK, code)
 
-        recom = await models.node.cursor_query(
+        recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],
-            cursor_text="te",
+            cursor_text="text",
         )
-        self.assertEqual(2, len(recom))
+        self.assertEqual(1, len(recom))
+        self.assertEqual(1, total)
 
-        recom = await models.node.cursor_query(
+        recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
-            cursor_text="",
+            cursor_text="",  # return recent nodes only
         )
         self.assertEqual(2, len(recom))
+        self.assertEqual(2, total)
 
         code = await models.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
         self.assertEqual(const.Code.OK, code)
 
-        recom = await models.node.cursor_query(
+        recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
             cursor_text="",
         )
         self.assertEqual(3, len(recom))
-        self.assertEqual("Welcome to Rethink", recom[2]["title"])
+        self.assertEqual(3, total)
+        self.assertEqual("Welcome to Rethink", recom[2].title)
 
     async def test_to_trash(self):
         n1, code = await models.node.add(
@@ -272,13 +283,13 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, total)
         self.assertEqual(n1["id"], ns[0]["id"])
 
-        ns, total = await models.search.user_node(self.uid)
+        ns, total = await models.database.searcher().search(self.uid, query="")
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
         code = await models.node.restore_from_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+        nodes, total = await models.database.searcher().search(self.uid, query="")
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
@@ -304,7 +315,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await models.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+        nodes, total = await models.database.searcher().search(self.uid, query="")
         self.assertEqual(6 + base_count, len(nodes))
         self.assertEqual(6 + base_count, total)
 
@@ -314,7 +325,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await models.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+        nodes, total = await models.database.searcher().search(self.uid)
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 

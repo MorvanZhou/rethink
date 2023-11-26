@@ -65,12 +65,12 @@ def md2txt(md: str) -> str:
     return __md.convert(md)
 
 
-def preprocess_md(md: str) -> Tuple[str, str]:
+def preprocess_md(md: str, snippet_len: int = 200) -> Tuple[str, str, str]:
     title, body = split_title_body(fulltext=md)
     title = md2txt(title.strip())
-    body = body.strip()
-    snippet = md2txt(md=body)[:200]
-    return title, snippet
+    body = md2txt(body.strip())
+    snippet = body[:snippet_len]
+    return title, body, snippet
 
 
 def txt2search_keys(txt: str) -> str:

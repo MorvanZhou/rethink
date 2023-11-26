@@ -13,7 +13,9 @@ def set_env(file=".env.test.local"):
             os.environ["VUE_APP_API_PORT"] = "8000"
         if file.endswith(".local"):
             tmp = Path(__file__).parent / "tmp"
-            tmp.mkdir(exist_ok=True)
+            if tmp.exists():
+                shutil.rmtree(tmp)
+            tmp.mkdir()
             os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
         for c in cs:
@@ -40,3 +42,12 @@ def drop_env(file=".env.test.local"):
         for c in cs:
             k, _ = c.split("=")
             os.environ.pop(k)
+
+
+def skip_no_connect(f):
+    async def wrapper(*args, **kwargs):
+        if args[0].skip:
+            return
+        return await f(*args, **kwargs)
+
+    return wrapper

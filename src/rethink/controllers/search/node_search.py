@@ -1,66 +1,65 @@
 from rethink import const, models
 from rethink.controllers import schemas
-from rethink.controllers.utils import TokenDecode, datetime2str
+from rethink.controllers.utils import TokenDecode
 
 
 async def cursor_query(
         td: TokenDecode,
         req: schemas.search.CursorQueryRequest,
-) -> schemas.search.CursorQueryResponse:
+) -> schemas.search.NodesSearchResponse:
     if td.code != const.Code.OK:
-        return schemas.search.CursorQueryResponse(
+        return schemas.search.NodesSearchResponse(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
-            nodes=None
+            data=None
         )
-    recommended_nodes = await models.node.cursor_query(
+    nodes, total = await models.search.cursor_query(
         uid=td.uid,
         nid=req.nid,
         cursor_text=req.textBeforeCursor,
     )
     code = const.Code.OK
-    return schemas.search.CursorQueryResponse(
+    return schemas.node.NodesSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        nodes=[schemas.node.NodesInfoResponse.Data.NodeInfo(
-            id=n["id"],
-            title=n["title"],
-            snippet=n["snippet"],
-            type=n["type"],
-            createdAt=datetime2str(n["_id"].generation_time),
-            modifiedAt=datetime2str(n["modifiedAt"]),
-        ) for n in recommended_nodes],
+        data=schemas.node.NodesSearchResponse.Data(
+            nodes=nodes,
+            total=total,
+        )
     )
 
 
 async def search_user_nodes(
         td: TokenDecode,
         req: schemas.search.SearchUserNodesRequest,
-) -> schemas.node.NodesInfoResponse:
+) -> schemas.node.NodesSearchResponse:
     if td.code != const.Code.OK:
-        return schemas.node.NodesInfoResponse(
+        return schemas.node.NodesSearchResponse(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
             nodes=[],
         )
-    nodes, total = await models.search.user_node(
+    nodes, total = await models.search.search(
         uid=td.uid,
         query=req.query,
         sort_key=req.sortKey,
-        sort_order=req.sortOrder,
+        reverse=req.reverse,
         page=req.page,
         page_size=req.pageSize,
-        nid_exclude=req.nidExclude,
+        exclude_nids=req.nidExclude,
     )
     code = const.Code.OK
-    return schemas.node.NodesInfoResponse(
+    return schemas.node.NodesSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        data=schemas.node.parse_nodes_info(nodes, total),
+        data=schemas.node.NodesSearchResponse.Data(
+            nodes=nodes,
+            total=total,
+        )
     )
 
 

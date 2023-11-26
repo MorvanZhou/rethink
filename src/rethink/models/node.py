@@ -8,9 +8,9 @@ from bson.tz_util import utc
 
 from rethink import config, const
 from rethink.logger import logger
+from rethink.models.search_engine.engine import SearchDoc
 from . import user, tps, utils, db_ops
-from .database import COLL
-from .search import user_node
+from .database import COLL, searcher
 
 AT_PTN = re.compile(r'\[@[ \w\u4e00-\u9fa5！？。，￥【】「」]+?]\(([\w/]+?)\)', re.MULTILINE)
 CURSOR_AT_PTN = re.compile(r'\s+?@([\w ]*)$')
@@ -88,7 +88,7 @@ async def add(
     if await user.user_space_not_enough(u=u):
         return None, const.Code.USER_SPACE_NOT_ENOUGH
 
-    title, snippet = utils.preprocess_md(md)
+    title, body, snippet = utils.preprocess_md(md)
 
     nid = utils.short_uuid()
 
@@ -128,6 +128,11 @@ async def add(
     await user.update_used_space(uid=uid, delta=new_size)
 
     __local_usage_write_file(nid=nid, md=md)
+
+    if type_ == const.NodeType.MARKDOWN.value:
+        code = await searcher().add(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        if code != const.Code.OK:
+            logger.error(f"add search index failed, code: {code}")
     return data, const.Code.OK
 
 
@@ -196,7 +201,7 @@ async def update(
     if await user.user_space_not_enough(u=u):
         return None, const.Code.USER_SPACE_NOT_ENOUGH
 
-    title, snippet = utils.preprocess_md(md)
+    title, body, snippet = utils.preprocess_md(md)
 
     n, code = await get(uid=uid, nid=nid)
     if code != const.Code.OK:
@@ -253,47 +258,15 @@ async def update(
         docs=[doc],
         with_disabled=False,
     )
+
     await user.update_used_space(uid=uid, delta=len(md.encode("utf-8")) - old_md_size)
 
     __local_usage_write_file(nid=nid, md=md)
-    return doc, const.Code.OK
-
-
-async def cursor_query(
-        uid: str,
-        nid: str,
-        cursor_text: str,
-) -> List[tps.Node]:
-    # if cursor_text.startswith("@"):
-    #     query = cursor_text[1:].strip()
-    # else:
-    #     found = CURSOR_AT_PTN.search(cursor_text)
-    #     if found is None:
-    #         return None, []
-    #     query = found.group(1).strip()
-
-    query = cursor_text.strip()
-
-    if query == "":
-        u = await COLL.users.find_one({"id": uid})
-        if u is None:
-            return []
-        rn = u["lastState"]["recentCursorSearchSelectedNIds"]
-        try:
-            rn.remove(nid)
-        except ValueError:
-            pass
-        return sorted(await COLL.nodes.find({"id": {"$in": rn}}).to_list(length=None), key=lambda x: rn.index(x["id"]))
-    nodes_found, _ = await user_node(
-        uid=uid,
-        query=query,
-        sort_key="modifiedAt",
-        sort_order=-1,
-        page=0,
-        page_size=8,
-        nid_exclude=[nid],
-    )
-    return nodes_found
+    if doc["type"] == const.NodeType.MARKDOWN.value:
+        code = await searcher().update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        if code != const.Code.OK:
+            logger.error(f"update search index failed, code: {code}")
+    return doc, code
 
 
 async def to_trash(uid: str, nid: str) -> const.Code:
@@ -326,7 +299,11 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
     if res.modified_count != len(nids):
         logger.error(f"update nodes {nids} failed")
         return const.Code.OPERATION_FAILED
-    return const.Code.OK
+
+    code = await searcher().batch_to_trash(uid=uid, nids=nids)
+    if code != const.Code.OK:
+        logger.error(f"update search index failed, code: {code}")
+    return code
 
 
 async def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.Node], int]:
@@ -360,7 +337,11 @@ async def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
     if res.modified_count != len(nids):
         logger.error(f"restore nodes {nids} failed")
         return const.Code.OPERATION_FAILED
-    return const.Code.OK
+
+    code = await searcher().restore_batch_from_trash(uid=uid, nids=nids)
+    if code != const.Code.OK:
+        logger.error(f"restore search index failed, code: {code}")
+    return code
 
 
 async def delete(uid: str, nid: str) -> const.Code:
@@ -394,7 +375,11 @@ async def batch_delete(uid: str, nids: List[str]) -> const.Code:
         return const.Code.OPERATION_FAILED
 
     __local_usage_delete_files(nids=nids)
-    return const.Code.OK
+
+    code = await searcher().delete_batch(uid=uid, nids=nids)
+    if code != const.Code.OK:
+        logger.error(f"delete search index failed, code: {code}")
+    return code
 
 
 async def disable(
@@ -410,6 +395,9 @@ async def disable(
     if res.modified_count != 1:
         logger.error(f"disable node {nid} failed")
         return const.Code.OPERATION_FAILED
+    code = await searcher().disable(uid=uid, nid=nid)
+    if code != const.Code.OK:
+        logger.error(f"disable search index failed, code: {code}")
     return const.Code.OK
 
 
@@ -425,4 +413,5 @@ async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
         uid=uid,
         md=lns[1].format(n["id"]),
     )
+    await searcher().refresh()
     return code

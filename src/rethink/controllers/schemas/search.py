@@ -2,14 +2,14 @@ from typing import List, Sequence
 
 from pydantic import Field, BaseModel, NonNegativeInt
 
-from .node import NodesInfoResponse
+from .node import NodesSearchResponse
 
 
 class SearchUserNodesRequest(BaseModel):
     requestId: str
     query: str = ""
     sortKey: str = "createdAt"
-    sortOrder: int = -1
+    reverse: bool = False
     page: NonNegativeInt = 0
     pageSize: NonNegativeInt = 0
     nidExclude: Sequence[str] = Field(default_factory=list)
@@ -25,7 +25,7 @@ class CursorQueryResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
-    nodes: List[NodesInfoResponse.Data.NodeInfo]
+    nodes: List[NodesSearchResponse.Data.Node]
 
 
 class AddToRecentSearchHistRequest(BaseModel):

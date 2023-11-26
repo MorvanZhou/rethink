@@ -1,8 +1,8 @@
 import asyncio
 import datetime
 import io
+import multiprocessing
 import os
-import threading
 import zipfile
 from typing import List, Tuple, Optional
 
@@ -16,12 +16,11 @@ from starlette.datastructures import Headers
 from rethink import const, models
 from rethink.config import is_local_db
 from rethink.logger import logger
-from rethink.models.database import COLL
 from rethink.models.tps import ImportData
 from . import file_ops
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
-RESIZE_IMG_THRESHOLD = 1024 * 128  # 128 kb
+RESIZE_IMG_THRESHOLD = 1024 * 1024 * 1  # 1mb  # 1024 * 128  # 128 kb
 
 
 async def update_process(
@@ -41,10 +40,10 @@ async def update_process(
         data["code"] = code
     if is_local_db():
         # local db not support find_one_and_update
-        await COLL.import_data.update_one({"uid": uid}, {"$set": data})
-        doc = await COLL.import_data.find_one({"uid": uid})
+        await models.database.COLL.import_data.update_one({"uid": uid}, {"$set": data})
+        doc = await models.database.COLL.import_data.find_one({"uid": uid})
     else:
-        doc = await COLL.import_data.find_one_and_update(
+        doc = await models.database.COLL.import_data.find_one_and_update(
             {"uid": uid},
             {"$set": data}
         )
@@ -58,20 +57,26 @@ async def __set_running_false(
         code: const.Code,
         problem_files: List[str] = None,
 ) -> None:
-    await COLL.import_data.update_one({"uid": uid}, {"$set": {
+    await models.database.COLL.import_data.update_one({"uid": uid}, {"$set": {
         "running": False,
         "problemFiles": problem_files if problem_files is not None else [],
         "code": code.value,
     }})
 
 
-async def upload_obsidian_thread(
+async def upload_obsidian_task(
         uid: str,
         bytes_data: bytes,
         filename: str,
         doc: dict,
         max_file_size: int,
+        new_process=False,
 ) -> None:
+    from rethink import models
+    if new_process:
+        await models.database.set_client()
+        models.database.set_coll()
+
     try:
         unzipped_files = file_ops.unzip_file(bytes_data)
     except zipfile.BadZipFile:
@@ -208,7 +213,7 @@ async def upload_obsidian_thread(
 
         count += 1
 
-    await COLL.import_data.update_one(
+    await models.database.COLL.import_data.update_one(
         {"uid": uid},
         {"$set": {
             "obsidian": existed_filename2nid,
@@ -218,12 +223,18 @@ async def upload_obsidian_thread(
             "process": 100,
         }})
 
+    if new_process:
+        try:
+            await models.database.searcher().es.close()
+        except AttributeError:
+            pass
 
-def between_obsidian_callback(*args, **kwargs):
+
+def async_upload_obsidian(*args, **kwargs):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(upload_obsidian_thread(*args, **kwargs))
+    loop.run_until_complete(upload_obsidian_task(*args, **kwargs))
     loop.close()
 
 
@@ -231,7 +242,7 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
     max_file_count = 1
     max_file_size = 1024 * 1024 * 200  # 200 mb
 
-    doc = await COLL.import_data.find_one({"uid": uid})
+    doc = await models.database.COLL.import_data.find_one({"uid": uid})
     if doc is None:
         doc: ImportData = {
             "_id": ObjectId(),
@@ -244,7 +255,7 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
             "code": 0,
             "obsidian": {},
         }
-        res = await COLL.import_data.insert_one(doc)
+        res = await models.database.COLL.import_data.insert_one(doc)
         if not res.acknowledged:
             await __set_running_false(uid, const.Code.OPERATION_FAILED)
             return const.Code.OPERATION_FAILED
@@ -275,20 +286,33 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
         await __set_running_false(uid, const.Code.INVALID_FILE_TYPE)
         return const.Code.INVALID_FILE_TYPE
 
-    td = threading.Thread(
-        target=between_obsidian_callback,
-        args=(uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size),
-        daemon=True,
-    )
-    td.start()
+    if is_local_db():
+        # local db not support find_one_and_update
+        await upload_obsidian_task(
+            uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size,
+            new_process=False
+        )
+    else:
+        td = multiprocessing.Process(
+            target=async_upload_obsidian,
+            args=(uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size, True),
+            daemon=True,
+        )
+        td.start()
     return const.Code.OK
 
 
-async def update_text_thread(
+async def update_text_task(
         uid: str,
         files: List[dict],
         max_file_size: int,
+        new_process=False,
 ):
+    from rethink import models
+    if new_process:
+        await models.database.set_client()
+        models.database.set_coll()
+
     for file in files:
         if not file["filename"].endswith(".md") and not file["filename"].endswith(".txt"):
             await __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [file["filename"]])
@@ -324,7 +348,7 @@ async def update_text_thread(
                 return
             if not doc["running"]:
                 break
-    await COLL.import_data.update_one(
+    resp = await models.database.COLL.import_data.update_one(
         {"uid": uid},
         {"$set": {
             "running": False,
@@ -333,19 +357,32 @@ async def update_text_thread(
             "problemFiles": [],
         }})
 
+    if resp.modified_count != 1:
+        await __set_running_false(uid, const.Code.OPERATION_FAILED)
 
-def between_text_callback(*args, **kwargs):
+    resp = await models.database.COLL.import_data.find_one({"uid": uid})
+    if resp is None:
+        await __set_running_false(uid, const.Code.OPERATION_FAILED)
+
+    if new_process:
+        try:
+            await models.database.searcher().es.close()
+        except AttributeError:
+            pass
+
+
+def async_upload_text_task(*args, **kwargs):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(update_text_thread(*args, **kwargs))
+    loop.run_until_complete(update_text_task(*args, **kwargs))
     loop.close()
 
 
 async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
-    doc = await COLL.import_data.find_one({"uid": uid})
+    doc = await models.database.COLL.import_data.find_one({"uid": uid})
     if doc is None:
         doc: ImportData = {
             "_id": ObjectId(),
@@ -358,7 +395,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
             "code": 0,
             "obsidian": {},
         }
-        res = await COLL.import_data.insert_one(doc)
+        res = await models.database.COLL.import_data.insert_one(doc)
         if not res.acknowledged:
             await __set_running_false(uid, const.Code.OPERATION_FAILED)
             return const.Code.OPERATION_FAILED
@@ -387,18 +424,22 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
         "size": file.size,
     } for file in files]
 
-    td = threading.Thread(
-        target=between_text_callback,
-        args=(uid, file_list, max_file_size),
-        daemon=True,
-    )
-    td.start()
+    if is_local_db():
+        # local db not support find_one_and_update
+        await update_text_task(uid, file_list, max_file_size, new_process=False)
+    else:
+        td = multiprocessing.Process(
+            target=async_upload_text_task,
+            args=(uid, file_list, max_file_size),
+            daemon=True,
+        )
+        td.start()
     return const.Code.OK
 
 
 async def get_upload_process(uid: str) -> Optional[dict]:
     timeout_minus = 5
-    doc = await COLL.import_data.find_one({"uid": uid})
+    doc = await models.database.COLL.import_data.find_one({"uid": uid})
     if doc is None:
         return None
     now = datetime.datetime.now(tz=utc)
@@ -408,7 +449,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
             now.replace(tzinfo=None) - doc["startAt"].replace(tzinfo=None) \
             > datetime.timedelta(minutes=timeout_minus):
         doc["running"] = False
-        await COLL.import_data.update_one(
+        await models.database.COLL.import_data.update_one(
             {"uid": uid},
             {"$set": {
                 "running": False,

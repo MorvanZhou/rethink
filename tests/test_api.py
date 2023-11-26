@@ -243,8 +243,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
-        self.assertEqual(1, len(rj["nodes"]))
-        self.assertEqual("How do I record", rj["nodes"][0]["title"])
+        self.assertEqual(2, len(rj["data"]["nodes"]))
+        self.assertEqual("Welcome to Rethink", rj["data"]["nodes"][0]["title"])
 
         self.client.put(
             "/api/trash",
@@ -460,7 +460,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
 
-        for _ in range(8):
+        for _ in range(10):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/uploadProcess",
@@ -487,9 +487,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         f1.close()
         f2.close()
-        os.remove("temp/test1.txt")
-        os.remove("temp/test2.txt")
-        os.rmdir("temp")
+        shutil.rmtree("temp", ignore_errors=True)
 
     def test_upload_image(self):
         os.makedirs("temp", exist_ok=True)
@@ -509,8 +507,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 'test.png': "/files/3acca26d4f9d111694d7dbda2d1e6a40.png"
             }}, rj["data"])
         f1.close()
-        os.remove("temp/test.png")
-        os.rmdir("temp")
+        shutil.rmtree("temp", ignore_errors=True)
 
     def test_put_quick_node(self):
         resp = self.client.put(

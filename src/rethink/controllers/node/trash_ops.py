@@ -1,6 +1,6 @@
 from rethink import const, models
 from rethink.controllers import schemas
-from rethink.controllers.utils import TokenDecode
+from rethink.controllers.utils import TokenDecode, datetime2str
 
 
 async def move_to_trash(
@@ -45,13 +45,27 @@ async def get_from_trash(
         ps: int = 10,
         rid: str = "",
 ) -> schemas.node.GetFromTrashResponse:
-    ns, total = await models.node.get_nodes_in_trash(uid=td.uid, page=p, page_size=ps)
+    nodes, total = await models.node.get_nodes_in_trash(uid=td.uid, page=p, page_size=ps)
     code = const.Code.OK
+    data = schemas.node.NodesSearchResponse.Data(
+        nodes=[schemas.node.NodesSearchResponse.Data.Node(
+            id=n["id"],
+            title=n["title"],
+            snippet=n["snippet"],
+            titleHighlight="",
+            bodyHighlights=[],
+            score=0,
+            type=n["type"],
+            createdAt=datetime2str(n["_id"].generation_time),
+            modifiedAt=datetime2str(n["modifiedAt"]),
+        ) for n in nodes],
+        total=total,
+    )
     return schemas.node.GetFromTrashResponse(
         requestId=rid,
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
-        data=schemas.node.parse_nodes_info(ns, total)
+        data=data,
     )
 
 

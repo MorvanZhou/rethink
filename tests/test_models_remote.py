@@ -9,15 +9,6 @@ from rethink.controllers.auth import register_user
 from . import utils
 
 
-def skip_no_db(f):
-    async def wrapper(*args, **kwargs):
-        if args[0].skip:
-            return
-        return await f(*args, **kwargs)
-
-    return wrapper
-
-
 class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     default_pwd = "rethink123"
 
@@ -58,7 +49,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         except (pymongo.errors.NetworkTimeout, pymongo.errors.ServerSelectionTimeoutError):
             print("timeout")
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_user(self):
         if models.database.CLIENT is None: return
         _id, code = await register_user(email="aaa", password="bbb123")
@@ -99,7 +90,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         code = await models.user.delete(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_node(self):
         u, code = await models.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
@@ -116,7 +107,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title", n["title"])
 
-        ns, total = await models.search.user_node(uid=self.uid)
+        await models.database.searcher().refresh()
+        ns, total = await models.database.searcher().search(uid=self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
@@ -138,11 +130,13 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await models.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
+        await models.database.searcher().refresh()
         n, code = await models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
 
         code = await models.node.to_trash(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
+        await models.database.searcher().refresh()
         code = await models.node.delete(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         n, code = await models.node.get(uid=self.uid, nid=node["id"])
@@ -153,7 +147,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_parse_at(self):
         nid1, _ = await models.node.add(
             uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
@@ -172,13 +166,14 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(uid=self.uid)
+        await models.database.searcher().refresh()
+        nodes, total = await models.database.searcher().search(uid=self.uid)
         self.assertEqual(5, len(nodes))
         self.assertEqual(5, total)
 
-        found, total = await models.search.user_node(uid=self.uid, query="我")
+        found, total = await models.database.searcher().search(uid=self.uid, query="我")
         self.assertEqual(2, len(found), msg=found)
-        self.assertEqual(5, total)
+        self.assertEqual(2, total)
 
         n, code = await models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -201,7 +196,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["fromNodeIds"]))
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_add_set(self):
         node, code = await models.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
@@ -215,7 +210,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(node["toNodeIds"]))
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_to_trash(self):
         n1, code = await models.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
@@ -234,17 +229,20 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, total)
         self.assertEqual(n1["id"], ns[0]["id"])
 
-        ns, total = await models.search.user_node(self.uid)
+        await models.database.searcher().refresh()
+        ns, total = await models.database.searcher().search(self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
         code = await models.node.restore_from_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+
+        await models.database.searcher().refresh()
+        nodes, total = await models.database.searcher().search(self.uid)
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_batch(self):
         ns = []
         for i in range(10):
@@ -258,7 +256,9 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await models.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+
+        await models.database.searcher().refresh()
+        nodes, total = await models.database.searcher().search(self.uid)
         self.assertEqual(6 + base_count, len(nodes))
         self.assertEqual(6 + base_count, total)
 
@@ -268,17 +268,20 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await models.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.search.user_node(self.uid)
+
+        await models.database.searcher().refresh()
+        nodes, total = await models.database.searcher().search(self.uid)
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 
         code = await models.node.batch_delete(self.uid, [n["id"] for n in tns[2:4]])
         self.assertEqual(const.Code.OK, code)
+
         tns, total = await models.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(0, total)
         self.assertEqual(0, len(tns))
 
-    @skip_no_db
+    @utils.skip_no_connect
     async def test_update_used_space(self):
         u, code = await models.user.get(self.uid)
         base_used_space = u["usedSpace"]

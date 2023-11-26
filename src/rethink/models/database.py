@@ -1,4 +1,3 @@
-import asyncio
 import calendar
 import datetime
 import json
@@ -16,6 +15,9 @@ from rethink.logger import logger
 from rethink.mongita import MongitaClientDisk
 from rethink.mongita.collection import Collection
 from . import utils
+from .search_engine.engine import BaseEngine, SearchDoc
+from .search_engine.engine_es import ESSearcher
+from .search_engine.engine_local import LocalSearcher
 from .tps import UserMeta, Node, UserFile, ImportData
 
 
@@ -29,18 +31,28 @@ class Collections:
 
 COLL = Collections()
 CLIENT: Optional[Union[AsyncIOMotorClient, MongitaClientDisk]] = None
+SEARCHER: Optional[BaseEngine] = None
 
 
-def set_client():
-    global CLIENT
+def searcher() -> BaseEngine:
+    if SEARCHER is None:
+        raise ValueError("searcher not initialized")
+    return SEARCHER
+
+
+async def set_client():
+    global CLIENT, SEARCHER
     conf = config.get_settings()
     if config.is_local_db():
         if not conf.LOCAL_STORAGE_PATH.exists():
             raise FileNotFoundError(f"Path not exists: {conf.LOCAL_STORAGE_PATH}")
         db_path = conf.LOCAL_STORAGE_PATH / ".data" / "db"
         db_path.mkdir(parents=True, exist_ok=True)
+        SEARCHER = LocalSearcher()
         CLIENT = MongitaClientDisk(db_path)
     else:
+        if not isinstance(SEARCHER, ESSearcher):
+            SEARCHER = ESSearcher()
         CLIENT = AsyncIOMotorClient(
             host=conf.DB_HOST,
             port=conf.DB_PORT,
@@ -48,6 +60,36 @@ def set_client():
             password=conf.DB_PASSWORD,
             socketTimeoutMS=1000 * 5,
         )
+    await SEARCHER.init()
+
+
+def set_coll():
+    db = CLIENT[config.get_settings().DB_NAME]
+    COLL.users = db["users"]
+    COLL.nodes = db["nodes"]
+    COLL.import_data = db["importData"]
+    COLL.user_file = db["userFile"]
+
+
+async def init():
+    await set_client()
+    set_coll()
+
+    if config.is_local_db():
+        await __local_try_create_or_restore()
+
+    else:
+        await __remote_try_build_index()
+
+
+async def drop_all():
+    await set_client()
+    for db_name in await CLIENT.list_database_names():
+        if db_name == "admin":
+            continue
+        await CLIENT.drop_database(db_name)
+    if SEARCHER:
+        await SEARCHER.drop()
 
 
 async def __remote_try_build_index():
@@ -95,28 +137,6 @@ async def __remote_try_build_index():
         await COLL.user_file.create_index([("uid", 1), ("fid", -1)], unique=True)
 
 
-async def init():
-    set_client()
-    db = CLIENT[config.get_settings().DB_NAME]
-    COLL.users = db["users"]
-    COLL.nodes = db["nodes"]
-    COLL.import_data = db["importData"]
-    COLL.user_file = db["userFile"]
-
-    if config.is_local_db():
-        await __local_try_create_or_restore()
-    else:
-        # useful when upload files by another threading
-        CLIENT.get_io_loop = asyncio.get_running_loop
-        await __remote_try_build_index()
-
-
-async def drop_all():
-    set_client()
-    for db_name in await CLIENT.list_database_names():
-        if db_name == "admin":
-            continue
-        await CLIENT.drop_database(db_name)
 
 
 async def __local_try_add_default_user():
@@ -137,9 +157,10 @@ async def __local_try_add_default_user():
 
     logger.info("running at the first time, a user with initial data will be created")
     ns = const.NEW_USER_DEFAULT_NODES[u_insertion["language"]]
+    search_docs = []
 
     async def create_node(md: str):
-        title_, snippet_ = utils.preprocess_md(md)
+        title_, body_, snippet_ = utils.preprocess_md(md)
         n: Node = {
             "_id": ObjectId(),
             "id": utils.short_uuid(),
@@ -159,6 +180,13 @@ async def __local_try_add_default_user():
         res = await COLL.nodes.insert_one(n)
         if not res.acknowledged:
             raise ValueError("cannot insert default node")
+        search_docs.append(
+            SearchDoc(
+                nid=n["id"],
+                title=title_,
+                body=body_,
+            )
+        )
         return n
 
     n0 = await create_node(ns[0])
@@ -188,6 +216,11 @@ async def __local_try_add_default_user():
         }
     }
     _ = await COLL.users.insert_one(u)
+
+    await SEARCHER.add_batch(
+        uid=u["id"],
+        docs=search_docs,
+    )
 
 
 def __oid_from_datetime(dt: datetime.datetime) -> ObjectId:
@@ -240,11 +273,12 @@ async def __local_restore():
     if not md_dir.exists():
         return
     ns = []
+    search_docs = []
     for md_path in md_dir.glob("*.md"):
         md = md_path.read_text(encoding="utf-8")
         created_time = datetime.datetime.fromtimestamp(md_path.stat().st_ctime, tz=utc)
         modified_time = datetime.datetime.fromtimestamp(md_path.stat().st_mtime, tz=utc)
-        title_, snippet_ = utils.preprocess_md(md)
+        title_, body_, snippet_ = utils.preprocess_md(md)
 
         n: Node = {
             "_id": __oid_from_datetime(created_time),
@@ -263,6 +297,13 @@ async def __local_restore():
             "searchKeys": utils.txt2search_keys(title_),
         }
         ns.append(n)
+        search_docs.append(
+            SearchDoc(
+                nid=n["id"],
+                title=title_,
+                body=body_,
+            )
+        )
     res = await COLL.nodes.insert_many(ns)
     if not res.acknowledged:
         raise ValueError("cannot insert default node")
@@ -283,6 +324,13 @@ async def __local_restore():
     res = await COLL.user_file.insert_many(docs)
     if not res.acknowledged:
         raise ValueError("cannot insert default node")
+
+    await SEARCHER.drop()
+    await SEARCHER.init()
+    await SEARCHER.add_batch(
+        uid=u["id"],
+        docs=search_docs,
+    )
     logger.info(f"restore files count: {len(res.inserted_ids)}")
 
 
