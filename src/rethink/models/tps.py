@@ -30,8 +30,6 @@ class Node(TypedDict):
     inTrashAt: Optional[datetime.datetime]
     fromNodeIds: List[str]
     toNodeIds: List[str]
-    fromNodes: Optional[List[LinkedNode]]
-    toNodes: Optional[List[LinkedNode]]
 
 
 class _LastState(TypedDict):

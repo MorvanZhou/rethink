@@ -1,7 +1,6 @@
 import datetime
 import logging
 import time
-from shutil import rmtree
 from typing import List, Tuple, Sequence
 
 import jieba
@@ -11,7 +10,7 @@ from whoosh.fields import TEXT, ID, Schema, DATETIME, BOOLEAN
 from whoosh.highlight import Highlighter, HtmlFormatter
 from whoosh.index import create_in, open_dir, FileIndex
 from whoosh.qparser import QueryParser, syntax
-from whoosh.query import Term, And, Or
+from whoosh.query import Term, And, Or, Every
 
 from rethink import config, const
 from rethink.logger import logger
@@ -77,12 +76,16 @@ class LocalSearcher(BaseEngine):
             self.ix = open_dir(self.index_path)
 
     async def drop(self):
-        # remove all index
-        rmtree(self.index_path, ignore_errors=True)
         try:
+            w = self.ix.writer()
+            w.delete_by_query(Every("nid"))
+            w.commit()
             self.ix.close()
         except AttributeError:
             pass
+        # # remove all index
+        # if self.index_path.exists():
+        #     rmtree(self.index_path)
 
     async def add(self, uid: str, doc: SearchDoc) -> const.Code:
         return await self.add_batch(uid=uid, docs=[doc])
@@ -208,7 +211,7 @@ class LocalSearcher(BaseEngine):
                     nid=hit["nid"],
                     score=hit.score if sort_key != "title" else 0.,
                     titleHighlight=self.get_hl(hl, hit, "title", return_list=False, default=hit["title"]),
-                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=""),
+                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=hit["body"][:120]),
                 ) for hit in hits
             ], hits.total
 
@@ -220,7 +223,7 @@ class LocalSearcher(BaseEngine):
         hl_str = hl.highlight_hit(hit, key)
         if return_list:
             if hl_str == "":
-                return []
+                return [default]
             return [hl_str]
         if hl_str == "":
             return default

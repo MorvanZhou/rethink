@@ -22,7 +22,6 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self) -> None:
         await self.searcher.drop()
-        self.assertFalse(self.searcher.index_path.exists())
 
     async def test_add(self):
         for i in range(20):
@@ -66,7 +65,6 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(20, len(docs))
         self.assertEqual(20, total)
-        self.assertEqual([], docs[0].bodyHighlights)
 
     async def test_batch_add_update_delete(self):
         code = await self.searcher.add_batch(uid="uid", docs=[

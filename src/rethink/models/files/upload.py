@@ -20,7 +20,7 @@ from rethink.models.tps import ImportData
 from . import file_ops
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
-RESIZE_IMG_THRESHOLD = 1024 * 1024 * 1  # 1mb  # 1024 * 128  # 128 kb
+RESIZE_IMG_THRESHOLD = 1024 * 256  # 256kb  # 1024 * 128  # 128 kb
 
 
 async def update_process(
@@ -75,6 +75,7 @@ async def upload_obsidian_task(
     from rethink import models
     if new_process:
         await models.database.set_client()
+        await models.database.searcher().init()
         models.database.set_coll()
 
     try:

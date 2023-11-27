@@ -84,16 +84,10 @@ async def init():
 
 async def drop_all():
     await set_client()
-    for db_name in await CLIENT.list_database_names():
-        if db_name == "admin":
-            continue
-        elif not db_name.endswith("_test"):
-            continue
-        await CLIENT.drop_database(db_name)
+    await CLIENT.drop_database(config.get_settings().DB_NAME)
     global SEARCHER
     if SEARCHER:
         await SEARCHER.drop()
-        SEARCHER = None
 
 
 async def __remote_try_build_index():
@@ -189,6 +183,10 @@ async def __local_try_add_default_user():
                 body=body_,
             )
         )
+        md_dir = config.get_settings().LOCAL_STORAGE_PATH / ".data" / "md"
+        md_dir.mkdir(parents=True, exist_ok=True)
+        with open(md_dir / f"{n['id']}.md", "w", encoding="utf-8") as f:
+            f.write(md)
         return n
 
     n0 = await create_node(ns[0])
@@ -382,7 +380,7 @@ async def __local_try_create_or_restore():
         )
 
     if await COLL.users.find_one(
-            {"account": const.DEFAULT_USER["email"], "source": const.UserSource.EMAIL.value}
+            {"account": const.DEFAULT_USER["email"], "source": const.UserSource.LOCAL.value}
     ) is not None:
         return
 

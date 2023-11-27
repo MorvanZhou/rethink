@@ -147,7 +147,6 @@ body,
 .error-msg-box-border {
   border: 4px solid #ff6666;
 }
-
 em.match {
   color: #f73131;
   font-style: normal;
@@ -3171,13 +3170,11 @@ img[data-v-4f42ee16] {
   margin: 0 5px;
   padding: 5px;
   cursor: pointer;
-  min-height: 2.5em;
+  min-height: 1em;
 }
-
 .at-search-result[data-v-5527cb1e]:hover {
   background-color: #eeeeee;
 }
-
 .result-hl[data-v-5527cb1e] {
   font-size: 0.8em;
   color: #666;
@@ -3194,7 +3191,7 @@ img[data-v-4f42ee16] {
 .at-search-result-group[data-v-e789ed84] {
   padding: 5px 0 0 0;
   border-bottom: 1px solid #e5e5e5;
-  max-height: 500px;
+  max-height: 400px;
   overflow-y: auto;
 }
 .at-search-result-group-label[data-v-e789ed84] {
@@ -3517,13 +3514,11 @@ img[data-v-4f42ee16] {
   color: #666;
   height: 3em;
 }
-
 .search-result[data-v-48038053] {
   cursor: pointer;
   padding: 10px 10px 10px 10px;
   letter-spacing: 1px;
 }
-
 .node-hl[data-v-48038053] {
   font-size: 0.9em;
   padding: 0;
@@ -4102,14 +4097,12 @@ tr.tr-sm .node-more-ops {
   margin-bottom: 10px;
   letter-spacing: 1px;
 }
-
 .node-time[data-v-19c64c31] {
   font-size: 0.8em;
   padding-top: 10px;
   color: #666;
   overflow-x: hidden;
 }
-
 .node-hl[data-v-19c64c31] {
   font-size: 0.9em;
   padding-top: 8px;
