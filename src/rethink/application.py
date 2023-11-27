@@ -70,21 +70,24 @@ async def shutdown_event():
     logger.info("db closed")
 
 
-app.mount(
-    "/css",
-    StaticFiles(directory=const.FRONTEND_DIR / "css"),
-    name="css",
-)
-app.mount(
-    "/js",
-    StaticFiles(directory=const.FRONTEND_DIR / "js"),
-    name="js",
-)
-app.mount(
-    "/img",
-    StaticFiles(directory=const.FRONTEND_DIR / "img"),
-    name="img",
-)
+try:
+    app.mount(
+        "/css",
+        StaticFiles(directory=const.FRONTEND_DIR / "css"),
+        name="css",
+    )
+    app.mount(
+        "/js",
+        StaticFiles(directory=const.FRONTEND_DIR / "js"),
+        name="js",
+    )
+    app.mount(
+        "/img",
+        StaticFiles(directory=const.FRONTEND_DIR / "img"),
+        name="img",
+    )
+except RuntimeError:
+    logger.info("mount frontend failed")
 
 
 @app.get("/", response_class=HTMLResponse)

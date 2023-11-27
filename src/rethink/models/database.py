@@ -397,9 +397,9 @@ async def __try_restore_search():
         return
     await SEARCHER.drop()
     await SEARCHER.init()
-    docs = COLL.nodes.find()
+    docs = await COLL.nodes.find({}).to_list(length=None)
     search_docs = {}
-    for doc in await docs.to_list(length=None):
+    for doc in docs:
         if doc["uid"] not in search_docs:
             search_docs[doc["uid"]] = []
 
@@ -417,4 +417,4 @@ async def __try_restore_search():
         )
         if code != const.Code.OK:
             raise ValueError("cannot restore search index")
-    logger.info(f"restore search index count: {count_search}")
+    logger.info(f"restore search index count: {count_mongo}")
