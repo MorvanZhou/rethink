@@ -46,8 +46,8 @@ class LocalSearcher(BaseEngine):
                     "disabled": disable if disable is not None else res["disabled"],
                     "inTrash": in_trash if in_trash is not None else res["inTrash"],
                 }
-                writer.delete_by_term("nid", nid)
-                writer.add_document(uid=uid, **new)
+
+            writer.update_document(uid=uid, **new)
         writer.commit()
         return const.Code.OK
 
@@ -162,8 +162,7 @@ class LocalSearcher(BaseEngine):
                     "disabled": res["disabled"],
                     "inTrash": res["inTrash"],
                 }
-                writer.delete_by_term("nid", doc.nid)
-            writer.add_document(uid=uid, **new)
+            writer.update_document(uid=uid, **new)
         writer.commit()
         return const.Code.OK
 
@@ -217,6 +216,11 @@ class LocalSearcher(BaseEngine):
 
     async def refresh(self):
         raise NotImplementedError
+
+    async def count_all(self) -> int:
+        with self.ix.searcher() as searcher:
+            resp = searcher.search(Every("nid"))
+            return len(resp)
 
     @staticmethod
     def get_hl(hl: Highlighter, hit: dict, key: str, return_list: bool, default: str = ""):

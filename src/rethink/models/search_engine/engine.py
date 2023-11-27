@@ -97,3 +97,7 @@ class BaseEngine(ABC):
     @abstractmethod
     async def refresh(self):
         ...
+
+    @abstractmethod
+    async def count_all(self) -> int:
+        ...

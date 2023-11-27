@@ -66,6 +66,9 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, len(docs))
         self.assertEqual(20, total)
 
+        count = await self.searcher.count_all()
+        self.assertEqual(20, count)
+
     async def test_batch_add_update_delete(self):
         code = await self.searcher.add_batch(uid="uid", docs=[
             SearchDoc(
@@ -95,6 +98,8 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             ) for i in range(20)
         ])
         self.assertEqual(const.Code.OK, code)
+        self.assertEqual(20, await self.searcher.count_all())
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",
@@ -109,6 +114,8 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
 
         code = await self.searcher.disable(uid="uid", nid="nid18")
         self.assertEqual(const.Code.OK, code)
+        self.assertEqual(20, await self.searcher.count_all())
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",
@@ -120,14 +127,18 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(10, len(docs))
         self.assertEqual(19, total)
         self.assertEqual("nid17", docs[1].nid)
+        self.assertEqual(20, await self.searcher.count_all())
 
         code = await self.searcher.enable(uid="uid", nid="nid18")
         self.assertEqual(const.Code.OK, code)
 
         code = await self.searcher.batch_to_trash(uid="uid", nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
+        self.assertEqual(20, await self.searcher.count_all())
         code = await self.searcher.delete_batch(uid="uid", nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
+        self.assertEqual(10, await self.searcher.count_all())
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",

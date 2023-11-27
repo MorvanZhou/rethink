@@ -85,6 +85,9 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
         self.assertEqual([], docs[0].bodyHighlights)
 
+        count = await self.searcher.count_all()
+        self.assertEqual(20, count)
+
     @utils.skip_no_connect
     async def test_batch_add_update_delete(self):
         code = await self.searcher.add_batch(uid="uid", docs=[
@@ -96,6 +99,8 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         ])
         self.assertEqual(const.Code.OK, code)
         await self.searcher.refresh()
+        count = await self.searcher.count_all()
+        self.assertEqual(20, count)
 
         docs, total = await self.searcher.search(
             uid="uid",
@@ -118,6 +123,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         ])
         self.assertEqual(const.Code.OK, code)
         await self.searcher.refresh()
+        self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
             uid="uid",
@@ -134,6 +140,8 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         code = await self.searcher.disable(uid="uid", nid="nid18")
         self.assertEqual(const.Code.OK, code)
         await self.searcher.refresh()
+        self.assertEqual(20, await self.searcher.count_all())
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",
@@ -152,10 +160,13 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         code = await self.searcher.batch_to_trash(uid="uid", nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         await self.searcher.refresh()
+        self.assertEqual(20, await self.searcher.count_all())
 
         code = await self.searcher.delete_batch(uid="uid", nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         await self.searcher.refresh()
+        self.assertEqual(10, await self.searcher.count_all())
+
         docs, total = await self.searcher.search(
             uid="uid",
             query="doc",

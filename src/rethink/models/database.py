@@ -81,6 +81,8 @@ async def init():
     else:
         await __remote_try_build_index()
 
+    await __try_restore_search()
+
 
 async def drop_all():
     await set_client()
@@ -386,3 +388,33 @@ async def __local_try_create_or_restore():
 
     # no default user, create one
     await __local_try_add_default_user()
+
+
+async def __try_restore_search():
+    count_mongo = await COLL.nodes.count_documents({})
+    count_search = await SEARCHER.count_all()
+    if count_mongo == count_search:
+        return
+    await SEARCHER.drop()
+    await SEARCHER.init()
+    docs = COLL.nodes.find()
+    search_docs = {}
+    for doc in await docs.to_list(length=None):
+        if doc["uid"] not in search_docs:
+            search_docs[doc["uid"]] = []
+
+        search_docs[doc["uid"]].append(
+            SearchDoc(
+                nid=doc["id"],
+                title=doc["title"],
+                body=doc["md"],
+            )
+        )
+    for uid, docs in search_docs.items():
+        code = await SEARCHER.add_batch(
+            uid=uid,
+            docs=docs,
+        )
+        if code != const.Code.OK:
+            raise ValueError("cannot restore search index")
+    logger.info(f"restore search index count: {count_search}")

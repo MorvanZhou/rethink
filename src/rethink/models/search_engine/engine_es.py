@@ -480,45 +480,15 @@ class ESSearcher(BaseEngine):
             ) for hit in hits
         ], total
 
-    async def all(self, uid: str) -> Tuple[List[SearchResult], int]:
-        resp = await self.es.search(
+    async def count_all(self) -> int:
+        resp = await self.es.count(
             index=get_settings().ES_INDEX,
             body={
                 "query": {
-                    "term": {"uid": uid}
-                },
-                "sort": [
-                    {
-                        "modifiedAt": {
-                            "order": "desc",
-                            "format": "strict_date_optional_time_nanos",
-                        }
-                    }
-                ],
-                "from": 0,
-                "size": 10000,
-                "highlight": {
-                    "pre_tags": [
-                        f"<{self.hl_tag_name} class=\"{self.hl_class_name} {self.hl_term_prefix}{i}\">"
-                        for i in range(5)
-                    ],
-                    "post_tags": [f"</{self.hl_tag_name}>" for _ in range(5)],
-                    "fields": {
-                        "body": {},
-                        "title": {},
-                    }
-                },
+                    "match_all": {}
+                }
             })
-        hits = resp["hits"]["hits"]
-        total = resp["hits"]["total"]["value"]
-        return [
-            SearchResult(
-                nid=hit["_id"],
-                score=hit["_score"] if hit["_score"] is not None else 0.,
-                titleHighlight=self.get_hl(hit, "title", first=True, default=hit["_source"]["title"]),
-                bodyHighlights=self.get_hl(hit, "body", first=False, default=""),
-            ) for hit in hits
-        ], total
+        return resp["count"]
 
     async def refresh(self):
         await self.es.indices.refresh(index=get_settings().ES_INDEX)
