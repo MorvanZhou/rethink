@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 from shutil import rmtree
 from typing import List, Tuple, Sequence
 
@@ -106,13 +107,20 @@ class LocalSearcher(BaseEngine):
 
     async def add_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
         writer = self.ix.writer()
+        now = datetime.datetime.now(tz=utc)
         for doc in docs:
             d = doc.__dict__
-            d["createdAt"] = datetime.datetime.now(tz=utc)
+            now_ = datetime.datetime.now(tz=utc)
+            if now == now_:
+                time.sleep(0.00001)
+                now_ = datetime.datetime.now(tz=utc)
+            d["createdAt"] = now_
             d["modifiedAt"] = d["createdAt"]
             d["disabled"] = False
             d["inTrash"] = False
             writer.add_document(uid=uid, **d)
+            now = now_
+
         writer.commit()
         return const.Code.OK
 

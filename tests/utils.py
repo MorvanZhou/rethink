@@ -14,8 +14,8 @@ def set_env(file=".env.test.local"):
         if file.endswith(".local"):
             tmp = Path(__file__).parent / "tmp"
             if tmp.exists():
-                shutil.rmtree(tmp)
-            tmp.mkdir()
+                shutil.rmtree(tmp, ignore_errors=True)
+            tmp.mkdir(exist_ok=True)
             os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
         for c in cs:
@@ -45,8 +45,10 @@ def drop_env(file=".env.test.local"):
 
 
 def skip_no_connect(f):
+    skip_no_connect.skip = False
+
     async def wrapper(*args, **kwargs):
-        if args[0].skip:
+        if skip_no_connect.skip:
             return
         return await f(*args, **kwargs)
 

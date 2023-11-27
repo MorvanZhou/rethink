@@ -10,7 +10,6 @@ from . import utils
 class ESTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.skip = False
         utils.set_env(".env.test.development")
         cls.searcher = ESSearcher()
 
@@ -19,17 +18,22 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.development")
 
     async def asyncSetUp(self) -> None:
-        if self.skip:
+        if utils.skip_no_connect.skip:
+            print("remote test asyncSetUp skipped")
             return
         try:
             await self.searcher.drop()
             await self.searcher.init()
             self.assertTrue(await self.searcher.es.indices.exists(index=config.get_settings().ES_INDEX))
         except (elastic_transport.ConnectionError, RuntimeError):
-            self.skip = True
+            utils.skip_no_connect.skip = True
+            print("remote test asyncSetUp timeout")
+            if self.searcher.es is not None:
+                await self.searcher.es.close()
 
     async def asyncTearDown(self) -> None:
-        if self.skip:
+        if utils.skip_no_connect.skip:
+            print("remote test asyncTearDown skipped")
             return
         try:
             await self.searcher.drop()

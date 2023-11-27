@@ -15,7 +15,6 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.skip = False
         utils.set_env(".env.test.development")
 
     @classmethod
@@ -23,7 +22,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.development")
 
     async def asyncSetUp(self) -> None:
-        if self.skip:
+        if utils.skip_no_connect.skip:
+            print("remote test asyncSetUp skipped")
             return
         try:
             await models.database.drop_all()
@@ -44,11 +44,12 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 elastic_transport.ConnectionError,
                 RuntimeError,
         ):
-            print("timeout")
-            self.skip = True
+            print("remote test asyncSetUp timeout")
+            utils.skip_no_connect.skip = True
 
     async def asyncTearDown(self) -> None:
-        if self.skip:
+        if utils.skip_no_connect.skip:
+            print("remote test asyncTearDown skipped")
             return
         try:
             await models.database.drop_all()
@@ -58,7 +59,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 elastic_transport.ConnectionError,
                 RuntimeError,
         ):
-            print("timeout")
+            print("remote test asyncTearDown timeout")
+            utils.skip_no_connect.skip = True
 
     @utils.skip_no_connect
     async def test_user(self):
