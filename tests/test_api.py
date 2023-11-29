@@ -6,6 +6,7 @@ import time
 import unittest
 from pathlib import Path
 from typing import Dict
+from unittest.mock import patch
 from zipfile import ZipFile
 
 from PIL import Image
@@ -513,7 +514,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         f1.close()
         shutil.rmtree("temp", ignore_errors=True)
 
-    def test_put_quick_node(self):
+    @patch(
+        "rethink.models.utils.httpx.AsyncClient.get",
+        return_value=Response(200, content="<title>百度一下</title>".encode("utf-8"))
+    )
+    def test_put_quick_node(self, mocker):
         resp = self.client.put(
             "/api/node/quick",
             json={

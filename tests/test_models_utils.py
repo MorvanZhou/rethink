@@ -1,5 +1,8 @@
 import unittest
 from textwrap import dedent
+from unittest.mock import patch
+
+import httpx
 
 from rethink import const, config
 from rethink.models import utils
@@ -92,18 +95,66 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
     def tearDownClass(cls) -> None:
         config.get_settings.cache_clear()
 
-    @unittest.skip("skip outer connection test")
-    async def test_get_title_description_from_link(self):
-        for url, res in [
-            ("https://github.com/MorvanZhou/rethink", True),
-            # ("https://zhuanlan.zhihu.com/p/610939462?utm_id=0", True),
-            ("https://waqwe12f2f2fa.fffffffff", False),
-            ("https://baidu.com", True),
-            ("https://rethink.run", True),
-            ("https://rethink.run/about", True),
-            ("https://baidu.com/wqwqqqqq", False),
-            ("https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw", True),
+    # @unittest.skip("skip outer connection test")
+    @patch(
+        "rethink.models.utils.httpx.AsyncClient.get",
+    )
+    async def test_get_title_description_from_link(self, mock_get):
+        for url, content, res in [
+            (
+                    "https://github.com/MorvanZhou/rethink",
+                    "<title>MorvanZhou/rethink: Rethink: a note taking web app</title>"
+                    """<meta name="description" content="Rethink: a note taking web app. Contribute to 
+                    MorvanZhou/rethink development by creating an account on GitHub.">""",
+                    True
+            ),
+            (
+                    "https://zhuanlan.zhihu.com/p/610939462?utm_id=0",
+                    """<head>
+                    <meta charSet="utf-8"/>
+                    <title data-rh="true">python的httpx库如何使用 - 知乎</title>
+                    <meta data-rh="true" name="description" content="httpx是一个基于Python的异步HTTP客户端库，
+                    可以用于发送HTTP请求和接收HTTP响应。以下是一些httpx库的基本使用方法：
+                     发送HTTP GET请求import httpx async with httpx.AsyncClient() as client: response = await…"/>""",
+                    True
+            ),
+            (
+                    "https://waqwe12f2f2fa.fffffffff",
+                    "",
+                    False
+            ),
+            (
+                    "https://baidu.com",
+                    """<title>百度一下，你就知道</title>
+                    <meta name="description" content="全球领先的中文搜索引擎、
+                    致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。">""",
+                    True
+            ),
+            (
+                    "https://rethink.run",
+                    """<meta content="Rethink" name="title"><title>rethink</title><meta content="Rethink: think differently" name="description">""",
+                    True
+            ),
+            (
+                    "https://baidu.com/wqwqqqqq",
+                    "",
+                    False
+            ),
+            (
+                    "https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw",
+                    """<title></title><meta name="description" content="" />""",
+                    False),
         ]:
+            if res:
+                mock_get.return_value = httpx.Response(
+                    status_code=200,
+                    content=content.encode("utf-8"),
+                )
+            else:
+                mock_get.return_value = httpx.Response(
+                    status_code=404,
+                    content=content.encode("utf-8"),
+                )
             title, desc = await utils.get_title_description_from_link(
                 url, language=const.Language.EN.value)
             if res:

@@ -3175,7 +3175,6 @@ img[data-v-4f42ee16] {
 .at-search-result[data-v-5527cb1e]:hover {
   background-color: #eeeeee;
 }
-
 .result-hl[data-v-5527cb1e] {
   font-size: 0.8em;
   color: #666;
@@ -3196,15 +3195,12 @@ img[data-v-4f42ee16] {
   height: 100%;
   margin: 0 auto;
 }
-
 .circle-bg[data-v-1bc9a6f2] {
   background: #FEFEFE;
 }
-
 .circle[data-v-1bc9a6f2] {
   height: 50px;
 }
-
 .dots[data-v-1bc9a6f2] {
   width: 60px;
 }
@@ -3219,11 +3215,9 @@ img[data-v-4f42ee16] {
   max-height: 400px;
   overflow-y: auto;
 }
-
 .at-search-height-sm[data-v-e789ed84] {
   max-height: 600px !important;
 }
-
 .at-search-result-group-label[data-v-e789ed84] {
   font-weight: 500;
   font-size: 0.9em;

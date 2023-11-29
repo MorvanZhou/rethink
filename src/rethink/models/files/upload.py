@@ -7,8 +7,8 @@ import time
 import zipfile
 from typing import List, Tuple, Optional
 
+import httpx
 import pymongo.errors
-import requests
 from bson import ObjectId
 from bson.tz_util import utc
 from fastapi import UploadFile
@@ -630,20 +630,34 @@ async def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
         return "", code
     if await models.user.user_space_not_enough(u=u):
         return "", const.Code.USER_SPACE_NOT_ENOUGH
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                url=url,
+                headers=models.utils.ASYNC_CLIENT_HEADERS,
+                timeout=5.
+            )
+        except (
+                httpx.ConnectTimeout,
+                RuntimeError,
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.HTTPError
+        ) as e:
+            logger.info(f"failed to get {url}: {e}")
+            return "", const.Code.FILE_OPEN_ERROR
+        if response.status_code != 200:
+            return "", const.Code.FILE_OPEN_ERROR
 
-    try:
-        r = requests.get(url)
-    except requests.exceptions.RequestException:
-        return url, const.Code.OK
+        content = response.content
 
-    if r.status_code != 200:
-        return "", const.Code.FILE_OPEN_ERROR
-    file = UploadFile(
-        filename=url.split("/")[-1],
-        file=io.BytesIO(r.content),
-        headers=Headers(r.headers),
-        size=len(r.content)
-    )
+        file = UploadFile(
+            filename=url.split("/")[-1],
+            file=io.BytesIO(content),
+            headers=Headers(response.headers),
+            size=len(content)
+        )
+
     res = await file_ops.save_upload_files(
         uid=uid,
         files=[file],

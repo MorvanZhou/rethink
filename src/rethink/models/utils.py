@@ -3,6 +3,8 @@ import io
 import math
 import re
 import uuid
+from html.parser import HTMLParser
+from io import StringIO
 from typing import Tuple
 
 import httpx
@@ -68,7 +70,7 @@ def preprocess_md(md: str, snippet_len: int = 200) -> Tuple[str, str, str]:
     title, body = split_title_body(fulltext=md)
     title = md2txt(title.strip())
     body = md2txt(body.strip())
-    snippet = body[:snippet_len]
+    snippet = strip_html_tags(body)[:snippet_len]
     return title, body, snippet
 
 
@@ -156,14 +158,14 @@ ASYNC_CLIENT_HEADERS = {
 
 async def get_title_description_from_link(url: str, language: str) -> Tuple[str, str]:
     if language == const.Language.ZH.value:
-        title = "网址没发现标题"
-        description = "网址没发现描述"
+        no_title = "网址没发现标题"
+        no_description = "网址没发现描述"
     elif language == const.Language.EN.value:
-        title = "No title found"
-        description = "No description found"
+        no_title = "No title found"
+        no_description = "No description found"
     else:
-        title = "No title found"
-        description = "No description found"
+        no_title = "No title found"
+        no_description = "No description found"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -179,14 +181,15 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
                 httpx.HTTPError
         ) as e:
             logger.info(f"failed to get {url}: {e}")
-            return title, description
+            return no_title, no_description
         if response.status_code in [302, 301]:
             url = response.headers["Location"]
             return await get_title_description_from_link(url=url, language=language)
         if response.status_code != 200:
-            return title, description
+            return no_title, no_description
         html = response.text
 
+    title, description = "", ""
     found = re.search(r'<meta[^>]*name="title"[^>]*content="([^"]*)"[^>]*>', html, re.DOTALL)
     if found is None:
         found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="title"[^>]*>', html, re.DOTALL)
@@ -200,4 +203,29 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
         found = re.search(r'<meta[^>]*content="([^"]*)"[^>]*name="description"[^>]*>', html, re.DOTALL)
     if found:
         description = found.group(1).strip()[:400]
+    if title == "":
+        title = no_title
+    if description == "":
+        description = no_description
     return title, description
+
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.text = StringIO()
+
+    def handle_data(self, d):
+        self.text.write(d)
+
+    def get_data(self):
+        return self.text.getvalue()
+
+
+def strip_html_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Tuple, Sequence
 
 from rethink import const
+from rethink.models.utils import strip_html_tags
 
 
 @dataclass
@@ -11,6 +12,10 @@ class SearchDoc:
     nid: str
     title: str
     body: str
+
+    def __post_init__(self):
+        self.title = strip_html_tags(self.title)
+        self.body = strip_html_tags(self.body)
 
 
 @dataclass
@@ -22,6 +27,10 @@ class RestoreSearchDoc:
     modifiedAt: datetime.datetime
     disabled: bool
     inTrash: bool
+
+    def __post_init__(self):
+        self.title = strip_html_tags(self.title)
+        self.body = strip_html_tags(self.body)
 
 
 @dataclass

@@ -4,8 +4,9 @@ import unittest
 from io import BytesIO
 from pathlib import Path
 from textwrap import dedent
+from unittest.mock import patch
 
-import requests
+import httpx
 from PIL import Image
 from bson import ObjectId
 from bson.tz_util import utc
@@ -351,7 +352,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             "startAt": now,
             "running": True,
             "obsidian": {},
-            "problemFiles": [],
+            "msg": "",
             "code": const.Code.OK.value,
         }
         res = await models.database.COLL.import_data.insert_one(doc)
@@ -409,22 +410,32 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await models.user.get(self.uid)
         self.assertEqual(used_space + size, u["usedSpace"])
 
-    async def test_fetch_image_vditor(self):
+    @patch(
+        "rethink.models.files.upload.httpx.AsyncClient.get",
+    )
+    async def test_fetch_image_vditor(self, mock_get):
+        f = open(Path(__file__).parent.parent / "img" / "phone-notes.png", "rb")
+        mock_get.return_value = httpx.Response(
+            200,
+            content=f.read(),
+            headers={"content-type": "image/png"}
+        )
+
         u, code = await models.user.get(self.uid)
         used_space = u["usedSpace"]
 
-        url = "https://rethink.run/favicon.ico"
+        url = "https://rethink.run/favicon.png"
         new_url, code = await models.files.fetch_image_vditor(self.uid, url)
         self.assertEqual(const.Code.OK, code)
-        self.assertTrue(new_url.endswith(".ico"))
+        self.assertTrue(new_url.endswith(".png"))
         self.assertTrue(new_url.startswith("/"))
         local_file = Path(__file__).parent / "tmp" / ".data" / new_url[1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
         u, code = await models.user.get(self.uid)
-        r = requests.get(url)
-        self.assertEqual(used_space + len(r.content), u["usedSpace"])
+        self.assertEqual(used_space + f.tell(), u["usedSpace"])
+        f.close()
 
     async def test_update_used_space(self):
         u, code = await models.user.get(self.uid)
