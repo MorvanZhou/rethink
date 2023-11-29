@@ -61,7 +61,7 @@ async def get_upload_process(
             type="",
             startAt="",
             running=False,
-            problemFiles=[],
+            msg="",
         )
     doc = await models.files.get_upload_process(uid=td.uid)
     if doc is None:
@@ -73,7 +73,7 @@ async def get_upload_process(
             type="",
             startAt="",
             running=False,
-            problemFiles=[],
+            msg="",
         )
     code = const.INT_CODE_MAP[doc["code"]]
     return schemas.files.FileUploadProcessResponse(
@@ -84,7 +84,7 @@ async def get_upload_process(
         type=doc["type"],
         startAt=datetime2str(doc["startAt"]),
         running=doc["running"],
-        problemFiles=doc["problemFiles"],
+        msg=doc["msg"],
     )
 
 

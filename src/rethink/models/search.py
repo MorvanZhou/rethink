@@ -50,6 +50,8 @@ async def cursor_query(
         uid: str,
         nid: str,
         cursor_text: str,
+        page: int,
+        page_size: int,
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
     # if cursor_text.startswith("@"):
     #     query = cursor_text[1:].strip()
@@ -78,9 +80,9 @@ async def cursor_query(
             NodesSearchResponse.Data.Node(
                 id=n["id"],
                 title=n["title"],
-                snippet=n["snippet"],
-                titleHighlight="",
-                bodyHighlights=[],
+                snippet=n["snippet"][:60] + "...",
+                titleHighlight=n["title"],
+                bodyHighlights=[n["snippet"][:60] + "..."],
                 score=0,
                 type=n["type"],
                 createdAt=datetime2str(n["_id"].generation_time),
@@ -92,8 +94,8 @@ async def cursor_query(
         query=query,
         sort_key="modifiedAt",
         reverse=True,
-        page=0,
-        page_size=8,
+        page=page,
+        page_size=page_size,
         exclude_nids=[nid],
     )
 

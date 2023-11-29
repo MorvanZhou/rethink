@@ -14,7 +14,7 @@ from whoosh.query import Term, And, Or, Every
 
 from rethink import config, const
 from rethink.logger import logger
-from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult
+from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc
 
 jieba.setLogLevel(logging.ERROR)
 
@@ -81,7 +81,7 @@ class LocalSearcher(BaseEngine):
             w.delete_by_query(Every("nid"))
             w.commit()
             self.ix.close()
-        except AttributeError:
+        except (AttributeError, FileNotFoundError):
             pass
         # # remove all index
         # if self.index_path.exists():
@@ -210,7 +210,7 @@ class LocalSearcher(BaseEngine):
                     nid=hit["nid"],
                     score=hit.score if sort_key != "title" else 0.,
                     titleHighlight=self.get_hl(hl, hit, "title", return_list=False, default=hit["title"]),
-                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=hit["body"][:120]),
+                    bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=hit["body"][:60] + "..."),
                 ) for hit in hits
             ], hits.total
 
@@ -221,6 +221,13 @@ class LocalSearcher(BaseEngine):
         with self.ix.searcher() as searcher:
             resp = searcher.search(Every("nid"))
             return len(resp)
+
+    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+        writer = self.ix.writer()
+        for doc in docs:
+            writer.add_document(uid=uid, **doc.__dict__)
+        writer.commit()
+        return const.Code.OK
 
     @staticmethod
     def get_hl(hl: Highlighter, hit: dict, key: str, return_list: bool, default: str = ""):

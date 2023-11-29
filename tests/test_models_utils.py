@@ -23,10 +23,6 @@ class UtilsTest(unittest.TestCase):
         text = utils.md2txt(md="# 123\n## 456\n### 789\n")
         self.assertEqual("123\n456\n789", text)
 
-    def test_pinyin(self):
-        res = utils.txt2search_keys('中心English')
-        self.assertEqual({'zhongxinenglish', '中心english', 'ㄓㄨㄥㄒㄧㄣenglish'}, set(res.split(" ")))
-
     def test_change_link_title(self):
         md = dedent("""\
             # 123

@@ -241,6 +241,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid,
             nid=n2["id"],
             cursor_text="text",
+            page=0,
+            page_size=10,
         )
         self.assertEqual(1, len(recom))
         self.assertEqual(1, total)
@@ -249,6 +251,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
             cursor_text="",  # return recent nodes only
+            page=0,
+            page_size=10,
         )
         self.assertEqual(2, len(recom))
         self.assertEqual(2, total)
@@ -260,6 +264,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
             cursor_text="",
+            page=0,
+            page_size=10,
         )
         self.assertEqual(3, len(recom))
         self.assertEqual(3, total)

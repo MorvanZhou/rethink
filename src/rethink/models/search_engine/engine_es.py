@@ -8,12 +8,16 @@ from elasticsearch import helpers
 from rethink import const
 from rethink.config import get_settings
 from rethink.logger import logger
-from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult
+from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc
+
+
+def datetime2str(dt: datetime.datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 def get_utc_now() -> str:
     now = datetime.datetime.now(tz=utc)
-    return now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    return datetime2str(now)
 
 
 class ESSearcher(BaseEngine):
@@ -294,7 +298,7 @@ class ESSearcher(BaseEngine):
             d = doc.__dict__
             d["inTrash"] = False
             d["disabled"] = False
-            d["createdAt"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            d["createdAt"] = datetime2str(now)
             d["modifiedAt"] = d["createdAt"]
             d["uid"] = uid
             nid = d.pop("nid")
@@ -306,15 +310,7 @@ class ESSearcher(BaseEngine):
                 "_source": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        try:
-            resp = await helpers.async_bulk(client=self.es, actions=actions)
-        except helpers.BulkIndexError as e:
-            logger.error(f"add batch failed, resp: {e.args[0]}")
-            return const.Code.OPERATION_FAILED
-        if resp[0] != len(actions):
-            logger.error(f"add batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+        return await self._batch_ops(actions, op_type="add")
 
     async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
         resp = await self.es.delete_by_query(
@@ -353,7 +349,7 @@ class ESSearcher(BaseEngine):
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
             d = doc.__dict__
-            d["modifiedAt"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            d["modifiedAt"] = datetime2str(now)
             d["uid"] = uid
             nid = d.pop("nid")
             actions.append({
@@ -363,15 +359,7 @@ class ESSearcher(BaseEngine):
                 "doc": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        try:
-            resp = await helpers.async_bulk(client=self.es, actions=actions)
-        except helpers.BulkIndexError as e:
-            logger.error(f"update batch failed, resp: {e.args[0]}")
-            return const.Code.OPERATION_FAILED
-        if resp[0] != len(actions):
-            logger.error(f"update batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+        return await self._batch_ops(actions, op_type="update")
 
     async def search(
             self,
@@ -386,14 +374,17 @@ class ESSearcher(BaseEngine):
         if page < 0:
             raise ValueError("page must >= 0")
         if sort_key is None or sort_key in ["", "similarity"]:
-            sort_key = "_score"
+            sort = ["_score"]
         elif sort_key == "title":
-            sort_key = "title.keyword"
-        sort = {sort_key: {"order": "desc" if reverse else "asc"}}
-        if sort_key in ["createdAt", "modifiedAt"]:
-            sort[sort_key]["format"] = "strict_date_optional_time_nanos"
-        elif sort_key in ["_score", "_id", "title.keyword"]:
-            pass
+            sort = [{"title.keyword": {"order": "desc" if reverse else "asc"}}, "_score"]
+        elif sort_key in ["createdAt", "modifiedAt"]:
+            sort = [
+                {sort_key: {
+                    "order": "desc" if reverse else "asc",
+                    "format": "strict_date_optional_time_nanos"
+                }},
+                "_score",
+            ]
         else:
             raise ValueError(f"sort_key {sort_key} not supported")
         # select uid = uid, disabled = false, inTrash = false
@@ -454,7 +445,7 @@ class ESSearcher(BaseEngine):
             index=get_settings().ES_INDEX,
             body={
                 "query": query_dict,
-                "sort": [sort],
+                "sort": sort,
                 "from": page * page_size,
                 "size": page_size,
                 "highlight": {
@@ -476,7 +467,7 @@ class ESSearcher(BaseEngine):
                 nid=hit["_id"],
                 score=hit["_score"] if hit["_score"] is not None else 0.,
                 titleHighlight=self.get_hl(hit, "title", first=True, default=hit["_source"]["title"]),
-                bodyHighlights=self.get_hl(hit, "body", first=False, default=""),
+                bodyHighlights=self.get_hl(hit, "body", first=False, default=hit["_source"]["body"][:60] + "..."),
             ) for hit in hits
         ], total
 
@@ -493,6 +484,34 @@ class ESSearcher(BaseEngine):
     async def refresh(self):
         await self.es.indices.refresh(index=get_settings().ES_INDEX)
 
+    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+        actions = []
+        for doc in docs:
+            d = doc.__dict__
+            d["createdAt"] = datetime2str(d["createdAt"])
+            d["modifiedAt"] = datetime2str(d["modifiedAt"])
+            d["uid"] = uid
+            nid = d.pop("nid")
+            # insert a creation operation
+            actions.append({
+                "_op_type": "create",
+                "_index": get_settings().ES_INDEX,
+                "_id": nid,
+                "_source": d
+            })
+        return await self._batch_ops(actions, "restore")
+
+    async def _batch_ops(self, actions: List[dict], op_type: str) -> const.Code:
+        try:
+            resp = await helpers.async_bulk(client=self.es, actions=actions)
+        except helpers.BulkIndexError as e:
+            logger.error(f"{op_type} batch failed, resp: {e.args[0]}")
+            return const.Code.OPERATION_FAILED
+        if resp[0] != len(actions):
+            logger.error(f"{op_type} batch failed, resp: {resp}")
+            return const.Code.OPERATION_FAILED
+        return const.Code.OK
+
     @staticmethod
     def get_hl(hit: dict, key: str, first: bool, default: str = ""):
         if "highlight" not in hit:
@@ -502,7 +521,7 @@ class ESSearcher(BaseEngine):
         if key not in hit["highlight"]:
             if first:
                 return default
-            return []
+            return [default]
         if first:
             if len(hit["highlight"][key]) > 0:
                 return hit["highlight"][key][0]

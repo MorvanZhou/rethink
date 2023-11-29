@@ -23,7 +23,6 @@ class Node(TypedDict):
     title: str
     snippet: str
     type: int  # const.NodeType.MARKDOWN.value
-    searchKeys: str
     disabled: bool
     inTrash: bool
     modifiedAt: datetime.datetime
@@ -71,6 +70,6 @@ class ImportData(TypedDict):
     type: str
     startAt: datetime.datetime
     running: bool
-    problemFiles: List[str]
+    msg: str
     code: int
     obsidian: Dict[str, str]  # filename: nid

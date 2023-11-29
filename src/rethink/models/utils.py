@@ -7,7 +7,6 @@ from typing import Tuple
 
 import httpx
 import jwt
-import pypinyin
 from markdown import Markdown
 
 from rethink import config, const
@@ -71,13 +70,6 @@ def preprocess_md(md: str, snippet_len: int = 200) -> Tuple[str, str, str]:
     body = md2txt(body.strip())
     snippet = body[:snippet_len]
     return title, body, snippet
-
-
-def txt2search_keys(txt: str) -> str:
-    s1 = "".join(pypinyin.lazy_pinyin(txt))
-    s2 = "".join(pypinyin.lazy_pinyin(txt, style=pypinyin.Style.BOPOMOFO))
-    s = {s1, s2, txt}
-    return " ".join(s).lower()
 
 
 def split_title_body(fulltext: str) -> (str, str):

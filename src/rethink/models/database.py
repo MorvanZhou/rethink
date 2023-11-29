@@ -15,7 +15,7 @@ from rethink.logger import logger
 from rethink.mongita import MongitaClientDisk
 from rethink.mongita.collection import Collection
 from . import utils
-from .search_engine.engine import BaseEngine, SearchDoc
+from .search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
 from .search_engine.engine_es import ESSearcher
 from .search_engine.engine_local import LocalSearcher
 from .tps import UserMeta, Node, UserFile, ImportData
@@ -48,7 +48,8 @@ async def set_client():
             raise FileNotFoundError(f"Path not exists: {conf.LOCAL_STORAGE_PATH}")
         db_path = conf.LOCAL_STORAGE_PATH / ".data" / "db"
         db_path.mkdir(parents=True, exist_ok=True)
-        SEARCHER = LocalSearcher()
+        if not isinstance(SEARCHER, LocalSearcher):
+            SEARCHER = LocalSearcher()
         CLIENT = MongitaClientDisk(db_path)
     else:
         if not isinstance(SEARCHER, ESSearcher):
@@ -79,6 +80,7 @@ async def init():
         await __local_try_create_or_restore()
 
     else:
+        # CLIENT.get_io_loop = asyncio.get_running_loop
         await __remote_try_build_index()
 
     await __try_restore_search()
@@ -173,7 +175,6 @@ async def __local_try_add_default_user():
             "inTrashAt": None,
             "fromNodeIds": [],
             "toNodeIds": [],
-            "searchKeys": utils.txt2search_keys(title_),
         }
         res = await COLL.nodes.insert_one(n)
         if not res.acknowledged:
@@ -296,7 +297,6 @@ async def __local_restore():
             "inTrashAt": None,
             "fromNodeIds": [],
             "toNodeIds": [],
-            "searchKeys": utils.txt2search_keys(title_),
         }
         ns.append(n)
         search_docs.append(
@@ -404,14 +404,18 @@ async def __try_restore_search():
             search_docs[doc["uid"]] = []
 
         search_docs[doc["uid"]].append(
-            SearchDoc(
+            RestoreSearchDoc(
                 nid=doc["id"],
                 title=doc["title"],
                 body=doc["md"],
+                createdAt=doc["_id"].generation_time,
+                modifiedAt=doc["modifiedAt"],
+                disabled=doc["disabled"],
+                inTrash=doc["inTrash"],
             )
         )
     for uid, docs in search_docs.items():
-        code = await SEARCHER.add_batch(
+        code = await SEARCHER.batch_restore_docs(
             uid=uid,
             docs=docs,
         )

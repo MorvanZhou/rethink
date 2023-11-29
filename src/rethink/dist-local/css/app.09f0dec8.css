@@ -3175,6 +3175,7 @@ img[data-v-4f42ee16] {
 .at-search-result[data-v-5527cb1e]:hover {
   background-color: #eeeeee;
 }
+
 .result-hl[data-v-5527cb1e] {
   font-size: 0.8em;
   color: #666;
@@ -3183,6 +3184,30 @@ img[data-v-4f42ee16] {
   letter-spacing: 1px;
 }
 
+
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/WaitLoading.vue?vue&type=style&index=0&id=1bc9a6f2&scoped=true&lang=css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.loading[data-v-1bc9a6f2] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.circle-bg[data-v-1bc9a6f2] {
+  background: #FEFEFE;
+}
+
+.circle[data-v-1bc9a6f2] {
+  height: 50px;
+}
+
+.dots[data-v-1bc9a6f2] {
+  width: 60px;
+}
 
 /*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/cursorSearch/SearchResultsGroup.vue?vue&type=style&index=0&id=e789ed84&scoped=true&lang=css ***!
@@ -3194,6 +3219,11 @@ img[data-v-4f42ee16] {
   max-height: 400px;
   overflow-y: auto;
 }
+
+.at-search-height-sm[data-v-e789ed84] {
+  max-height: 600px !important;
+}
+
 .at-search-result-group-label[data-v-e789ed84] {
   font-weight: 500;
   font-size: 0.9em;
@@ -3356,24 +3386,6 @@ img[data-v-4f42ee16] {
   overflow-y: auto;
   white-space: break-spaces;
   overflow-wrap: break-word;
-}
-
-/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/WaitLoading.vue?vue&type=style&index=0&id=1bc9a6f2&scoped=true&lang=css ***!
-  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.loading[data-v-1bc9a6f2] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  margin: 0 auto;
-}
-.circle[data-v-1bc9a6f2] {
-  height: 50px;
-}
-.dots[data-v-1bc9a6f2] {
-  width: 60px;
 }
 
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\

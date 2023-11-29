@@ -1,3 +1,4 @@
+import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple, Sequence
@@ -10,6 +11,17 @@ class SearchDoc:
     nid: str
     title: str
     body: str
+
+
+@dataclass
+class RestoreSearchDoc:
+    nid: str
+    title: str
+    body: str
+    createdAt: datetime.datetime
+    modifiedAt: datetime.datetime
+    disabled: bool
+    inTrash: bool
 
 
 @dataclass
@@ -100,4 +112,8 @@ class BaseEngine(ABC):
 
     @abstractmethod
     async def count_all(self) -> int:
+        ...
+
+    @abstractmethod
+    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
         ...

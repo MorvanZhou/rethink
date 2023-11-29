@@ -3,6 +3,7 @@ import datetime
 import io
 import multiprocessing
 import os
+import time
 import zipfile
 from typing import List, Tuple, Optional
 
@@ -55,37 +56,109 @@ async def update_process(
 async def __set_running_false(
         uid: str,
         code: const.Code,
-        problem_files: List[str] = None,
+        msg: str = "",
 ) -> None:
     await models.database.COLL.import_data.update_one({"uid": uid}, {"$set": {
         "running": False,
-        "problemFiles": problem_files if problem_files is not None else [],
+        "msg": msg,
         "code": code.value,
     }})
 
 
+def new_process_wrapper(func):
+    async def try_new_process(
+            *args, **kwargs
+    ):
+        if "new_process" in kwargs:
+            is_new_process = kwargs["new_process"]
+        else:
+            is_new_process = args[0]
+        if is_new_process:
+            from rethink import models
+            await models.database.set_client()
+            await models.database.searcher().init()
+            models.database.set_coll()
+        try:
+            await func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"new process for uploading error: {e}")
+            await __set_running_false(
+                args[1],
+                const.Code.OPERATION_FAILED,
+                msg=f"new process for uploading error: {e}"
+            )
+
+        if is_new_process:
+            try:
+                await models.database.searcher().es.close()
+            except AttributeError:
+                pass
+
+    return try_new_process
+
+
+@new_process_wrapper
 async def upload_obsidian_task(
+        new_process: bool,
         uid: str,
         bytes_data: bytes,
         filename: str,
         doc: dict,
         max_file_size: int,
-        new_process=False,
 ) -> None:
-    from rethink import models
-    if new_process:
-        await models.database.set_client()
-        await models.database.searcher().init()
-        models.database.set_coll()
+    t0 = time.time()
+    if doc is None:
+        doc: ImportData = {
+            "_id": ObjectId(),
+            "uid": uid,
+            "process": 0,
+            "type": "obsidian",
+            "startAt": datetime.datetime.now(tz=utc),
+            "running": True,
+            "msg": "",
+            "code": 0,
+            "obsidian": {},
+        }
+        res = await models.database.COLL.import_data.insert_one(doc)
+        if not res.acknowledged:
+            await __set_running_false(
+                uid,
+                const.Code.OPERATION_FAILED,
+                msg="insert new importData process failed",
+            )
+            return
+
+    _, code = await update_process(
+        uid=uid,
+        type_="obsidian",
+        process=0,
+        start_at=datetime.datetime.now(tz=utc),
+        running=True,
+        code=0,
+    )
+    if code != const.Code.OK:
+        await __set_running_false(
+            uid,
+            code,
+            msg="update importData process failed",
+        )
+        return
 
     try:
         unzipped_files = file_ops.unzip_file(bytes_data)
-    except zipfile.BadZipFile:
-        await __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [filename])
+    except zipfile.BadZipFile as e:
+        await __set_running_false(
+            uid,
+            const.Code.INVALID_FILE_TYPE,
+            msg=f"unzip failed: {e}"
+        )
         logger.info(f"invalid file type: {filename}, uid: {uid}")
         return
+    t1 = time.time()
+    logger.info(f"obsidian upload, uid={uid}, unzip time: {t1 - t0:.2f}")
+
     filtered_files = {}
-    existed_filename2nid = doc["obsidian"].copy()
+    existed_filename2nid = doc.get("obsidian", {}).copy()
     img_path_dict = {}
     img_name_dict = {}
     md_count = 0
@@ -99,7 +172,11 @@ async def upload_obsidian_task(
         if ext not in valid_file:
             continue
         if data["size"] > max_file_size:
-            await __set_running_false(uid, const.Code.TOO_LARGE_FILE, [filepath], )
+            await __set_running_false(
+                uid,
+                const.Code.TOO_LARGE_FILE,
+                msg=f"file size > {max_file_size}: {filepath}",
+            )
             logger.info(f"too large file: {filepath}, uid: {uid}")
             return
         if ext in ["md", "txt"]:
@@ -110,8 +187,10 @@ async def upload_obsidian_task(
         else:
             img_path_dict[filepath] = data["file"]
             img_name_dict[os.path.basename(filepath)] = data["file"]
+    t2 = time.time()
+    logger.info(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
 
-    # add new md files
+    # add new md files with only title
     for i, (filepath, file_bytes) in enumerate(filtered_files.items()):
         base_name, ext = filepath.rsplit(".", 1)
         if base_name in existed_filename2nid:
@@ -123,29 +202,44 @@ async def upload_obsidian_task(
                 type_=const.NodeType.MARKDOWN.value,
             )
         except pymongo.errors.DuplicateKeyError:
+            logger.error(f"duplicate key: {filepath}, uid: {uid}")
             continue
         if code != const.Code.OK:
-            await __set_running_false(uid, code, [filepath], )
-            logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+            await __set_running_false(
+                uid,
+                code,
+                msg=f"new file insert failed: {filepath}",
+            )
+            logger.error(f"error: {code}, filepath: {filepath}, uid: {uid}")
             return
         existed_filename2nid[base_name] = n["id"]
         if i % 20 == 0:
             doc, code = await update_process(uid, "obsidian", int(i / md_count * 10))
             if code != const.Code.OK:
-                await __set_running_false(uid, code, [filepath], )
+                await __set_running_false(
+                    uid,
+                    code,
+                    msg="process updating failed",
+                )
                 logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
+    t3 = time.time()
+    logger.info(f"obsidian upload, uid={uid}, add new md time: {t3 - t2:.2f}")
 
-    # update all files
+    # update all files and update md files
     for i, (filepath, file_bytes) in enumerate(filtered_files.items()):
         base_name, ext = filepath.rsplit(".", 1)
         try:
             md = file_bytes.decode("utf-8")
         except (FileNotFoundError, OSError, UnicodeDecodeError) as e:
             logger.error(f"error: {e}. filepath: {filepath}")
-            await __set_running_false(uid, const.Code.FILE_OPEN_ERROR, [filepath], )
+            await __set_running_false(
+                uid,
+                const.Code.FILE_OPEN_ERROR,
+                msg=f"file decode utf-8 failed, {e}: {filepath}",
+            )
             logger.info(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {filepath}, uid: {uid}")
             return
 
@@ -172,21 +266,36 @@ async def upload_obsidian_task(
                 type_=const.NodeType.MARKDOWN.value,
             )
             if code != const.Code.OK:
-                await __set_running_false(uid, code, [filepath])
+                await __set_running_false(
+                    uid,
+                    code,
+                    msg=f"file insert failed: {filepath}",
+                )
                 logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
                 return
+            existed_filename2nid[base_name] = n["id"]
         elif code != const.Code.OK:
-            await __set_running_false(uid, code, [filepath])
+            await __set_running_false(
+                uid,
+                code,
+                msg=f"file updating failed: {filepath}",
+            )
             logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
             return
         if i % 20 == 0:
             doc, code = await update_process(uid, "obsidian", int(i / md_count * 40 + 10))
             if code != const.Code.OK:
-                await __set_running_false(uid, code, [filepath])
+                await __set_running_false(
+                    uid,
+                    code,
+                    msg="uploading process update failed",
+                )
                 logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
+    t4 = time.time()
+    logger.info(f"obsidian upload, uid={uid}, update all files time: {t4 - t3:.2f}")
 
     # update for old obsidian files
     count = 0
@@ -206,7 +315,11 @@ async def upload_obsidian_task(
         if count % 20 == 0:
             doc, code = await update_process(uid, "obsidian", int(count / len(doc["obsidian"]) * 50 + 50))
             if code != const.Code.OK:
-                await __set_running_false(uid, code)
+                await __set_running_false(
+                    uid,
+                    code,
+                    msg="uploading process update failed",
+                )
                 logger.info(f"error: {code}, uid: {uid}")
                 return
             if not doc["running"]:
@@ -214,26 +327,25 @@ async def upload_obsidian_task(
 
         count += 1
 
+    t5 = time.time()
+    logger.info(f"obsidian upload, uid={uid}, update for old obsidian files time: {t5 - t4:.2f}")
+
     await models.database.COLL.import_data.update_one(
         {"uid": uid},
         {"$set": {
             "obsidian": existed_filename2nid,
             "running": False,
-            "problemFiles": [],
+            "msg": "",
             "code": 0,
             "process": 100,
         }})
 
-    if new_process:
-        try:
-            await models.database.searcher().es.close()
-        except AttributeError:
-            pass
-
 
 def async_upload_obsidian(*args, **kwargs):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.get_event_loop()
 
     loop.run_until_complete(upload_obsidian_task(*args, **kwargs))
     loop.close()
@@ -244,82 +356,115 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
     max_file_size = 1024 * 1024 * 200  # 200 mb
 
     doc = await models.database.COLL.import_data.find_one({"uid": uid})
-    if doc is None:
-        doc: ImportData = {
-            "_id": ObjectId(),
-            "uid": uid,
-            "process": 0,
-            "type": "obsidian",
-            "startAt": datetime.datetime.now(tz=utc),
-            "running": True,
-            "problemFiles": [],
-            "code": 0,
-            "obsidian": {},
-        }
-        res = await models.database.COLL.import_data.insert_one(doc)
-        if not res.acknowledged:
-            await __set_running_false(uid, const.Code.OPERATION_FAILED)
-            return const.Code.OPERATION_FAILED
-    elif doc["running"]:
+    if doc and doc["running"]:
         return const.Code.IMPORT_PROCESS_NOT_FINISHED
-    _, code = await update_process(
-        uid=uid,
-        type_="obsidian",
-        process=0,
-        start_at=datetime.datetime.now(tz=utc),
-        running=True,
-        code=0,
-    )
-    if code != const.Code.OK:
-        await __set_running_false(uid, code)
-        return code
 
     # check file type and size and number
     if len(zipped_files) > max_file_count:
-        await __set_running_false(uid, const.Code.TOO_MANY_FILES)
+        await __set_running_false(
+            uid,
+            const.Code.TOO_MANY_FILES,
+            msg=f"too many files: {len(zipped_files)} > {max_file_count} (max file count)",
+        )
         return const.Code.TOO_MANY_FILES
 
     zipped_file = zipped_files[0]
     if not zipped_file.filename.endswith(".zip"):
-        await __set_running_false(uid, const.Code.INVALID_FILE_TYPE)
+        await __set_running_false(
+            uid,
+            const.Code.INVALID_FILE_TYPE,
+            msg=f"invalid file type: {zipped_file.filename}",
+        )
         return const.Code.INVALID_FILE_TYPE
     if zipped_file.content_type not in ["application/zip", "application/octet-stream", "application/x-zip-compressed"]:
-        await __set_running_false(uid, const.Code.INVALID_FILE_TYPE)
+        await __set_running_false(
+            uid,
+            const.Code.INVALID_FILE_TYPE,
+            msg=f"invalid file type: {zipped_file.content_type}",
+        )
         return const.Code.INVALID_FILE_TYPE
 
     if is_local_db():
         # local db not support find_one_and_update
         await upload_obsidian_task(
-            uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size,
-            new_process=False
+            new_process=False,
+            uid=uid,
+            bytes_data=zipped_file.file.read(),
+            filename=zipped_file.filename,
+            doc=doc,
+            max_file_size=max_file_size,
+
         )
     else:
-        td = multiprocessing.Process(
+        ctx = multiprocessing.get_context('spawn')
+        p = ctx.Process(
             target=async_upload_obsidian,
-            args=(uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size, True),
+            args=(True, uid, zipped_file.file.read(), zipped_file.filename, doc, max_file_size),
             daemon=True,
         )
-        td.start()
+        p.start()
     return const.Code.OK
 
 
+@new_process_wrapper
 async def update_text_task(
+        new_process: bool,
         uid: str,
         files: List[dict],
         max_file_size: int,
-        new_process=False,
 ):
-    from rethink import models
-    if new_process:
-        await models.database.set_client()
-        models.database.set_coll()
+    doc = await models.database.COLL.import_data.find_one({"uid": uid})
+    if doc is None:
+        doc: ImportData = {
+            "_id": ObjectId(),
+            "uid": uid,
+            "process": 0,
+            "type": "text",
+            "startAt": datetime.datetime.now(tz=utc),
+            "running": True,
+            "msg": "",
+            "code": 0,
+            "obsidian": {},
+        }
+        res = await models.database.COLL.import_data.insert_one(doc)
+        if not res.acknowledged:
+            await __set_running_false(
+                uid,
+                const.Code.OPERATION_FAILED,
+                msg="insert new importData process failed",
+            )
+            return const.Code.OPERATION_FAILED
+
+    _, code = await update_process(
+        uid,
+        "text",
+        0,
+        start_at=datetime.datetime.now(tz=utc),
+        running=True,
+        code=0,
+    )
+    if code != const.Code.OK:
+        await __set_running_false(
+            uid,
+            code,
+            msg="update importData process failed",
+        )
+        return
 
     for file in files:
         if not file["filename"].endswith(".md") and not file["filename"].endswith(".txt"):
-            await __set_running_false(uid, const.Code.INVALID_FILE_TYPE, [file["filename"]])
+            await __set_running_false(
+                uid,
+                const.Code.INVALID_FILE_TYPE,
+                msg=f"invalid file type: {file['filename']}",
+            )
             return
         if file["size"] > max_file_size:
-            await __set_running_false(uid, const.Code.TOO_LARGE_FILE, [file["filename"]])
+            await __set_running_false(
+                uid,
+                const.Code.TOO_LARGE_FILE,
+                msg=f"file size: {file['size']} > {max_file_size} (max file size): {file['filename']}",
+            )
             return
 
     for i, file in enumerate(files):
@@ -327,7 +472,11 @@ async def update_text_task(
             md = file["content"].decode("utf-8")
         except (FileNotFoundError, OSError) as e:
             logger.error(f"error: {e}. filepath: {file['filename']}")
-            await __set_running_false(uid, const.Code.FILE_OPEN_ERROR, [file["filename"]])
+            await __set_running_false(
+                uid,
+                const.Code.FILE_OPEN_ERROR,
+                msg=f"file decode utf-8 failed, {e}: {file['filename']}",
+            )
             return
         title = file["filename"].rsplit(".", 1)[0]
         md = title + "\n\n" + md
@@ -339,13 +488,29 @@ async def update_text_task(
             )
         except pymongo.errors.DuplicateKeyError:
             continue
+        except Exception as e:
+            logger.error(f"error: {e}. filepath: {file['filename']}")
+            await __set_running_false(
+                uid,
+                const.Code.FILE_OPEN_ERROR,
+                msg=f"file decode utf-8 failed, {e}: {file['filename']}",
+            )
+            return
         if code != const.Code.OK:
-            await __set_running_false(uid, code, [file["filename"]])
+            await __set_running_false(
+                uid,
+                code,
+                msg=f"file insert failed: {file['filename']}",
+            )
             return
         if i % 20 == 0:
             doc, code = await update_process(uid, "text", int(i / len(files) * 100))
             if code != const.Code.OK:
-                await __set_running_false(uid, code, [file["filename"]])
+                await __set_running_false(
+                    uid,
+                    code,
+                    msg="uploading process update failed",
+                )
                 return
             if not doc["running"]:
                 break
@@ -355,26 +520,22 @@ async def update_text_task(
             "running": False,
             "process": 100,
             "code": 0,
-            "problemFiles": [],
+            "msg": "",
         }})
 
     if resp.modified_count != 1:
-        await __set_running_false(uid, const.Code.OPERATION_FAILED)
-
-    resp = await models.database.COLL.import_data.find_one({"uid": uid})
-    if resp is None:
-        await __set_running_false(uid, const.Code.OPERATION_FAILED)
-
-    if new_process:
-        try:
-            await models.database.searcher().es.close()
-        except AttributeError:
-            pass
+        await __set_running_false(
+            uid,
+            const.Code.OPERATION_FAILED,
+            msg="uploading importData process failed",
+        )
 
 
 def async_upload_text_task(*args, **kwargs):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.get_event_loop()
 
     loop.run_until_complete(update_text_task(*args, **kwargs))
     loop.close()
@@ -383,40 +544,12 @@ def async_upload_text_task(*args, **kwargs):
 async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
+
     doc = await models.database.COLL.import_data.find_one({"uid": uid})
-    if doc is None:
-        doc: ImportData = {
-            "_id": ObjectId(),
-            "uid": uid,
-            "process": 0,
-            "type": "text",
-            "startAt": datetime.datetime.now(tz=utc),
-            "running": True,
-            "problemFiles": [],
-            "code": 0,
-            "obsidian": {},
-        }
-        res = await models.database.COLL.import_data.insert_one(doc)
-        if not res.acknowledged:
-            await __set_running_false(uid, const.Code.OPERATION_FAILED)
-            return const.Code.OPERATION_FAILED
-    elif doc["running"]:
+    if doc is not None and doc["running"]:
         return const.Code.IMPORT_PROCESS_NOT_FINISHED
 
-    _, code = await update_process(
-        uid,
-        "text",
-        0,
-        start_at=datetime.datetime.now(tz=utc),
-        running=True,
-        code=0,
-    )
-    if code != const.Code.OK:
-        await __set_running_false(uid, code)
-        return code
-
     if len(files) > max_file_count:
-        await __set_running_false(uid, const.Code.TOO_MANY_FILES)
         return const.Code.TOO_MANY_FILES
 
     file_list = [{
@@ -427,14 +560,20 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
 
     if is_local_db():
         # local db not support find_one_and_update
-        await update_text_task(uid, file_list, max_file_size, new_process=False)
+        await update_text_task(
+            new_process=False,
+            uid=uid,
+            files=file_list,
+            max_file_size=max_file_size,
+        )
     else:
-        td = multiprocessing.Process(
+        ctx = multiprocessing.get_context('spawn')
+        p = ctx.Process(
             target=async_upload_text_task,
-            args=(uid, file_list, max_file_size),
+            args=(True, uid, file_list, max_file_size),
             daemon=True,
         )
-        td.start()
+        p.start()
     return const.Code.OK
 
 
@@ -455,7 +594,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
             {"$set": {
                 "running": False,
                 "code": const.Code.UPLOAD_TASK_TIMEOUT.value,
-                "problemFiles": [],
+                "msg": f"Timeout, upload not finish in {timeout_minus} mins",
             }},
         )
     return doc

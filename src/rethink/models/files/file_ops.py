@@ -172,7 +172,7 @@ async def replace_inner_link_and_upload_image(
             span=span,
         )
 
-    # link
+    # node link
     for match in list(INTERNAL_LINK_PTN.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)

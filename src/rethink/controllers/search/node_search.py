@@ -18,6 +18,8 @@ async def cursor_query(
         uid=td.uid,
         nid=req.nid,
         cursor_text=req.textBeforeCursor,
+        page=req.page,
+        page_size=req.pageSize,
     )
     code = const.Code.OK
     return schemas.node.NodesSearchResponse(

@@ -18,6 +18,8 @@ class SearchUserNodesRequest(BaseModel):
 class CursorQueryRequest(BaseModel):
     nid: str
     textBeforeCursor: str
+    page: NonNegativeInt = 0
+    pageSize: NonNegativeInt = 0
     requestId: str = ""
 
 

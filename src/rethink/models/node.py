@@ -119,7 +119,6 @@ async def add(
         "inTrashAt": None,
         "fromNodeIds": from_nids,
         "toNodeIds": new_to_node_ids,
-        "searchKeys": utils.txt2search_keys(title),
     }
     res = await COLL.nodes.insert_one(data)
     if not res.acknowledged:
@@ -223,7 +222,6 @@ async def update(
             if code != const.Code.OK:
                 logger.info(f"update fromNode {from_node['id']} failed")
         new_data["title"] = title
-        new_data["searchKeys"] = utils.txt2search_keys(title)
 
     if n["md"] != md:
         new_data["md"] = md

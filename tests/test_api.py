@@ -25,9 +25,11 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         utils.set_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await database.drop_all()
         await database.init()
         self.client = TestClient(app)
+
+    async def asyncTearDown(self) -> None:
+        await database.drop_all()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -237,6 +239,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "requestId": "xxx",
                 "nid": node["id"],
                 "textBeforeCursor": "How",
+                "page": 0,
+                "pageSize": 10,
             },
             headers={"token": self.token},
         )
@@ -419,7 +423,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             )
             rj = resp.json()
             self.assertEqual("obsidian", rj["type"], msg=rj)
-            self.assertEqual([], rj["problemFiles"], msg=rj)
+            self.assertEqual("", rj["msg"], msg=rj)
             if rj["process"] == 100:
                 break
         self.assertFalse(rj["running"], msg=rj)
@@ -468,7 +472,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             )
             rj = resp.json()
             self.assertEqual("text", rj["type"], msg=rj)
-            self.assertEqual([], rj["problemFiles"], msg=rj)
+            self.assertEqual("", rj["msg"], msg=rj)
             if rj["process"] == 100:
                 break
         self.assertFalse(rj["running"], msg=rj)

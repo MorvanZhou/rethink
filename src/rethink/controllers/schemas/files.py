@@ -17,7 +17,7 @@ class FileUploadProcessResponse(BaseModel):
     type: str
     startAt: str
     running: bool
-    problemFiles: List[str]
+    msg: str
 
 
 class ImageVditorUploadResponse(BaseModel):
