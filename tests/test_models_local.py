@@ -14,6 +14,7 @@ from fastapi import UploadFile
 from starlette.datastructures import Headers
 
 from rethink import const, models
+from rethink.models.files import queuing_upload
 from rethink.models.utils import short_uuid
 from . import utils
 
@@ -358,7 +359,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         res = await models.database.COLL.import_data.insert_one(doc)
         self.assertTrue(res.acknowledged)
 
-        doc, code = await models.files.update_process("xxx", "obsidian", 10)
+        doc, code = await queuing_upload.update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
         doc = await models.files.get_upload_process("xxx")

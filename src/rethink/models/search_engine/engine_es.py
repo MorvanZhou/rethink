@@ -112,7 +112,7 @@ class ESSearcher(BaseEngine):
                         "index": {
                             "number_of_shards": 1,
                             "number_of_replicas": 0,
-                            "refresh_interval": "2s",
+                            "refresh_interval": "3s",
                         },
                         "analysis": self.analysis,
                     },
@@ -178,7 +178,8 @@ class ESSearcher(BaseEngine):
                 "doc": {
                     "inTrash": True,
                 }
-            }
+            },
+            refresh=True,
         )
         if resp.meta.status != 200:
             logger.error(f"to trash failed {uid=} {nid=}")
@@ -203,6 +204,7 @@ class ESSearcher(BaseEngine):
         if resp[0] != len(nids):
             logger.error(f"to trash batch failed, resp: {resp}")
             return const.Code.OPERATION_FAILED
+        await self.refresh()
         return const.Code.OK
 
     async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
@@ -213,7 +215,8 @@ class ESSearcher(BaseEngine):
                 "doc": {
                     "inTrash": False,
                 }
-            }
+            },
+            refresh=True,
         )
         if resp.meta.status != 200:
             logger.error(f"restore from trash failed {uid=} {nid=}")
@@ -238,6 +241,7 @@ class ESSearcher(BaseEngine):
         if resp[0] != len(nids):
             logger.error(f"restore batch from trash failed, resp: {resp}")
             return const.Code.OPERATION_FAILED
+        await self.refresh()
         return const.Code.OK
 
     async def disable(self, uid: str, nid: str) -> const.Code:
@@ -248,7 +252,8 @@ class ESSearcher(BaseEngine):
                 "doc": {
                     "disabled": True,
                 }
-            }
+            },
+            refresh=True,
         )
         if resp.meta.status != 200:
             logger.error(f"disable failed {uid=} {nid=}")
@@ -263,7 +268,8 @@ class ESSearcher(BaseEngine):
                 "doc": {
                     "disabled": False,
                 }
-            }
+            },
+            refresh=True,
         )
         if resp.meta.status != 200:
             logger.error(f"enable failed {uid=} {nid=}")
@@ -285,6 +291,7 @@ class ESSearcher(BaseEngine):
         resp = await self.es.delete(
             index=get_settings().ES_INDEX,
             id=nid,
+            refresh=True,
         )
         if resp.meta.status != 201:
             logger.error(f"delete failed {uid=} {nid=}")
@@ -310,7 +317,7 @@ class ESSearcher(BaseEngine):
                 "_source": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        return await self._batch_ops(actions, op_type="add")
+        return await self._batch_ops(actions, op_type="add", refresh=False)
 
     async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
         resp = await self.es.delete_by_query(
@@ -333,7 +340,8 @@ class ESSearcher(BaseEngine):
                         ]
                     }
                 }
-            }
+            },
+            refresh=True,
         )
 
         if resp.meta.status != 200:
@@ -359,7 +367,24 @@ class ESSearcher(BaseEngine):
                 "doc": d
             })
             now = now + datetime.timedelta(seconds=0.001)
-        return await self._batch_ops(actions, op_type="update")
+        return await self._batch_ops(actions, op_type="update", refresh=False)
+
+    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+        actions = []
+        for doc in docs:
+            d = doc.__dict__
+            d["createdAt"] = datetime2str(d["createdAt"])
+            d["modifiedAt"] = datetime2str(d["modifiedAt"])
+            d["uid"] = uid
+            nid = d.pop("nid")
+            # insert a creation operation
+            actions.append({
+                "_op_type": "create",
+                "_index": get_settings().ES_INDEX,
+                "_id": nid,
+                "_source": d
+            })
+        return await self._batch_ops(actions, "restore", refresh=True)
 
     async def search(
             self,
@@ -484,24 +509,7 @@ class ESSearcher(BaseEngine):
     async def refresh(self):
         await self.es.indices.refresh(index=get_settings().ES_INDEX)
 
-    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
-        actions = []
-        for doc in docs:
-            d = doc.__dict__
-            d["createdAt"] = datetime2str(d["createdAt"])
-            d["modifiedAt"] = datetime2str(d["modifiedAt"])
-            d["uid"] = uid
-            nid = d.pop("nid")
-            # insert a creation operation
-            actions.append({
-                "_op_type": "create",
-                "_index": get_settings().ES_INDEX,
-                "_id": nid,
-                "_source": d
-            })
-        return await self._batch_ops(actions, "restore")
-
-    async def _batch_ops(self, actions: List[dict], op_type: str) -> const.Code:
+    async def _batch_ops(self, actions: List[dict], op_type: str, refresh: bool) -> const.Code:
         try:
             resp = await helpers.async_bulk(client=self.es, actions=actions)
         except helpers.BulkIndexError as e:
@@ -510,6 +518,8 @@ class ESSearcher(BaseEngine):
         if resp[0] != len(actions):
             logger.error(f"{op_type} batch failed, resp: {resp}")
             return const.Code.OPERATION_FAILED
+        if refresh:
+            await self.refresh()
         return const.Code.OK
 
     @staticmethod

@@ -424,7 +424,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             )
             rj = resp.json()
             self.assertEqual("obsidian", rj["type"], msg=rj)
-            self.assertEqual("", rj["msg"], msg=rj)
+            self.assertEqual("done", rj["msg"], msg=rj)
             if rj["process"] == 100:
                 break
         self.assertFalse(rj["running"], msg=rj)
@@ -472,8 +472,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 headers={"token": self.token, "rid": "xxx"}
             )
             rj = resp.json()
-            self.assertEqual("text", rj["type"], msg=rj)
-            self.assertEqual("", rj["msg"], msg=rj)
+            self.assertEqual("md", rj["type"], msg=rj)
+            self.assertEqual("done", rj["msg"], msg=rj)
             if rj["process"] == 100:
                 break
         self.assertFalse(rj["running"], msg=rj)

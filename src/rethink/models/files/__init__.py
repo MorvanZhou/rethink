@@ -3,6 +3,5 @@ from .upload import (
     get_upload_process,
     upload_text,
     upload_obsidian,
-    update_process,
     fetch_image_vditor,
 )
