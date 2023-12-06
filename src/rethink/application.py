@@ -16,6 +16,7 @@ from .routes import (
     trash,
     verification,
     files,
+    email,
 )
 
 app = FastAPI(
@@ -49,6 +50,7 @@ app.include_router(search.router)
 app.include_router(trash.router)
 app.include_router(verification.router)
 app.include_router(files.router)
+app.include_router(email.router)
 
 
 @app.on_event("startup")

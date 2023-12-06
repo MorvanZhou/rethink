@@ -2,5 +2,6 @@ from . import (
     auth,
     user,
     node,
-    verification,
+    verify,
+    email,
 )

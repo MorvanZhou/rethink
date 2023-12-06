@@ -90,3 +90,23 @@ async def register_user(
 
     code = await models.node.new_user_add_default_nodes(uid=uid, language=language)
     return uid, code
+
+
+async def reset_password(
+        email: str,
+        password: str,
+) -> Tuple[Optional[models.tps.UserMeta], const.Code]:
+    if config.get_settings().ONE_USER:
+        logger.warning("on ONE_USER mode, user registration will be skipped")
+        return None, const.Code.ONE_USER_MODE
+    if VALID_PASSWORD_PTN.match(password) is None:
+        return None, const.Code.INVALID_PASSWORD
+    u, code = await models.user.get_by_email(email=email)
+    if code != const.Code.OK:
+        return None, code
+    if u is None:
+        return None, const.Code.INVALID_AUTH
+    bpw = _base_password(password=password, email=email)
+    hashed = bcrypt.hashpw(bpw, config.get_settings().DB_SALT)
+    code = await models.user.reset_password(uid=u["id"], hashed=hashed.decode("utf-8"))
+    return u, code

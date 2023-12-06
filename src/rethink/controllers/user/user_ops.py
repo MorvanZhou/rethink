@@ -1,17 +1,26 @@
 from rethink import const, models, config
 from rethink.controllers import schemas, auth
-from rethink.controllers.utils import TokenDecode, datetime2str
+from rethink.controllers.utils import TokenDecode, datetime2str, match_captcha
 from rethink.models.utils import jwt_encode
 
 
-async def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
+async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
+    code, msg = match_captcha(token=req.captchaToken, code_str=req.captchaCode, language=req.language)
+    if code != const.Code.OK:
+        return schemas.base.TokenResponse(
+            requestId=req.requestId,
+            code=code.value,
+            message=msg,
+            token="",
+        )
+
     new_user_id, code = await auth.register_user(
         req.email,
         req.password,
         req.language,
     )
     if code != const.Code.OK:
-        return schemas.user.LoginResponse(
+        return schemas.base.TokenResponse(
             requestId=req.requestId,
             code=code.value,
             message=const.get_msg_by_code(code, req.language),
@@ -22,7 +31,7 @@ async def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
         data={"uid": new_user_id, "language": req.language},
     )
-    return schemas.user.LoginResponse(
+    return schemas.base.TokenResponse(
         requestId=req.requestId,
         code=const.Code.OK.value,
         message=const.get_msg_by_code(const.Code.OK, req.language),
@@ -30,10 +39,10 @@ async def put(req: schemas.user.RegisterRequest) -> schemas.user.LoginResponse:
     )
 
 
-async def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
+async def login(req: schemas.user.LoginRequest) -> schemas.base.TokenResponse:
     u, code = await auth.get_user_by_email(req.email)
     if code != const.Code.OK:
-        return schemas.user.LoginResponse(
+        return schemas.base.TokenResponse(
             requestId=req.requestId,
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -41,7 +50,7 @@ async def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
         )
     if not await auth.verify_user(u, req.password):
         code = const.Code.ACCOUNT_OR_PASSWORD_ERROR
-        return schemas.user.LoginResponse(
+        return schemas.base.TokenResponse(
             requestId=req.requestId,
             code=code.value,
             message=const.get_msg_by_code(code, u["language"]),
@@ -51,7 +60,7 @@ async def login(req: schemas.user.LoginRequest) -> schemas.user.LoginResponse:
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
         data={"uid": u["id"], "language": u["language"]},
     )
-    return schemas.user.LoginResponse(
+    return schemas.base.TokenResponse(
         requestId=req.requestId,
         code=code.value,
         message=const.get_msg_by_code(code, u["language"]),

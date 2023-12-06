@@ -6,7 +6,7 @@ from . import (
     search,
     tps,
     db_ops,
-    verification,
     files,
     utils,
 )
+from .verify import verification

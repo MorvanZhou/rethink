@@ -1,7 +1,7 @@
 from fastapi import Request, APIRouter
 
 from rethink.controllers import oauth as co
-from rethink.controllers.schemas.user import LoginResponse
+from rethink.controllers.schemas.base import TokenResponse
 from rethink.routes.utils import measure_time_spend
 
 router = APIRouter(
@@ -17,9 +17,9 @@ async def login_github() -> co.OAuthResponse:
     return await co.login_github()
 
 
-@router.get(path="/callback/github", response_model=LoginResponse)
+@router.get(path="/callback/github", response_model=TokenResponse)
 @measure_time_spend
-async def callback_github(request: Request) -> LoginResponse:
+async def callback_github(request: Request) -> TokenResponse:
     return await co.callback_github(req=request)
 
 # @router.get(path="/login/facebook", response_model=co.OAuthResponse)

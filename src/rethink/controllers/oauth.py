@@ -7,8 +7,8 @@ from rethink.sso.base import SSOLoginError
 from rethink.sso.facebook import FacebookSSO
 from rethink.sso.github import GithubSSO
 from rethink.sso.qq import QQSSO
+from .schemas.base import TokenResponse
 from .schemas.oauth import OAuthResponse
-from .schemas.user import LoginResponse
 
 GITHUB_SSO: Optional[GithubSSO] = None
 QQ_SSO: Optional[QQSSO] = None
@@ -34,12 +34,12 @@ async def login_github() -> OAuthResponse:
     )
 
 
-async def callback_github(req: Request) -> LoginResponse:
+async def callback_github(req: Request) -> TokenResponse:
     try:
         user = await GITHUB_SSO.verify_and_process(req)
     except SSOLoginError:
         code = const.Code.INVALID_AUTH
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -47,7 +47,7 @@ async def callback_github(req: Request) -> LoginResponse:
         )
     if user is None:
         code = const.Code.INVALID_AUTH
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -55,7 +55,7 @@ async def callback_github(req: Request) -> LoginResponse:
         )
     u, code = models.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
@@ -77,7 +77,7 @@ async def callback_github(req: Request) -> LoginResponse:
         language=language,
     )
     if code != const.Code.OK:
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -89,7 +89,7 @@ async def callback_github(req: Request) -> LoginResponse:
     )
     code = models.node.new_user_add_default_nodes(language=language, uid=uid)
 
-    return LoginResponse(
+    return TokenResponse(
         requestId="",
         code=code.value,
         message=const.get_msg_by_code(const.Code.OK, language=language),
@@ -116,12 +116,12 @@ async def login_facebook() -> OAuthResponse:
     )
 
 
-async def callback_facebook(req: Request) -> LoginResponse:
+async def callback_facebook(req: Request) -> TokenResponse:
     try:
         user = await FACEBOOK_SSO.verify_and_process(req)
     except SSOLoginError:
         code = const.Code.INVALID_AUTH
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -129,7 +129,7 @@ async def callback_facebook(req: Request) -> LoginResponse:
         )
     if user is None:
         code = const.Code.INVALID_AUTH
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -137,7 +137,7 @@ async def callback_facebook(req: Request) -> LoginResponse:
         )
     u, code = models.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
@@ -159,7 +159,7 @@ async def callback_facebook(req: Request) -> LoginResponse:
         language=language,
     )
     if code != const.Code.OK:
-        return LoginResponse(
+        return TokenResponse(
             requestId="",
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
@@ -170,7 +170,7 @@ async def callback_facebook(req: Request) -> LoginResponse:
         data={"uid": uid, "language": language},
     )
     code = models.node.new_user_add_default_nodes(language=language, uid=uid)
-    return LoginResponse(
+    return TokenResponse(
         requestId="",
         code=code.value,
         message=const.get_msg_by_code(const.Code.OK, language=language),

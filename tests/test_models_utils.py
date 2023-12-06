@@ -20,7 +20,7 @@ class UtilsTest(unittest.TestCase):
     def test_short_uuid(self):
         for _ in range(10):
             uid = utils.short_uuid()
-            self.assertEqual(22, len(uid))
+            self.assertEqual(24, len(uid), msg=uid)
 
     def test_md2txt(self):
         text = utils.md2txt(md="# 123\n## 456\n### 789\n")

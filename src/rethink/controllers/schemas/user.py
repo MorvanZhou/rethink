@@ -1,7 +1,9 @@
-from typing import Optional, Literal
+from typing import Literal
 
 from pydantic import BaseModel, NonNegativeInt, HttpUrl, EmailStr, AfterValidator
 from typing_extensions import Annotated
+
+from rethink import const
 
 
 def empty_str_to_http_url(v: str) -> HttpUrl:
@@ -34,6 +36,8 @@ class UserInfoResponse(BaseModel):
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
+    captchaToken: str
+    captchaCode: str
     language: Literal["en", "zh"]
     requestId: str = ""
 
@@ -44,13 +48,6 @@ class LoginRequest(BaseModel):
     requestId: str = ""
 
 
-class LoginResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
-    requestId: Optional[str]
-    token: str = ""
-
-
 class UpdateRequest(BaseModel):
     email: str = ""
     nickname: str = ""
@@ -58,4 +55,20 @@ class UpdateRequest(BaseModel):
     language: Literal["en", "zh"] = ""
     nodeDisplayMethod: int = -1
     nodeDisplaySortKey: str = ""
+    requestId: str = ""
+
+
+class ForgetPasswordRequest(BaseModel):
+    email: str
+    captchaToken: str
+    captchaCode: str
+    language: str = const.Language.EN.value
+    requestId: str = ""
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    newPassword: str
+    verification: str
+    verificationToken: str
     requestId: str = ""

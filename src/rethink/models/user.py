@@ -196,3 +196,11 @@ async def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool
         if code != const.Code.OK:
             return True
     return u["usedSpace"] > const.USER_TYPE.id2config(u["type"]).max_store_space
+
+
+async def reset_password(uid: str, hashed: str) -> const.Code:
+    res = await COLL.users.update_one(
+        {"id": uid},
+        {"$set": {"hashed": hashed}}
+    )
+    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED

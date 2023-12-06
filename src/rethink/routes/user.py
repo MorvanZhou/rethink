@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 
 from rethink.controllers import schemas
 from rethink.controllers.auth import token2uid
-from rethink.controllers.user import user_ops
+from rethink.controllers.user import user_ops, forget_password
 from rethink.controllers.utils import TokenDecode
 from rethink.routes.utils import measure_time_spend
 
@@ -18,23 +18,23 @@ router = APIRouter(
 
 @router.post(
     "/login",
-    response_model=schemas.user.LoginResponse,
+    response_model=schemas.base.TokenResponse,
 )
 @measure_time_spend
 async def login(
         req: schemas.user.LoginRequest
-) -> schemas.user.LoginResponse:
+) -> schemas.base.TokenResponse:
     return await user_ops.login(req=req)
 
 
 @router.put(
     "/user",
-    response_model=schemas.user.LoginResponse,
+    response_model=schemas.base.TokenResponse,
 )
 @measure_time_spend
 async def register(
         req: schemas.user.RegisterRequest
-) -> schemas.user.LoginResponse:
+) -> schemas.base.TokenResponse:
     return await user_ops.put(req=req)
 
 
@@ -65,3 +65,14 @@ async def update_user(
         td=token_decode,
         req=req,
     )
+
+
+@router.post(
+    path="/user/password",
+    response_model=schemas.base.TokenResponse,
+)
+@measure_time_spend
+async def reset_password(
+        req: schemas.user.ResetPasswordRequest,
+) -> schemas.base.AcknowledgeResponse:
+    return await forget_password.reset_password(req=req)

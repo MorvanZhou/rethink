@@ -17,6 +17,7 @@ from rethink import const
 from rethink.application import app
 from rethink.models import database
 from rethink.models.utils import jwt_decode
+from rethink.models.verify import verification
 from . import utils
 
 
@@ -43,9 +44,13 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(Response, type(resp))
 
     def test_register(self):
+        token, _ = verification.random_captcha()
+        data = jwt_decode(token)
         resp = self.client.put("/api/user", json={
             "email": "a@c.com",
             "password": "a",
+            "captchaToken": token,
+            "captchaCode": data["code"],
             "language": const.Language.EN.value,
             "requestId": "xxx"
         })
@@ -288,19 +293,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual("image/png", resp.headers["content-type"])
         self.assertGreater(len(resp.headers["x-captcha-token"]), 0)
-
-        code_str = jwt_decode(resp.headers["x-captcha-token"])["code"]
-        resp = self.client.post(
-            "/api/captcha/img",
-            json={
-                "requestId": "xxx",
-                "token": resp.headers["x-captcha-token"],
-                "codeStr": code_str,
-            }
-        )
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
 
     def test_batch(self):
         base_count = 2
