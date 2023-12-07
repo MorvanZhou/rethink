@@ -1,16 +1,19 @@
 from rethink import const, models, config
 from rethink.controllers import schemas, auth
-from rethink.controllers.utils import TokenDecode, datetime2str, match_captcha
+from rethink.controllers.utils import TokenDecode, datetime2str
 from rethink.models.utils import jwt_encode
+from rethink.models.verify.verification import verify_captcha
 
 
 async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
-    code, msg = match_captcha(token=req.captchaToken, code_str=req.captchaCode, language=req.language)
+    if req.language not in const.Language.__members__:
+        req.language = const.Language.EN.value
+    code = verify_captcha(token=req.captchaToken, code_str=req.captchaCode)
     if code != const.Code.OK:
         return schemas.base.TokenResponse(
             requestId=req.requestId,
             code=code.value,
-            message=msg,
+            message=const.get_msg_by_code(code, req.language),
             token="",
         )
 

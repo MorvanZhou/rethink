@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from rethink import const, config
-from rethink.logger import logger
+from rethink.logger import logger, add_rotating_file_handler
 from .models import database
 from .routes import (
     user,
@@ -55,6 +55,12 @@ app.include_router(email.router)
 
 @app.on_event("startup")
 async def startup_event():
+    if not config.is_local_db():
+        add_rotating_file_handler(
+            log_dir=const.RETHINK_DIR.parent.parent / ".logs",
+            max_bytes=10 * 1024 * 1024,
+            backup_count=10,
+        )
     logger.debug(f'startup_event LOCAL_STORAGE_PATH: {os.environ.get("LOCAL_STORAGE_PATH")}')
     logger.debug(f'startup_event VUE_APP_MODE: {os.environ.get("VUE_APP_MODE")}')
     logger.debug(f'startup_event VUE_APP_API_PORT: {os.environ.get("VUE_APP_API_PORT")}')

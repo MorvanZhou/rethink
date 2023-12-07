@@ -4,6 +4,7 @@
 /tests/tmp
 /**/*.egg-info
 /dist
+/.logs
 **/__pycache__
 
 # local env files

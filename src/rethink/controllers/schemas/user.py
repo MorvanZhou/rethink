@@ -58,7 +58,7 @@ class UpdateRequest(BaseModel):
     requestId: str = ""
 
 
-class ForgetPasswordRequest(BaseModel):
+class EmailVerificationRequest(BaseModel):
     email: str
     captchaToken: str
     captchaCode: str

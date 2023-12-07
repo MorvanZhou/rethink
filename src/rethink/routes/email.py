@@ -11,11 +11,22 @@ router = APIRouter(
 
 
 @router.post(
-    path="/email/forgetPassword",
+    path="/email/verify",
     response_model=schemas.base.TokenResponse,
 )
 @measure_time_spend
-async def forget_password_send_email(
-        req: schemas.user.ForgetPasswordRequest,
+async def email_verification(
+        req: schemas.user.EmailVerificationRequest,
 ) -> schemas.base.TokenResponse:
-    return email.forget_password(req=req)
+    return email.send_email_verification(req=req)
+
+
+@router.post(
+    path="/email/register",
+    response_model=schemas.base.TokenResponse,
+)
+@measure_time_spend
+async def email_register(
+        req: schemas.user.EmailVerificationRequest,
+) -> schemas.base.TokenResponse:
+    return await email.check_email_then_send_email_verification(req=req)

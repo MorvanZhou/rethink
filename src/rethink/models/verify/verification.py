@@ -1,6 +1,6 @@
 from datetime import timedelta
 from io import BytesIO
-from random import randint
+from random import choices
 from typing import Tuple, Dict
 
 import jwt
@@ -8,17 +8,20 @@ from captcha.audio import AudioCaptcha
 from captcha.image import ImageCaptcha
 
 from rethink import const, config
-from rethink.models.utils import alphabet, alphabet_len, jwt_encode, jwt_decode
+from rethink.models.utils import jwt_encode, jwt_decode
 
 DEFAULT_CAPTCHA_EXPIRE_SECOND = 60
-DEFAULT_NUMBER_EXPIRE_SECOND = 60 * 5
 
 img_captcha = ImageCaptcha(font_sizes=(35, 30, 32))
 audio_captcha = AudioCaptcha()
 
+alphabet = "3467ACDEFGJKLMNPQRTVWXYbdfgkmnprtwy"
+alphabet_len = len(alphabet)
+code_idx_range = list(range(0, alphabet_len - 1))
+
 
 def random_captcha(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, BytesIO]]:
-    code = [alphabet[randint(0, alphabet_len - 1)] for _ in range(length)]
+    code = [alphabet[i] for i in choices(code_idx_range, k=length)]
     code_str = "".join(code)
     data = {
         "img": img_captcha.generate(code_str),
@@ -45,9 +48,9 @@ def verify_captcha(token: str, code_str: str) -> const.Code:
     return code
 
 
-def encode_numbers(numbers: str) -> str:
+def encode_numbers(numbers: str, expired_min: int) -> str:
     token = jwt_encode(
-        exp_delta=timedelta(seconds=DEFAULT_NUMBER_EXPIRE_SECOND),
+        exp_delta=timedelta(minutes=expired_min),
         data={"code": numbers + config.get_settings().CAPTCHA_SALT}
     )
     return token

@@ -10,7 +10,7 @@ async def reset_password(req: schemas.user.ResetPasswordRequest) -> schemas.base
     if code != const.Code.OK:
         return schemas.base.AcknowledgeResponse(
             code=code.value,
-            message=const.get_msg_by_code(code, req.language),
+            message=const.get_msg_by_code(code, const.Language.EN.value),
             requestId=req.requestId,
         )
     u, code = await auth.reset_password(

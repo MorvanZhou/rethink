@@ -15,6 +15,7 @@ from rethink.models.utils import jwt_decode
 
 # at least 6 characters, at most 20 characters, at least one letter and one number
 VALID_PASSWORD_PTN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{6,20}$")
+VALID_EMAIL_PTN = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[A-Z|a-z]{2,}$")
 
 
 async def token2uid(token: str = Header(...)) -> TokenDecode:
@@ -68,6 +69,8 @@ async def register_user(
     if config.get_settings().ONE_USER:
         logger.warning("on ONE_USER mode, user registration will be skipped")
         return "", const.Code.ONE_USER_MODE
+    if VALID_EMAIL_PTN.match(email) is None:
+        return "", const.Code.INVALID_EMAIL
     if VALID_PASSWORD_PTN.match(password) is None:
         return "", const.Code.INVALID_PASSWORD
     u, code = await models.user.get_by_email(email=email)
@@ -99,6 +102,8 @@ async def reset_password(
     if config.get_settings().ONE_USER:
         logger.warning("on ONE_USER mode, user registration will be skipped")
         return None, const.Code.ONE_USER_MODE
+    if VALID_EMAIL_PTN.match(email) is None:
+        return None, const.Code.INVALID_EMAIL
     if VALID_PASSWORD_PTN.match(password) is None:
         return None, const.Code.INVALID_PASSWORD
     u, code = await models.user.get_by_email(email=email)

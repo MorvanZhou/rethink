@@ -144,12 +144,163 @@ body,
 .button-bg:hover {
   color: #0156c9 !important;
 }
+
 .error-msg-box-border {
   border: 4px solid #ff6666;
 }
+
 em.match {
   color: #f73131;
   font-style: normal;
+}
+
+.blur-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.sign-pop-window {
+  width: 100%;
+  max-width: 450px;
+  background-color: #ffffff;
+  padding: 10px 20px 20px 20px;
+  border-radius: 5px;
+}
+
+.flex-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.close-pop-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px 0;
+}
+
+.close-sign-pop-window {
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+}
+
+.flow-label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.flow-input {
+  position: relative;
+}
+
+.flow-input input {
+  padding: 10px 0 10px 3px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.flow-input input:focus {
+  outline: none;
+  border: 1px solid #3d3d3d;
+}
+
+.flow-input input:invalid:focus {
+  border: 1px solid red;
+}
+
+.show-hide-password {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 9px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.show-hide-password img {
+  width: 20px;
+  height: 20px;
+}
+
+.flow-input select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 30%;
+}
+
+#captcha {
+  width: 50%;
+}
+
+.captcha-img {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 170%;
+  cursor: pointer;
+}
+
+.captcha-img-sm {
+  height: 130%;
+}
+
+.sign-button {
+  line-height: 2.5em;
+  width: 100%;
+  border-radius: 5px;
+  border: none;
+  font-size: 1em;
+  color: white;
+  background-color: #42b72a;
+  margin: 10px auto;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.sign-button:hover {
+  background-color: #3aa623;
+}
+
+.required {
+  color: red;
+  padding-left: 2px;
+}
+
+.sign-has-account {
+  font-weight: normal;
+  font-size: 0.9em;
+  color: #696969;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  float: right;
+}
+
+.sign-has-account:hover {
+  color: #3d3d3d;
+}
+
+.next-disable-button:disabled {
+  background-color: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
 }
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -561,131 +712,6 @@ label[data-v-708d9590] {
   padding-left: 5px;
 }
 
-/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/signin/SignupWindow.vue?vue&type=style&index=0&id=21397f96&scoped=true&lang=css ***!
-  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.blur-background[data-v-21397f96] {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-.signup-pop-window[data-v-21397f96] {
-  width: 100%;
-  max-width: 450px;
-  background-color: #ffffff;
-  padding: 10px 20px 20px 20px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.close-pop-header[data-v-21397f96] {
-  display: flex;
-  justify-content: flex-end;
-  padding: 5px 0;
-}
-.close-signup-pop-window[data-v-21397f96] {
-  width: 35px;
-  height: 35px;
-  cursor: pointer;
-}
-.signup-has-account[data-v-21397f96] {
-  font-weight: normal;
-  font-size: 0.9em;
-  color: #696969;
-  text-align: center;
-  cursor: pointer;
-  text-decoration: none;
-  float: right;
-}
-.signup-has-account[data-v-21397f96]:hover {
-  color: #3d3d3d;
-}
-.flow-label[data-v-21397f96] {
-  font-weight: bold;
-  margin-top: 10px;
-}
-.flow-input[data-v-21397f96] {
-  position: relative;
-}
-.flow-input input[data-v-21397f96] {
-  padding: 10px 0 10px 3px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 100%;
-}
-.flow-input input[data-v-21397f96]:focus {
-  outline: none;
-  border: 1px solid #3d3d3d;
-}
-.flow-input input[data-v-21397f96]:invalid:focus {
-  border: 1px solid red;
-}
-.show-hide-password[data-v-21397f96] {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 9px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-.show-hide-password img[data-v-21397f96] {
-  width: 20px;
-  height: 20px;
-}
-.flow-input select[data-v-21397f96] {
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 30%;
-}
-#captcha[data-v-21397f96] {
-  width: 50%;
-}
-.captcha-img[data-v-21397f96] {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  height: 170%;
-  cursor: pointer;
-}
-.captcha-img-sm[data-v-21397f96] {
-  height: 130%;
-}
-.signup-button[data-v-21397f96] {
-  line-height: 2.5em;
-  width: 100%;
-  border-radius: 5px;
-  border: none;
-  font-size: 1em;
-  color: white;
-  background-color: #42b72a;
-  margin: 10px auto;
-  cursor: pointer;
-  font-weight: bold;
-}
-.signup-button[data-v-21397f96]:hover {
-  background-color: #3aa623;
-}
-.required[data-v-21397f96] {
-  color: red;
-  padding-left: 2px;
-}
-
 /*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/signin/OauthButton.vue?vue&type=style&index=0&id=61b664a8&scoped=true&lang=css ***!
   \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -735,36 +761,42 @@ label[data-v-708d9590] {
   gap: 10px;
 }
 
-/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/signin/LoginPannel.vue?vue&type=style&index=0&id=4215bda4&scoped=true&lang=css ***!
-  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/signin/LoginPanel.vue?vue&type=style&index=0&id=249a04e8&scoped=true&lang=css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.login-register-form[data-v-4215bda4] {
+.login-register-form[data-v-249a04e8] {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.flow-label[data-v-4215bda4] {
+
+.flow-label[data-v-249a04e8] {
   font-weight: bold;
   margin-top: 10px;
 }
-.flow-input[data-v-4215bda4] {
+
+.flow-input[data-v-249a04e8] {
   position: relative;
 }
-.flow-input input[data-v-4215bda4] {
+
+.flow-input input[data-v-249a04e8] {
   padding: 10px 0 10px 3px;
   border-radius: 5px;
   border: 1px solid #ccc;
   width: 100%;
 }
-.flow-input input[data-v-4215bda4]:focus {
+
+.flow-input input[data-v-249a04e8]:focus {
   outline: none;
   border: 1px solid #3d3d3d;
 }
-.flow-input input[data-v-4215bda4]:invalid:focus {
+
+.flow-input input[data-v-249a04e8]:invalid:focus {
   border: 1px solid red;
 }
-.show-hide-password[data-v-4215bda4] {
+
+.show-hide-password[data-v-249a04e8] {
   position: absolute;
   right: 0;
   top: 0;
@@ -776,24 +808,28 @@ label[data-v-708d9590] {
   display: flex;
   align-items: center;
 }
-.show-hide-password img[data-v-4215bda4] {
+
+.show-hide-password img[data-v-249a04e8] {
   width: 20px;
   height: 20px;
 }
-.forget-password[data-v-4215bda4] {
+
+.forget-password[data-v-249a04e8] {
   text-align: right;
   font-size: 0.8em;
   color: #696969;
   cursor: pointer;
   text-decoration: none;
 }
-.flow-input select[data-v-4215bda4] {
+
+.flow-input select[data-v-249a04e8] {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #ccc;
   width: 30%;
 }
-.login-button[data-v-4215bda4] {
+
+.login-button[data-v-249a04e8] {
   line-height: 2.5em;
   width: 100%;
   border-radius: 5px;
@@ -805,7 +841,8 @@ label[data-v-708d9590] {
   cursor: pointer;
   font-weight: bold;
 }
-.signup-button[data-v-4215bda4] {
+
+.signup-button[data-v-249a04e8] {
   line-height: 2.5em;
   width: 100%;
   border-radius: 5px;
@@ -817,10 +854,12 @@ label[data-v-708d9590] {
   cursor: pointer;
   font-weight: bold;
 }
-.signup-button[data-v-4215bda4]:hover {
+
+.signup-button[data-v-249a04e8]:hover {
   background-color: #3aa623;
 }
-.required[data-v-4215bda4] {
+
+.required[data-v-249a04e8] {
   color: red;
   padding-left: 2px;
 }
@@ -843,17 +882,6 @@ label[data-v-708d9590] {
 .login h1 {
   text-align: center;
 }
-
-/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/ForgetPasswordView.vue?vue&type=style&index=0&id=12e64fa7&scoped=true&lang=css ***!
-  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.forget-password[data-v-12e64fa7] {
-  width: 60%;
-  margin: 0 auto;
-  max-width: 400px;
-}
-
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/OAuthView.vue?vue&type=style&index=0&id=1fe5319c&scoped=true&lang=css ***!
@@ -1824,9 +1852,8 @@ h1[data-v-9a15286a] {
 }
 
 .vditor-reset {
-  color: #121212;
+  color: #374151;
   font-variant-ligatures: no-common-ligatures;
-  font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
   word-wrap: break-word;
   overflow: auto;
   line-height: 1.75em;
@@ -1863,6 +1890,13 @@ h1[data-v-9a15286a] {
   padding-left: 2em;
   margin-top: 0;
   margin-bottom: 16px;
+}
+
+.vditor-reset ul li,
+.vditor-reset ol li {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 0.375em;
 }
 
 .vditor-reset li + li {
@@ -1948,7 +1982,7 @@ h1[data-v-9a15286a] {
 
 .vditor-reset p {
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 1em;
 }
 
 .vditor-reset blockquote {
