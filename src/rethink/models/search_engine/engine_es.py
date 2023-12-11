@@ -416,21 +416,9 @@ class ESSearcher(BaseEngine):
         query_dict = {
             "bool": {
                 "must": [
-                    {
-                        "term": {
-                            "uid": uid
-                        }
-                    },
-                    {
-                        "term": {
-                            "disabled": False
-                        }
-                    },
-                    {
-                        "term": {
-                            "inTrash": False
-                        }
-                    }
+                    {"constant_score": {"filter": {"term": {"uid": uid}}}},
+                    {"constant_score": {"filter": {"term": {"disabled": False}}}},
+                    {"constant_score": {"filter": {"term": {"inTrash": False}}}},
                 ]
             }
         }

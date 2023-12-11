@@ -102,21 +102,3 @@ async def get_recent(
         requestId=rid,
         queries=queries,
     )
-
-
-async def put_recent(
-        td: TokenDecode,
-        req: schemas.search.PutRecentSearchRequest,
-) -> schemas.base.AcknowledgeResponse:
-    if td.code != const.Code.OK:
-        return schemas.base.AcknowledgeResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
-        )
-    code = await models.search.put_recent_search(uid=td.uid, query=req.query)
-    return schemas.base.AcknowledgeResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.requestId,
-    )

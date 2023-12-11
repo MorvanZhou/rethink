@@ -65,7 +65,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @utils.skip_no_connect
     async def test_user(self):
         if models.database.CLIENT is None: return
-        _id, code = await register_user(email="aaa", password="bbb123")
+        _id, code = await register_user(email="aaa@rethink.run", password="bbb123")
         self.assertNotEqual("", str(_id))
         self.assertEqual(const.Code.OK, code)
 

@@ -74,18 +74,3 @@ async def get_recent_search(
         td=token_decode,
         rid=rid,
     )
-
-
-@router.put(
-    path="/search/recent",
-    response_model=schemas.base.AcknowledgeResponse,
-)
-@measure_time_spend
-async def put_recent_search(
-        req: schemas.search.PutRecentSearchRequest,
-        token_decode: Annotated[TokenDecode, Depends(token2uid)]
-) -> schemas.base.AcknowledgeResponse:
-    return await node_search.put_recent(
-        td=token_decode,
-        req=req,
-    )

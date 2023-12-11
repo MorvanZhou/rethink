@@ -120,14 +120,15 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("xxx", rj["requestId"])
 
     def test_recent_search(self):
-        resp = self.client.put(
-            "/api/search/recent",
+        resp = self.client.post(
+            "/api/search/node",
             json={
                 "requestId": "xxx",
                 "query": "aaa",
+                "page": 0, "pageSize": 5
             }, headers={"token": self.token})
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        self.assertEqual(0, rj["code"], msg=rj)
 
         resp = self.client.get(
             "/api/search/recent",

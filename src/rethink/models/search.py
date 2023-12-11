@@ -43,6 +43,9 @@ async def search(
             modifiedAt=datetime2str(n["modifiedAt"]),
         )
         results.append(r)
+
+    if query != "":
+        await put_recent_search(uid, query)
     return results, total
 
 
@@ -89,10 +92,11 @@ async def cursor_query(
                 modifiedAt=datetime2str(n["modifiedAt"]),
             ) for n in nodes
         ], len(rn)
+
     return await search(
         uid=uid,
         query=query,
-        sort_key="modifiedAt",
+        sort_key="similarity",
         reverse=True,
         page=page,
         page_size=page_size,
