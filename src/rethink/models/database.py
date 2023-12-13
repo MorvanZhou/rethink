@@ -108,25 +108,10 @@ async def __remote_try_build_index():
     nodes_info = await COLL.nodes.index_information()
     if "id_1" not in nodes_info:
         await COLL.nodes.create_index("id", unique=True)
-    if "uid_1_id_-1_modifiedAt_-1" not in nodes_info:
-        await COLL.nodes.create_index(
-            [("uid", 1), ("id", -1), ("modifiedAt", -1)],
-            unique=True,
-        )
-    if "uid_1_id_-1_inTrash_-1" not in nodes_info:
-        await COLL.nodes.create_index(
-            [("uid", 1), ("id", -1), ("inTrash", -1)],
-            unique=True,
-        )
     if "uid_1_id_-1" not in nodes_info:
         # created at
         await COLL.nodes.create_index(
             [("uid", 1), ("id", -1)],
-            unique=True,
-        )
-    if "uid_1_id_-1_title_1" not in nodes_info:
-        await COLL.nodes.create_index(
-            [("uid", 1), ("id", -1), ("title", 1)],
             unique=True,
         )
 

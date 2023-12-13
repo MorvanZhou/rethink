@@ -2,7 +2,27 @@ from typing import List, Sequence
 
 from pydantic import Field, BaseModel, NonNegativeInt
 
-from .node import NodesSearchResponse
+
+class NodesSearchResponse(BaseModel):
+    class Data(BaseModel):
+        class Node(BaseModel):
+            id: str
+            title: str
+            snippet: str
+            titleHighlight: str
+            bodyHighlights: List[str]
+            score: float
+            type: int
+            createdAt: str
+            modifiedAt: str
+
+        nodes: List[Node]
+        total: NonNegativeInt
+
+    code: NonNegativeInt
+    message: str
+    requestId: str
+    data: Data
 
 
 class SearchUserNodesRequest(BaseModel):
@@ -23,7 +43,13 @@ class CursorQueryRequest(BaseModel):
     requestId: str = ""
 
 
-class CursorQueryResponse(BaseModel):
+class RecommendNodesRequest(BaseModel):
+    requestId: str
+    content: str
+    nidExclude: Sequence[str] = Field(default_factory=list)
+
+
+class RecommendNodesResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str

@@ -47,8 +47,8 @@ async def get_from_trash(
 ) -> schemas.node.GetFromTrashResponse:
     nodes, total = await models.node.get_nodes_in_trash(uid=td.uid, page=p, page_size=ps)
     code = const.Code.OK
-    data = schemas.node.NodesSearchResponse.Data(
-        nodes=[schemas.node.NodesSearchResponse.Data.Node(
+    data = schemas.search.NodesSearchResponse.Data(
+        nodes=[schemas.search.NodesSearchResponse.Data.Node(
             id=n["id"],
             title=n["title"],
             snippet=n["snippet"],

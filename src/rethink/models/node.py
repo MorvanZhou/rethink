@@ -171,7 +171,11 @@ async def get_batch(
         with_disabled: bool = False,
         in_trash: bool = False,
 ) -> Tuple[List[tps.Node], const.Code]:
-    c = {"id": {"$in": nids}, "uid": uid, "inTrash": in_trash}
+    c = {"uid": uid, "inTrash": in_trash}
+    if len(nids) > 1:
+        c["id"] = {"$in": nids}
+    elif len(nids) == 1:
+        c["id"] = nids[0]
     if not with_disabled:
         c["disabled"] = False
     docs = await COLL.nodes.find(c).to_list(length=None)

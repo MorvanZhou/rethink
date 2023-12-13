@@ -1,14 +1,16 @@
 import datetime
-from typing import List, Tuple, Sequence
+from typing import List, Tuple, Sequence, Dict, Any
 
 from bson.tz_util import utc
-from elasticsearch import AsyncElasticsearch
-from elasticsearch import helpers
+from elastic_transport import ObjectApiResponse
+from elasticsearch import AsyncElasticsearch, helpers
 
 from rethink import const
 from rethink.config import get_settings
 from rethink.logger import logger
-from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc
+from rethink.models.search_engine.engine import (
+    BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc, STOPWORDS,
+)
 
 
 def datetime2str(dt: datetime.datetime) -> str:
@@ -22,6 +24,7 @@ def get_utc_now() -> str:
 
 class ESSearcher(BaseEngine):
     es: AsyncElasticsearch
+    index: str
     properties = {
         "uid": {
             "type": "keyword"
@@ -63,7 +66,17 @@ class ESSearcher(BaseEngine):
                 "tokenizer": "ik_max_word",
                 "filter": [
                     "lowercase",
-                    "english_stop"
+                    "english_stop",
+                ]
+            },
+            "search_stop_analyzer": {
+                "type": "custom",
+                "char_filter": [],
+                "tokenizer": "ik_smart",
+                "filter": [
+                    "lowercase",
+                    "english_stop",
+                    "cn_stop",
                 ]
             },
             "en_analyzer": {
@@ -73,17 +86,26 @@ class ESSearcher(BaseEngine):
                     "lowercase",
                     "english_stop"
                 ]
-            }
+            },
+
         },
         "filter": {
             "english_stop": {
                 "type": "stop",
-                "stopwords": "_english_"
+                "stopwords": "_english_",
+            },
+            "cn_stop": {
+                "type": "stop",
+                "stopwords": STOPWORDS,
             }
         }
     }
 
-    def connect(self):
+    def __init__(self):
+        super().__init__()
+        self.index = ""
+
+    async def connect(self):
         try:
             self.es
         except AttributeError:
@@ -96,45 +118,99 @@ class ESSearcher(BaseEngine):
                 request_timeout=5,
             )
 
+        resp = await self.es.indices.get_alias(index=f"{get_settings().ES_INDEX_ALIAS}-*")
+        for index, aliases in resp.body.items():
+            if get_settings().ES_INDEX_ALIAS in aliases["aliases"]:
+                self.index = index
+                break
+
     async def init(self):
         # please install es 8.11.0
-        self.connect()
+        await self.connect()
         info = await self.es.info()
         if info.body["version"]["number"] != "8.11.0":
             raise ValueError("please install es 8.11.0")
 
-        if not await self.es.indices.exists(index=get_settings().ES_INDEX):
+        # if no index found, create one
+        if self.index == "" or not await self.es.indices.exists(index=self.index):
             # install ik plugin: https://github.com/medcl/elasticsearch-analysis-ik
+            self.index = f"{get_settings().ES_INDEX_ALIAS}-1"
             resp = await self.es.indices.create(
-                index=get_settings().ES_INDEX,
-                body={
-                    "settings": {
-                        "index": {
-                            "number_of_shards": 1,
-                            "number_of_replicas": 0,
-                            "refresh_interval": "3s",
-                        },
-                        "analysis": self.analysis,
+                index=self.index,
+                aliases={get_settings().ES_INDEX_ALIAS: {}},
+                settings={
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 0,
+                        "refresh_interval": "3s",
                     },
-                    "mappings": {
-                        "properties": self.properties,
-                    }
+                    "analysis": self.analysis,
+                },
+                mappings={
+                    "properties": self.properties,
                 }
             )
             if resp.meta.status != 200:
                 raise RuntimeError(f"create index failed, resp: {resp}")
 
+        settings = await self.es.indices.get_settings(index=self.index)
+        if settings.body[self.index]["settings"]["index"]["analysis"] != self.analysis:
+            await self.reindex()
+
+    async def reindex(self):
+        await self.connect()
+        new_index_num = int(self.index.split("-")[-1]) + 1
+        new_index = f"{get_settings().ES_INDEX_ALIAS}-{new_index_num}"
+
+        resp = await self.es.indices.create(
+            index=new_index,
+            aliases={get_settings().ES_INDEX_ALIAS: {}},
+            settings={
+                "index": {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0,
+                    "refresh_interval": "3s",
+                },
+                "analysis": self.analysis,
+            },
+            mappings={
+                "properties": self.properties,
+            }
+        )
+        if resp.meta.status != 200:
+            raise RuntimeError(f"create index for reindexing failed, resp: {resp}")
+
+        resp = await self.es.reindex(
+            body={
+                "source": {
+                    "index": self.index,
+                },
+                "dest": {
+                    "index": new_index,
+                }
+            }
+        )
+        if resp.meta.status != 200:
+            raise RuntimeError(f"reindex failed, resp: {resp}")
+        resp = await self.es.indices.delete(index=self.index)
+        if resp.meta.status != 200:
+            raise RuntimeError(f"reindex failed, resp: {resp}")
+
+        self.index = new_index
+        logger.info(f"elasticsearch reindex finished, new index: {self.index}")
+
     async def drop(self):
-        self.connect()
-        if await self.es.indices.exists(index=get_settings().ES_INDEX):
-            await self.es.indices.delete(index=get_settings().ES_INDEX)
+        await self.connect()
+        if self.index != "" and await self.es.indices.exists(index=self.index):
+            await self.es.indices.delete(index=self.index)
+        self.index = ""
         await self.es.close()
         del self.es
 
     async def add(self, uid: str, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.index(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             document={
                 "uid": uid,
                 "title": doc.title,
@@ -154,7 +230,7 @@ class ESSearcher(BaseEngine):
     async def update(self, uid: str, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.update(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=doc.nid,
             body={
                 "doc": {
@@ -172,7 +248,7 @@ class ESSearcher(BaseEngine):
 
     async def to_trash(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
             body={
                 "doc": {
@@ -192,7 +268,7 @@ class ESSearcher(BaseEngine):
             actions=[
                 {
                     "_op_type": "update",
-                    "_index": get_settings().ES_INDEX,
+                    "_index": get_settings().ES_INDEX_ALIAS,
                     "_id": nid,
                     "doc": {
                         "inTrash": True,
@@ -209,7 +285,7 @@ class ESSearcher(BaseEngine):
 
     async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
             body={
                 "doc": {
@@ -229,7 +305,7 @@ class ESSearcher(BaseEngine):
             actions=[
                 {
                     "_op_type": "update",
-                    "_index": get_settings().ES_INDEX,
+                    "_index": get_settings().ES_INDEX_ALIAS,
                     "_id": nid,
                     "doc": {
                         "inTrash": False,
@@ -246,7 +322,7 @@ class ESSearcher(BaseEngine):
 
     async def disable(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
             body={
                 "doc": {
@@ -262,7 +338,7 @@ class ESSearcher(BaseEngine):
 
     async def enable(self, uid: str, nid: str) -> const.Code:
         resp = await self.es.update(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
             body={
                 "doc": {
@@ -278,7 +354,7 @@ class ESSearcher(BaseEngine):
 
     async def delete(self, uid: str, nid: str) -> const.Code:
         doc = await self.es.get(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
         )
         if doc["_source"]["uid"] != uid:
@@ -289,7 +365,7 @@ class ESSearcher(BaseEngine):
             return const.Code.OPERATION_FAILED
 
         resp = await self.es.delete(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             id=nid,
             refresh=True,
         )
@@ -312,7 +388,7 @@ class ESSearcher(BaseEngine):
             # insert a creation operation
             actions.append({
                 "_op_type": "create",
-                "_index": get_settings().ES_INDEX,
+                "_index": get_settings().ES_INDEX_ALIAS,
                 "_id": nid,
                 "_source": d
             })
@@ -321,7 +397,7 @@ class ESSearcher(BaseEngine):
 
     async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
         resp = await self.es.delete_by_query(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             body={
                 "query": {
                     "bool": {
@@ -362,7 +438,7 @@ class ESSearcher(BaseEngine):
             nid = d.pop("nid")
             actions.append({
                 "_op_type": "update",
-                "_index": get_settings().ES_INDEX,
+                "_index": get_settings().ES_INDEX_ALIAS,
                 "_id": nid,
                 "doc": d
             })
@@ -380,13 +456,13 @@ class ESSearcher(BaseEngine):
             # insert a creation operation
             actions.append({
                 "_op_type": "create",
-                "_index": get_settings().ES_INDEX,
+                "_index": get_settings().ES_INDEX_ALIAS,
                 "_id": nid,
                 "_source": d
             })
         return await self._batch_ops(actions, "restore", refresh=True)
 
-    async def search(
+    async def _search(
             self,
             uid: str,
             query: str = "",
@@ -395,7 +471,8 @@ class ESSearcher(BaseEngine):
             page: int = 0,
             page_size: int = 10,
             exclude_nids: Sequence[str] = None,
-    ) -> Tuple[List[SearchResult], int]:
+            with_stop_analyzer: bool = False,
+    ) -> ObjectApiResponse[Any]:
         if page < 0:
             raise ValueError("page must >= 0")
         if sort_key is None or sort_key in ["", "similarity"]:
@@ -413,17 +490,18 @@ class ESSearcher(BaseEngine):
         else:
             raise ValueError(f"sort_key {sort_key} not supported")
         # select uid = uid, disabled = false, inTrash = false
-        query_dict = {
+        query_dict: Dict[str, Any] = {
             "bool": {
                 "must": [
                     {"constant_score": {"filter": {"term": {"uid": uid}}}},
                     {"constant_score": {"filter": {"term": {"disabled": False}}}},
                     {"constant_score": {"filter": {"term": {"inTrash": False}}}},
                 ]
-            }
+            },
         }
         if query != "":
             q_lower = query.lower()
+            analyzer = "search_stop_analyzer" if with_stop_analyzer else "ik_smart"
             # search q_lower on both title and body
             query_dict["bool"]["must"].append({
                 "bool": {
@@ -433,6 +511,7 @@ class ESSearcher(BaseEngine):
                                 "title": {
                                     "query": q_lower,
                                     "boost": 2,
+                                    "analyzer": analyzer,
                                 }
                             }
                         },
@@ -441,6 +520,7 @@ class ESSearcher(BaseEngine):
                                 "body": {
                                     "query": q_lower,
                                     "boost": 1,
+                                    "analyzer": analyzer,
                                 }
                             }
                         }
@@ -455,7 +535,7 @@ class ESSearcher(BaseEngine):
             }]
 
         resp = await self.es.search(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             body={
                 "query": query_dict,
                 "sort": sort,
@@ -473,6 +553,28 @@ class ESSearcher(BaseEngine):
                     }
                 },
             })
+        return resp
+
+    async def search(
+            self,
+            uid: str,
+            query: str = "",
+            sort_key: str = None,
+            reverse: bool = False,
+            page: int = 0,
+            page_size: int = 10,
+            exclude_nids: Sequence[str] = None,
+    ) -> Tuple[List[SearchResult], int]:
+        resp = await self._search(
+            uid=uid,
+            query=query,
+            sort_key=sort_key,
+            reverse=reverse,
+            page=page,
+            page_size=page_size,
+            exclude_nids=exclude_nids,
+            with_stop_analyzer=False,
+        )
         hits = resp["hits"]["hits"]
         total = resp["hits"]["total"]["value"]
         return [
@@ -484,9 +586,37 @@ class ESSearcher(BaseEngine):
             ) for hit in hits
         ], total
 
+    async def recommend(
+            self,
+            uid: str,
+            content: str,
+            max_return: int = 10,
+            exclude_nids: int = None,
+    ) -> List[SearchResult]:
+        threshold = 3.
+        resp = await self._search(
+            uid=uid,
+            query=content,
+            sort_key="similarity",
+            reverse=False,
+            page=0,
+            page_size=max_return,
+            exclude_nids=exclude_nids,
+            with_stop_analyzer=True,
+        )
+        hits = resp["hits"]["hits"]
+        return [
+            SearchResult(
+                nid=hit["_id"],
+                score=hit["_score"],
+                titleHighlight=self.get_hl(hit, "title", first=True, default=hit["_source"]["title"]),
+                bodyHighlights=self.get_hl(hit, "body", first=False, default=hit["_source"]["body"][:60] + "..."),
+            ) for hit in hits if hit["_score"] is not None and hit["_score"] > threshold
+        ]
+
     async def count_all(self) -> int:
         resp = await self.es.count(
-            index=get_settings().ES_INDEX,
+            index=self.index,
             body={
                 "query": {
                     "match_all": {}
@@ -495,7 +625,7 @@ class ESSearcher(BaseEngine):
         return resp["count"]
 
     async def refresh(self):
-        await self.es.indices.refresh(index=get_settings().ES_INDEX)
+        await self.es.indices.refresh(index=self.index)
 
     async def _batch_ops(self, actions: List[dict], op_type: str, refresh: bool) -> const.Code:
         try:

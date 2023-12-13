@@ -33,14 +33,29 @@ async def cursor_query(
 
 @router.post(
     path="/search/node",
-    response_model=schemas.node.NodesSearchResponse,
+    response_model=schemas.search.NodesSearchResponse,
 )
 @measure_time_spend
 async def search_user_nodes(
         req: schemas.search.SearchUserNodesRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)]
-) -> schemas.node.NodesSearchResponse:
+) -> schemas.search.NodesSearchResponse:
     return await node_search.search_user_nodes(
+        td=token_decode,
+        req=req,
+    )
+
+
+@router.post(
+    path="/search/recommend",
+    response_model=schemas.search.RecommendNodesResponse,
+)
+@measure_time_spend
+async def recommend_nodes(
+        req: schemas.search.RecommendNodesRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.search.RecommendNodesResponse:
+    return await node_search.recommend_nodes(
         td=token_decode,
         req=req,
     )

@@ -1,10 +1,34 @@
 from typing import List, Dict, Tuple, Sequence
 
 from rethink import const
-from rethink.controllers.schemas.node import NodesSearchResponse
+from rethink.controllers.schemas.search import NodesSearchResponse
 from rethink.controllers.utils import datetime2str
 from rethink.models import tps
 from rethink.models.database import COLL, searcher
+from rethink.models.search_engine.engine import SearchResult
+
+
+async def _2node_data(
+        hits: Sequence[SearchResult],
+) -> List[NodesSearchResponse.Data.Node]:
+    nodes = await COLL.nodes.find({"id": {"$in": [hit.nid for hit in hits]}}).to_list(length=None)
+    nodes_map: Dict[str, tps.Node] = {n["id"]: n for n in nodes}
+    results = []
+    for hit in hits:
+        n = nodes_map[hit.nid]
+        r = NodesSearchResponse.Data.Node(
+            id=n["id"],
+            title=n["title"],
+            snippet=n["snippet"],
+            titleHighlight=hit.titleHighlight,
+            bodyHighlights=hit.bodyHighlights,
+            score=hit.score,
+            type=n["type"],
+            createdAt=datetime2str(n["_id"].generation_time),
+            modifiedAt=datetime2str(n["modifiedAt"]),
+        )
+        results.append(r)
+    return results
 
 
 async def search(
@@ -26,27 +50,29 @@ async def search(
         page_size=page_size,
         exclude_nids=exclude_nids,
     )
-    nodes = await COLL.nodes.find({"id": {"$in": [hit.nid for hit in hits]}}).to_list(length=None)
-    nodes_map: Dict[str, tps.Node] = {n["id"]: n for n in nodes}
-    results = []
-    for hit in hits:
-        n = nodes_map[hit.nid]
-        r = NodesSearchResponse.Data.Node(
-            id=n["id"],
-            title=n["title"],
-            snippet=n["snippet"],
-            titleHighlight=hit.titleHighlight,
-            bodyHighlights=hit.bodyHighlights,
-            score=hit.score,
-            type=n["type"],
-            createdAt=datetime2str(n["_id"].generation_time),
-            modifiedAt=datetime2str(n["modifiedAt"]),
-        )
-        results.append(r)
+    results = await _2node_data(hits)
 
     if query != "":
         await put_recent_search(uid, query)
     return results, total
+
+
+async def recommend(
+        uid: str,
+        content: str,
+        max_return: int = 10,
+        exclude_nids: Sequence[str] = None,
+) -> List[NodesSearchResponse.Data.Node]:
+    if content == "":
+        return []
+    # search nodes
+    hits = await searcher().recommend(
+        uid=uid,
+        content=content,
+        max_return=max_return,
+        exclude_nids=exclude_nids,
+    )
+    return await _2node_data(hits)
 
 
 async def cursor_query(

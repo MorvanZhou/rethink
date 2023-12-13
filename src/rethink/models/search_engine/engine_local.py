@@ -1,6 +1,5 @@
 import datetime
 import logging
-import time
 from typing import List, Tuple, Sequence
 
 import jieba
@@ -14,13 +13,17 @@ from whoosh.query import Term, And, Or, Every
 
 from rethink import config, const
 from rethink.logger import logger
-from rethink.models.search_engine.engine import BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc
+from rethink.models.search_engine.engine import (
+    BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc, STOPWORDS,
+)
 
 jieba.setLogLevel(logging.ERROR)
 
 
 class LocalSearcher(BaseEngine):
     ix: FileIndex
+    indexing_schema: Schema
+    search_stop_schema: Schema
 
     async def _trash_disable_ops_batch(
             self,
@@ -56,12 +59,8 @@ class LocalSearcher(BaseEngine):
         return config.get_settings().LOCAL_STORAGE_PATH / ".data" / "search"
 
     async def init(self):
-        if not self.index_path.exists():
-            self.index_path.mkdir(parents=True)
-            analyzer = ChineseAnalyzer(
-                # stoplist=(Path(__file__).parent / "stop_words.txt").read_text().splitlines(),
-            )
-            schema = Schema(
+        def create_schema(analyzer):
+            return Schema(
                 uid=ID(stored=True),
                 nid=ID(stored=True, unique=True),
                 title=TEXT(analyzer=analyzer, stored=True, sortable=True),
@@ -71,7 +70,13 @@ class LocalSearcher(BaseEngine):
                 modifiedAt=DATETIME(stored=True, sortable=True),
                 createdAt=DATETIME(stored=True, sortable=True),
             )
-            self.ix = create_in(self.index_path, schema)
+
+        self.indexing_schema = create_schema(analyzer=ChineseAnalyzer())
+        self.search_stop_schema = create_schema(analyzer=ChineseAnalyzer(stoplist=STOPWORDS))
+
+        if not self.index_path.exists():
+            self.index_path.mkdir(parents=True)
+            self.ix = create_in(self.index_path, self.indexing_schema)
         else:
             self.ix = open_dir(self.index_path)
 
@@ -114,9 +119,9 @@ class LocalSearcher(BaseEngine):
         for doc in docs:
             d = doc.__dict__
             now_ = datetime.datetime.now(tz=utc)
-            if now == now_:
-                time.sleep(0.00001)
-                now_ = datetime.datetime.now(tz=utc)
+            delta = datetime.timedelta(microseconds=100)
+            if now + delta >= now_:
+                now_ = now + delta
             d["createdAt"] = now_
             d["modifiedAt"] = d["createdAt"]
             d["disabled"] = False
@@ -166,7 +171,7 @@ class LocalSearcher(BaseEngine):
         writer.commit()
         return const.Code.OK
 
-    async def search(
+    async def _search(
             self,
             uid: str,
             query: str = "",
@@ -175,14 +180,16 @@ class LocalSearcher(BaseEngine):
             page: int = 0,
             page_size: int = 10,
             exclude_nids: Sequence[str] = None,
+            with_stop_analyzer: bool = False,
     ) -> Tuple[List[SearchResult], int]:
         if sort_key in ["", "similarity"]:
             sort_key = None
         with self.ix.searcher() as searcher:
             cs = [Term("uid", uid), Term("disabled", False), Term("inTrash", False)]
             if query != "":
-                q_body = QueryParser("body", self.ix.schema, group=syntax.OrGroup).parse(query.lower())
-                q_title = QueryParser("title", self.ix.schema, group=syntax.OrGroup).parse(query.lower())
+                schema = self.search_stop_schema if with_stop_analyzer else self.indexing_schema
+                q_body = QueryParser("body", schema, group=syntax.OrGroup).parse(query.lower())
+                q_title = QueryParser("title", schema, group=syntax.OrGroup).parse(query.lower())
                 cs.append(Or([q_body, q_title]))
             query_terms = And(cs)
             if exclude_nids is not None and len(exclude_nids) > 0:
@@ -213,6 +220,47 @@ class LocalSearcher(BaseEngine):
                     bodyHighlights=self.get_hl(hl, hit, "body", return_list=True, default=hit["body"][:60] + "..."),
                 ) for hit in hits
             ], hits.total
+
+    async def search(
+            self,
+            uid: str,
+            query: str = "",
+            sort_key: str = None,
+            reverse: bool = False,
+            page: int = 0,
+            page_size: int = 10,
+            exclude_nids: Sequence[str] = None,
+    ) -> Tuple[List[SearchResult], int]:
+        return await self._search(
+            uid=uid,
+            query=query,
+            sort_key=sort_key,
+            reverse=reverse,
+            page=page,
+            page_size=page_size,
+            exclude_nids=exclude_nids,
+            with_stop_analyzer=False,
+        )
+
+    async def recommend(
+            self,
+            uid: str,
+            content: str,
+            max_return: int = 10,
+            exclude_nids: Sequence[str] = None,
+    ) -> List[SearchResult]:
+        threshold = 5.
+        res, total = await self._search(
+            uid=uid,
+            query=content,
+            sort_key="similarity",
+            reverse=True,
+            page=0,
+            page_size=max_return,
+            exclude_nids=exclude_nids,
+            with_stop_analyzer=True,
+        )
+        return [r for r in res if r.score >= threshold]
 
     async def refresh(self):
         raise NotImplementedError

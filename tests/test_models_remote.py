@@ -188,6 +188,13 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(found), msg=found)
         self.assertEqual(2, total)
 
+        recommend = await models.database.searcher().recommend(
+            uid=self.uid,
+            content="I do need a Knowledge Management System. This is a good one to try.",
+            exclude_nids=[],
+        )
+        self.assertEqual(1, len(recommend))
+
         n, code = await models.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(2, len(n["toNodeIds"]))

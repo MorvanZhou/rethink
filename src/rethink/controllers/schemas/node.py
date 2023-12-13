@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
+from .search import NodesSearchResponse
+
 
 class NodeData(BaseModel):
     class LinkedNode(BaseModel):
@@ -52,28 +54,6 @@ class UpdateRequest(BaseModel):
     nid: str
     md: str
     requestId: str = ""
-
-
-class NodesSearchResponse(BaseModel):
-    class Data(BaseModel):
-        class Node(BaseModel):
-            id: str
-            title: str
-            snippet: str
-            titleHighlight: str
-            bodyHighlights: List[str]
-            score: float
-            type: int
-            createdAt: str
-            modifiedAt: str
-
-        nodes: List[Node]
-        total: NonNegativeInt
-
-    code: NonNegativeInt
-    message: str
-    requestId: str
-    data: Data
 
 
 class RestoreFromTrashRequest(BaseModel):

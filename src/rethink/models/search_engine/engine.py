@@ -1,6 +1,7 @@
 import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Tuple, Sequence
 
 from rethink import const
@@ -39,6 +40,12 @@ class SearchResult:
     score: float
     titleHighlight: str
     bodyHighlights: List[str]
+
+
+STOPWORDS = sorted(list(set(
+    (Path(__file__).parent / "cn_stopwords.txt").read_text(encoding="utf-8").splitlines()
+    + (Path(__file__).parent / "baidu_stopwords.txt").read_text(encoding="utf-8").splitlines()
+)))
 
 
 class BaseEngine(ABC):
@@ -103,6 +110,20 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
+    async def _search(
+            self,
+            uid: str,
+            query: str = "",
+            sort_key: str = None,
+            reverse: bool = False,
+            page: int = 1,
+            page_size: int = 10,
+            exclude_nids: Sequence[str] = None,
+            with_stop_analyzer: bool = False,
+    ):
+        ...
+
+    @abstractmethod
     async def search(
             self,
             uid: str,
@@ -113,6 +134,16 @@ class BaseEngine(ABC):
             page_size: int = 10,
             exclude_nids: Sequence[str] = None,
     ) -> Tuple[List[SearchResult], int]:
+        ...
+
+    @abstractmethod
+    async def recommend(
+            self,
+            uid: str,
+            content: str,
+            max_return: int = 10,
+            exclude_nids: Sequence[str] = None,
+    ) -> List[SearchResult]:
         ...
 
     @abstractmethod

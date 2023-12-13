@@ -24,7 +24,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         try:
             await self.searcher.drop()
             await self.searcher.init()
-            self.assertTrue(await self.searcher.es.indices.exists(index=config.get_settings().ES_INDEX))
+            self.assertTrue(await self.searcher.es.indices.exists(index=config.get_settings().ES_INDEX_ALIAS))
         except (elastic_transport.ConnectionError, RuntimeError):
             utils.skip_no_connect.skip = True
             print("remote test asyncSetUp timeout")
@@ -39,6 +39,35 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             await self.searcher.drop()
         except (elastic_transport.ConnectionError, RuntimeError):
             pass
+
+    @utils.skip_no_connect
+    async def test_reindex(self):
+        code = await self.searcher.add_batch(uid="uid", docs=[SearchDoc(
+            nid=f"nid{i}",
+            title=f"title{i}",
+            body=f"this is {i} doc, 这是第 {i} 个文档",
+        ) for i in range(20)])
+        self.assertEqual(const.Code.OK, code)
+        await self.searcher.refresh()
+        self.assertIn(config.get_settings().ES_INDEX_ALIAS, self.searcher.index)
+        self.assertEqual("1", self.searcher.index.split("-")[-1])
+
+        docs, total = await self.searcher.search(
+            uid="uid",
+            query="title doc",
+            sort_key="createdAt",
+            reverse=True,
+            page=0,
+            page_size=10,
+        )
+        self.assertEqual(10, len(docs))
+        self.assertEqual(20, total)
+
+        await self.searcher.reindex()
+        await self.searcher.refresh()
+        self.assertEqual(20, await self.searcher.count_all())
+        self.assertIn(config.get_settings().ES_INDEX_ALIAS, self.searcher.index)
+        self.assertEqual("2", self.searcher.index.split("-")[-1])
 
     @utils.skip_no_connect
     async def test_add(self):

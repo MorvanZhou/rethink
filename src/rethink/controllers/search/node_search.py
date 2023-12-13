@@ -22,11 +22,11 @@ async def cursor_query(
         page_size=req.pageSize,
     )
     code = const.Code.OK
-    return schemas.node.NodesSearchResponse(
+    return schemas.search.NodesSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        data=schemas.node.NodesSearchResponse.Data(
+        data=schemas.search.NodesSearchResponse.Data(
             nodes=nodes,
             total=total,
         )
@@ -36,9 +36,9 @@ async def cursor_query(
 async def search_user_nodes(
         td: TokenDecode,
         req: schemas.search.SearchUserNodesRequest,
-) -> schemas.node.NodesSearchResponse:
+) -> schemas.search.NodesSearchResponse:
     if td.code != const.Code.OK:
-        return schemas.node.NodesSearchResponse(
+        return schemas.search.NodesSearchResponse(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
@@ -54,14 +54,41 @@ async def search_user_nodes(
         exclude_nids=req.nidExclude,
     )
     code = const.Code.OK
-    return schemas.node.NodesSearchResponse(
+    return schemas.search.NodesSearchResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
         requestId=req.requestId,
-        data=schemas.node.NodesSearchResponse.Data(
+        data=schemas.search.NodesSearchResponse.Data(
             nodes=nodes,
             total=total,
         )
+    )
+
+
+async def recommend_nodes(
+        td: TokenDecode,
+        req: schemas.search.RecommendNodesRequest,
+) -> schemas.search.RecommendNodesResponse:
+    if td.code != const.Code.OK:
+        return schemas.search.RecommendNodesResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+            nodes=[],
+        )
+    max_return = 10
+    nodes = await models.search.recommend(
+        uid=td.uid,
+        content=req.content,
+        max_return=max_return,
+        exclude_nids=req.nidExclude,
+    )
+    code = const.Code.OK
+    return schemas.search.RecommendNodesResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
+        nodes=nodes
     )
 
 

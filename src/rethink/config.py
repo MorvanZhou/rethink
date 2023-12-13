@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     ES_USER: str = Field(env='ES_USER', default="")
     ES_PASSWORD: str = Field(env='ES_PASSWORD', default="")
     ES_HOSTS: str = Field(env='ES_HOSTS', default="")
-    ES_INDEX: str = Field(env='ES_INDEX', default="")
+    ES_INDEX_ALIAS: str = Field(env='ES_INDEX_ALIAS', default="")
     CAPTCHA_SALT: str = Field(env='CAPTCHA_SALT', default="")
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")

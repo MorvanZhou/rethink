@@ -257,6 +257,21 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(rj["data"]["nodes"]))
         self.assertEqual("Welcome to Rethink", rj["data"]["nodes"][0]["title"])
 
+        resp = self.client.post(
+            "/api/search/recommend",
+            json={
+                "requestId": "xxx",
+                "content": "I do need a Knowledge Management System. This is a good one to try.",
+                "nidExclude": [],
+            },
+            headers={"token": self.token},
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(1, len(rj["nodes"]))
+        self.assertEqual("Welcome to Rethink", rj["nodes"][0]["title"])
+
         self.client.put(
             "/api/trash",
             json={
