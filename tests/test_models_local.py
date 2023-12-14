@@ -407,6 +407,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         local_file.unlink()
         image.close()
         buf.close()
+        await img_file.close()
 
         u, code = await models.user.get(self.uid)
         self.assertEqual(used_space + size, u["usedSpace"])

@@ -1,3 +1,4 @@
+import time
 import unittest
 
 from rethink import const
@@ -31,6 +32,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
                 body=f"this is {i} doc, 这是第 {i} 个文档",
             ))
             self.assertEqual(const.Code.OK, code)
+            time.sleep(0.0001)
 
         docs, total = await self.searcher.search(
             uid="uid",
