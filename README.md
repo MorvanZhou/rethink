@@ -22,7 +22,36 @@ The official web version can be found at [https://rethink.run](https://rethink.r
 
 ![phone](https://github.com/MorvanZhou/rethink/blob/main/img/phone.png?raw=true)
 
+## Why Rethink
+
+Rethink was born out of my inability to find a note-taking app that truly catered to my needs. My vision for a
+note-taking app includes:
+
+1. **Effortless Recording**: When capturing ideas, rethink provides with a swift and seamless recording process.
+2. **Easy Application**: To facilitate easy application, merely jotting down notes is insufficient.
+   The recorded information should be able to form a knowledge network,
+   enabling your accumulated knowledge to compound over time.
+   This foundation allows for effective application and each new idea recorded serves to reinforce
+   and strengthen the existing knowledge network.
+
+## Features
+
+1. **Bi-directional links**: A knowledge network is important.
+   Rethink allows you to @ link to other notes in the note with one click;
+2. **Markdown syntax**: Seamless support for Markdown syntax, the format of notes is more controllable;
+3. **Automatic association**: Too many notes? Don't remember what you wrote before?
+   Unable to effectively form a note network?
+   Rethink automatically recommend related notes while writing,
+   actively assist you in forming a knowledge network. (Working in progress)
+4. **Local storage**: Rethink attaches great importance to data security.
+   You can store data in a local storage.
+   Or you can also use the online version [https://rethink.run](https://rethink.run),
+   which makes it easy to synchronize across multiple platforms.
+5. **Multi-language**: Support multiple languages, including Chinese and English.
+
 ## Install
+
+First install:
 
 ```shell
 pip install rethink-note
@@ -36,7 +65,8 @@ pip install -U rethink-note
 
 ## Usage
 
-Quickly start the note web service with `rethink.run()`, and save your note data locally:
+Quickly start the note web service with `rethink.run()`, and save your note data locally,
+The default save path is the `.data` folder under the path of this script:
 
 ```python
 import rethink
@@ -62,3 +92,5 @@ and the `.data` folder will be created in your `path` directory.
 
 English and Chinese languages are supported, and the default is English `en`.
 If you want to use Chinese `zh`, you can use `language="zh"` parameter.
+
+Open your browser and visit `http://127.0.0.1:8080` to start recording your ideas.
