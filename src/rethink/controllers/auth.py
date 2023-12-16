@@ -18,6 +18,10 @@ VALID_PASSWORD_PTN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{6,20}$")
 VALID_EMAIL_PTN = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[A-Z|a-z]{2,}$")
 
 
+def __one_line_traceback() -> str:
+    return traceback.format_exc().replace("\n", "\\n")
+
+
 async def token2uid(token: str = Header(...)) -> TokenDecode:
     uid = ""
     err = ""
@@ -32,13 +36,16 @@ async def token2uid(token: str = Header(...)) -> TokenDecode:
         language = u["language"]
     except jwt.ExpiredSignatureError:
         code = const.Code.EXPIRED_AUTH
-        err = traceback.format_exc().replace("\n", "\\n")
+        err = __one_line_traceback()
     except jwt.DecodeError:
         code = const.Code.INVALID_AUTH
-        err = traceback.format_exc().replace("\n", "\\n")
+        err = __one_line_traceback()
+    except jwt.InvalidTokenError:
+        code = const.Code.INVALID_AUTH
+        err = __one_line_traceback()
     except Exception:  # pylint: disable=broad-except
         code = const.Code.INVALID_AUTH
-        err = traceback.format_exc().replace("\n", "\\n")
+        err = __one_line_traceback()
     if code != const.Code.OK:
         logger.error(f"jwt_decode err: {err}")
     return TokenDecode(code=code, uid=uid, language=language)
@@ -61,18 +68,25 @@ def _base_password(password: str, email: str) -> bytes:
     return base64.b64encode(hashlib.sha256(f"{password}&&{email}".encode("utf-8")).digest())
 
 
+def validate_email_pwd(email: str, password: str) -> const.Code:
+    if config.get_settings().ONE_USER:
+        logger.warning("on ONE_USER mode, user registration will be skipped")
+        return const.Code.ONE_USER_MODE
+    if VALID_EMAIL_PTN.match(email) is None:
+        return const.Code.INVALID_EMAIL
+    if VALID_PASSWORD_PTN.match(password) is None:
+        return const.Code.INVALID_PASSWORD
+    return const.Code.OK
+
+
 async def register_user(
         email: str,
         password: str,
         language: str = const.Language.EN.value,
 ) -> Tuple[str, const.Code]:
-    if config.get_settings().ONE_USER:
-        logger.warning("on ONE_USER mode, user registration will be skipped")
-        return "", const.Code.ONE_USER_MODE
-    if VALID_EMAIL_PTN.match(email) is None:
-        return "", const.Code.INVALID_EMAIL
-    if VALID_PASSWORD_PTN.match(password) is None:
-        return "", const.Code.INVALID_PASSWORD
+    code = validate_email_pwd(email=email, password=password)
+    if code != const.Code.OK:
+        return "", code
     u, code = await models.user.get_by_email(email=email)
     if code == const.Code.OK or u is not None:
         return "", const.Code.USER_EXIST
@@ -99,13 +113,9 @@ async def reset_password(
         email: str,
         password: str,
 ) -> Tuple[Optional[models.tps.UserMeta], const.Code]:
-    if config.get_settings().ONE_USER:
-        logger.warning("on ONE_USER mode, user registration will be skipped")
-        return None, const.Code.ONE_USER_MODE
-    if VALID_EMAIL_PTN.match(email) is None:
-        return None, const.Code.INVALID_EMAIL
-    if VALID_PASSWORD_PTN.match(password) is None:
-        return None, const.Code.INVALID_PASSWORD
+    code = validate_email_pwd(email=email, password=password)
+    if code != const.Code.OK:
+        return None, code
     u, code = await models.user.get_by_email(email=email)
     if code != const.Code.OK:
         return None, code
