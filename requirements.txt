@@ -17,5 +17,4 @@ numpy>=1.24.4
 whoosh>=2.7.4
 elasticsearch[async]~=8.11.0
 jieba>=0.42.1
-requests>=2.31.0
 starlette>=0.27.0
