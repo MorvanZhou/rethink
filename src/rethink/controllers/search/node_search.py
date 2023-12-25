@@ -76,7 +76,7 @@ async def recommend_nodes(
             requestId=req.requestId,
             nodes=[],
         )
-    max_return = 10
+    max_return = 5
     nodes = await models.search.recommend(
         uid=td.uid,
         content=req.content,

@@ -60,7 +60,7 @@ async def search(
 async def recommend(
         uid: str,
         content: str,
-        max_return: int = 10,
+        max_return: int = 5,
         exclude_nids: Sequence[str] = None,
 ) -> List[NodesSearchResponse.Data.Node]:
     if content == "":
