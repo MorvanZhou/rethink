@@ -154,7 +154,11 @@ class ESSearcher(BaseEngine):
                 raise RuntimeError(f"create index failed, resp: {resp}")
 
         settings = await self.es.indices.get_settings(index=self.index)
-        if settings.body[self.index]["settings"]["index"]["analysis"] != self.analysis:
+        try:
+            analysis = settings.body[self.index]["settings"]["index"]["analysis"]
+            if analysis != self.analysis:
+                await self.reindex()
+        except KeyError:
             await self.reindex()
 
     async def reindex(self):
