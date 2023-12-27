@@ -2,7 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple, Sequence
+from typing import List, Tuple, Sequence, Literal
 
 from rethink import const
 from rethink.models.utils import strip_html_tags
@@ -128,7 +128,9 @@ class BaseEngine(ABC):
             self,
             uid: str,
             query: str = "",
-            sort_key: str = None,
+            sort_key: Literal[
+                "createdAt", "modifiedAt", "title", "similarity"
+            ] = None,
             reverse: bool = False,
             page: int = 1,
             page_size: int = 10,

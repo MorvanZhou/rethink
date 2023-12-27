@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
+from rethink import const
 from .search import NodesSearchResponse
 
 
@@ -30,10 +31,10 @@ class NodeData(BaseModel):
 
 
 class PutRequest(BaseModel):
-    md: str
+    md: str = Field(max_length=const.MD_MAX_LENGTH)
     type: NonNegativeInt
-    requestId: str = ""
-    fromNid: str = ""
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+    fromNid: str = Field(default="", max_length=const.NID_MAX_LENGTH)
 
 
 class PutResponse(BaseModel):
@@ -51,14 +52,14 @@ class GetResponse(BaseModel):
 
 
 class UpdateRequest(BaseModel):
-    nid: str
-    md: str
-    requestId: str = ""
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    md: str = Field(max_length=const.MD_MAX_LENGTH)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class RestoreFromTrashRequest(BaseModel):
-    requestId: str
-    nid: str
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class GetFromTrashResponse(BaseModel):
@@ -69,5 +70,5 @@ class GetFromTrashResponse(BaseModel):
 
 
 class BatchNodeIdsRequest(BaseModel):
-    requestId: str
-    nids: List[str]
+    nids: List[str] = Field(default_factory=list, min_items=1, max_items=1000)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)

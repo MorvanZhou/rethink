@@ -1,4 +1,5 @@
 import datetime
+import html
 from typing import Optional, Tuple
 
 from bson import ObjectId
@@ -79,6 +80,7 @@ async def update(
     if hashed != "" and hashed != u["hashed"]:
         new_data["hashed"] = hashed
     nickname = nickname.strip()
+    nickname = html.escape(nickname)
     if nickname != "" and nickname != u["nickname"]:
         new_data["nickname"] = nickname
     avatar = str(avatar).strip()

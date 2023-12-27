@@ -242,7 +242,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],
-            cursor_text="text",
+            query="text",
             page=0,
             page_size=10,
         )
@@ -252,7 +252,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
-            cursor_text="",  # return recent nodes only
+            query="",  # return recent nodes only
             page=0,
             page_size=10,
         )
@@ -265,7 +265,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         recom, total = await models.search.cursor_query(
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
-            cursor_text="",
+            query="",
             page=0,
             page_size=10,
         )

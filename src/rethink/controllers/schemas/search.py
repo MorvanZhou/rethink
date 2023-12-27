@@ -1,6 +1,8 @@
-from typing import List, Sequence
+from typing import List, Sequence, Literal
 
 from pydantic import Field, BaseModel, NonNegativeInt
+
+from rethink import const
 
 
 class NodesSearchResponse(BaseModel):
@@ -26,27 +28,29 @@ class NodesSearchResponse(BaseModel):
 
 
 class SearchUserNodesRequest(BaseModel):
-    requestId: str
-    query: str = ""
-    sortKey: str = "createdAt"
+    query: str = Field(default="", max_length=const.SEARCH_QUERY_MAX_LENGTH)
+    sortKey: Literal[
+        "createdAt", "modifiedAt", "title", "similarity"
+    ] = Field(default="createdAt", max_length=20)
     reverse: bool = False
     page: NonNegativeInt = 0
     pageSize: NonNegativeInt = 0
-    nidExclude: Sequence[str] = Field(default_factory=list)
+    nidExclude: Sequence[str] = Field(default_factory=list, max_items=1000)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class CursorQueryRequest(BaseModel):
-    nid: str
-    textBeforeCursor: str
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    query: str = Field(max_length=const.SEARCH_QUERY_MAX_LENGTH)
     page: NonNegativeInt = 0
     pageSize: NonNegativeInt = 0
-    requestId: str = ""
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class RecommendNodesRequest(BaseModel):
-    requestId: str
-    content: str
-    nidExclude: Sequence[str] = Field(default_factory=list)
+    content: str = Field(max_length=const.RECOMMEND_CONTENT_MAX_LENGTH)
+    nidExclude: Sequence[str] = Field(default_factory=list, max_items=1000)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class RecommendNodesResponse(BaseModel):
@@ -57,14 +61,9 @@ class RecommendNodesResponse(BaseModel):
 
 
 class AddToRecentSearchHistRequest(BaseModel):
-    requestId: str
-    nid: str
-    toNid: str
-
-
-class PutRecentSearchRequest(BaseModel):
-    requestId: str
-    query: str
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    toNid: str = Field(max_length=const.NID_MAX_LENGTH)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class GetRecentSearchResponse(BaseModel):

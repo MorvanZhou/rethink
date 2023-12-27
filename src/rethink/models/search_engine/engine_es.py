@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Tuple, Sequence, Dict, Any
+from typing import List, Tuple, Sequence, Dict, Any, Literal
 
 from bson.tz_util import utc
 from elastic_transport import ObjectApiResponse
@@ -470,7 +470,9 @@ class ESSearcher(BaseEngine):
             self,
             uid: str,
             query: str = "",
-            sort_key: str = None,
+            sort_key: Literal[
+                "createdAt", "modifiedAt", "title", "similarity"
+            ] = None,
             reverse: bool = False,
             page: int = 0,
             page_size: int = 10,
@@ -563,7 +565,9 @@ class ESSearcher(BaseEngine):
             self,
             uid: str,
             query: str = "",
-            sort_key: str = None,
+            sort_key: Literal[
+                "createdAt", "modifiedAt", "title", "similarity"
+            ] = None,
             reverse: bool = False,
             page: int = 0,
             page_size: int = 10,

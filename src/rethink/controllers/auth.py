@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import re
 import traceback
 from typing import Optional, Tuple
 
@@ -8,14 +7,10 @@ import bcrypt
 import jwt
 from fastapi import Header
 
-from rethink import config, const, models
+from rethink import config, const, models, regex
 from rethink.controllers.utils import TokenDecode
 from rethink.logger import logger
 from rethink.models.utils import jwt_decode
-
-# at least 6 characters, at most 20 characters, at least one letter and one number
-VALID_PASSWORD_PTN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{6,20}$")
-VALID_EMAIL_PTN = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[A-Z|a-z]{2,}$")
 
 
 def __one_line_traceback() -> str:
@@ -72,9 +67,9 @@ def validate_email_pwd(email: str, password: str) -> const.Code:
     if config.get_settings().ONE_USER:
         logger.warning("on ONE_USER mode, user registration will be skipped")
         return const.Code.ONE_USER_MODE
-    if VALID_EMAIL_PTN.match(email) is None:
+    if regex.EMAIL_PTN.match(email) is None:
         return const.Code.INVALID_EMAIL
-    if VALID_PASSWORD_PTN.match(password) is None:
+    if regex.VALID_PASSWORD_PTN.match(password) is None:
         return const.Code.INVALID_PASSWORD
     return const.Code.OK
 

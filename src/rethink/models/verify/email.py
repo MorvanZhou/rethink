@@ -1,5 +1,4 @@
 import email.header
-import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -7,7 +6,7 @@ from textwrap import dedent
 from typing import List
 from typing import Tuple
 
-from rethink import const, config
+from rethink import const, config, regex
 
 
 class EmailServer:
@@ -45,9 +44,6 @@ class EmailServer:
         """),
     }
 
-    def __init__(self):
-        self.email_re = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
-
     @staticmethod
     def get_mask_email(e: str) -> str:
         name, end = e.split("@", 1)
@@ -80,8 +76,9 @@ class EmailServer:
             html_message=content
         )
 
-    def email_ok(self, email_addr: str) -> bool:
-        if self.email_re.fullmatch(email_addr) is None:
+    @staticmethod
+    def email_ok(email_addr: str) -> bool:
+        if regex.EMAIL_PTN.fullmatch(email_addr) is None:
             return False
         return True
 

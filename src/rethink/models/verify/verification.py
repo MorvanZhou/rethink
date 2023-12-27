@@ -32,6 +32,7 @@ def random_captcha(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str,
         exp_delta=timedelta(seconds=DEFAULT_CAPTCHA_EXPIRE_SECOND),
         data={"code": code_str.lower() + config.get_settings().CAPTCHA_SALT}
     )
+    # TODO: 以后有 redis 之后要考虑 token 的一次性校验。校验过一次后，需要主动失效
     return token, data
 
 

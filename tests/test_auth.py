@@ -2,7 +2,7 @@ import unittest
 
 import bcrypt
 
-from rethink import const
+from rethink import const, regex
 from rethink.controllers import auth
 from rethink.models import database
 from . import utils
@@ -27,6 +27,7 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
         email = "rethink@rethink.run"
         bpw = auth._base_password(password=password, email=email)
         token_str = bcrypt.hashpw(bpw, self.salt).decode("utf-8")
+        self.assertEqual(60, len(token_str))
         hashed = auth._base_password(password=password, email=email)
         match = bcrypt.checkpw(hashed, token_str.encode("utf-8"))
         self.assertTrue(match)
@@ -63,6 +64,6 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
             ("", False)
         ]:
             if b:
-                self.assertIsNotNone(auth.VALID_PASSWORD_PTN.match(t), msg=t)
+                self.assertIsNotNone(regex.VALID_PASSWORD_PTN.match(t), msg=t)
             else:
-                self.assertIsNone(auth.VALID_PASSWORD_PTN.match(t), msg=t)
+                self.assertIsNone(regex.VALID_PASSWORD_PTN.match(t), msg=t)

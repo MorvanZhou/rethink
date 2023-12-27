@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from rethink import const, config
 from rethink.logger import logger, add_rotating_file_handler
@@ -34,14 +35,27 @@ else:
         "*",
     ]
 
+
+class CSPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        csp_header = "default-src 'self'; " \
+                     "script-src 'self' 'unsafe-inline' https://unpkg.com https://www.googletagmanager.com; " \
+                     "style-src 'self' 'unsafe-inline' 'report-sample' https://unpkg.com; " \
+                     "img-src * data:; connect-src 'self' https://unpkg.com https://www.google-analytics.com;"
+        response.headers["Content-Security-Policy"] = csp_header
+        return response
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Captcha-Token"],
+    expose_headers=["X-Captcha-Token", "Content-Security-Policy"],
 )
+app.add_middleware(CSPMiddleware)
 
 app.include_router(node.router)
 app.include_router(user.router)

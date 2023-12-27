@@ -5,7 +5,7 @@ from fastapi import UploadFile
 from rethink import const, models
 from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode
-from ..utils import datetime2str
+from ..utils import datetime2str, is_allowed_mime_type
 
 
 async def upload_obsidian_files(
@@ -114,12 +114,33 @@ async def fetch_image_vditor(
         return schemas.files.ImageVditorFetchResponse(
             code=td.code.value,
             msg=const.get_msg_by_code(td.code, td.language),
-            data={},
+            data=schemas.files.ImageVditorFetchResponse.Data(
+                originalURL=req.url,
+                url="",
+            ),
+        )
+    if is_allowed_mime_type(req.url, ["image/svg+xml", "image/png", "image/jpeg", "image/gif"]):
+        return schemas.files.ImageVditorFetchResponse(
+            code=const.Code.OK.value,
+            msg=const.get_msg_by_code(const.Code.OK, td.language),
+            data=schemas.files.ImageVditorFetchResponse.Data(
+                originalURL=req.url,
+                url=req.url,
+            ),
+        )
+    if len(req.url) > 2048:
+        return schemas.files.ImageVditorFetchResponse(
+            code=const.Code.REQUEST_INPUT_ERROR.value,
+            msg=const.get_msg_by_code(const.Code.REQUEST_INPUT_ERROR, td.language),
+            data=schemas.files.ImageVditorFetchResponse.Data(
+                originalURL=req.url,
+                url="",
+            ),
         )
     new_url, code = await models.files.fetch_image_vditor(uid=td.uid, url=req.url)
     return schemas.files.ImageVditorFetchResponse(
-        code=const.Code.OK.value,
-        msg=const.get_msg_by_code(const.Code.OK, td.language),
+        code=code.value,
+        msg=const.get_msg_by_code(code, td.language),
         data=schemas.files.ImageVditorFetchResponse.Data(
             originalURL=req.url,
             url=new_url,

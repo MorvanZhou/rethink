@@ -17,7 +17,7 @@ async def cursor_query(
     nodes, total = await models.search.cursor_query(
         uid=td.uid,
         nid=req.nid,
-        cursor_text=req.textBeforeCursor,
+        query=req.query,
         page=req.page,
         page_size=req.pageSize,
     )

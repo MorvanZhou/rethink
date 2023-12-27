@@ -43,6 +43,8 @@ async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
 
 
 async def login(req: schemas.user.LoginRequest) -> schemas.base.TokenResponse:
+    # TODO: 后台应记录成功登录用户名和 IP、时间.
+    #  当尝试登录 IP 不在历史常登录 IP 地理位置时，应进行多因素二次验证用户身份，防止用户因密码泄漏被窃取账户
     u, code = await auth.get_user_by_email(req.email)
     if code != const.Code.OK:
         return schemas.base.TokenResponse(

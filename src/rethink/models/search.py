@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Sequence
+from typing import List, Dict, Tuple, Sequence, Literal
 
 from rethink import const
 from rethink.controllers.schemas.search import NodesSearchResponse
@@ -34,7 +34,9 @@ async def _2node_data(
 async def search(
         uid: str,
         query: str,
-        sort_key: str,
+        sort_key: Literal[
+            "createdAt", "modifiedAt", "title", "similarity"
+        ],
         reverse: bool,
         page: int,
         page_size: int,
@@ -78,7 +80,7 @@ async def recommend(
 async def cursor_query(
         uid: str,
         nid: str,
-        cursor_text: str,
+        query: str,
         page: int,
         page_size: int,
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
@@ -90,7 +92,7 @@ async def cursor_query(
     #         return None, []
     #     query = found.group(1).strip()
 
-    query = cursor_text.strip()
+    query = query.strip()
 
     # if query == "", return recent nodes
     if query == "":

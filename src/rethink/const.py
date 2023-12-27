@@ -6,6 +6,13 @@ from textwrap import dedent
 RETHINK_DIR = Path(__file__).parent
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
 MD_MAX_LENGTH = 100_000
+REQUEST_ID_MAX_LENGTH = 50
+NID_MAX_LENGTH = 30
+SEARCH_QUERY_MAX_LENGTH = 100
+RECOMMEND_CONTENT_MAX_LENGTH = 200
+EMAIL_MAX_LENGTH = 100
+PASSWORD_MAX_LENGTH = 20
+NICKNAME_MAX_LENGTH = 20
 
 
 class NodeType(Enum):
@@ -42,6 +49,7 @@ class Code(Enum):
     USER_SPACE_NOT_ENOUGH = auto()  # 26
     INVALID_NODE_DISPLAY_SORT_KEY = auto()  # 27
     INVALID_EMAIL = auto()  # 28
+    REQUEST_INPUT_ERROR = auto()  # 29
 
 
 INT_CODE_MAP = {
@@ -86,6 +94,7 @@ CODE_MESSAGES = {
     Code.USER_SPACE_NOT_ENOUGH: CodeMessage(zh="用户空间不足", en="User space not enough"),
     Code.INVALID_NODE_DISPLAY_SORT_KEY: CodeMessage(zh="无效的排序方式", en="Invalid sort key"),
     Code.INVALID_EMAIL: CodeMessage(zh="邮箱格式错误", en="Email format error"),
+    Code.REQUEST_INPUT_ERROR: CodeMessage(zh="请求输入错误", en="Request input error"),
 }
 
 DEFAULT_USER = {

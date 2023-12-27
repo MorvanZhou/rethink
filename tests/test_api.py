@@ -75,6 +75,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.token = rj["token"]
+        self.assertEqual(811, len(self.token))
 
     async def asyncTearDown(self) -> None:
         await database.drop_all()
@@ -245,7 +246,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "requestId": "xxx",
                 "nid": node["id"],
-                "textBeforeCursor": "How",
+                "query": "How",
                 "page": 0,
                 "pageSize": 10,
             },
@@ -521,6 +522,18 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             }}, rj["data"])
         f1.close()
         shutil.rmtree("temp", ignore_errors=True)
+
+    def test_fetch_image(self):
+        img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/" \
+              "w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+        resp = self.client.post(
+            "/api/files/imageFetchVditor",
+            json={"url": img},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual(img, rj["data"]["url"])
 
     @patch(
         "rethink.models.utils.httpx.AsyncClient.get",
