@@ -273,13 +273,11 @@ em.match {
 .sign-has-account:hover {
   color: #3d3d3d;
 }
-
 .next-disable-button:disabled {
   background-color: #e0e0e0;
   color: #9e9e9e;
   cursor: not-allowed;
 }
-
 .transition-height-08s {
   transition: height 0.8s ease-in-out;
 }
@@ -3623,11 +3621,9 @@ img[data-v-4f42ee16] {
   flex-wrap: nowrap;
   flex-direction: row;
 }
-
 .height-sm[data-v-0e4153a9] {
   height: 60px;
 }
-
 .hide-reco[data-v-0e4153a9] {
   height: 0;
   margin: 0;
