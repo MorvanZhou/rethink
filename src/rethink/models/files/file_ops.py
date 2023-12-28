@@ -2,6 +2,7 @@ import hashlib
 import io
 import re
 import zipfile
+from os.path import normpath
 from pathlib import Path
 from platform import system
 from typing import List, Tuple, BinaryIO, Dict, Union
@@ -71,6 +72,12 @@ def unzip_file(zip_bytes: bytes) -> Dict[str, Dict[str, Union[bytes, int]]]:
                 _filepath = "/".join(sp[1:])
             if _filepath.strip() == "" or _filepath.startswith("."):
                 continue
+
+            # Check for directory traversal
+            norm_path = normpath(_filepath)
+            if norm_path.startswith('../') or norm_path.startswith('..\\'):
+                continue  # or raise an exception
+
             extracted_files[_filepath] = {
                 "file": ref.read(filepath),
                 "size": info.file_size,

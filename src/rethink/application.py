@@ -47,6 +47,13 @@ class CSPMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class FrameOptionsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        return response
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
@@ -56,6 +63,7 @@ app.add_middleware(
     expose_headers=["X-Captcha-Token", "Content-Security-Policy"],
 )
 app.add_middleware(CSPMiddleware)
+app.add_middleware(FrameOptionsMiddleware)
 
 app.include_router(node.router)
 app.include_router(user.router)
