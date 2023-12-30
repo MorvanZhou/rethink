@@ -57,7 +57,6 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         u, code = await models.user.update(
             uid=_id,
-            email="a@a.com",
             hashed="1",
             nickname="2",
             avatar="3",
@@ -68,7 +67,6 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         u, code = await models.user.get(_id)
         self.assertEqual(const.Code.OK, code)
-        self.assertEqual("a@a.com", u["email"])
         self.assertEqual("1", u["hashed"])
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])

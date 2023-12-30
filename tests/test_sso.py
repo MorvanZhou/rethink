@@ -1,20 +1,23 @@
 import unittest
+from unittest.mock import patch
 
-from rethink import config
-from rethink.sso.github import GithubSSO
+from rethink import const
+from rethink.controllers import oauth
+from rethink.sso import github
+from tests import utils
 
 
 class SSOTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        config.get_settings.cache_clear()
+        utils.set_env(".env.test.local")
 
     @classmethod
     def tearDownClass(cls) -> None:
-        config.get_settings.cache_clear()
+        utils.drop_env(".env.test.local")
 
     async def test_github(self):
-        sso = GithubSSO(
+        sso = github.GithubSSO(
             client_id="",
             client_secret="",
             redirect_uri="",
@@ -30,7 +33,7 @@ class SSOTest(unittest.IsolatedAsyncioTestCase):
         }, await sso.get_discovery_document())
 
     async def test_github_openid_from_response(self):
-        sso = GithubSSO(
+        sso = github.GithubSSO(
             client_id="",
             client_secret="",
             redirect_uri="",
@@ -49,3 +52,13 @@ class SSOTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("login", open_id.display_name)
         self.assertEqual("avatar_url", open_id.picture)
         self.assertEqual("email", open_id.email)
+
+    @patch(
+        "rethink.sso.base.SSOBase.get_login_url",
+    )
+    async def test_login_github(self, mock_get_login_url):
+        mock_get_login_url.return_value = "https://github.com/"
+        res = await oauth.login_github()
+        self.assertEqual(const.Code.OK.value, res.code)
+        self.assertEqual(const.CODE_MESSAGES[const.Code.OK].en, res.message)
+        self.assertEqual("https://github.com/", res.uri.unicode_string())

@@ -132,7 +132,8 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             ),
             (
                     "https://rethink.run",
-                    """<meta content="Rethink" name="title"><title>rethink</title><meta content="Rethink: think differently" name="description">""",
+                    """<meta content="Rethink" name="title"><title>rethink</title>
+                    <meta content="Rethink: think differently" name="description">""",
                     True
             ),
             (
@@ -144,6 +145,21 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
                     "https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw",
                     """<title></title><meta name="description" content="" />""",
                     False),
+            (
+                    "http://127.0.0.1",
+                    "",
+                    False,
+            ),
+            (
+                    "http://127.0.2.1",
+                    "",
+                    False,
+            ),
+            (
+                    "http://9.0.0.1.xip.io/?id=1",
+                    "",
+                    False,
+            ),
         ]:
             if res:
                 mock_get.return_value = httpx.Response(
@@ -163,3 +179,15 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             else:
                 self.assertEqual("No title found", title, msg=f"{url} {title}")
                 self.assertEqual("No description found", desc, msg=f"{url} {desc}")
+
+    def test_mask_email(self):
+        for email, res in [
+            ("", ""),
+            ("a", "a"),
+            ("a@b", "a**@b"),
+            ("ab@b", "a**b@b"),
+            ("abc@b", "ab**c@b"),
+            ("abcd@b", "ab**d@b"),
+            ("abcdef@b", "ab**f@b"),
+        ]:
+            self.assertEqual(res, utils.mask_email(email))

@@ -49,7 +49,6 @@ class LoginRequest(BaseModel):
 
 
 class UpdateRequest(BaseModel):
-    email: str = Field(default="", max_length=const.EMAIL_MAX_LENGTH)
     nickname: str = Field(default="", max_length=const.NICKNAME_MAX_LENGTH)
     avatar: str = Field(default="", max_length=2048)
     language: Literal["en", "zh"] = ""

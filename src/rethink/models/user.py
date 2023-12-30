@@ -55,7 +55,6 @@ async def add(
 
 async def update(
         uid: str,
-        email: str = "",
         hashed: str = "",
         nickname: str = "",
         avatar: str = "",
@@ -66,15 +65,8 @@ async def update(
     u, code = await get(uid=uid)
     if code != const.Code.OK:
         return None, code
-    email = email.strip()
-    if email not in ["", u["email"]] and await COLL.users.find_one(
-            {"account": email, "source": const.UserSource.EMAIL.value}
-    ) is not None:
-        return None, const.Code.EMAIL_OCCUPIED
 
     new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
-    if email != "" and email != u["email"]:
-        new_data["email"] = email
 
     hashed = hashed.strip()
     if hashed != "" and hashed != u["hashed"]:

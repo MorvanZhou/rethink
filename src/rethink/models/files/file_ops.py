@@ -283,6 +283,7 @@ async def save_upload_files(
     }
     for file in files:
         filename = file.filename
+        # validate MIME image type
         if not file.content_type.startswith("image/"):
             res["errFiles"].append(filename)
             continue

@@ -7,6 +7,7 @@ from typing import List
 from typing import Tuple
 
 from rethink import const, config, regex
+from rethink.models import utils
 
 
 class EmailServer:
@@ -44,17 +45,6 @@ class EmailServer:
         """),
     }
 
-    @staticmethod
-    def get_mask_email(e: str) -> str:
-        name, end = e.split("@", 1)
-        if len(name) <= 1:
-            e = f"{name[0]}**@{end}"
-        elif len(name) == 2:
-            e = f"{name[0]}**{name[1]}@{end}"
-        else:
-            e = f"{name[:2]}**{name[-1]}@{end}"
-        return e
-
     def get_subject_content(self, recipient: str, numbers: str, expire: int, language: str) -> Tuple[str, str]:
         try:
             subject = self.lang_subject[language]
@@ -62,7 +52,7 @@ class EmailServer:
         except KeyError:
             subject = self.lang_subject[self.default_language]
             content_temp = self.lang_content[self.default_language]
-        content = content_temp.format(email=self.get_mask_email(recipient), numbers=numbers, expire=expire)
+        content = content_temp.format(email=utils.mask_email(recipient), numbers=numbers, expire=expire)
         return subject, content
 
     def send(self, recipient: str, numbers: str, expire: int, language: str) -> const.Code:

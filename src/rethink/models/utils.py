@@ -1,11 +1,14 @@
 import datetime
 import io
+import ipaddress
 import math
 import re
+import socket
 import uuid
 from html.parser import HTMLParser
 from io import StringIO
 from typing import Tuple
+from urllib.parse import urlparse
 
 import httpx
 import jwt
@@ -156,6 +159,39 @@ ASYNC_CLIENT_HEADERS = {
 }
 
 
+def is_internal_ip(ip):
+    internal_ip_ranges = [
+        ("127.0.0.0", "127.255.255.255"),
+        ("10.0.0.0", "10.255.255.255"),
+        ("9.0.0.0", "9.255.255.255"),
+        ("100.64.0.0", "100.127.255.255"),
+        ("192.168.0.0", "192.168.255.255"),
+        ("172.16.0.0", "172.31.255.255"),
+    ]
+
+    for start, end in internal_ip_ranges:
+        if ipaddress.IPv4Address(start) <= ip <= ipaddress.IPv4Address(end):
+            return True
+    return False
+
+
+# SSRF protection
+def ssrf_check(url: str) -> bool:
+    if url.startswith("http://localhost") or url.startswith("http://127.0.0.1"):
+        return True
+    if '@' in url:
+        return True
+    host = urlparse(url).hostname
+    try:
+        ip = ipaddress.IPv4Address(socket.gethostbyname(host))
+    except socket.gaierror:
+        return True
+    if ip.is_private:
+        return True
+    if is_internal_ip(ip):
+        return True
+
+
 async def get_title_description_from_link(url: str, language: str) -> Tuple[str, str]:
     if language == const.Language.ZH.value:
         no_title = "网址没发现标题"
@@ -166,6 +202,12 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
     else:
         no_title = "No title found"
         no_description = "No description found"
+
+    # SSRF protection
+    if ssrf_check(url):
+        return no_title, no_description
+    # end of SSRF protection
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -182,8 +224,10 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
         ) as e:
             logger.info(f"failed to get {url}: {e}")
             return no_title, no_description
-        if response.status_code in [302, 301]:
+        if response.status_code in (301, 302):
             url = response.headers["Location"]
+            if ssrf_check(url):
+                return no_title, no_description
             return await get_title_description_from_link(url=url, language=language)
         if response.status_code != 200:
             return no_title, no_description
@@ -229,3 +273,18 @@ def strip_html_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()
+
+
+def mask_email(email: str):
+    if email == "":
+        return ""
+    if "@" not in email:
+        return email
+    name, end = email.split("@", 1)
+    if len(name) <= 1:
+        e = f"{name[0]}**@{end}"
+    elif len(name) == 2:
+        e = f"{name[0]}**{name[1]}@{end}"
+    else:
+        e = f"{name[:2]}**{name[-1]}@{end}"
+    return e

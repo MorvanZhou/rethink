@@ -1,7 +1,7 @@
 from rethink import const, models, config
 from rethink.controllers import schemas, auth
 from rethink.controllers.utils import TokenDecode, datetime2str
-from rethink.models.utils import jwt_encode
+from rethink.models.utils import jwt_encode, mask_email
 from rethink.models.verify.verification import verify_captcha
 
 
@@ -90,6 +90,7 @@ async def get_user(
             code=code.value,
             message=const.get_msg_by_code(code, td.language),
         )
+    u["email"] = mask_email(u["email"])
     if config.is_local_db():
         max_space = 0
     else:
@@ -127,7 +128,6 @@ async def update_user(
         )
     u, code = await models.user.update(
         uid=td.uid,
-        email=req.email,
         nickname=req.nickname,
         avatar=req.avatar,
         language=req.language,
