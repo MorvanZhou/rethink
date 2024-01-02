@@ -14,6 +14,7 @@ from .database import COLL, searcher
 
 AT_PTN = re.compile(r'\[@[ \w\u4e00-\u9fa5！？。，￥【】「」]+?]\(([\w/]+?)\)', re.MULTILINE)
 CURSOR_AT_PTN = re.compile(r'\s+?@([\w ]*)$')
+NID_PTN = re.compile(fr"^[A-Za-z0-9]{{20,{const.NID_MAX_LENGTH}}}$")
 
 
 def __get_linked_nodes(new_md) -> Tuple[set, const.Code]:
@@ -172,7 +173,8 @@ async def get_batch(
         in_trash: bool = False,
 ) -> Tuple[List[tps.Node], const.Code]:
     for nid in nids:
-        if utils.alphabet_ptn.match(nid) is None:
+        if NID_PTN.match(nid) is None:
+            logger.error(f"invalid nid: {nid}")
             return [], const.Code.NODE_NOT_EXIST
     c: Dict[str, Any] = {"uid": uid, "inTrash": in_trash}
     if len(nids) > 1:
@@ -183,6 +185,7 @@ async def get_batch(
         c["disabled"] = False
     docs = await COLL.nodes.find(c).to_list(length=None)
     if len(docs) != len(nids):
+        logger.error(f"docs len != nids len: {nids}")
         return [], const.Code.NODE_NOT_EXIST
 
     await __set_linked_nodes(
@@ -198,7 +201,7 @@ async def update(
         md: str,
         refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
-    if utils.alphabet_ptn.match(nid) is None:
+    if NID_PTN.match(nid) is None:
         return None, const.Code.NODE_NOT_EXIST
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
@@ -393,7 +396,7 @@ async def disable(
         uid: str,
         nid: str,
 ) -> const.Code:
-    if utils.alphabet_ptn.match(nid) is None:
+    if NID_PTN.match(nid) is None:
         return const.Code.NODE_NOT_EXIST
     if not await user.is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR

@@ -23,7 +23,6 @@ HEADERS = {
 }
 alphabet = "3467ACDEFGHJKLMNPQRTUVWXYabcdefghkmnoprtuvwxy"
 alphabet_len = len(alphabet)
-alphabet_ptn = re.compile(fr"^[{alphabet}]{{20,{const.NID_MAX_LENGTH}}}$")
 __padding = int(math.ceil(math.log(2 ** 128, alphabet_len)))
 __code_pattern = re.compile(r"^```[^\S\r\n]*[a-z]*?\n(.*?)\n```$", re.MULTILINE | re.DOTALL)
 
