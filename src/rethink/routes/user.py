@@ -7,7 +7,7 @@ from rethink.controllers import schemas
 from rethink.controllers.auth import token2uid
 from rethink.controllers.user import user_ops, forget_password
 from rethink.controllers.utils import TokenDecode
-from rethink.routes.utils import measure_time_spend
+from rethink.routes.utils import measure_time_spend, verify_referer
 
 router = APIRouter(
     prefix="/api",
@@ -22,7 +22,8 @@ router = APIRouter(
 )
 @measure_time_spend
 async def login(
-        req: schemas.user.LoginRequest
+        req: schemas.user.LoginRequest,
+        referer: Optional[str] = Depends(verify_referer),
 ) -> schemas.base.TokenResponse:
     return await user_ops.login(req=req)
 
@@ -33,7 +34,8 @@ async def login(
 )
 @measure_time_spend
 async def register(
-        req: schemas.user.RegisterRequest
+        req: schemas.user.RegisterRequest,
+        referer: Optional[str] = Depends(verify_referer),
 ) -> schemas.base.TokenResponse:
     return await user_ops.put(req=req)
 
@@ -59,7 +61,8 @@ async def get_user(
 @measure_time_spend
 async def update_user(
         req: schemas.user.UpdateRequest,
-        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        referer: Optional[str] = Depends(verify_referer),
 ) -> schemas.user.UserInfoResponse:
     return await user_ops.update_user(
         td=token_decode,
@@ -74,5 +77,6 @@ async def update_user(
 @measure_time_spend
 async def reset_password(
         req: schemas.user.ResetPasswordRequest,
+        referer: Optional[str] = Depends(verify_referer),
 ) -> schemas.base.AcknowledgeResponse:
     return await forget_password.reset_password(req=req)

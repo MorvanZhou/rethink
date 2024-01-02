@@ -3,6 +3,7 @@ from enum import Enum, auto, unique
 from pathlib import Path
 from textwrap import dedent
 
+DOMAIN = "rethink.run"
 RETHINK_DIR = Path(__file__).parent
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
 MD_MAX_LENGTH = 100_000

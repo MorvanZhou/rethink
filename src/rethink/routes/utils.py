@@ -1,6 +1,11 @@
 import time
 from functools import wraps
+from typing import Optional
 
+from fastapi import HTTPException, Header
+from starlette.status import HTTP_403_FORBIDDEN
+
+from rethink import const, config
 from rethink.logger import logger
 
 
@@ -38,3 +43,12 @@ def measure_time_spend(func):
         return resp
 
     return wrapper
+
+
+def verify_referer(referer: Optional[str] = Header(None)):
+    if config.get_settings().VERIFY_REFERER and referer != f"https://{const.DOMAIN}":
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Invalid referer",
+        )
+    return referer

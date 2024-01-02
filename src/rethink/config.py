@@ -14,6 +14,7 @@ from rethink.logger import logger
 
 class Settings(BaseSettings):
     ONE_USER: bool = Field(default=1, env='ONE_USER')
+    VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='LOCAL_STORAGE_PATH', default=None)
     DB_NAME: str = Field(env='DB_NAME', default="")
     DB_USER: str = Field(env='DB_USER', default="")

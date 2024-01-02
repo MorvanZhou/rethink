@@ -1,7 +1,7 @@
 import datetime
 import re
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Dict, Any
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -171,7 +171,10 @@ async def get_batch(
         with_disabled: bool = False,
         in_trash: bool = False,
 ) -> Tuple[List[tps.Node], const.Code]:
-    c = {"uid": uid, "inTrash": in_trash}
+    for nid in nids:
+        if utils.alphabet_ptn.match(nid) is None:
+            return [], const.Code.NODE_NOT_EXIST
+    c: Dict[str, Any] = {"uid": uid, "inTrash": in_trash}
     if len(nids) > 1:
         c["id"] = {"$in": nids}
     elif len(nids) == 1:
@@ -195,6 +198,8 @@ async def update(
         md: str,
         refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
+    if utils.alphabet_ptn.match(nid) is None:
+        return None, const.Code.NODE_NOT_EXIST
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
@@ -388,6 +393,8 @@ async def disable(
         uid: str,
         nid: str,
 ) -> const.Code:
+    if utils.alphabet_ptn.match(nid) is None:
+        return const.Code.NODE_NOT_EXIST
     if not await user.is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
     res = await COLL.nodes.update_one(
