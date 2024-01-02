@@ -79,7 +79,7 @@ app.include_router(email.router)
 async def startup_event():
     if not config.is_local_db():
         add_rotating_file_handler(
-            log_dir=const.RETHINK_DIR.parent.parent / ".logs",
+            log_dir=const.RETHINK_DIR.parent.parent / "logs",
             max_bytes=10 * 1024 * 1024,
             backup_count=10,
         )

@@ -29,13 +29,13 @@ async def token2uid(token: str = Header(...)) -> TokenDecode:
             return TokenDecode(code=code, language=language)
         uid = u["id"]
         language = u["language"]
-    except jwt.ExpiredSignatureError:
+    except jwt.exceptions.ExpiredSignatureError:
         code = const.Code.EXPIRED_AUTH
         err = __one_line_traceback()
-    except jwt.DecodeError:
+    except jwt.exceptions.DecodeError:
         code = const.Code.INVALID_AUTH
         err = __one_line_traceback()
-    except jwt.InvalidTokenError:
+    except jwt.exceptions.InvalidTokenError:
         code = const.Code.INVALID_AUTH
         err = __one_line_traceback()
     except Exception:  # pylint: disable=broad-except
