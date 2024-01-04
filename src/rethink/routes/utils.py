@@ -9,6 +9,9 @@ from rethink import const, config
 from rethink.logger import logger
 
 
+REFERER_PREFIX = f"https://{const.DOMAIN}"
+
+
 def measure_time_spend(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -46,7 +49,8 @@ def measure_time_spend(func):
 
 
 def verify_referer(referer: Optional[str] = Header(None)):
-    if config.get_settings().VERIFY_REFERER and referer != f"https://{const.DOMAIN}":
+    if config.get_settings().VERIFY_REFERER and not referer.startswith(REFERER_PREFIX):
+        logger.error(f"referer={referer} not startswith {REFERER_PREFIX}")
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Invalid referer",
