@@ -31,7 +31,7 @@ async def token2uid(token: str = Header(...)) -> TokenDecode:
         language = u["language"]
     except jwt.exceptions.ExpiredSignatureError:
         code = const.Code.EXPIRED_AUTH
-        err = __one_line_traceback()
+        err = "auth token expired"
     except jwt.exceptions.DecodeError:
         code = const.Code.INVALID_AUTH
         err = __one_line_traceback()

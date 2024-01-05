@@ -60,7 +60,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Captcha-Token", "Content-Security-Policy"],
+    expose_headers=["X-Captcha-Token"],
 )
 app.add_middleware(CSPMiddleware)
 app.add_middleware(FrameOptionsMiddleware)
