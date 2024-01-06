@@ -16,11 +16,7 @@
 A note-taking app dependent on python.
 The official web version can be found at [https://rethink.run](https://rethink.run).
 
-![image](https://github.com/MorvanZhou/rethink/blob/main/img/notes-page.png?raw=true)
-
-![editor](https://github.com/MorvanZhou/rethink/blob/main/img/editor.png?raw=true)
-
-![phone](https://github.com/MorvanZhou/rethink/blob/main/img/phone.png?raw=true)
+<video src="https://github.com/MorvanZhou/rethink/blob/main/img/demo.mp4" controls="controls" width="100%" height="auto" style="max-width:100%;"></video>
 
 ## Why Rethink
 
@@ -42,7 +38,7 @@ note-taking app includes:
 3. **Automatic association**: Too many notes? Don't remember what you wrote before?
    Unable to effectively form a note network?
    Rethink automatically recommend related notes while writing,
-   actively assist you in forming a knowledge network. (Working in progress)
+   actively assist you in forming a knowledge network.
 4. **Local storage**: Rethink attaches great importance to data security.
    You can store data in a local storage.
    Or you can also use the online version [https://rethink.run](https://rethink.run),

@@ -17,11 +17,7 @@
 一个依赖于 Python 的笔记应用。
 官方网页版可以在 [https://rethink.run](https://rethink.run) 找到。
 
-![image](https://github.com/MorvanZhou/rethink/blob/main/img/notes-page.png?raw=true)
-
-![editor](https://github.com/MorvanZhou/rethink/blob/main/img/editor.png?raw=true)
-
-![phone](https://github.com/MorvanZhou/rethink/blob/main/img/phone.png?raw=true)
+<video src="https://github.com/MorvanZhou/rethink/blob/main/img/demo.mp4" controls="controls" width="100%" height="auto" style="max-width:100%;"></video>
 
 ## 为什么有 Rethink
 
@@ -36,7 +32,7 @@ Rethink 的诞生源于我无法找到一款真正满足我的需求的记笔记
 
 1. **双向链接**：知识网络至关重要。Rethink 允许您在笔记中一键 @ 链接到其他笔记；
 2. **Markdown 语法**：无缝支持 Markdown 语法，笔记格式更易控制；
-3. **自动关联**：笔记太多？记不住以前写过什么？无法有效形成笔记网络？Rethink 在您编写时自动推荐相关笔记，积极帮助您建立知识网络；（正在开发中）
+3. **自动关联**：笔记太多？记不住以前写过什么？无法有效形成笔记网络？Rethink 在您编写时自动推荐相关笔记，积极帮助您建立知识网络；
 4. **本地存储**：Rethink 非常重视数据安全。您可以将数据存储在本地存储中。或者，您也可以使用在线版本 https://rethink.run
    ，便于在多个平台之间同步；
 5. **多语言**：支持多种语言，包括中文和英文。
