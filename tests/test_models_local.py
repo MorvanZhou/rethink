@@ -23,10 +23,15 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
+        # create a fake image
+        tmp_path = Path(__file__).parent / "tmp" / "fake.png"
+        tmp_path.parent.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (100, 100)).save(tmp_path)
 
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
+        shutil.rmtree(Path(__file__).parent / "tmp", ignore_errors=True)
 
     async def asyncSetUp(self) -> None:
         await models.database.drop_all()
@@ -387,20 +392,20 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     async def test_upload_image_vditor(self):
         u, code = await models.user.get(self.uid)
         used_space = u["usedSpace"]
+        p = Path(__file__).parent / "tmp" / "fake.png"
 
-        p = Path(__file__).parent.parent / "img" / "phone-notes.png"
         image = Image.open(p)
         buf = BytesIO()
         image.save(buf, format="png")
         size = buf.tell()
         img_file = UploadFile(
-            buf, filename="phone-notes.png", size=size,
+            buf, filename="fake.png", size=size,
             headers=Headers({"content-type": "image/png"})
         )
         res = await models.files.upload_image_vditor(self.uid, [img_file])
-        self.assertIn("phone-notes.png", res["succMap"])
-        self.assertTrue(".png" in res["succMap"]["phone-notes.png"])
-        local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["phone-notes.png"][1:]
+        self.assertIn("fake.png", res["succMap"])
+        self.assertTrue(".png" in res["succMap"]["fake.png"])
+        local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["fake.png"][1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
         image.close()
@@ -414,7 +419,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         "rethink.models.files.upload.httpx.AsyncClient.get",
     )
     async def test_fetch_image_vditor(self, mock_get):
-        f = open(Path(__file__).parent.parent / "img" / "phone-notes.png", "rb")
+        f = open(Path(__file__).parent / "tmp" / "fake.png", "rb")
         mock_get.return_value = httpx.Response(
             200,
             content=f.read(),
