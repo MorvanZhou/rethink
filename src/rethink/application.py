@@ -30,19 +30,22 @@ if os.getenv("VUE_APP_MODE", "local") not in ["development", "local"]:
         "https://rethink.run",
         "https://www.rethink.run",
     ]
+    csp_local = ""
 else:
     allow_origins = [
         "*",
     ]
+    csp_local = " http://localhost:* http://127.0.0.1:* "
 
 
 class CSPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         csp_header = "default-src 'self'; " \
-                     "script-src 'self' 'unsafe-inline' https://unpkg.com https://www.googletagmanager.com; " \
-                     "style-src 'self' 'unsafe-inline' 'report-sample' https://unpkg.com; " \
-                     "img-src * data:; connect-src 'self' https://unpkg.com https://www.google-analytics.com;"
+                     f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {csp_local} https://www.googletagmanager.com; " \
+                     f"style-src 'self' 'unsafe-inline' 'report-sample' {csp_local}; " \
+                     "img-src * data: blob:; " \
+                     f"connect-src 'self' {csp_local} https://www.google-analytics.com;"
         response.headers["Content-Security-Policy"] = csp_header
         return response
 
@@ -101,21 +104,12 @@ async def shutdown_event():
 
 
 try:
-    app.mount(
-        "/css",
-        StaticFiles(directory=const.FRONTEND_DIR / "css"),
-        name="css",
-    )
-    app.mount(
-        "/js",
-        StaticFiles(directory=const.FRONTEND_DIR / "js"),
-        name="js",
-    )
-    app.mount(
-        "/img",
-        StaticFiles(directory=const.FRONTEND_DIR / "img"),
-        name="img",
-    )
+    for name in ["css", "js", "img", "dist"]:
+        app.mount(
+            f"/{name}",
+            StaticFiles(directory=const.FRONTEND_DIR / name),
+            name=name,
+        )
 except RuntimeError:
     logger.info("mount frontend failed")
 
