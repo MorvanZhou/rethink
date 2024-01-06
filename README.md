@@ -16,7 +16,7 @@
 A note-taking app dependent on python.
 The official web version can be found at [https://rethink.run](https://rethink.run).
 
-<video src="https://github.com/MorvanZhou/rethink/blob/main/img/demo.mp4" controls="controls" width="100%" height="auto" style="max-width:100%;"></video>
+![demo](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
 
 ## Why Rethink
 

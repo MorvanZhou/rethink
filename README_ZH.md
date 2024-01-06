@@ -17,7 +17,7 @@
 一个依赖于 Python 的笔记应用。
 官方网页版可以在 [https://rethink.run](https://rethink.run) 找到。
 
-<video src="https://github.com/MorvanZhou/rethink/blob/main/img/demo.mp4" controls="controls" width="100%" height="auto" style="max-width:100%;"></video>
+![demo](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
 
 ## 为什么有 Rethink
 
