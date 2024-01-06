@@ -10,6 +10,7 @@ from starlette.datastructures import Headers
 from rethink import const, models
 from rethink.config import is_local_db
 from rethink.logger import logger
+from rethink.models.utils import ssrf_check, ASYNC_CLIENT_HEADERS
 from . import file_ops, queuing_upload
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
@@ -141,7 +142,13 @@ async def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
     )
 
 
-async def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
+async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Code]:
+    if count > 2:
+        logger.info(f"too many 30X code, failed to get {url}")
+        return "", const.Code.FILE_OPEN_ERROR
+    if ssrf_check(url):
+        logger.info(f"ssrf check failed: {url}")
+        return "", const.Code.FILE_OPEN_ERROR
     u, code = await models.user.get(uid=uid)
     if code != const.Code.OK:
         return "", code
@@ -151,7 +158,8 @@ async def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
         try:
             response = await client.get(
                 url=url,
-                headers=models.utils.ASYNC_CLIENT_HEADERS,
+                headers=ASYNC_CLIENT_HEADERS,
+                follow_redirects=False,
                 timeout=5.
             )
         except (
@@ -163,13 +171,15 @@ async def fetch_image_vditor(uid: str, url: str) -> Tuple[str, const.Code]:
         ) as e:
             logger.info(f"failed to get {url}: {e}")
             return "", const.Code.FILE_OPEN_ERROR
-        if response.status_code != 200:
+        if response.status_code in [301, 302]:
+            return await fetch_image_vditor(uid=uid, url=response.headers["Location"], count=count + 1)
+        elif response.status_code != 200:
             return "", const.Code.FILE_OPEN_ERROR
 
         content = response.content
 
         file = UploadFile(
-            filename=url.split("/")[-1],
+            filename=url.split("?", 1)[0].split("/")[-1],  # remove url parameters
             file=io.BytesIO(content),
             headers=Headers(response.headers),
             size=len(content)

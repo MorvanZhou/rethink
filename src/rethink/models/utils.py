@@ -143,10 +143,10 @@ ASYNC_CLIENT_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
               "application/signed-exchange;v=b3;q=0.7",
     "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "zh",
+    "Accept-Language": "zh,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
-    "Sec-Ch-Ua": '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": '"macOS"',
     "Sec-Fetch-Dest": "document",
@@ -154,8 +154,8 @@ ASYNC_CLIENT_HEADERS = {
     "Sec-Fetch-Site": "none",
     "Sec-Fetch-User": "?1",
     "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
 
 
@@ -192,7 +192,7 @@ def ssrf_check(url: str) -> bool:
         return True
 
 
-async def get_title_description_from_link(url: str, language: str) -> Tuple[str, str]:
+async def get_title_description_from_link(url: str, language: str, count=0) -> Tuple[str, str]:
     if language == const.Language.ZH.value:
         no_title = "网址没发现标题"
         no_description = "网址没发现描述"
@@ -202,6 +202,10 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
     else:
         no_title = "No title found"
         no_description = "No description found"
+
+    if count > 2:
+        logger.info(f"too many 30X code, failed to get {url}")
+        return no_title, no_description
 
     # SSRF protection
     if ssrf_check(url):
@@ -225,10 +229,11 @@ async def get_title_description_from_link(url: str, language: str) -> Tuple[str,
             logger.info(f"failed to get {url}: {e}")
             return no_title, no_description
         if response.status_code in (301, 302):
-            url = response.headers["Location"]
-            if ssrf_check(url):
-                return no_title, no_description
-            return await get_title_description_from_link(url=url, language=language)
+            return await get_title_description_from_link(
+                url=response.headers["Location"],
+                language=language,
+                count=count + 1,
+            )
         if response.status_code != 200:
             return no_title, no_description
         html = response.text
