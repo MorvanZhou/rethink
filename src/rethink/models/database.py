@@ -4,11 +4,10 @@ import json
 import os
 import struct
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 from bson import ObjectId
 from bson.tz_util import utc
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 from rethink import config, const
 from rethink.logger import logger
@@ -16,21 +15,24 @@ from rethink.mongita import MongitaClientDisk
 from rethink.mongita.collection import Collection
 from . import utils
 from .search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
-from .search_engine.engine_es import ESSearcher
 from .search_engine.engine_local import LocalSearcher
 from .tps import UserMeta, Node, UserFile, ImportData
+
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
+    from .search_engine.engine_es import ESSearcher
 
 
 @dataclass
 class Collections:
-    users: Union[Collection, AsyncIOMotorCollection] = None
-    nodes: Union[Collection, AsyncIOMotorCollection] = None
-    import_data: Union[Collection, AsyncIOMotorCollection] = None
-    user_file: Union[Collection, AsyncIOMotorCollection] = None
+    users: Union[Collection, "AsyncIOMotorCollection"] = None
+    nodes: Union[Collection, "AsyncIOMotorCollection"] = None
+    import_data: Union[Collection, "AsyncIOMotorCollection"] = None
+    user_file: Union[Collection, "AsyncIOMotorCollection"] = None
 
 
 COLL = Collections()
-CLIENT: Optional[Union[AsyncIOMotorClient, MongitaClientDisk]] = None
+CLIENT: Optional[Union["AsyncIOMotorClient", MongitaClientDisk]] = None
 SEARCHER: Optional[BaseEngine] = None
 
 
@@ -52,8 +54,10 @@ async def set_client():
             SEARCHER = LocalSearcher()
         CLIENT = MongitaClientDisk(db_path)
     else:
+        from .search_engine.engine_es import ESSearcher
         if not isinstance(SEARCHER, ESSearcher):
             SEARCHER = ESSearcher()
+        from motor.motor_asyncio import AsyncIOMotorClient
         CLIENT = AsyncIOMotorClient(
             host=conf.DB_HOST,
             port=conf.DB_PORT,
@@ -96,6 +100,7 @@ async def drop_all():
 
 async def __remote_try_build_index():
     # try creating index
+    from motor.motor_asyncio import AsyncIOMotorClient
     if not isinstance(CLIENT, AsyncIOMotorClient):
         return
 
@@ -144,7 +149,7 @@ async def __local_try_add_default_user():
     ns = const.NEW_USER_DEFAULT_NODES[u_insertion["language"]]
     search_docs = []
 
-    async def create_node(md: str):
+    async def create_node(md: str, to_nid: Optional[str] = None):
         title_, body_, snippet_ = utils.preprocess_md(md)
         n: Node = {
             "_id": ObjectId(),
@@ -159,7 +164,7 @@ async def __local_try_add_default_user():
             "modifiedAt": datetime.datetime.now(tz=utc),
             "inTrashAt": None,
             "fromNodeIds": [],
-            "toNodeIds": [],
+            "toNodeIds": [] if to_nid is None else [to_nid],
         }
         res = await COLL.nodes.insert_one(n)
         if not res.acknowledged:
@@ -179,7 +184,7 @@ async def __local_try_add_default_user():
 
     n0 = await create_node(ns[0])
     _md = ns[1].format(n0["id"])
-    n1 = await create_node(_md)
+    n1 = await create_node(_md, to_nid=n0["id"])
 
     u: UserMeta = {
         "_id": ObjectId(u_insertion["_id"]),
