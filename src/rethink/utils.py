@@ -74,7 +74,7 @@ def jwt_decode(token: str) -> dict:
     )
 
 
-class MLStripper(HTMLParser):
+class HTMLStripper(HTMLParser):
     def __init__(self):
         super().__init__()
         self.reset()
@@ -89,9 +89,9 @@ class MLStripper(HTMLParser):
         return self.text.getvalue()
 
 
-def strip_html_tags(html):
-    s = MLStripper()
-    s.feed(html)
+def strip_html_tags(html: str) -> str:
+    s = HTMLStripper()
+    s.feed(html[:1000])
     return s.get_data()
 
 
@@ -146,7 +146,6 @@ def change_link_title(md: str, nid: str, new_title: str) -> str:
         md,
     )
     return new_md
-
 
 
 def contain_only_http_link(md: str) -> str:
