@@ -5,9 +5,9 @@ from typing import Optional, Tuple
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import const, config
-from . import tps, utils
-from .database import COLL
+from rethink import const, config, utils
+from rethink.models import tps
+from rethink.models.database import COLL
 
 
 async def add(

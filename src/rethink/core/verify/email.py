@@ -3,11 +3,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from textwrap import dedent
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
-from rethink import const, config, regex
-from rethink.models import utils
+from rethink import const, config, regex, utils
 
 
 class EmailServer:
@@ -68,7 +66,7 @@ class EmailServer:
 
     @staticmethod
     def email_ok(email_addr: str) -> bool:
-        if regex.EMAIL_PTN.fullmatch(email_addr) is None:
+        if regex.EMAIL.fullmatch(email_addr) is None:
             return False
         return True
 

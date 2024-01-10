@@ -64,6 +64,6 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
             ("", False)
         ]:
             if b:
-                self.assertIsNotNone(regex.VALID_PASSWORD_PTN.match(t), msg=t)
+                self.assertIsNotNone(regex.VALID_PASSWORD.match(t), msg=t)
             else:
-                self.assertIsNone(regex.VALID_PASSWORD_PTN.match(t), msg=t)
+                self.assertIsNone(regex.VALID_PASSWORD.match(t), msg=t)

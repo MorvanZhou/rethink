@@ -9,18 +9,17 @@ from typing import Optional, Union, TYPE_CHECKING
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import config, const
+from rethink import config, const, utils
+from rethink.depend.mongita import MongitaClientDisk
+from rethink.depend.mongita.collection import Collection
 from rethink.logger import logger
-from rethink.mongita import MongitaClientDisk
-from rethink.mongita.collection import Collection
-from . import utils
-from .search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
-from .search_engine.engine_local import LocalSearcher
+from rethink.models.search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
+from rethink.models.search_engine.engine_local import LocalSearcher
 from .tps import UserMeta, Node, UserFile, ImportData
 
 if TYPE_CHECKING:
     from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
-    from .search_engine.engine_es import ESSearcher
+    from rethink.models.search_engine.engine_es import ESSearcher
 
 
 @dataclass
@@ -54,7 +53,7 @@ async def set_client():
             SEARCHER = LocalSearcher()
         CLIENT = MongitaClientDisk(db_path)
     else:
-        from .search_engine.engine_es import ESSearcher
+        from rethink.models.search_engine.engine_es import ESSearcher
         if not isinstance(SEARCHER, ESSearcher):
             SEARCHER = ESSearcher()
         from motor.motor_asyncio import AsyncIOMotorClient

@@ -1,6 +1,6 @@
 from fastapi.responses import StreamingResponse
 
-from rethink.models.verify.verification import random_captcha
+from rethink.core.verify.verification import random_captcha
 
 
 def get_captcha_img():

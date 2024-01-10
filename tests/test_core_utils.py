@@ -4,8 +4,7 @@ from unittest.mock import patch
 
 import httpx
 
-from rethink import const, config
-from rethink.models import utils
+from rethink import const, config, utils
 
 
 class UtilsTest(unittest.TestCase):
@@ -97,7 +96,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
 
     # @unittest.skip("skip outer connection test")
     @patch(
-        "rethink.models.utils.httpx.AsyncClient.get",
+        "rethink.utils.httpx.AsyncClient.get",
     )
     async def test_get_title_description_from_link(self, mock_get):
         for url, content, res in [

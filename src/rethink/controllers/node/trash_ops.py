@@ -1,4 +1,4 @@
-from rethink import const, models
+from rethink import const, core
 from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode, datetime2str
 
@@ -13,7 +13,7 @@ async def move_to_trash(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.node.to_trash(uid=td.uid, nid=req.nid)
+    code = await core.node.to_trash(uid=td.uid, nid=req.nid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -31,7 +31,7 @@ async def move_batch_to_trash(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.node.batch_to_trash(uid=td.uid, nids=req.nids)
+    code = await core.node.batch_to_trash(uid=td.uid, nids=req.nids)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -45,7 +45,7 @@ async def get_from_trash(
         ps: int = 10,
         rid: str = "",
 ) -> schemas.node.GetFromTrashResponse:
-    nodes, total = await models.node.get_nodes_in_trash(uid=td.uid, page=p, page_size=ps)
+    nodes, total = await core.node.get_nodes_in_trash(uid=td.uid, page=p, page_size=ps)
     code = const.Code.OK
     data = schemas.search.NodesSearchResponse.Data(
         nodes=[schemas.search.NodesSearchResponse.Data.Node(
@@ -79,7 +79,7 @@ async def restore_from_trash(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.node.restore_from_trash(uid=td.uid, nid=req.nid)
+    code = await core.node.restore_from_trash(uid=td.uid, nid=req.nid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -97,7 +97,7 @@ async def restore_batch_from_trash(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.node.restore_batch_from_trash(uid=td.uid, nids=req.nids)
+    code = await core.node.restore_batch_from_trash(uid=td.uid, nids=req.nids)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -115,7 +115,7 @@ async def delete_node(
             message=const.get_msg_by_code(td.code, td.language),
             requestId="",
         )
-    code = await models.node.delete(uid=td.uid, nid=nid)
+    code = await core.node.delete(uid=td.uid, nid=nid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -133,7 +133,7 @@ async def delete_batch_node(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.node.batch_delete(uid=td.uid, nids=req.nids)
+    code = await core.node.batch_delete(uid=td.uid, nids=req.nids)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),

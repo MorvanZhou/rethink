@@ -1,4 +1,4 @@
-from rethink import const, models
+from rethink import const, core
 from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode
 
@@ -14,7 +14,7 @@ async def cursor_query(
             requestId=req.requestId,
             data=None
         )
-    nodes, total = await models.search.cursor_query(
+    nodes, total = await core.search.cursor_query(
         uid=td.uid,
         nid=req.nid,
         query=req.query,
@@ -44,7 +44,7 @@ async def search_user_nodes(
             requestId=req.requestId,
             nodes=[],
         )
-    nodes, total = await models.search.search(
+    nodes, total = await core.search.search(
         uid=td.uid,
         query=req.query,
         sort_key=req.sortKey,
@@ -77,7 +77,7 @@ async def recommend_nodes(
             nodes=[],
         )
     max_return = 5
-    nodes = await models.search.recommend(
+    nodes = await core.search.recommend(
         uid=td.uid,
         content=req.content,
         max_return=max_return,
@@ -102,7 +102,7 @@ async def add_to_recent_cursor_search(
             message=const.get_msg_by_code(td.code, td.language),
             requestId=req.requestId,
         )
-    code = await models.search.add_recent_cursor_search(uid=td.uid, nid=req.nid, to_nid=req.toNid)
+    code = await core.search.add_recent_cursor_search(uid=td.uid, nid=req.nid, to_nid=req.toNid)
     return schemas.base.AcknowledgeResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -121,7 +121,7 @@ async def get_recent(
             requestId=rid,
             queries=[],
         )
-    queries = await models.search.get_recent_search(uid=td.uid)
+    queries = await core.search.get_recent_search(uid=td.uid)
     code = const.Code.OK
     return schemas.search.GetRecentSearchResponse(
         code=code.value,

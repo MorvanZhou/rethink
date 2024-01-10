@@ -13,9 +13,9 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from rethink import const, models
-from rethink.models.files import queuing_upload
-from rethink.models.utils import short_uuid
+from rethink import const, models, core
+from rethink.core.files import queuing_upload
+from rethink.utils import short_uuid
 from . import utils
 
 
@@ -36,7 +36,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         await models.database.drop_all()
         await models.database.init()
-        u, _ = await models.user.get_by_email(email=const.DEFAULT_USER["email"])
+        u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
 
     async def asyncTearDown(self) -> None:
@@ -45,22 +45,22 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 
     async def test_user(self):
-        _id, code = await models.user.add(
+        _id, code = await core.user.add(
             account="aaa", source=const.UserSource.EMAIL.value,
             email="aaa", hashed="bbb", nickname="ccc", avatar="ddd", language=const.Language.EN.value)
         self.assertNotEqual("", _id)
         self.assertEqual(const.Code.OK, code)
 
-        u, code = await models.user.get_by_email(email=const.DEFAULT_USER["email"])
+        u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("rethink", u["nickname"])
         self.assertIsNotNone(u)
 
-        u, code = await models.user.get(_id)
+        u, code = await core.user.get(_id)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("ccc", u["nickname"])
 
-        u, code = await models.user.update(
+        u, code = await core.user.update(
             uid=_id,
             hashed="1",
             nickname="2",
@@ -70,7 +70,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(const.Code.OK, code)
 
-        u, code = await models.user.get(_id)
+        u, code = await core.user.get(_id)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("1", u["hashed"])
         self.assertEqual("2", u["nickname"])
@@ -78,42 +78,42 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("zh", u["language"])
         self.assertEqual(const.NodeDisplayMethod.LIST.value, u["lastState"]["nodeDisplayMethod"])
 
-        code = await models.user.disable(uid=_id)
+        code = await core.user.disable(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
-        u, code = await models.user.get(uid=_id)
+        u, code = await core.user.get(uid=_id)
         self.assertEqual(const.Code.ACCOUNT_OR_PASSWORD_ERROR, code)
         self.assertIsNone(u)
 
-        code = await models.user.enable(uid=_id)
+        code = await core.user.enable(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
-        code = await models.user.disable(uid="sdwqdqw")
+        code = await core.user.disable(uid="sdwqdqw")
         self.assertEqual(const.Code.OPERATION_FAILED, code)
 
-        code = await models.user.delete(uid=_id)
+        code = await core.user.delete(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
     async def test_node(self):
-        node, code = await models.node.add(
+        node, code = await core.node.add(
             uid=self.uid, md="a" * (const.MD_MAX_LENGTH + 1), type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.NOTE_EXCEED_MAX_LENGTH, code)
         self.assertIsNone(node)
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
-        node, code = await models.node.add(
+        node, code = await core.node.add(
             uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space + len(node["md"].encode("utf-8")), u["usedSpace"])
         self.assertEqual("modifiedAt", u["lastState"]["nodeDisplaySortKey"])
 
-        n, code = await models.node.get(uid=self.uid, nid=node["id"])
+        n, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title", n["title"])
         self.assertEqual("body", n["snippet"])
@@ -126,7 +126,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
-        u, code = await models.user.update(
+        u, code = await core.user.update(
             uid=self.uid,
             node_display_sort_key="createdAt",
         )
@@ -134,43 +134,43 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("createdAt", u["lastState"]["nodeDisplaySortKey"])
         used_space = u["usedSpace"]
-        n, code = await models.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
+        n, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("title2\nbody2", n["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space + (
                 len(n["md"].encode("utf-8")) -
                 len(node["md"].encode("utf-8"))
         ), u["usedSpace"])
 
-        code = await models.node.disable(uid=self.uid, nid=node["id"])
+        code = await core.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
-        n, code = await models.node.get(uid=self.uid, nid=node["id"])
+        n, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
 
-        code = await models.node.to_trash(uid=self.uid, nid=node["id"])
+        code = await core.node.to_trash(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
 
-        code = await models.node.delete(uid=self.uid, nid=node["id"])
+        code = await core.node.delete(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
-        n, code = await models.node.get(uid=self.uid, nid=node["id"])
+        n, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertIsNone(n)
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
     async def test_parse_at(self):
-        nid1, _ = await models.node.add(
+        nid1, _ = await core.node.add(
             uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
         )
-        nid2, _ = await models.node.add(
+        nid2, _ = await core.node.add(
             uid=self.uid, md="我133", type_=const.NodeType.MARKDOWN.value,
         )
         md = dedent(f"""title
@@ -179,7 +179,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         [@我133](/n/{nid2['id']})
         ffq
         """)
-        node, code = await models.node.add(
+        node, code = await core.node.add(
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -198,29 +198,29 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(found), msg=found)
         self.assertEqual(2, total)
 
-        n, code = await models.node.get(uid=self.uid, nid=node["id"])
+        n, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(2, len(n["toNodeIds"]))
 
         cache = n["md"]
-        n, code = await models.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
+        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(cache + "xxxx", n["md"])
 
-        n, code = await models.node.get(uid=self.uid, nid=nid1['id'])
+        n, code = await core.node.get(uid=self.uid, nid=nid1['id'])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, code = await models.node.update(uid=self.uid, nid=node["id"], md=n["title"])
+        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["title"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
-        n, code = await models.node.get(uid=self.uid, nid=nid1['id'])
+        n, code = await core.node.get(uid=self.uid, nid=nid1['id'])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["fromNodeIds"]))
 
     async def test_add_set(self):
-        node, code = await models.node.add(
+        node, code = await core.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(0, len(node["toNodeIds"]))
@@ -228,21 +228,21 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         res = await models.db_ops.node_add_to_set(node["id"], "toNodeIds", short_uuid())
         self.assertEqual(1, res.modified_count)
-        node, code = await models.node.get(uid=self.uid, nid=node["id"])
+        node, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(node["toNodeIds"]))
 
     async def test_cursor_text(self):
-        n1, code = await models.node.add(
+        n1, code = await core.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await models.node.add(
+        n2, code = await core.node.add(
             uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
-        recom, total = await models.search.cursor_query(
+        recom, total = await core.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],
             query="text",
@@ -252,7 +252,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(recom))
         self.assertEqual(1, total)
 
-        recom, total = await models.search.cursor_query(
+        recom, total = await core.search.cursor_query(
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
             query="",  # return recent nodes only
@@ -262,10 +262,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(recom))
         self.assertEqual(2, total)
 
-        code = await models.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
+        code = await core.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
         self.assertEqual(const.Code.OK, code)
 
-        recom, total = await models.search.cursor_query(
+        recom, total = await core.search.cursor_query(
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
             query="",
@@ -277,19 +277,19 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("Welcome to Rethink", recom[2].title)
 
     async def test_to_trash(self):
-        n1, code = await models.node.add(
+        n1, code = await core.node.add(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await models.node.add(
+        n2, code = await core.node.add(
             uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
-        code = await models.node.to_trash(self.uid, n1["id"])
+        code = await core.node.to_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
 
-        ns, total = await models.node.get_nodes_in_trash(self.uid, 0, 10)
+        ns, total = await core.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(1, len(ns))
         self.assertEqual(1, total)
         self.assertEqual(n1["id"], ns[0]["id"])
@@ -298,25 +298,25 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        code = await models.node.restore_from_trash(self.uid, n1["id"])
+        code = await core.node.restore_from_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
         nodes, total = await models.database.searcher().search(self.uid, query="")
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
     async def test_search(self):
-        code = await models.search.put_recent_search(self.uid, "a")
+        code = await core.search.put_recent_search(self.uid, "a")
         self.assertEqual(const.Code.OK, code)
-        await models.search.put_recent_search(self.uid, "c")
-        await models.search.put_recent_search(self.uid, "b")
+        await core.search.put_recent_search(self.uid, "c")
+        await core.search.put_recent_search(self.uid, "b")
 
-        queries = await models.search.get_recent_search(self.uid)
+        queries = await core.search.get_recent_search(self.uid)
         self.assertEqual(["b", "c", "a"], queries)
 
     async def test_batch(self):
         ns = []
         for i in range(10):
-            n, code = await models.node.add(
+            n, code = await core.node.add(
                 uid=self.uid, md=f"title{i}\ntext", type_=const.NodeType.MARKDOWN.value
             )
             self.assertEqual(const.Code.OK, code)
@@ -324,25 +324,25 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         base_count = 2
 
-        code = await models.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
+        code = await core.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
         self.assertEqual(const.Code.OK, code)
         nodes, total = await models.database.searcher().search(self.uid, query="")
         self.assertEqual(6 + base_count, len(nodes))
         self.assertEqual(6 + base_count, total)
 
-        tns, total = await models.node.get_nodes_in_trash(self.uid, 0, 10)
+        tns, total = await core.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(4, total)
         self.assertEqual(4, len(tns))
 
-        code = await models.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
+        code = await core.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
         self.assertEqual(const.Code.OK, code)
         nodes, total = await models.database.searcher().search(self.uid)
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 
-        code = await models.node.batch_delete(self.uid, [n["id"] for n in tns[2:4]])
+        code = await core.node.batch_delete(self.uid, [n["id"] for n in tns[2:4]])
         self.assertEqual(const.Code.OK, code)
-        tns, total = await models.node.get_nodes_in_trash(self.uid, 0, 10)
+        tns, total = await core.node.get_nodes_in_trash(self.uid, 0, 10)
         self.assertEqual(0, total)
         self.assertEqual(0, len(tns))
 
@@ -365,7 +365,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         doc, code = await queuing_upload.update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
-        doc = await models.files.get_upload_process("xxx")
+        doc = await core.files.get_upload_process("xxx")
         self.assertEqual(10, doc["process"])
         self.assertEqual("obsidian", doc["type"])
         self.assertEqual(now, doc["startAt"])
@@ -374,23 +374,23 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         await models.database.COLL.import_data.delete_one({"uid": "xxx"})
 
     async def test_update_title_and_from_nodes_updates(self):
-        n1, code = await models.node.add(
+        n1, code = await core.node.add(
             uid=self.uid, md="title1\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await models.node.add(
+        n2, code = await core.node.add(
             uid=self.uid, md=f"title2\n[@title1](/n/{n1['id']})", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
-        n1, code = await models.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
+        n1, code = await core.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
         self.assertEqual(const.Code.OK, code)
-        n2, code = await models.node.get(uid=self.uid, nid=n2["id"])
+        n2, code = await core.node.get(uid=self.uid, nid=n2["id"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(f"title2\n[@title1Changed](/n/{n1['id']})", n2["md"])
 
     async def test_upload_image_vditor(self):
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         used_space = u["usedSpace"]
         p = Path(__file__).parent / "tmp" / "fake.png"
 
@@ -402,7 +402,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             buf, filename="fake.png", size=size,
             headers=Headers({"content-type": "image/png"})
         )
-        res = await models.files.upload_image_vditor(self.uid, [img_file])
+        res = await core.files.upload_image_vditor(self.uid, [img_file])
         self.assertIn("fake.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["fake.png"])
         local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["fake.png"][1:]
@@ -412,11 +412,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         buf.close()
         await img_file.close()
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(used_space + size, u["usedSpace"])
 
     @patch(
-        "rethink.models.files.upload.httpx.AsyncClient.get",
+        "rethink.core.files.upload.httpx.AsyncClient.get",
     )
     async def test_fetch_image_vditor(self, mock_get):
         f = open(Path(__file__).parent / "tmp" / "fake.png", "rb")
@@ -426,11 +426,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             headers={"content-type": "image/png"}
         )
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         used_space = u["usedSpace"]
 
         url = "https://rethink.run/favicon.png"
-        new_url, code = await models.files.fetch_image_vditor(self.uid, url)
+        new_url, code = await core.files.fetch_image_vditor(self.uid, url)
         self.assertEqual(const.Code.OK, code)
         self.assertTrue(new_url.endswith(".png"))
         self.assertTrue(new_url.startswith("/"))
@@ -438,12 +438,12 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         self.assertEqual(used_space + f.tell(), u["usedSpace"])
         f.close()
 
     async def test_update_used_space(self):
-        u, code = await models.user.get(self.uid)
+        u, code = await core.user.get(self.uid)
         base_used_space = u["usedSpace"]
         for delta, value in [
             (100, 100),
@@ -452,9 +452,9 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             (-3000, 0),
             (20.1, 20.1),
         ]:
-            code = await models.user.update_used_space(self.uid, delta)
+            code = await core.user.update_used_space(self.uid, delta)
             self.assertEqual(const.Code.OK, code)
-            u, code = await models.user.get(self.uid)
+            u, code = await core.user.get(self.uid)
             self.assertEqual(const.Code.OK, code)
             now = u["usedSpace"] - base_used_space
             if now < 0:

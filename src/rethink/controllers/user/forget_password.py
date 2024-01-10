@@ -1,6 +1,6 @@
 from rethink import const
 from rethink.controllers import schemas, auth
-from rethink.models.verify.verification import (
+from rethink.core.verify.verification import (
     verify_numbers,
 )
 

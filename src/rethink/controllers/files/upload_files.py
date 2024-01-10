@@ -2,10 +2,13 @@ from typing import List
 
 from fastapi import UploadFile
 
-from rethink import const, models
+from rethink import const, core
 from rethink.controllers import schemas
-from rethink.controllers.utils import TokenDecode
-from ..utils import datetime2str, is_allowed_mime_type
+from rethink.controllers.utils import (
+    TokenDecode,
+    datetime2str,
+    is_allowed_mime_type,
+)
 
 
 async def upload_obsidian_files(
@@ -19,7 +22,7 @@ async def upload_obsidian_files(
             requestId="",
             failedFilename="",
         )
-    code = await models.files.upload_obsidian(uid=td.uid, zipped_files=files)
+    code = await core.files.upload_obsidian(uid=td.uid, zipped_files=files)
 
     return schemas.files.FileUploadResponse(
         code=code.value,
@@ -39,7 +42,7 @@ async def upload_text_files(
             requestId="",
             failedFilename="",
         )
-    code = await models.files.upload_text(uid=td.uid, files=files)
+    code = await core.files.upload_text(uid=td.uid, files=files)
     return schemas.files.FileUploadResponse(
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
@@ -63,7 +66,7 @@ async def get_upload_process(
             running=False,
             msg="",
         )
-    doc = await models.files.get_upload_process(uid=td.uid)
+    doc = await core.files.get_upload_process(uid=td.uid)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
             code=const.Code.OK.value,
@@ -98,7 +101,7 @@ async def upload_image_vditor(
             msg=const.get_msg_by_code(td.code, td.language),
             data={},
         )
-    res = await models.files.upload_image_vditor(uid=td.uid, files=[file])
+    res = await core.files.upload_image_vditor(uid=td.uid, files=[file])
     return schemas.files.ImageVditorUploadResponse(
         code=const.Code.OK.value,
         msg=const.get_msg_by_code(const.Code.OK, td.language),
@@ -137,7 +140,7 @@ async def fetch_image_vditor(
                 url="",
             ),
         )
-    new_url, code = await models.files.fetch_image_vditor(uid=td.uid, url=req.url)
+    new_url, code = await core.files.fetch_image_vditor(uid=td.uid, url=req.url)
     return schemas.files.ImageVditorFetchResponse(
         code=code.value,
         msg=const.get_msg_by_code(code, td.language),

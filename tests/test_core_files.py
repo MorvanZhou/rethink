@@ -7,7 +7,7 @@ from zipfile import ZipFile, BadZipFile
 from bson import ObjectId
 
 from rethink import config
-from rethink.models.files import file_ops
+from rethink.core.files import file_ops
 
 
 class UnzipTest(unittest.IsolatedAsyncioTestCase):

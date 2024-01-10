@@ -1,11 +1,13 @@
 from typing import List
 
-from rethink import const, models
+from rethink import const, core
 from rethink.controllers import schemas
 from rethink.controllers.utils import TokenDecode, datetime2str
+from rethink.models import tps
+from rethink.utils import contain_only_http_link, get_title_description_from_link
 
 
-def __get_node_data(n: models.tps.Node) -> schemas.node.NodeData:
+def __get_node_data(n: tps.Node) -> schemas.node.NodeData:
     from_nodes: List[schemas.node.NodeData.LinkedNode] = []
     to_nodes: List[schemas.node.NodeData.LinkedNode] = []
     for nodes, n_nodes in zip(
@@ -51,7 +53,7 @@ async def put_node(
             node=None
         )
 
-    n, code = await models.node.add(
+    n, code = await core.node.add(
         uid=td.uid,
         md=req.md,
         type_=req.type,
@@ -84,8 +86,8 @@ async def put_quick_node(
             node=None
         )
 
-    if models.utils.contain_only_http_link(req.md) != "":
-        title, description = await models.utils.get_title_description_from_link(
+    if contain_only_http_link(req.md) != "":
+        title, description = await get_title_description_from_link(
             url=req.md,
             language=td.language,
         )
@@ -111,7 +113,7 @@ async def get_node(
         req_id: str,
         nid: str,
 ) -> schemas.node.GetResponse:
-    n, code = await models.node.get(uid=td.uid, nid=nid)
+    n, code = await core.node.get(uid=td.uid, nid=nid)
     if code != const.Code.OK:
         return schemas.node.GetResponse(
             requestId=req_id,
@@ -138,7 +140,7 @@ async def update_node(
             requestId=req.requestId,
             node=None
         )
-    n, code = await models.node.update(
+    n, code = await core.node.update(
         uid=td.uid,
         nid=req.nid,
         md=req.md,

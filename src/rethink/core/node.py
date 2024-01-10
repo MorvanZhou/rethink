@@ -1,27 +1,23 @@
 import datetime
-import re
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Dict, Any
 
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import config, const
+from rethink import config, const, utils, regex
 from rethink.logger import logger
+from rethink.models import tps, db_ops
+from rethink.models.database import COLL, searcher
 from rethink.models.search_engine.engine import SearchDoc
-from . import user, tps, utils, db_ops
-from .database import COLL, searcher
-
-AT_PTN = re.compile(r'\[@[ \w\u4e00-\u9fa5！？。，￥【】「」]+?]\(([\w/]+?)\)', re.MULTILINE)
-CURSOR_AT_PTN = re.compile(r'\s+?@([\w ]*)$')
-NID_PTN = re.compile(fr"^[A-Za-z0-9]{{20,{const.NID_MAX_LENGTH}}}$")
+from . import user
 
 
 def __get_linked_nodes(new_md) -> Tuple[set, const.Code]:
     # last first
     cache_current_to_nid: Set[str] = set()
 
-    for match in list(AT_PTN.finditer(new_md))[::-1]:
+    for match in list(regex.MD_AT_LINK.finditer(new_md))[::-1]:
         l0, l1 = match.span(1)
         link = new_md[l0:l1]
         if link.startswith("/n/"):
@@ -173,7 +169,7 @@ async def get_batch(
         in_trash: bool = False,
 ) -> Tuple[List[tps.Node], const.Code]:
     for nid in nids:
-        if NID_PTN.match(nid) is None:
+        if regex.NID.match(nid) is None:
             logger.error(f"invalid nid: {nid}")
             return [], const.Code.NODE_NOT_EXIST
     c: Dict[str, Any] = {"uid": uid, "inTrash": in_trash}
@@ -201,7 +197,7 @@ async def update(
         md: str,
         refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
-    if NID_PTN.match(nid) is None:
+    if regex.NID.match(nid) is None:
         return None, const.Code.NODE_NOT_EXIST
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
@@ -396,7 +392,7 @@ async def disable(
         uid: str,
         nid: str,
 ) -> const.Code:
-    if NID_PTN.match(nid) is None:
+    if regex.NID.match(nid) is None:
         return const.Code.NODE_NOT_EXIST
     if not await user.is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR

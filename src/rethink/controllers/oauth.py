@@ -3,10 +3,10 @@ from typing import Optional
 from fastapi import Request
 
 from rethink import config, const, models
-from rethink.sso.base import SSOLoginError
-from rethink.sso.facebook import FacebookSSO
-from rethink.sso.github import GithubSSO
-from rethink.sso.qq import QQSSO
+from rethink.depend.sso.base import SSOLoginError
+from rethink.depend.sso.facebook import FacebookSSO
+from rethink.depend.sso.github import GithubSSO
+from rethink.depend.sso.qq import QQSSO
 from .schemas.base import TokenResponse
 from .schemas.oauth import OAuthResponse
 

@@ -8,7 +8,7 @@ from captcha.audio import AudioCaptcha
 from captcha.image import ImageCaptcha
 
 from rethink import const, config
-from rethink.models.utils import jwt_encode, jwt_decode
+from rethink.utils import jwt_encode, jwt_decode
 
 DEFAULT_CAPTCHA_EXPIRE_SECOND = 60
 

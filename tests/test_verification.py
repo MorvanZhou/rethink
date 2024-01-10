@@ -2,7 +2,8 @@ import unittest
 from io import BytesIO
 
 from rethink import models, const
-from rethink.models.verify import verification
+from rethink.core.verify import verification
+from rethink.utils import jwt_decode
 from . import utils
 
 
@@ -27,7 +28,7 @@ class VerificationTest(unittest.IsolatedAsyncioTestCase):
 
     def test_verify_img(self):
         token, data = verification.random_captcha()
-        decoded = models.utils.jwt_decode(token)
+        decoded = jwt_decode(token)
         code = verification.verify_captcha(token=token, code_str=decoded["code"])
         self.assertEqual(const.Code.OK, code)
 

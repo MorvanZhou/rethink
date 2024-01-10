@@ -84,14 +84,6 @@ async def cursor_query(
         page: int,
         page_size: int,
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
-    # if cursor_text.startswith("@"):
-    #     query = cursor_text[1:].strip()
-    # else:
-    #     found = CURSOR_AT_PTN.search(cursor_text)
-    #     if found is None:
-    #         return None, []
-    #     query = found.group(1).strip()
-
     query = query.strip()
 
     # if query == "", return recent nodes

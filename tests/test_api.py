@@ -15,9 +15,9 @@ from httpx import Response
 
 from rethink import const
 from rethink.application import app
+from rethink.core.verify import verification
 from rethink.models import database
-from rethink.models.utils import jwt_decode
-from rethink.models.verify import verification
+from rethink.utils import jwt_decode
 from . import utils
 
 
@@ -536,7 +536,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(img, rj["data"]["url"])
 
     @patch(
-        "rethink.models.utils.httpx.AsyncClient.get",
+        "rethink.utils.httpx.AsyncClient.get",
         return_value=Response(200, content="<title>百度一下</title>".encode("utf-8"))
     )
     def test_put_quick_node(self, mocker):

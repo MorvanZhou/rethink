@@ -3,9 +3,9 @@ from typing import Tuple
 
 from rethink import const
 from rethink.controllers import schemas, auth
+from rethink.core.verify.email import email_server
+from rethink.core.verify.verification import encode_numbers, verify_captcha
 from rethink.logger import logger
-from rethink.models.verify.email import email_server
-from rethink.models.verify.verification import encode_numbers, verify_captcha
 
 
 def __check_and_send_email(

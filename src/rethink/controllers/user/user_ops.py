@@ -1,8 +1,8 @@
-from rethink import const, models, config
+from rethink import const, core, config
 from rethink.controllers import schemas, auth
 from rethink.controllers.utils import TokenDecode, datetime2str
-from rethink.models.utils import jwt_encode, mask_email
-from rethink.models.verify.verification import verify_captcha
+from rethink.core.verify.verification import verify_captcha
+from rethink.utils import jwt_encode, mask_email
 
 
 async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
@@ -83,7 +83,7 @@ async def get_user(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
         )
-    u, code = await models.user.get(uid=td.uid)
+    u, code = await core.user.get(uid=td.uid)
     if code != const.Code.OK:
         return schemas.user.UserInfoResponse(
             requestId=req_id,
@@ -126,7 +126,7 @@ async def update_user(
             code=td.code.value,
             message=const.get_msg_by_code(td.code, td.language),
         )
-    u, code = await models.user.update(
+    u, code = await core.user.update(
         uid=td.uid,
         nickname=req.nickname,
         avatar=req.avatar,

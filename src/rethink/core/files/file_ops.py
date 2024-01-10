@@ -1,6 +1,5 @@
 import hashlib
 import io
-import re
 import zipfile
 from os.path import normpath
 from pathlib import Path
@@ -12,15 +11,11 @@ from bson.objectid import ObjectId
 from fastapi import UploadFile
 from qcloud_cos import CosConfig, CosServiceError, CosS3Client
 
-from rethink import const, config
+from rethink import const, config, regex
+from rethink.core.user import update_used_space
 from rethink.models.database import COLL
 from rethink.models.tps import UserFile
-from rethink.models.user import update_used_space
-from rethink.models.utils import short_uuid
-
-INTERNAL_LINK_PTN = re.compile(r"\[\[(.*?)]]")
-INTERNAL_IMG_PTN = re.compile(r"!\[\[(Pasted image .*?)]]")
-INTERNAL_IMG_PTN2 = re.compile(r"!\[(.*?)]\((?!http)(.*?)\)")
+from rethink.utils import short_uuid
 
 VALID_IMG_EXT = {"jpg", "jpeg", "png", "gif", "svg"}
 
@@ -153,7 +148,7 @@ async def replace_inner_link_and_upload_image(
         md
     """
     # image
-    for match in list(INTERNAL_IMG_PTN2.finditer(md))[::-1]:
+    for match in list(regex.MD_IMG.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)
         filepath = match.group(2)
@@ -166,7 +161,7 @@ async def replace_inner_link_and_upload_image(
             resize_threshold=resize_threshold,
             span=span,
         )
-    for match in list(INTERNAL_IMG_PTN.finditer(md))[::-1]:
+    for match in list(regex.OBS_INTERNAL_IMG.finditer(md))[::-1]:
         span = match.span()
         filepath = filename = match.group(1)
         md = await __img_ptn_replace_upload(
@@ -180,7 +175,7 @@ async def replace_inner_link_and_upload_image(
         )
 
     # node link
-    for match in list(INTERNAL_LINK_PTN.finditer(md))[::-1]:
+    for match in list(regex.OBS_INTERNAL_LINK.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)
         nid = exist_filename2nid.get(filename)

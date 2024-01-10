@@ -7,10 +7,11 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from rethink import const, models
+from rethink import const, core
 from rethink.config import is_local_db
 from rethink.logger import logger
-from rethink.models.utils import ssrf_check, ASYNC_CLIENT_HEADERS
+from rethink.models.database import COLL
+from rethink.utils import ssrf_check, ASYNC_CLIENT_HEADERS
 from . import file_ops, queuing_upload
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
@@ -61,7 +62,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
 
-    doc = await models.database.COLL.import_data.find_one({"uid": uid})
+    doc = await COLL.import_data.find_one({"uid": uid})
     if doc is not None and doc["running"]:
         return const.Code.IMPORT_PROCESS_NOT_FINISHED
 
@@ -97,7 +98,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
 
 async def get_upload_process(uid: str) -> Optional[dict]:
     timeout_minus = 5
-    doc = await models.database.COLL.import_data.find_one({"uid": uid})
+    doc = await COLL.import_data.find_one({"uid": uid})
     if doc is None:
         return None
     now = datetime.datetime.now(tz=utc)
@@ -107,7 +108,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
             now.replace(tzinfo=None) - doc["startAt"].replace(tzinfo=None) \
             > datetime.timedelta(minutes=timeout_minus):
         doc["running"] = False
-        await models.database.COLL.import_data.update_one(
+        await COLL.import_data.update_one(
             {"uid": uid},
             {"$set": {
                 "running": False,
@@ -124,12 +125,12 @@ async def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
         "succMap": {},
         "code": const.Code.OK,
     }
-    u, code = await models.user.get(uid=uid)
+    u, code = await core.user.get(uid=uid)
     if code != const.Code.OK:
         res["errFiles"] = [file.filename for file in files]
         res["code"] = code
         return res
-    if await models.user.user_space_not_enough(u=u):
+    if await core.user.user_space_not_enough(u=u):
         res["errFiles"] = [file.filename for file in files]
         res["code"] = const.Code.USER_SPACE_NOT_ENOUGH
         return res
@@ -149,10 +150,10 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
     if ssrf_check(url):
         logger.info(f"ssrf check failed: {url}")
         return "", const.Code.FILE_OPEN_ERROR
-    u, code = await models.user.get(uid=uid)
+    u, code = await core.user.get(uid=uid)
     if code != const.Code.OK:
         return "", code
-    if await models.user.user_space_not_enough(u=u):
+    if await core.user.user_space_not_enough(u=u):
         return "", const.Code.USER_SPACE_NOT_ENOUGH
     async with httpx.AsyncClient() as client:
         try:

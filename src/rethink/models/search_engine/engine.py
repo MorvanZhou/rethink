@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Tuple, Sequence, Literal
 
 from rethink import const
-from rethink.models.utils import strip_html_tags
+from rethink.utils import strip_html_tags
 
 
 @dataclass

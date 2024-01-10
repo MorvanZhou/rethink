@@ -10,9 +10,10 @@ import pymongo.errors
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import const, models, config
+from rethink import const, config, core
+from rethink.core.files import file_ops
 from rethink.logger import logger
-from rethink.models.files import file_ops
+from rethink.models.database import COLL
 from rethink.models.tps import ImportData
 
 RESIZE_IMG_THRESHOLD = 1024 * 256  # 256kb  # 1024 * 128  # 128 kb
@@ -26,7 +27,7 @@ async def __set_running_false(
         code: const.Code,
         msg: str = "",
 ) -> None:
-    await models.database.COLL.import_data.update_one({"uid": uid}, {"$set": {
+    await COLL.import_data.update_one({"uid": uid}, {"$set": {
         "running": False,
         "msg": msg,
         "code": code.value,
@@ -50,10 +51,10 @@ async def update_process(
         data["code"] = code
     if config.is_local_db():
         # local db not support find_one_and_update
-        await models.database.COLL.import_data.update_one({"uid": uid}, {"$set": data})
-        doc = await models.database.COLL.import_data.find_one({"uid": uid})
+        await COLL.import_data.update_one({"uid": uid}, {"$set": data})
+        doc = await COLL.import_data.find_one({"uid": uid})
     else:
-        doc = await models.database.COLL.import_data.find_one_and_update(
+        doc = await COLL.import_data.find_one_and_update(
             {"uid": uid},
             {"$set": data}
         )
@@ -71,7 +72,7 @@ async def import_set_modules():
 
 
 async def __check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[ImportData], bool]:
-    doc = await models.database.COLL.import_data.find_one({"uid": uid})
+    doc = await COLL.import_data.find_one({"uid": uid})
     if doc and doc["running"]:
         await __set_running_false(
             uid=uid,
@@ -92,7 +93,7 @@ async def __check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Imp
             "code": 0,
             "obsidian": {},
         }
-        res = await models.database.COLL.import_data.insert_one(doc)
+        res = await COLL.import_data.insert_one(doc)
         if not res.acknowledged:
             await __set_running_false(
                 uid,
@@ -120,7 +121,7 @@ async def __check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Imp
 
 
 async def __finish_task(uid: str, obsidian=None):
-    resp = await models.database.COLL.import_data.update_one(
+    resp = await COLL.import_data.update_one(
         {"uid": uid},
         {"$set": {
             "obsidian": obsidian or {},
@@ -180,7 +181,7 @@ async def update_text_task(
         title = file["filename"].rsplit(".", 1)[0]
         md = title + "\n\n" + md
         try:
-            n, code = await models.node.add(
+            n, code = await core.node.add(
                 uid=uid,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,
@@ -283,7 +284,7 @@ async def upload_obsidian_task(
         if base_name in existed_filename2nid:
             continue
         try:
-            n, code = await models.node.add(
+            n, code = await core.node.add(
                 uid=uid,
                 md=base_name,
                 type_=const.NodeType.MARKDOWN.value,
@@ -340,14 +341,14 @@ async def upload_obsidian_task(
         )
         md = base_name + "\n\n" + md
         nid = existed_filename2nid[base_name]
-        n, code = await models.node.update(
+        n, code = await core.node.update(
             uid=uid,
             nid=nid,
             md=md,
             refresh_on_same_md=True,
         )
         if code == const.Code.NODE_NOT_EXIST:
-            n, code = await models.node.add(
+            n, code = await core.node.add(
                 uid=uid,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,
@@ -388,10 +389,10 @@ async def upload_obsidian_task(
     count = 0
     for base_name, nid in doc["obsidian"].items():
         if base_name not in existed_filename2nid:
-            n, code = await models.node.get(uid=uid, nid=nid)
+            n, code = await core.node.get(uid=uid, nid=nid)
             if code != const.Code.OK:
                 continue
-            n, code = await models.node.update(
+            n, code = await core.node.update(
                 uid=uid,
                 nid=nid,
                 md=n["md"],

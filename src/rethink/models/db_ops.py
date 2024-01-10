@@ -1,7 +1,7 @@
 from typing import Any
 
 from rethink import config
-from rethink.mongita.results import UpdateResult
+from rethink.depend.mongita.results import UpdateResult
 from .database import COLL
 
 
