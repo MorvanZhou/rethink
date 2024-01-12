@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import Request
 
-from rethink import config, const, models
+from rethink import config, const, core, utils
 from rethink.depend.sso.base import SSOLoginError
 from rethink.depend.sso.facebook import FacebookSSO
 from rethink.depend.sso.github import GithubSSO
@@ -53,13 +53,13 @@ async def callback_github(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    u, code = await models.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
+    u, code = await core.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
         return TokenResponse(
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
-            token=models.utils.jwt_encode(
+            token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
                 data={"uid": u["id"], "language": u["language"]},
             ),
@@ -67,7 +67,7 @@ async def callback_github(req: Request) -> TokenResponse:
 
     # no user found, create one
     language = const.Language.EN.value
-    uid, code = await models.user.add(
+    uid, code = await core.user.add(
         account=user.id,
         source=const.UserSource.GITHUB.value,
         email=user.email if user.email else "",
@@ -83,11 +83,11 @@ async def callback_github(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    token = models.utils.jwt_encode(
+    token = utils.jwt_encode(
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
         data={"uid": uid, "language": language},
     )
-    code = await models.node.new_user_add_default_nodes(language=language, uid=uid)
+    code = await core.node.new_user_add_default_nodes(language=language, uid=uid)
 
     return TokenResponse(
         requestId="",
@@ -135,13 +135,13 @@ async def callback_facebook(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    u, code = await models.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
+    u, code = await core.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
         return TokenResponse(
             requestId="",
             code=const.Code.OK.value,
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
-            token=models.utils.jwt_encode(
+            token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
                 data={"uid": u["id"], "language": u["language"]},
             ),
@@ -149,7 +149,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 
     # no user found, create one
     language = const.Language.EN.value
-    uid, code = await models.user.add(
+    uid, code = await core.user.add(
         account=user.id,
         source=const.UserSource.FACEBOOK.value,
         email=user.email,
@@ -165,11 +165,11 @@ async def callback_facebook(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(code, const.Language.EN.value),
             token="",
         )
-    token = models.utils.jwt_encode(
+    token = utils.jwt_encode(
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
         data={"uid": uid, "language": language},
     )
-    code = await models.node.new_user_add_default_nodes(language=language, uid=uid)
+    code = await core.node.new_user_add_default_nodes(language=language, uid=uid)
     return TokenResponse(
         requestId="",
         code=code.value,
@@ -215,7 +215,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 #             message=const.get_msg_by_code(code, const.Language.EN.value),
 #             token="",
 #         )
-#     u, code = await models.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
+#     u, code = await core.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
 #     if code == const.Code.OK:
 #         return LoginResponse(
 #             requestId="",
@@ -229,7 +229,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 #
 #     # no user found, create one
 #     language = const.Language.EN.value
-#     uid, code = await models.user.add(
+#     uid, code = await core.user.add(
 #         account=user.id,
 #         source=const.UserSource.GITHUB.value,
 #         email=user.email,
@@ -250,7 +250,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 #         language=language,
 #     )
 #     new_user_node = const.NEW_USER_FIRST_NODE[language]
-#     _, code = await models.node.add(
+#     _, code = await core.node.add(
 #         uid=uid,
 #         title=new_user_node["title"],
 #         text=new_user_node["text"],
