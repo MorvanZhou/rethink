@@ -409,6 +409,22 @@ async def disable(
     return const.Code.OK
 
 
+async def core_nodes(
+        uid: str,
+        page: int,
+        page_size: int,
+) -> Tuple[List[tps.Node], int]:
+    condition = {
+        "uid": uid,
+        "disabled": False,
+        "inTrash": False,
+    }
+    # the key of toNodeIds is a list, sort by the toNodeIds length, from large to small
+    docs = db_ops.sort_nodes_by_to_nids(condition=condition, page=page, page_size=page_size)
+    total = await COLL.nodes.count_documents(condition)
+    return await docs.to_list(length=None), total
+
+
 async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
     lns = const.NEW_USER_DEFAULT_NODES[language]
     n, code = await add(

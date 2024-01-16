@@ -303,6 +303,21 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
 
+        resp = self.client.post(
+            "/api/node/core",
+            json={
+                "requestId": "xxx",
+                "page": 0,
+                "pageSize": 10,
+            },
+            headers={"token": self.token},
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(2, rj["data"]["total"])
+        self.assertEqual(2, len(rj["data"]["nodes"]))
+
     def test_captcha(self):
         resp = self.client.get(
             "/api/captcha/img",

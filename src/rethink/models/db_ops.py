@@ -50,3 +50,20 @@ async def node_add_to_set(id_: str, key: str, value: Any) -> UpdateResult:
             {"$addToSet": {key: value}}
         )
     return res
+
+
+def sort_nodes_by_to_nids(condition: dict, page: int, page_size: int):
+    if config.is_local_db():
+        docs = COLL.nodes.find(condition).sort(
+            [("toNodeIdsLen", -1), ("_id", -1)]
+        ).skip(page * page_size).limit(page_size)
+    else:
+        docs = COLL.nodes.aggregate([
+            {"$match": condition},
+            {"$addFields": {"toNodeIdsLen": {"$size": "$toNodeIds"}}},
+            {"$sort": {"toNodeIdsLen": -1}},
+            {"$sort": {"_id": -1}},
+            {"$skip": page * page_size},
+            {"$limit": page_size},
+        ])
+    return docs

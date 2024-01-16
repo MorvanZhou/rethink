@@ -76,3 +76,18 @@ async def update_node(
         td=token_decode,
         req=req,
     )
+
+
+@router.post(
+    path="/node/core",
+    response_model=schemas.node.CoreNodesResponse,
+)
+@measure_time_spend
+async def get_core_nodes(
+        req: schemas.node.CoreNodesRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.node.CoreNodesResponse:
+    return await node_ops.get_core_nodes(
+        td=token_decode,
+        req=req,
+    )

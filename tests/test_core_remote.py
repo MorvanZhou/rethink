@@ -160,6 +160,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
+        nodes, total = await core.node.core_nodes(self.uid, 0, 10)
+        self.assertEqual(2, len(nodes))
+        self.assertEqual(2, total)
+
     @utils.skip_no_connect
     async def test_parse_at(self):
         nid1, _ = await core.node.add(

@@ -151,3 +151,41 @@ async def update_node(
         requestId=req.requestId,
         node=__get_node_data(n),
     )
+
+
+async def get_core_nodes(
+        td: TokenDecode,
+        req: schemas.node.CoreNodesRequest,
+) -> schemas.node.CoreNodesResponse:
+    if td.code != const.Code.OK:
+        return schemas.node.CoreNodesResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+            data=None,
+        )
+    nodes, total = await core.node.core_nodes(
+        uid=td.uid,
+        page=req.page,
+        page_size=req.pageSize,
+    )
+    return schemas.node.CoreNodesResponse(
+        code=const.Code.OK.value,
+        message=const.get_msg_by_code(const.Code.OK, td.language),
+        requestId=req.requestId,
+        data=schemas.node.NodesSearchResponse.Data(
+            total=total,
+            nodes=[
+                schemas.node.NodesSearchResponse.Data.Node(
+                    id=n["id"],
+                    title=n["title"],
+                    snippet=n["snippet"],
+                    titleHighlight="",
+                    bodyHighlights=[],
+                    score=0,
+                    type=n["type"],
+                    createdAt=datetime2str(n["_id"].generation_time),
+                    modifiedAt=datetime2str(n["modifiedAt"]),
+                ) for n in nodes],
+        ),
+    )
