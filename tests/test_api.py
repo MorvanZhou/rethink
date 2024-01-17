@@ -59,6 +59,23 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(rj["token"]), 0)
         self.assertEqual("xxx", rj["requestId"])
 
+    @patch(
+        "rethink.core.verify.email.EmailServer._send"
+    )
+    def test_email_verification(self, mock_send):
+        mock_send.return_value = const.Code.OK
+        token, _ = verification.random_captcha()
+        data = jwt_decode(token)
+        resp = self.client.post("/api/email/register", json={
+            "email": "a@c.com",
+            "captchaToken": token,
+            "captchaCode": data["code"],
+            "language": "zh",
+            "requestId": "xxx"
+        })
+        rj = resp.json()
+        print(rj)
+
 
 class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     @classmethod

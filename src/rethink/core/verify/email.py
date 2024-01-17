@@ -12,11 +12,11 @@ class EmailServer:
     default_language = const.Language.EN
 
     lang_subject = {
-        const.Language.EN: "Rethink: Security Code",
-        const.Language.ZH: "Rethink: 安全密码",
+        const.Language.EN.value: "Rethink: Security Code",
+        const.Language.ZH.value: "Rethink: 安全密码",
     }
     lang_content = {
-        const.Language.EN: dedent("""\
+        const.Language.EN.value: dedent("""\
         Please use the following security code for your Rethink account {email}:
         <br><br>
         Security Code: <strong>{numbers}</strong>
@@ -29,7 +29,7 @@ class EmailServer:
         Thank you!<br>
         Rethink Team
         """),
-        const.Language.ZH: dedent("""\
+        const.Language.ZH.value: dedent("""\
         请使用以下用于 Rethink 账户 {email} 的安全代码：
         <br><br>
         安全代码：<strong>{numbers}</strong>

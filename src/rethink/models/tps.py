@@ -5,6 +5,7 @@ from bson import ObjectId
 from typing_extensions import TypedDict
 
 
+# not used, just for reference
 class LinkedNode(TypedDict):
     _id: ObjectId
     id: str

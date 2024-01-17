@@ -5,7 +5,6 @@ from rethink import const
 from rethink.controllers import schemas, auth
 from rethink.core.verify.email import email_server
 from rethink.core.verify.verification import encode_numbers, verify_captcha
-from rethink.logger import logger
 
 
 def __check_and_send_email(
@@ -27,12 +26,11 @@ def __check_and_send_email(
         expire=expired_min,
         language=language,
     )
-    logger.info(f"send email to {email} with code {numbers}")
     return numbers, expired_min, code
 
 
 def send_email_verification(req: schemas.user.EmailVerificationRequest) -> schemas.base.TokenResponse:
-    if req.language not in const.Language.__members__:
+    if req.language not in [lang.value for lang in const.Language.__members__.values()]:
         req.language = const.Language.EN.value
     numbers, expired_min, code = __check_and_send_email(
         email=req.email,
@@ -59,7 +57,7 @@ def send_email_verification(req: schemas.user.EmailVerificationRequest) -> schem
 async def check_email_then_send_email_verification(
         req: schemas.user.EmailVerificationRequest,
 ) -> schemas.base.TokenResponse:
-    if req.language not in const.Language.__members__:
+    if req.language not in [lang.value for lang in const.Language.__members__.values()]:
         req.language = const.Language.EN.value
     u, code = await auth.get_user_by_email(email=req.email)
     if code == const.Code.OK:
