@@ -74,7 +74,8 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
             "requestId": "xxx"
         })
         rj = resp.json()
-        print(rj)
+        self.assertEqual(0, rj["code"])
+        self.assertNotEqual("", rj["token"])
 
 
 class TokenApiTest(unittest.IsolatedAsyncioTestCase):
