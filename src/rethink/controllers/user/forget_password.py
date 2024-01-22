@@ -20,6 +20,6 @@ async def reset_password(req: schemas.user.ResetPasswordRequest) -> schemas.base
 
     return schemas.base.AcknowledgeResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, u["language"]),
+        message=const.get_msg_by_code(code, u["settings"]["language"]),
         requestId=req.requestId,
     )

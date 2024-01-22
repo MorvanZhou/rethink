@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Literal
 
 from bson import ObjectId
 from typing_extensions import TypedDict
@@ -39,6 +39,14 @@ class _LastState(TypedDict):
     recentCursorSearchSelectedNIds: List[str]
 
 
+class _Settings(TypedDict):
+    language: str
+    theme: Literal["light", "dark"]
+    editorMode: Literal["ir", "wysiwyg"]
+    editorFontSize: int
+    editorCodeTheme: Literal["dracula", "github"]
+
+
 class UserMeta(TypedDict):
     _id: ObjectId
     id: str
@@ -50,10 +58,10 @@ class UserMeta(TypedDict):
     hashed: str
     disabled: bool
     modifiedAt: datetime.datetime
-    language: str
     usedSpace: int
     type: int
     lastState: _LastState
+    settings: _Settings
 
 
 class UserFile(TypedDict):

@@ -65,7 +65,6 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             hashed="1",
             nickname="2",
             avatar="3",
-            language="zh",
             node_display_method=const.NodeDisplayMethod.LIST.value,
         )
         self.assertEqual(const.Code.OK, code)
@@ -75,7 +74,6 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("1", u["hashed"])
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])
-        self.assertEqual("zh", u["language"])
         self.assertEqual(const.NodeDisplayMethod.LIST.value, u["lastState"]["nodeDisplayMethod"])
 
         code = await core.user.disable(uid=_id)

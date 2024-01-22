@@ -5,6 +5,35 @@ from rethink.core.verify.verification import verify_captcha
 from rethink.utils import jwt_encode, mask_email
 
 
+def __get_user(u: dict) -> schemas.user.UserInfoResponse.User:
+    u["email"] = mask_email(u["email"])
+    if config.is_local_db():
+        max_space = 0
+    else:
+        max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
+    last_state = u["lastState"]
+    u_settings = u["settings"]
+    return schemas.user.UserInfoResponse.User(
+        email=u["email"],
+        nickname=u["nickname"],
+        avatar=u["avatar"],
+        createdAt=datetime2str(u["_id"].generation_time),
+        usedSpace=u["usedSpace"],
+        maxSpace=max_space,
+        lastState=schemas.user.UserInfoResponse.User.LastState(
+            nodeDisplayMethod=last_state["nodeDisplayMethod"],
+            nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
+        ),
+        settings=schemas.user.UserInfoResponse.User.Settings(
+            language=u_settings["language"],
+            theme=u_settings["theme"],
+            editorMode=u_settings["editorMode"],
+            editorFontSize=u_settings["editorFontSize"],
+            editorCodeTheme=u_settings["editorCodeTheme"],
+        ),
+    )
+
+
 async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
     if req.language not in const.Language.__members__:
         req.language = const.Language.EN.value
@@ -58,17 +87,17 @@ async def login(req: schemas.user.LoginRequest) -> schemas.base.TokenResponse:
         return schemas.base.TokenResponse(
             requestId=req.requestId,
             code=code.value,
-            message=const.get_msg_by_code(code, u["language"]),
+            message=const.get_msg_by_code(code, u["settings"]["language"]),
             token="",
         )
     token = jwt_encode(
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": u["id"], "language": u["language"]},
+        data={"uid": u["id"], "language": u["settings"]["language"]},
     )
     return schemas.base.TokenResponse(
         requestId=req.requestId,
         code=code.value,
-        message=const.get_msg_by_code(code, u["language"]),
+        message=const.get_msg_by_code(code, u["settings"]["language"]),
         token=token,
     )
 
@@ -90,29 +119,12 @@ async def get_user(
             code=code.value,
             message=const.get_msg_by_code(code, td.language),
         )
-    u["email"] = mask_email(u["email"])
-    if config.is_local_db():
-        max_space = 0
-    else:
-        max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
-    last_state = u["lastState"]
+    user_meta = __get_user(u)
     return schemas.user.UserInfoResponse(
         requestId=req_id,
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
-        user=schemas.user.UserInfoResponse.User(
-            email=u["email"],
-            nickname=u["nickname"],
-            avatar=u["avatar"],
-            createdAt=datetime2str(u["_id"].generation_time),
-            language=u["language"],
-            usedSpace=u["usedSpace"],
-            maxSpace=max_space,
-            lastState=schemas.user.UserInfoResponse.User.LastState(
-                nodeDisplayMethod=last_state["nodeDisplayMethod"],
-                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
-            ),
-        )
+        user=user_meta,
     )
 
 
@@ -130,24 +142,40 @@ async def update_user(
         uid=td.uid,
         nickname=req.nickname,
         avatar=req.avatar,
-        language=req.language,
         node_display_method=req.nodeDisplayMethod,
         node_display_sort_key=req.nodeDisplaySortKey,
     )
-    last_state = u["lastState"]
+    user_meta = __get_user(u)
     return schemas.user.UserInfoResponse(
         requestId=req.requestId,
         code=code.value,
         message=const.get_msg_by_code(code, td.language),
-        user=schemas.user.UserInfoResponse.User(
-            email=u["email"],
-            nickname=u["nickname"],
-            avatar=u["avatar"],
-            createdAt=datetime2str(u["_id"].generation_time),
-            language=u["language"],
-            lastState=schemas.user.UserInfoResponse.User.LastState(
-                nodeDisplayMethod=last_state["nodeDisplayMethod"],
-                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
-            ),
-        ),
+        user=user_meta,
+    )
+
+
+async def update_settings(
+        td: TokenDecode,
+        req: schemas.user.UpdateSettingsRequest,
+) -> schemas.user.UserInfoResponse:
+    if td.code != const.Code.OK:
+        return schemas.user.UserInfoResponse(
+            requestId=req.requestId,
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+        )
+    u, code = await core.user.update_settings(
+        uid=td.uid,
+        language=req.language,
+        theme=req.theme,
+        editor_mode=req.editorMode,
+        editor_font_size=req.editorFontSize,
+        editor_code_theme=req.editorCodeTheme,
+    )
+    user_meta = __get_user(u)
+    return schemas.user.UserInfoResponse(
+        requestId=req.requestId,
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        user=user_meta,
     )

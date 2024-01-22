@@ -71,6 +71,22 @@ async def update_user(
 
 
 @router.post(
+    path="/user/settings",
+    response_model=schemas.user.UserInfoResponse,
+)
+@measure_time_spend
+async def update_user_settings(
+        req: schemas.user.UpdateSettingsRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        referer: Optional[str] = Depends(verify_referer),
+) -> schemas.user.UserInfoResponse:
+    return await user_ops.update_settings(
+        td=token_decode,
+        req=req,
+    )
+
+
+@router.post(
     path="/user/password",
     response_model=schemas.base.TokenResponse,
 )

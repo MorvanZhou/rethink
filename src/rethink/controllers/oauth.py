@@ -61,7 +61,7 @@ async def callback_github(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
             token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-                data={"uid": u["id"], "language": u["language"]},
+                data={"uid": u["id"], "language": u["settings"]["language"]},
             ),
         )
 
@@ -143,7 +143,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
             token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-                data={"uid": u["id"], "language": u["language"]},
+                data={"uid": u["id"], "language": u["settings"]["language"]},
             ),
         )
 
@@ -223,7 +223,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 #             message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
 #             token=controllers.auth.jwt_encode(
 #                 uid=u["id"],
-#                 language=u["language"],
+#                 language=u["settings"]["language"],
 #             ),
 #         )
 #

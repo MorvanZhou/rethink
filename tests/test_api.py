@@ -138,6 +138,23 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
         self.assertEqual("xxx", rj["requestId"])
 
+        resp = self.client.post("/api/user/settings", json={
+            "requestId": "xxx",
+            "language": const.Language.ZH.value,
+            "theme": "dark",
+            "editorMode": "ir",
+            "editorFontSize": 20,
+            "editorCodeTheme": "dracula",
+        }, headers={"token": self.token})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual("zh", rj["user"]["settings"]["language"])
+        self.assertEqual("ir", rj["user"]["settings"]["editorMode"])
+        self.assertEqual("dark", rj["user"]["settings"]["theme"])
+        self.assertEqual(20, rj["user"]["settings"]["editorFontSize"])
+        self.assertEqual("dracula", rj["user"]["settings"]["editorCodeTheme"])
+
     def test_recent_search(self):
         resp = self.client.post(
             "/api/search/node",

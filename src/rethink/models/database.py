@@ -137,7 +137,13 @@ async def __local_try_add_default_user():
         "nickname": const.DEFAULT_USER["nickname"],
         "avatar": const.DEFAULT_USER["avatar"],
         "account": const.DEFAULT_USER["email"],
-        "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
+        "settings": {
+            "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
+            "theme": "light",
+            "editorMode": "wysiwyg",
+            "editorFontSize": 15,
+            "editorCodeTheme": "github",
+        }
     }
     with open(dot_rethink_path, "w", encoding="utf-8") as f:
         out = u_insertion.copy()
@@ -145,7 +151,7 @@ async def __local_try_add_default_user():
         json.dump(out, f, indent=2, ensure_ascii=False)
 
     logger.info("running at the first time, a user with initial data will be created")
-    ns = const.NEW_USER_DEFAULT_NODES[u_insertion["language"]]
+    ns = const.NEW_USER_DEFAULT_NODES[u_insertion["settings"]["language"]]
     search_docs = []
 
     async def create_node(md: str, to_nid: Optional[str] = None):
@@ -192,7 +198,6 @@ async def __local_try_add_default_user():
         "nickname": u_insertion["nickname"],
         "avatar": u_insertion["avatar"],
         "account": u_insertion["email"],
-        "language": u_insertion["language"],
 
         "source": const.UserSource.LOCAL.value,
         "hashed": "",
@@ -205,7 +210,8 @@ async def __local_try_add_default_user():
             "recentSearch": [],
             "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
             "nodeDisplaySortKey": "modifiedAt"
-        }
+        },
+        "settings": u_insertion["settings"],
     }
     _ = await COLL.users.insert_one(u)
 
@@ -243,7 +249,6 @@ async def __local_restore():
         "nickname": u_insertion["nickname"],
         "avatar": u_insertion["avatar"],
         "account": u_insertion["email"],
-        "language": u_insertion["language"],
 
         "source": const.UserSource.LOCAL.value,
         "hashed": "",
@@ -256,7 +261,8 @@ async def __local_restore():
             "recentSearch": [],
             "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
             "nodeDisplaySortKey": "modifiedAt"
-        }
+        },
+        "settings": u_insertion["settings"],
     }
     _ = await COLL.users.insert_one(u)
 

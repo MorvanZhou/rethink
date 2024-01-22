@@ -51,6 +51,7 @@ class Code(Enum):
     INVALID_NODE_DISPLAY_SORT_KEY = auto()  # 27
     INVALID_EMAIL = auto()  # 28
     REQUEST_INPUT_ERROR = auto()  # 29
+    INVALID_SETTING = auto()  # 30
 
 
 INT_CODE_MAP = {
@@ -96,6 +97,7 @@ CODE_MESSAGES = {
     Code.INVALID_NODE_DISPLAY_SORT_KEY: CodeMessage(zh="无效的排序方式", en="Invalid sort key"),
     Code.INVALID_EMAIL: CodeMessage(zh="邮箱格式错误", en="Email format error"),
     Code.REQUEST_INPUT_ERROR: CodeMessage(zh="请求输入错误", en="Request input error"),
+    Code.INVALID_SETTING: CodeMessage(zh="无效的设置", en="Invalid setting"),
 }
 
 DEFAULT_USER = {

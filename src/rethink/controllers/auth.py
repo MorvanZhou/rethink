@@ -29,7 +29,7 @@ async def token2uid(token: str = Header(...)) -> TokenDecode:
             logger.error(f"core.user.get err: {const.CODE_MESSAGES[code].zh}")
             return TokenDecode(code=code, language=language)
         uid = u["id"]
-        language = u["language"]
+        language = u["settings"]["language"]
     except jwt.exceptions.ExpiredSignatureError:
         code = const.Code.EXPIRED_AUTH
         err = "auth token expired"

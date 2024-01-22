@@ -1,15 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel, NonNegativeInt, HttpUrl, EmailStr, AfterValidator, Field
-from typing_extensions import Annotated
+from pydantic import BaseModel, NonNegativeInt, EmailStr, Field
 
 from rethink import const
-
-
-def empty_str_to_http_url(v: str) -> HttpUrl:
-    if v == "":
-        return v
-    return HttpUrl(v)
 
 
 class UserInfoResponse(BaseModel):
@@ -18,14 +11,21 @@ class UserInfoResponse(BaseModel):
             nodeDisplayMethod: NonNegativeInt
             nodeDisplaySortKey: str
 
+        class Settings(BaseModel):
+            language: Literal["en", "zh"]
+            theme: Literal["light", "dark"]
+            editorMode: Literal["ir", "wysiwyg"]
+            editorFontSize: NonNegativeInt
+            editorCodeTheme: Literal["dracula", "github"]
+
         email: str
         nickname: str
-        avatar: Annotated[str, AfterValidator(empty_str_to_http_url)]
+        avatar: str
         createdAt: str
-        language: Literal["en", "zh"]
         usedSpace: NonNegativeInt = 0
         maxSpace: NonNegativeInt = 0
         lastState: LastState
+        settings: Settings
 
     code: NonNegativeInt
     message: str
@@ -51,7 +51,6 @@ class LoginRequest(BaseModel):
 class UpdateRequest(BaseModel):
     nickname: str = Field(default="", max_length=const.NICKNAME_MAX_LENGTH)
     avatar: str = Field(default="", max_length=2048)
-    language: Literal["en", "zh"] = ""
     nodeDisplayMethod: int = Field(default=-1, ge=-1, le=10)
     nodeDisplaySortKey: Literal["modifiedAt", "createdAt", "title", ""] = Field(default="", max_length=20)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
@@ -70,4 +69,13 @@ class ResetPasswordRequest(BaseModel):
     newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     verification: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     verificationToken: str = Field(max_length=2000)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+
+
+class UpdateSettingsRequest(BaseModel):
+    language: Literal["en", "zh"] = const.Language.EN.value
+    theme: Literal["light", "dark", ""] = ""
+    editorMode: Literal["ir", "wysiwyg", ""] = ""
+    editorFontSize: int = -1
+    editorCodeTheme: Literal["dracula", "github", ""] = ""
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)

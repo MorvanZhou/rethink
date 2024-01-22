@@ -1,6 +1,6 @@
 import datetime
 import html
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Literal
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -37,7 +37,6 @@ async def add(
         "nickname": nickname,
         "modifiedAt": oid.generation_time,
         "nodeIds": [],
-        "language": language,
         "usedSpace": 0,
         "type": const.USER_TYPE.NORMAL.id,
         "lastState": {
@@ -45,6 +44,13 @@ async def add(
             "recentSearch": [],
             "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
             "nodeDisplaySortKey": "modifiedAt"
+        },
+        "settings": {
+            "language": language,
+            "editorMode": "wysiwyg",
+            "editorTheme": "light",
+            "editorFontSize": 15,
+            "editorCodeTheme": "github",
         }
     }
     res = await COLL.users.insert_one(data)
@@ -58,7 +64,6 @@ async def update(
         hashed: str = "",
         nickname: str = "",
         avatar: str = "",
-        language: str = "",
         node_display_method: int = -1,
         node_display_sort_key: str = "",
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
@@ -78,11 +83,6 @@ async def update(
     avatar = str(avatar).strip()
     if avatar != "" and avatar != u["avatar"]:
         new_data["avatar"] = avatar
-    language = language.strip()
-    if language != "" and language != u["language"]:
-        if not const.Language.is_valid(language):
-            return None, const.Code.INVALID_LANGUAGE
-        new_data["language"] = language
 
     if node_display_method != u["lastState"]["nodeDisplayMethod"] and node_display_method >= 0:
         if node_display_method >= len(const.NodeDisplayMethod):
@@ -92,6 +92,58 @@ async def update(
         if node_display_sort_key not in ["modifiedAt", "createdAt", "title"]:
             return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
         new_data["lastState.nodeDisplaySortKey"] = node_display_sort_key
+
+    res = await COLL.users.update_one(
+        {"id": uid},
+        {"$set": new_data},
+    )
+    if res.modified_count != 1:
+        return None, const.Code.OPERATION_FAILED
+    return await get(uid=uid)
+
+
+async def update_settings(
+        uid: str,
+        language: str = "",
+        theme: Literal["", "light", "dark"] = "",
+        editor_mode: Literal["", "ir", "wysiwyg"] = "",
+        editor_font_size: int = -1,
+        editor_code_theme: Literal["", "github", "dracula"] = "",
+) -> Tuple[Optional[tps.UserMeta], const.Code]:
+    u, code = await get(uid=uid)
+    if code != const.Code.OK:
+        return None, code
+
+    new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
+
+    language = language.strip()
+    if language != "" and language != u["settings"]["language"]:
+        if not const.Language.is_valid(language):
+            return None, const.Code.INVALID_LANGUAGE
+        new_data["settings.language"] = language
+
+    editor_mode = editor_mode.strip()
+    if editor_mode != "" and editor_mode != u["settings"]["editorMode"]:
+        if editor_mode not in ["ir", "wysiwyg"]:
+            return None, const.Code.INVALID_SETTING
+        new_data["settings.editorMode"] = editor_mode
+
+    theme = theme.strip()
+    if theme != "" and theme != u["settings"]["theme"]:
+        if theme not in ["light", "dark"]:
+            return None, const.Code.INVALID_SETTING
+        new_data["settings.theme"] = theme
+
+    if editor_font_size != -1 and editor_font_size != u["settings"]["editorFontSize"]:
+        if editor_font_size < 10 or editor_font_size > 30:
+            return None, const.Code.INVALID_SETTING
+        new_data["settings.editorFontSize"] = editor_font_size
+
+    editor_code_theme = editor_code_theme.strip()
+    if editor_code_theme != "" and editor_code_theme != u["settings"]["editorCodeTheme"]:
+        if editor_code_theme not in ["dracula", "github"]:
+            return None, const.Code.INVALID_SETTING
+        new_data["settings.editorCodeTheme"] = editor_code_theme
 
     res = await COLL.users.update_one(
         {"id": uid},
