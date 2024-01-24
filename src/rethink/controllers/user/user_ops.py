@@ -128,6 +128,22 @@ async def get_user(
     )
 
 
+def __return_user_resp(u: dict, code: const.Code, req_id: str) -> schemas.user.UserInfoResponse:
+    if code != const.Code.OK:
+        return schemas.user.UserInfoResponse(
+            requestId=req_id,
+            code=code.value,
+            message=const.get_msg_by_code(code, u["settings"]["language"]),
+        )
+    user_meta = __get_user(u)
+    return schemas.user.UserInfoResponse(
+        requestId=req_id,
+        code=code.value,
+        message=const.get_msg_by_code(code, u["settings"]["language"]),
+        user=user_meta,
+    )
+
+
 async def update_user(
         td: TokenDecode,
         req: schemas.user.UpdateRequest,
@@ -145,13 +161,7 @@ async def update_user(
         node_display_method=req.nodeDisplayMethod,
         node_display_sort_key=req.nodeDisplaySortKey,
     )
-    user_meta = __get_user(u)
-    return schemas.user.UserInfoResponse(
-        requestId=req.requestId,
-        code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        user=user_meta,
-    )
+    return __return_user_resp(u, code, req.requestId)
 
 
 async def update_settings(
@@ -172,10 +182,4 @@ async def update_settings(
         editor_font_size=req.editorFontSize,
         editor_code_theme=req.editorCodeTheme,
     )
-    user_meta = __get_user(u)
-    return schemas.user.UserInfoResponse(
-        requestId=req.requestId,
-        code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        user=user_meta,
-    )
+    return __return_user_resp(u, code, req.requestId)

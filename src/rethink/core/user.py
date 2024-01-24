@@ -108,7 +108,7 @@ async def update_settings(
         theme: Literal["", "light", "dark"] = "",
         editor_mode: Literal["", "ir", "wysiwyg"] = "",
         editor_font_size: int = -1,
-        editor_code_theme: Literal["", "github", "dracula"] = "",
+        editor_code_theme: tps.CODE_THEME_TYPES = "",
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u, code = await get(uid=uid)
     if code != const.Code.OK:
@@ -141,7 +141,7 @@ async def update_settings(
 
     editor_code_theme = editor_code_theme.strip()
     if editor_code_theme != "" and editor_code_theme != u["settings"]["editorCodeTheme"]:
-        if editor_code_theme not in ["dracula", "github"]:
+        if editor_code_theme not in tps.CODE_THEME_TYPES.__args__:
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorCodeTheme"] = editor_code_theme
 

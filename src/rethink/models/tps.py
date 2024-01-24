@@ -4,6 +4,10 @@ from typing import List, Optional, Dict, Literal
 from bson import ObjectId
 from typing_extensions import TypedDict
 
+CODE_THEME_TYPES = Literal[
+    "dracula", "github", "emacs", "tango", "",
+]
+
 
 # not used, just for reference
 class LinkedNode(TypedDict):
@@ -44,7 +48,7 @@ class _Settings(TypedDict):
     theme: Literal["light", "dark"]
     editorMode: Literal["ir", "wysiwyg"]
     editorFontSize: int
-    editorCodeTheme: Literal["dracula", "github"]
+    editorCodeTheme: CODE_THEME_TYPES
 
 
 class UserMeta(TypedDict):

@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, NonNegativeInt, EmailStr, Field
 
 from rethink import const
+from rethink.models.tps import CODE_THEME_TYPES
 
 
 class UserInfoResponse(BaseModel):
@@ -16,7 +17,7 @@ class UserInfoResponse(BaseModel):
             theme: Literal["light", "dark"]
             editorMode: Literal["ir", "wysiwyg"]
             editorFontSize: NonNegativeInt
-            editorCodeTheme: Literal["dracula", "github"]
+            editorCodeTheme: str
 
         email: str
         nickname: str
@@ -77,5 +78,5 @@ class UpdateSettingsRequest(BaseModel):
     theme: Literal["light", "dark", ""] = ""
     editorMode: Literal["ir", "wysiwyg", ""] = ""
     editorFontSize: int = -1
-    editorCodeTheme: Literal["dracula", "github", ""] = ""
+    editorCodeTheme: CODE_THEME_TYPES = ""
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
