@@ -198,6 +198,10 @@ def ssrf_check(url: str) -> bool:
     if '@' in url:
         return True
     host = urlparse(url).hostname
+    # cos url
+    settings = config.get_settings()
+    if host == f"{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com":
+        return True
     try:
         ip = ipaddress.IPv4Address(socket.gethostbyname(host))
     except socket.gaierror:
@@ -206,6 +210,7 @@ def ssrf_check(url: str) -> bool:
         return True
     if is_internal_ip(ip):
         return True
+    return False
 
 
 async def get_title_description_from_link(url: str, language: str, count=0) -> Tuple[str, str]:

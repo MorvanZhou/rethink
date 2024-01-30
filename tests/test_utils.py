@@ -8,12 +8,10 @@ from rethink import const, config, utils
 
 
 class UtilsTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
+    def setUp(self) -> None:
         config.get_settings.cache_clear()
 
-    @classmethod
-    def tearDownClass(cls) -> None:
+    def tearDown(self) -> None:
         config.get_settings.cache_clear()
 
     def test_short_uuid(self):
@@ -119,10 +117,14 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
         config.get_settings.cache_clear()
 
     # @unittest.skip("skip outer connection test")
-    @patch(
-        "rethink.utils.httpx.AsyncClient.get",
-    )
-    async def test_get_title_description_from_link(self, mock_get):
+    @patch("rethink.utils.httpx.AsyncClient.get")
+    @patch("rethink.config.get_settings")
+    async def test_get_title_description_from_link(self, mock_get_settings, mock_get, ):
+        s = config.Settings
+        s.COS_BUCKET_NAME = "rethink-dev-1258395282"
+        s.COS_REGION = "ap-hongkong"
+        s.DB_HOST = "127.0.0.1"
+        mock_get_settings.return_value = s
         for url, content, res in [
             (
                     "https://github.com/MorvanZhou/rethink",
@@ -214,3 +216,24 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             ("abcdef@b", "ab**f@b"),
         ]:
             self.assertEqual(res, utils.mask_email(email))
+
+    @patch(
+        "rethink.config.get_settings",
+    )
+    def test_ssrf(self, mock_get_settings):
+        for pre, url in [
+            (
+                    "rethink-product-1258395282",
+                    "https://rethink-product-1258395282.cos.ap-hongkong.myqcloud.com/userData/Rro/as.png",
+            ),
+            (
+                    "rethink-dev-1258395282",
+                    "https://rethink-dev-1258395282.cos.ap-hongkong.myqcloud.com/userData/qwqd/qwww.png",
+            ),
+        ]:
+            s = config.Settings
+            s.COS_BUCKET_NAME = pre
+            s.COS_REGION = "ap-hongkong"
+            s.DB_HOST = "127.0.0.1"
+            mock_get_settings.return_value = s
+            self.assertTrue(utils.ssrf_check(url), msg=url)

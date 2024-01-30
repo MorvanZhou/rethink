@@ -47,10 +47,10 @@ async def add(
         },
         "settings": {
             "language": language,
-            "editorMode": "wysiwyg",
-            "editorTheme": "light",
+            "editorMode": const.EditorMode.WYSIWYG.value,
+            "editorTheme": const.AppTheme.LIGHT.value,
             "editorFontSize": 15,
-            "editorCodeTheme": "github",
+            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
         }
     }
     res = await COLL.users.insert_one(data)
@@ -124,24 +124,24 @@ async def update_settings(
 
     editor_mode = editor_mode.strip()
     if editor_mode != "" and editor_mode != u["settings"]["editorMode"]:
-        if editor_mode not in ["ir", "wysiwyg"]:
+        if not const.EditorMode.is_valid(editor_mode):
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorMode"] = editor_mode
 
     theme = theme.strip()
     if theme != "" and theme != u["settings"]["theme"]:
-        if theme not in ["light", "dark"]:
+        if not const.AppTheme.is_valid(theme):
             return None, const.Code.INVALID_SETTING
         new_data["settings.theme"] = theme
 
     if editor_font_size != -1 and editor_font_size != u["settings"]["editorFontSize"]:
-        if editor_font_size < 10 or editor_font_size > 30:
+        if not const.EditorFontSize.is_valid(editor_font_size):
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorFontSize"] = editor_font_size
 
     editor_code_theme = editor_code_theme.strip()
     if editor_code_theme != "" and editor_code_theme != u["settings"]["editorCodeTheme"]:
-        if editor_code_theme not in tps.CODE_THEME_TYPES.__args__:
+        if not const.EditorCodeTheme.is_valid(editor_code_theme):
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorCodeTheme"] = editor_code_theme
 

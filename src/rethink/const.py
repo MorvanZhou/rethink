@@ -125,12 +125,8 @@ class Language(Enum):
             raise ValueError(f"Invalid language: {s}")
 
     @classmethod
-    def is_valid(cls, s: str):
-        try:
-            cls.from_str(s)
-            return True
-        except ValueError:
-            return False
+    def is_valid(cls, item: str):
+        return item in [v.value for v in cls.__members__.values()]
 
 
 def get_msg_by_code(code: Code, language: str = Language.EN.value):
@@ -239,3 +235,54 @@ class UserType:
 
 
 USER_TYPE = UserType()
+
+
+@unique
+class AppTheme(Enum):
+    DARK = "dark"
+    LIGHT = "light"
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def is_valid(cls, item: str):
+        return item in [v.value for v in cls.__members__.values()]
+
+
+@unique
+class EditorMode(Enum):
+    WYSIWYG = "wysiwyg"
+    IR = "ir"
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def is_valid(cls, item: str):
+        return item in [v.value for v in cls.__members__.values()]
+
+
+@unique
+class EditorCodeTheme(Enum):
+    DRACULA = "dracula"
+    GITHUB = "github"
+    EMACS = "emacs"
+    TANGO = "tango"
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def is_valid(cls, item: str):
+        return item in [v.value for v in cls.__members__.values()]
+
+
+@unique
+class EditorFontSize(Enum):
+    MAX = 30
+    MIN = 10
+
+    @classmethod
+    def is_valid(cls, item: int):
+        return cls.MIN.value <= item <= cls.MAX.value

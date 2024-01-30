@@ -14,7 +14,7 @@ from rethink.models.database import COLL
 from rethink.utils import ssrf_check, ASYNC_CLIENT_HEADERS
 from . import file_ops, queuing_upload
 
-MAX_IMAGE_SIZE = 1024 * 1024 * 10  # 10 mb
+MAX_IMAGE_SIZE = 1024 * 1024 * 3  # 3 mb
 QUEUE_INITED = False
 
 
@@ -26,14 +26,14 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
         return const.Code.TOO_MANY_FILES
 
     zipped_file = zipped_files[0]
-    if not zipped_file.filename.endswith(".zip"):
+    filename = zipped_file.filename
+    if not filename.endswith(".zip"):
         return const.Code.INVALID_FILE_TYPE
 
     if zipped_file.content_type not in ["application/zip", "application/octet-stream", "application/x-zip-compressed"]:
         return const.Code.INVALID_FILE_TYPE
 
     bytes_data = zipped_file.file.read()
-    filename = zipped_file.filename
 
     if is_local_db():
         # local db not support find_one_and_update

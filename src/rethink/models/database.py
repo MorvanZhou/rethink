@@ -139,10 +139,10 @@ async def __local_try_add_default_user():
         "account": const.DEFAULT_USER["email"],
         "settings": {
             "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
-            "theme": "light",
-            "editorMode": "wysiwyg",
+            "theme": const.AppTheme.LIGHT.value,
+            "editorMode": const.EditorMode.WYSIWYG.value,
             "editorFontSize": 15,
-            "editorCodeTheme": "github",
+            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
         }
     }
     with open(dot_rethink_path, "w", encoding="utf-8") as f:
@@ -262,7 +262,13 @@ async def __local_restore():
             "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
             "nodeDisplaySortKey": "modifiedAt"
         },
-        "settings": u_insertion["settings"],
+        "settings": u_insertion.get("settings", {
+            "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
+            "theme": const.AppTheme.LIGHT.value,
+            "editorMode": const.EditorMode.WYSIWYG.value,
+            "editorFontSize": 15,
+            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+        }),
     }
     _ = await COLL.users.insert_one(u)
 

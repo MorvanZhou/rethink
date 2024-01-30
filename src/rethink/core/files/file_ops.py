@@ -1,10 +1,11 @@
 import hashlib
 import io
 import zipfile
+from dataclasses import dataclass, field
+from datetime import datetime
 from os.path import normpath
 from pathlib import Path
-from platform import system
-from typing import List, Tuple, BinaryIO, Dict, Union
+from typing import List, Tuple, BinaryIO, Dict, Optional
 
 from PIL import Image, UnidentifiedImageError
 from bson.objectid import ObjectId
@@ -43,50 +44,100 @@ async def delete_files(uid: str, fids: List[str]) -> Tuple[List[str], List[str]]
     return success_deletion, failed_deletion
 
 
-def unzip_file(zip_bytes: bytes) -> Dict[str, Dict[str, Union[bytes, int]]]:
-    with zipfile.ZipFile(io.BytesIO(zip_bytes), 'r') as ref:
-        filepaths = ref.namelist()
-        extracted_files = {}
+def _decode_filename(filepath: str) -> str:
+    # 尝试使用不同的编码格式解码文件名
+    encodings = ['utf-8', 'gbk', 'cp437']
+    for encoding in encodings:
+        try:
+            return filepath.encode('cp437').decode(encoding)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+    return filepath
+
+
+@dataclass
+class UnzipObsidian:
+    @dataclass
+    class Meta:
+        __slots__ = ["filepath", "filename", "title", "file", "size", "duplicate", "created_at"]
+        filepath: str
+        filename: str
+        title: str
+        file: bytes
+        size: int
+        duplicate: bool
+        created_at: Optional[datetime]
+
+    md: Dict[str, Meta] = field(default_factory=dict)
+    md_full: Dict[str, Meta] = field(default_factory=dict)
+    others: Dict[str, Meta] = field(default_factory=dict)
+    others_full: Dict[str, Meta] = field(default_factory=dict)
+
+
+def unzip_obsidian(zip_bytes: bytes) -> UnzipObsidian:
+    with zipfile.ZipFile(io.BytesIO(zip_bytes), 'r') as zf:
+        filepaths = zf.namelist()
+        extracted_files = UnzipObsidian()
         for filepath in filepaths:
-            info = ref.getinfo(filepath)
-            try:
-                if system() in ["Darwin", "Linux"]:
-                    _filepath = filepath.encode('cp437').decode('utf-8')
-                elif system() == "Windows":
-                    _filepath = filepath.encode('cp437').decode('gbk')
-                else:
-                    _filepath = filepath
-            except UnicodeEncodeError:
-                if system() == "Windows":
-                    _filepath = filepath.encode("utf-8").decode("utf-8")
-                _filepath = filepath
-            sp = _filepath.split("/")
-            if sp[0] in ["__MACOSX", ".DS_Store"]:
+            info = zf.getinfo(filepath)
+            if info.is_dir():
                 continue
-            if len(sp) > 1:
-                _filepath = "/".join(sp[1:])
-            if _filepath.strip() == "" or _filepath.startswith("."):
+            try:
+                _filepath = _decode_filename(filepath)
+            except UnicodeDecodeError:
+                _filepath = filepath
+            fp = Path(_filepath.split("/", 1)[-1])
+            # filter out system files
+            has_invalid_suffix = False
+            for p in fp.parts:
+                if p.startswith(".") or fp.name.startswith("__MACOSX"):
+                    has_invalid_suffix = True
+                    break
+            if has_invalid_suffix:
                 continue
 
             # Check for directory traversal
-            norm_path = normpath(_filepath)
+            norm_path = normpath(fp)
             if norm_path.startswith('../') or norm_path.startswith('..\\'):
                 continue  # or raise an exception
+            try:
+                title = regex.MD_FILE_EXT.findall(fp.name)[0]
+            except IndexError:
+                title = fp.name
 
-            extracted_files[_filepath] = {
-                "file": ref.read(filepath),
-                "size": info.file_size,
-            }
+            meta = UnzipObsidian.Meta(
+                filepath=norm_path,
+                filename=fp.name,
+                title=title,
+                file=zf.read(filepath),
+                size=info.file_size,
+                duplicate=False,
+                created_at=datetime(*info.date_time),
+            )
+
+            if fp.suffix.lower() == ".md":
+                entry = extracted_files.md
+                entry_full = extracted_files.md_full
+            else:
+                entry = extracted_files.others
+                entry_full = extracted_files.others_full
+
+            if fp.name in entry:
+                meta.duplicate = True
+            else:
+                entry[fp.name] = meta
+            entry_full[str(fp)] = meta
 
     return extracted_files
 
 
-async def __img_ptn_replace_upload(
+async def __file_ptn_replace_upload(
         uid: str,
         filepath: str,
-        filename: str,
+        filename: str,  # with ext
         md: str,
-        img_dict: Dict[str, bytes],
+        others_full: Dict[str, UnzipObsidian.Meta],
+        others_name: Dict[str, UnzipObsidian.Meta],
         resize_threshold: int,
         span: Tuple[int, int]
 ) -> str:
@@ -96,29 +147,35 @@ async def __img_ptn_replace_upload(
         filepath:
         filename:
         md:
-        img_dict:
+        others_full:
+        others_name:
         resize_threshold:
         span:
 
     Returns:
         md, uploaded_file_size
     """
-    if filepath not in img_dict:
-        return md
-    file = img_dict[filepath]
-    ext = filepath.split(".")[-1].lower()
-    if ext == "jpg":
-        ext = "jpeg"
-    content_type = f"image/{ext}"
-    bio_file = io.BytesIO(file)
+    try:
+        meta = others_name[filename]
+    except KeyError:
+        try:
+            meta = others_full[filepath]
+        except KeyError:
+            # not inner file
+            return md
+
+    # ext = filepath.split(".")[-1].lower()
+    # if ext == "jpg":
+    #     ext = "jpeg"
+    # content_type = f"image/{ext}"
+    bio_file = io.BytesIO(meta.file)
     bio_file.seek(0, io.SEEK_END)
     file_size_ = bio_file.tell()
-    url = await __save_image(
+    url = await __save_file(
         uid=uid,
-        filename=filepath,
+        filename=meta.filename,
         file=bio_file,
         file_size=file_size_,
-        content_type=content_type,
         resize_threshold=resize_threshold,
     )
     if url != "":
@@ -126,12 +183,12 @@ async def __img_ptn_replace_upload(
     return md
 
 
-async def replace_inner_link_and_upload_image(
+async def replace_inner_link_and_upload(
         uid: str,
         md: str,
-        exist_filename2nid: Dict[str, str],
-        img_path_dict: Dict[str, bytes],
-        img_name_dict: Dict[str, bytes],
+        exist_path2nid: Dict[str, str],
+        others_full: Dict[str, UnzipObsidian.Meta],
+        others_name: Dict[str, UnzipObsidian.Meta],
         resize_threshold: int,
 ) -> str:
     """
@@ -139,37 +196,46 @@ async def replace_inner_link_and_upload_image(
     Args:
         uid:
         md:
-        exist_filename2nid:
-        img_path_dict:
-        img_name_dict:
+        exist_path2nid:
+        others_full:
+        others_name:
         resize_threshold:
 
     Returns:
         md
     """
-    # image
+    # orig image link to inner image file
     for match in list(regex.MD_IMG.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)
         filepath = match.group(2)
-        md = await __img_ptn_replace_upload(
+
+        # ![xxx](aa/bb/cc.png)
+        md = await __file_ptn_replace_upload(
             uid=uid,
-            filepath=filepath,
-            filename=filename,
+            filepath=filepath,  # full path in zip
+            filename=filename,  # filename in md
             md=md,
-            img_dict=img_path_dict,
+            others_full=others_full,
+            others_name=others_name,
             resize_threshold=resize_threshold,
             span=span,
         )
-    for match in list(regex.OBS_INTERNAL_IMG.finditer(md))[::-1]:
+
+    # files
+    for match in list(regex.OBS_INTERNAL_FILE.finditer(md))[::-1]:
         span = match.span()
-        filepath = filename = match.group(1)
-        md = await __img_ptn_replace_upload(
+        filepath = match.group(1)
+
+        # ![[aa/bb/cc.png]]
+        # ![[aa.pdf]]
+        md = await __file_ptn_replace_upload(
             uid=uid,
             filepath=filepath,
-            filename=filename,
+            filename=Path(filepath).name,
             md=md,
-            img_dict=img_name_dict,
+            others_full=others_full,
+            others_name=others_name,
             resize_threshold=resize_threshold,
             span=span,
         )
@@ -178,10 +244,12 @@ async def replace_inner_link_and_upload_image(
     for match in list(regex.OBS_INTERNAL_LINK.finditer(md))[::-1]:
         span = match.span()
         filename = match.group(1)
-        nid = exist_filename2nid.get(filename)
-        if nid is None:
+        path = f"{filename}.md"
+        try:
+            nid = exist_path2nid[path]
+        except KeyError:
             nid = short_uuid()
-            exist_filename2nid[filename] = nid
+            exist_path2nid[path] = nid
         md = f"{md[: span[0]]}[@{filename}](/n/{nid}){md[span[1]:]}"
     return md
 
@@ -197,7 +265,6 @@ def file_hash(file: BinaryIO) -> str:
 
 def __get_out_bytes(
         file_size: int,
-        content_type: str,
         file: BinaryIO,
         resize_threshold: int,
 ) -> BinaryIO:
@@ -205,19 +272,18 @@ def __get_out_bytes(
         # reduce image size
         out = io.BytesIO()
         image = Image.open(file)
-        image.save(out, format=content_type.split("/")[-1].upper(), quality=50, optimize=True)
+        image.save(out, format="PNG", quality=50, optimize=True)
     else:
         out = file
     out.seek(0)
     return out
 
 
-async def __save_image(
+async def __save_file(
         uid: str,
         filename: str,
         file: BinaryIO,
         file_size: int,
-        content_type: str,
         resize_threshold: int,
 ) -> str:
     """
@@ -226,7 +292,6 @@ async def __save_image(
         filename:
         file:
         file_size:
-        content_type:
         resize_threshold:
 
     Returns:
@@ -240,7 +305,6 @@ async def __save_image(
         url = await upload_to_local_storage(
             uid=uid,
             file_size=file_size,
-            content_type=content_type,
             file=file,
             resize_threshold=resize_threshold,
             filename=filename,
@@ -253,7 +317,6 @@ async def __save_image(
             url = await upload_bytes_to_cos(
                 uid=uid,
                 file_size=file_size,
-                content_type=content_type,
                 file=file,
                 resize_threshold=resize_threshold,
                 filename=filename,
@@ -285,12 +348,11 @@ async def save_upload_files(
         if file.size > max_image_size:
             res["errFiles"].append(filename)
             continue
-        url = await __save_image(
+        url = await __save_file(
             uid=uid,
             filename=file.filename,
             file=file.file,
             file_size=file.size,
-            content_type=file.content_type,
             resize_threshold=resize_threshold,
         )
         if url == "":
@@ -303,7 +365,6 @@ async def save_upload_files(
 async def upload_bytes_to_cos(
         uid: str,
         file_size: int,
-        content_type: str,
         file: BinaryIO,
         resize_threshold: int,
         filename: str,
@@ -347,7 +408,6 @@ async def upload_bytes_to_cos(
             return url
     body = __get_out_bytes(
         file_size=file_size,
-        content_type=content_type,
         file=file,
         resize_threshold=resize_threshold
     )
@@ -358,7 +418,7 @@ async def upload_bytes_to_cos(
         Key=key,
         StorageClass='STANDARD',  # 'STANDARD'|'STANDARD_IA'|'ARCHIVE',
         EnableMD5=False,
-        ContentType=content_type,
+        # ContentType=content_type,
     )
     await insert_new_file(
         uid=uid,
@@ -372,7 +432,6 @@ async def upload_bytes_to_cos(
 async def upload_to_local_storage(
         uid: str,
         file_size: int,
-        content_type: str,
         file: BinaryIO,
         resize_threshold: int,
         filename: str,
@@ -388,7 +447,6 @@ async def upload_to_local_storage(
     try:
         out_bytes = __get_out_bytes(
             file_size=file_size,
-            content_type=content_type,
             file=file,
             resize_threshold=resize_threshold
         )

@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import multiprocessing
-import os
 import time
 import zipfile
 from typing import List, Optional, Tuple
@@ -16,7 +15,7 @@ from rethink.logger import logger
 from rethink.models.database import COLL
 from rethink.models.tps import ImportData
 
-RESIZE_IMG_THRESHOLD = 1024 * 256  # 256kb  # 1024 * 128  # 128 kb
+RESIZE_IMG_THRESHOLD = 1024 * 1022 * 1  # 1mb    # 1024 * 128  # 128 kb
 
 ctx = multiprocessing.get_context('spawn')
 QUEUE = ctx.Queue()
@@ -233,7 +232,7 @@ async def upload_obsidian_task(
 
     t0 = time.time()
     try:
-        unzipped_files = file_ops.unzip_file(bytes_data)
+        unzipped_files = file_ops.unzip_obsidian(bytes_data)
     except zipfile.BadZipFile as e:
         await __set_running_false(
             uid,
@@ -245,62 +244,71 @@ async def upload_obsidian_task(
     t1 = time.time()
     logger.info(f"obsidian upload, uid={uid}, unzip time: {t1 - t0:.2f}")
 
-    filtered_files = {}
-    existed_filename2nid = doc.get("obsidian", {}).copy()
-    img_path_dict = {}
-    img_name_dict = {}
-    md_count = 0
-    for filepath, data in unzipped_files.items():
-        try:
-            base_name, ext = filepath.rsplit(".", 1)
-        except ValueError:
-            continue
-        valid_file = {"md", "txt"}
-        valid_file.update(file_ops.VALID_IMG_EXT)
-        if ext not in valid_file:
-            continue
-        if data["size"] > max_file_size:
-            await __set_running_false(
-                uid,
-                const.Code.TOO_LARGE_FILE,
-                msg=f"file size > {max_file_size}: {filepath}",
-            )
-            logger.info(f"too large file: {filepath}, uid: {uid}")
-            return
-        if ext in ["md", "txt"]:
-            if len(filepath.split("/")) > 1:
-                continue
-            md_count += 1
-            filtered_files[filepath] = data["file"]
-        else:
-            img_path_dict[filepath] = data["file"]
-            img_name_dict[os.path.basename(filepath)] = data["file"]
+    existed_path2nid = doc.get("obsidian", {}).copy()
+    md_count = len(unzipped_files.md_full)
+    if md_count == 0:
+        await __set_running_false(
+            uid,
+            const.Code.INVALID_FILE_TYPE,
+            msg="no md file found",
+        )
+        logger.info(f"no md file found, uid: {uid}")
+        return
+    elif md_count > 2000:
+        await __set_running_false(
+            uid,
+            const.Code.TOO_MANY_FILES,
+            msg=f"md file count: {md_count} > 2000",
+        )
+        logger.info(f"too many md files: {md_count}, uid: {uid}")
+        return
+
+    # check file size
+    for full in [unzipped_files.md_full, unzipped_files.others_full]:
+        for full_path, meta in full.items():
+            meta: file_ops.UnzipObsidian.Meta
+
+            if meta.size > max_file_size:
+                await __set_running_false(
+                    uid,
+                    const.Code.TOO_LARGE_FILE,
+                    msg=f"file size > {max_file_size}: {full_path}",
+                )
+                logger.info(f"too large file: {full_path}, uid: {uid}")
+                return
+
     t2 = time.time()
     logger.info(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
 
     # add new md files with only title
-    for i, (filepath, file_bytes) in enumerate(filtered_files.items()):
-        base_name, ext = filepath.rsplit(".", 1)
-        if base_name in existed_filename2nid:
+    for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
+        meta: file_ops.UnzipObsidian.Meta
+
+        if full_path in existed_path2nid:
             continue
+
         try:
             n, code = await core.node.add(
                 uid=uid,
-                md=base_name,
+                md=meta.title,
                 type_=const.NodeType.MARKDOWN.value,
             )
         except pymongo.errors.DuplicateKeyError:
-            logger.error(f"duplicate key: {filepath}, uid: {uid}")
+            logger.error(f"duplicate key: {full_path}, uid: {uid}")
             continue
         if code != const.Code.OK:
             await __set_running_false(
                 uid,
                 code,
-                msg=f"new file insert failed: {filepath}",
+                msg=f"new file insert failed: {full_path}",
             )
-            logger.error(f"error: {code}, filepath: {filepath}, uid: {uid}")
+            logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
             return
-        existed_filename2nid[base_name] = n["id"]
+
+        # add full path and short name to existed_path2nid
+        existed_path2nid[full_path] = n["id"]
+        if meta.filename not in existed_path2nid:
+            existed_path2nid[meta.filename] = n["id"]
         if i % 20 == 0:
             doc, code = await update_process(uid=uid, type_=type_, process=int(i / md_count * 10))
             if code != const.Code.OK:
@@ -309,38 +317,39 @@ async def upload_obsidian_task(
                     code,
                     msg="process updating failed",
                 )
-                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
     t3 = time.time()
     logger.info(f"obsidian upload, uid={uid}, add new md time: {t3 - t2:.2f}")
 
-    # update all files and update md files
-    for i, (filepath, file_bytes) in enumerate(filtered_files.items()):
-        base_name, ext = filepath.rsplit(".", 1)
+    # update all md content and update md files
+    for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
+        meta: file_ops.UnzipObsidian.Meta
+
         try:
-            md = file_bytes.decode("utf-8")
+            md = meta.file.decode("utf-8")
         except (FileNotFoundError, OSError, UnicodeDecodeError) as e:
-            logger.error(f"error: {e}. filepath: {filepath}")
+            logger.error(f"error: {e}. filepath: {full_path}")
             await __set_running_false(
                 uid,
                 const.Code.FILE_OPEN_ERROR,
-                msg=f"file decode utf-8 failed, {e}: {filepath}",
+                msg=f"file decode utf-8 failed, {e}: {full_path}",
             )
-            logger.info(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {filepath}, uid: {uid}")
+            logger.info(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {full_path}, uid: {uid}")
             return
 
-        md = await file_ops.replace_inner_link_and_upload_image(
+        md = await file_ops.replace_inner_link_and_upload(
             uid=uid,
             md=md,
-            exist_filename2nid=existed_filename2nid,
-            img_path_dict=img_path_dict,
-            img_name_dict=img_name_dict,
+            exist_path2nid=existed_path2nid,
+            others_full=unzipped_files.others_full,
+            others_name=unzipped_files.others,
             resize_threshold=RESIZE_IMG_THRESHOLD,
         )
-        md = base_name + "\n\n" + md
-        nid = existed_filename2nid[base_name]
+        md = meta.title + "\n\n" + md
+        nid = existed_path2nid[full_path]
         n, code = await core.node.update(
             uid=uid,
             nid=nid,
@@ -357,18 +366,18 @@ async def upload_obsidian_task(
                 await __set_running_false(
                     uid,
                     code,
-                    msg=f"file insert failed: {filepath}",
+                    msg=f"file insert failed: {full_path}",
                 )
-                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
-            existed_filename2nid[base_name] = n["id"]
+            existed_path2nid[full_path] = n["id"]
         elif code != const.Code.OK:
             await __set_running_false(
                 uid,
                 code,
-                msg=f"file updating failed: {filepath}",
+                msg=f"file updating failed: {full_path}",
             )
-            logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+            logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
             return
         if i % 20 == 0:
             doc, code = await update_process(uid=uid, type_=type_, process=int(i / md_count * 40 + 10))
@@ -378,7 +387,7 @@ async def upload_obsidian_task(
                     code,
                     msg="uploading process update failed",
                 )
-                logger.info(f"error: {code}, filepath: {filepath}, uid: {uid}")
+                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
@@ -388,7 +397,7 @@ async def upload_obsidian_task(
     # update for old obsidian files
     count = 0
     for base_name, nid in doc["obsidian"].items():
-        if base_name not in existed_filename2nid:
+        if base_name not in existed_path2nid:
             n, code = await core.node.get(uid=uid, nid=nid)
             if code != const.Code.OK:
                 continue
@@ -418,7 +427,7 @@ async def upload_obsidian_task(
     t5 = time.time()
     logger.info(f"obsidian upload, uid={uid}, update for old obsidian files time: {t5 - t4:.2f}")
 
-    await __finish_task(uid=uid, obsidian=existed_filename2nid)
+    await __finish_task(uid=uid, obsidian=existed_path2nid)
 
 
 def async_task(queue: multiprocessing.Queue):
