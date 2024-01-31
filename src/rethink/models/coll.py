@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 from rethink.depend.mongita.collection import Collection
 
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorCollection
 
 @dataclass
 class Collections:
