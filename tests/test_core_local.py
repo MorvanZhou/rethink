@@ -37,13 +37,25 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(Path(__file__).parent / "tmp", ignore_errors=True)
 
     async def asyncSetUp(self) -> None:
-        await client.drop()
+        try:
+            await client.drop()
+        except (
+                PermissionError,
+                RuntimeError,
+        ):
+            pass
         await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
 
     async def asyncTearDown(self) -> None:
-        await client.drop()
+        try:
+            await client.drop()
+        except (
+                PermissionError,
+                RuntimeError,
+        ):
+            pass
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 

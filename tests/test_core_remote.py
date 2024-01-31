@@ -45,6 +45,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
+                PermissionError,
                 RuntimeError,
         ):
             print("remote test asyncSetUp timeout")
@@ -60,6 +61,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
+                PermissionError,
                 RuntimeError,
         ):
             print("remote test asyncTearDown timeout")
