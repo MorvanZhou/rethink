@@ -87,12 +87,16 @@ class Client:
                 RuntimeError,
                 FileNotFoundError,
                 PermissionError,
-                ServerSelectionTimeoutError,
         ):
             pass
 
         try:
             if self.mongo is not None:
+                db = self.mongo[config.get_settings().DB_NAME]
+                self.coll.users = db["users"]
+                self.coll.nodes = db["nodes"]
+                self.coll.import_data = db["importData"]
+                self.coll.user_file = db["userFile"]
                 await self.mongo.drop_database(config.get_settings().DB_NAME)
         except (
                 RuntimeError,
