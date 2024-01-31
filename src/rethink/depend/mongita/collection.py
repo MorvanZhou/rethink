@@ -79,10 +79,10 @@ def _validate_update(update):
             continue
         if k.startswith('$'):
             raise MongitaNotImplementedError(
-                "Mongita does not support %r. These update operators are " \
+                "Mongita does not support %r. These update operators are "
                 "supported: %r." % (k, _SUPPORTED_UPDATE_OPERATORS))
         raise MongitaError(
-            "In update operations, you must use one of the supported " \
+            "In update operations, you must use one of the supported "
             "update operators %r." % (_SUPPORTED_UPDATE_OPERATORS,))
     for update_dict in update.values():
         if not isinstance(update_dict, dict):
@@ -126,7 +126,7 @@ def _overlap(iter_a, iter_b):
     return not set(iter_a).isdisjoint(iter_b)
 
 
-def _doc_matches_agg(doc_v, query_ops):
+def _doc_matches_agg(doc_v, query_ops):  # noqa: C901
     """
     Return whether an individual document value matches a dict of
     query operations. Usually there will be one query_op but sometimes there
@@ -255,7 +255,7 @@ def _idx_filter_sort(query_op_tup):
             query_op in ('$lt', '$lte', '$gt', '$gte'))
 
 
-def _get_ids_from_idx(idx, query_ops):
+def _get_ids_from_idx(idx, query_ops):  # noqa: C901
     """
     Returns the ids that match a set of query_ops in an index.
 
@@ -335,7 +335,7 @@ def _failed_update_error(update_op, update_op_dict, doc, msg):
                         ({update_op: update_op_dict}, doc, msg))
 
 
-def _update_item_in_doc(update_op, update_op_dict, doc):
+def _update_item_in_doc(update_op, update_op_dict, doc):  # noqa: C901
     """
     Given an $update_op, a {doc_key: value} update_op_dict, and a doc,
     Update the doc in-place at doc_key with the update operation.
@@ -394,7 +394,7 @@ def _rightpad(item, desired_length):
         item.append(None)
 
 
-def _get_datastructure_from_doc(doc, key):
+def _get_datastructure_from_doc(doc, key):  # noqa: C901
     """
     Get a pass-by-reference data structure from the document so that we can
     update it in-place. This dives deep into the document with the key
@@ -843,7 +843,7 @@ class Collection():
             if doc:
                 return copy.deepcopy(doc)
 
-    def __find_ids(self, filter, sort=None, limit=None, skip=None, metadata=None):
+    def __find_ids(self, filter, sort=None, limit=None, skip=None, metadata=None):  # noqa: C901
         """
         Given a filter, find all doc_ids that match this filter.
         Be sure to also sort and limit them.

@@ -1,3 +1,4 @@
+# flake8: noqa
 from .upload import (
     upload_image_vditor,
     get_upload_process,

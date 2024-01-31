@@ -67,7 +67,7 @@ def __local_usage_delete_files(nids: List[str]):
             md_dir.unlink()
 
 
-async def add(
+async def add(  # noqa: C901
         uid: str,
         md: str,
         type_: int = const.NodeType.MARKDOWN.value,
@@ -191,7 +191,7 @@ async def get_batch(
     return docs, const.Code.OK
 
 
-async def update(
+async def update(  # noqa: C901
         uid: str,
         nid: str,
         md: str,

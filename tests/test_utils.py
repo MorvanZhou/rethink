@@ -129,8 +129,8 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             (
                     "https://github.com/MorvanZhou/rethink",
                     "<title>MorvanZhou/rethink: Rethink: a note taking web app</title>"
-                    """<meta name="description" content="Rethink: a note taking web app. Contribute to 
-                    MorvanZhou/rethink development by creating an account on GitHub.">""",
+                    """<meta name="description" content="Rethink: a note taking web app. Contribute to
+                     MorvanZhou/rethink development by creating an account on GitHub.">""",
                     True
             ),
             (

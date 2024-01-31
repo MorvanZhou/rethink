@@ -111,7 +111,7 @@ async def update(
     return await get(uid=uid)
 
 
-async def update_settings(
+async def update_settings(  # noqa: C901
         uid: str,
         language: str = "",
         theme: Literal["", "light", "dark"] = "",

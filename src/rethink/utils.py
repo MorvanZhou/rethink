@@ -213,7 +213,11 @@ def ssrf_check(url: str) -> bool:
     return False
 
 
-async def get_title_description_from_link(url: str, language: str, count=0) -> Tuple[str, str]:
+async def get_title_description_from_link(  # noqa: C901
+        url: str,
+        language: str,
+        count=0
+) -> Tuple[str, str]:
     if language == const.Language.ZH.value:
         no_title = "网址没发现标题"
         no_description = "网址没发现描述"

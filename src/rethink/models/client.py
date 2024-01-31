@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 import struct
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -17,9 +17,11 @@ from .coll import Collections
 from .indexing import remote_try_build_index
 from .tps import UserFile, ImportData, UserMeta, Node
 
-if TYPE_CHECKING:
+try:
     from motor.motor_asyncio import AsyncIOMotorClient
     from rethink.models.search_engine.engine_es import ESSearcher
+except ImportError:
+    pass
 
 
 class Client:
@@ -50,7 +52,6 @@ class Client:
             db_path.mkdir(parents=True, exist_ok=True)
             self.mongo = MongitaClientDisk(db_path)
         else:
-            from motor.motor_asyncio import AsyncIOMotorClient
             self.mongo = AsyncIOMotorClient(
                 host=conf.DB_HOST,
                 port=conf.DB_PORT,
@@ -73,7 +74,6 @@ class Client:
             if not isinstance(self.search, LocalSearcher):
                 self.search = LocalSearcher()
         else:
-            from rethink.models.search_engine.engine_es import ESSearcher
             if not isinstance(self.search, ESSearcher):
                 self.search = ESSearcher()
 
@@ -179,7 +179,7 @@ class Client:
             docs=search_docs,
         )
 
-    async def local_try_create_or_restore(self):
+    async def local_try_create_or_restore(self):  # noqa: C901
         if not config.get_settings().ONE_USER:
             return
 

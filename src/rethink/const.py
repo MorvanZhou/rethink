@@ -1,3 +1,4 @@
+# flake8: noqa
 from dataclasses import dataclass
 from enum import Enum, auto, unique
 from pathlib import Path

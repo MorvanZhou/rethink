@@ -10,8 +10,9 @@ class MongitaNotImplementedError(MongitaError, NotImplementedError):
 
     @staticmethod
     def create_client(cls, attr):
-        msg = "%s.%s is not yet implemented. Most MongoClient attributes/methods will never be implemented because this is the key place where Mongita differs. See the Mongita docs." % (
-            cls, attr)
+        msg = "%s.%s is not yet implemented. Most MongoClient attributes/methods " \
+              "will never be implemented because this is the key place where Mongita differs. " \
+              "See the Mongita docs." % (cls, attr)
         return MongitaNotImplementedError(msg)
 
     @staticmethod

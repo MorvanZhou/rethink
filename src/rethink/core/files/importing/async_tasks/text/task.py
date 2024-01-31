@@ -7,7 +7,7 @@ from rethink.logger import logger
 from .. import utils
 
 
-async def update_text_task(
+async def update_text_task(  # noqa: C901
         files: List[dict],
         max_file_size: int,
         uid: str,
