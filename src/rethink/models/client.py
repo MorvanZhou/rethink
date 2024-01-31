@@ -83,9 +83,9 @@ class Client:
         if self.search is not None:
             await self.search.drop()
         if self.mongo is not None:
-            await self.mongo.drop_database(config.get_settings().DB_NAME)
             if isinstance(self.mongo, MongitaClientDisk):
-                self.mongo.engine.delete_dir(config.get_settings().DB_NAME)
+                await self.mongo.close()
+            await self.mongo.drop_database(config.get_settings().DB_NAME)
 
     async def local_try_add_default_user(self):
         dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
