@@ -7,6 +7,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 from bson import ObjectId
 from bson.tz_util import utc
+from pymongo.errors import ServerSelectionTimeoutError
 
 from rethink import config, const, utils
 from rethink.depend.mongita import MongitaClientDisk
@@ -87,6 +88,7 @@ class Client:
         except (
                 RuntimeError,
                 FileNotFoundError,
+                ServerSelectionTimeoutError,
         ):
             pass
 
