@@ -117,14 +117,11 @@ class ESSearcher(BaseEngine):
                 basic_auth=(get_settings().ES_USER, get_settings().ES_PASSWORD),
                 request_timeout=5,
             )
-        try:
             resp = await self.es.indices.get_alias(index=f"{get_settings().ES_INDEX_ALIAS}-*")
             for index, aliases in resp.body.items():
                 if get_settings().ES_INDEX_ALIAS in aliases["aliases"]:
                     self.index = index
                     break
-        except RuntimeError:
-            logger.error("connect to es failed")
 
     async def init(self):
         # please install es 8.11.0
