@@ -82,7 +82,10 @@ class Client:
     async def drop(self):
         try:
             if self.mongo is not None:
-                await self.mongo.drop_database(config.get_settings().DB_NAME)
+                # check if db name is correct
+                db_names = await self.mongo.list_database_names()
+                if config.get_settings().DB_NAME in db_names:
+                    await self.mongo.drop_database(config.get_settings().DB_NAME)
             if self.search is not None:
                 await self.search.drop()
         except (

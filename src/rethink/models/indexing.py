@@ -1,10 +1,10 @@
+from rethink.models.coll import Collections
+
 IS_MOTOR = True
 try:
     from motor.motor_asyncio import AsyncIOMotorCollection
 except ImportError:
     IS_MOTOR = False
-
-from rethink.models.coll import Collections
 
 
 async def remote_try_build_index(coll: Collections):

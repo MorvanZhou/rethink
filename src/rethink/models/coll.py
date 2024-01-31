@@ -6,6 +6,7 @@ from rethink.depend.mongita.collection import Collection
 if TYPE_CHECKING:
     from motor.motor_asyncio import AsyncIOMotorCollection
 
+
 @dataclass
 class Collections:
     users: Union[Collection, "AsyncIOMotorCollection"] = None
