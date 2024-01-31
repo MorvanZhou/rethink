@@ -5,8 +5,10 @@ import elastic_transport
 import pymongo.errors
 from bson import ObjectId
 
-from rethink import const, models, config, core
+from rethink import const, config, core
 from rethink.controllers.auth import register_user
+from rethink.models import db_ops
+from rethink.models.client import client
 from rethink.utils import jwt_encode
 from . import utils
 
@@ -27,8 +29,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             print("remote test asyncSetUp skipped")
             return
         try:
-            await models.database.drop_all()
-            await models.database.init()
+            await client.drop()
+            await client.init()
             uid, code = await register_user(
                 email=const.DEFAULT_USER["email"],
                 password=self.default_pwd,
@@ -53,7 +55,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             print("remote test asyncTearDown skipped")
             return
         try:
-            await models.database.drop_all()
+            await client.drop()
         except (
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
@@ -64,8 +66,44 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             utils.skip_no_connect.skip = True
 
     @utils.skip_no_connect
+    async def test_same_key(self):
+        async def add():
+            oid = ObjectId()
+            await client.coll.users.insert_one({
+                "_id": oid,
+                "id": "same",
+                "account": "a",
+                "source": 0,
+                "email": "email",
+                "hashed": "hashed",
+                "avatar": "avatar",
+                "disabled": False,
+                "nickname": "nickname",
+                "modifiedAt": oid.generation_time,
+                "nodeIds": [],
+                "usedSpace": 0,
+                "type": const.USER_TYPE.NORMAL.id,
+                "lastState": {
+                    "recentCursorSearchSelectedNIds": [],
+                    "recentSearch": [],
+                    "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+                    "nodeDisplaySortKey": "modifiedAt"
+                },
+                "settings": {
+                    "language": "en",
+                    "editorMode": const.EditorMode.WYSIWYG.value,
+                    "editorTheme": const.AppTheme.LIGHT.value,
+                    "editorFontSize": 15,
+                    "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+                }
+            })
+
+        await add()
+        with self.assertRaises(pymongo.errors.DuplicateKeyError):
+            await add()
+
+    @utils.skip_no_connect
     async def test_user(self):
-        if models.database.CLIENT is None: return
         _id, code = await register_user(email="aaa@rethink.run", password="bbb123")
         self.assertNotEqual("", str(_id))
         self.assertEqual(const.Code.OK, code)
@@ -120,8 +158,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title", n["title"])
 
-        await models.database.searcher().refresh()
-        ns, total = await models.database.searcher().search(uid=self.uid)
+        await client.search.refresh()
+        ns, total = await client.search.search(uid=self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
@@ -143,13 +181,13 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await core.node.disable(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
-        await models.database.searcher().refresh()
+        await client.search.refresh()
         n, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.NODE_NOT_EXIST, code)
 
         code = await core.node.to_trash(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
-        await models.database.searcher().refresh()
+        await client.search.refresh()
         code = await core.node.delete(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
         n, code = await core.node.get(uid=self.uid, nid=node["id"])
@@ -183,16 +221,16 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        await models.database.searcher().refresh()
-        nodes, total = await models.database.searcher().search(uid=self.uid)
+        await client.search.refresh()
+        nodes, total = await client.search.search(uid=self.uid)
         self.assertEqual(5, len(nodes))
         self.assertEqual(5, total)
 
-        found, total = await models.database.searcher().search(uid=self.uid, query="我")
+        found, total = await client.search.search(uid=self.uid, query="我")
         self.assertEqual(2, len(found), msg=found)
         self.assertEqual(2, total)
 
-        recommend = await models.database.searcher().recommend(
+        recommend = await client.search.recommend(
             uid=self.uid,
             content="I do need a Knowledge Management System. This is a good one to try.",
             exclude_nids=[],
@@ -228,7 +266,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(node["toNodeIds"]))
         self.assertEqual(const.Code.OK, code)
 
-        res = await models.db_ops.node_add_to_set(node["id"], "toNodeIds", ObjectId())
+        res = await db_ops.node_add_to_set(node["id"], "toNodeIds", ObjectId())
         self.assertEqual(1, res.modified_count)
         node, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -253,16 +291,16 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, total)
         self.assertEqual(n1["id"], ns[0]["id"])
 
-        await models.database.searcher().refresh()
-        ns, total = await models.database.searcher().search(self.uid)
+        await client.search.refresh()
+        ns, total = await client.search.search(self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
         code = await core.node.restore_from_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
 
-        await models.database.searcher().refresh()
-        nodes, total = await models.database.searcher().search(self.uid)
+        await client.search.refresh()
+        nodes, total = await client.search.search(self.uid)
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
@@ -281,8 +319,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         code = await core.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
         self.assertEqual(const.Code.OK, code)
 
-        await models.database.searcher().refresh()
-        nodes, total = await models.database.searcher().search(self.uid)
+        await client.search.refresh()
+        nodes, total = await client.search.search(self.uid)
         self.assertEqual(6 + base_count, len(nodes))
         self.assertEqual(6 + base_count, total)
 
@@ -293,8 +331,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         code = await core.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
         self.assertEqual(const.Code.OK, code)
 
-        await models.database.searcher().refresh()
-        nodes, total = await models.database.searcher().search(self.uid)
+        await client.search.refresh()
+        nodes, total = await client.search.search(self.uid)
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 

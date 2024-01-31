@@ -4,7 +4,7 @@ import bcrypt
 
 from rethink import const, regex
 from rethink.controllers import auth
-from rethink.models import database
+from rethink.models.client import client
 from . import utils
 
 
@@ -19,8 +19,8 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await database.drop_all()
-        await database.init()
+        await client.drop()
+        await client.init()
 
     def test_verify(self):
         password = "123abc"

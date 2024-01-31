@@ -1,6 +1,7 @@
 import unittest
 
-from rethink import models, const, core
+from rethink import const, core
+from rethink.models.client import client
 from . import utils
 
 
@@ -14,13 +15,13 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await models.database.drop_all()
+        await client.drop()
 
     async def asyncTearDown(self) -> None:
-        await models.database.drop_all()
+        await client.drop()
 
     async def test_restore_search(self):
-        await models.database.init()
+        await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
         base_count = 2
@@ -33,18 +34,18 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
             )
             nids.append(n["id"])
             self.assertEqual(const.Code.OK, code)
-        self.assertEqual(20 + base_count, await models.database.searcher().count_all())
+        self.assertEqual(20 + base_count, await client.search.count_all())
 
         code = await core.node.batch_to_trash(uid=self.uid, nids=nids[:10])
         self.assertEqual(const.Code.OK, code)
-        self.assertEqual(20 + base_count, await models.database.searcher().count_all())
+        self.assertEqual(20 + base_count, await client.search.count_all())
 
-        code = await models.database.searcher().delete_batch(
+        code = await client.search.delete_batch(
             uid=self.uid,
             nids=nids[:10],
         )
         self.assertEqual(const.Code.OK, code)
-        self.assertEqual(10 + base_count, await models.database.searcher().count_all())
+        self.assertEqual(10 + base_count, await client.search.count_all())
 
-        await models.database.init()
-        self.assertEqual(20 + base_count, await models.database.searcher().count_all())
+        await client.init()
+        self.assertEqual(20 + base_count, await client.search.count_all())

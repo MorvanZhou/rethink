@@ -2,25 +2,25 @@ from typing import Any
 
 from rethink import config
 from rethink.depend.mongita.results import UpdateResult
-from .database import COLL
+from .client import client
 
 
 async def remove_from_node(from_nid: str, to_nid: str):
     if config.is_local_db():
         # no $pull support
-        to_n = await COLL.nodes.find_one({"id": to_nid})
+        to_n = await client.coll.nodes.find_one({"id": to_nid})
         if to_n is None:
             return
         try:
             to_n["fromNodeIds"].remove(from_nid)
-            await COLL.nodes.update_one(
+            await client.coll.nodes.update_one(
                 {"id": to_nid},
                 {"$set": {"fromNodeIds": to_n["fromNodeIds"]}}
             )
         except ValueError:
             pass
     else:
-        await COLL.nodes.update_one(
+        await client.coll.nodes.update_one(
             {"id": to_nid},
             {"$pull": {"fromNodeIds": from_nid}}
         )
@@ -31,7 +31,7 @@ async def node_add_to_set(id_: str, key: str, value: Any) -> UpdateResult:
     if config.is_local_db():
         # no $addToSet support
         has_new = False
-        doc = await COLL.nodes.find_one({"id": id_})
+        doc = await client.coll.nodes.find_one({"id": id_})
         if doc is None:
             return res
         if key not in doc:
@@ -40,12 +40,12 @@ async def node_add_to_set(id_: str, key: str, value: Any) -> UpdateResult:
             doc[key].append(value)
             has_new = True
         if has_new:
-            res = await COLL.nodes.update_one(
+            res = await client.coll.nodes.update_one(
                 {"id": id_},
                 {"$set": {key: doc[key]}}
             )
     else:
-        res = await COLL.nodes.update_one(
+        res = await client.coll.nodes.update_one(
             {"id": id_},
             {"$addToSet": {key: value}}
         )
@@ -54,11 +54,11 @@ async def node_add_to_set(id_: str, key: str, value: Any) -> UpdateResult:
 
 def sort_nodes_by_to_nids(condition: dict, page: int, page_size: int):
     if config.is_local_db():
-        docs = COLL.nodes.find(condition).sort(
+        docs = client.coll.nodes.find(condition).sort(
             [("toNodeIdsLen", -1), ("_id", -1)]
         ).skip(page * page_size).limit(page_size)
     else:
-        docs = COLL.nodes.aggregate([
+        docs = client.coll.nodes.aggregate([
             {"$match": condition},
             {"$addFields": {"toNodeIdsLen": {"$size": "$toNodeIds"}}},
             {"$sort": {"toNodeIdsLen": -1}},

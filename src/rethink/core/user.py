@@ -4,10 +4,11 @@ from typing import Optional, Tuple, Literal
 
 from bson import ObjectId
 from bson.tz_util import utc
+from pymongo.errors import DuplicateKeyError
 
 from rethink import const, config, utils
 from rethink.models import tps
-from rethink.models.database import COLL
+from rethink.models.client import client
 
 
 async def add(
@@ -19,7 +20,7 @@ async def add(
         avatar: str,
         language: str,
 ) -> Tuple[str, const.Code]:
-    if await COLL.users.find_one({"account": account, "source": source}) is not None:
+    if await client.coll.users.find_one({"account": account, "source": source}) is not None:
         return "", const.Code.EMAIL_OCCUPIED
     oid = ObjectId()
     # assert language in const.Language
@@ -53,9 +54,17 @@ async def add(
             "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
         }
     }
-    res = await COLL.users.insert_one(data)
-    if not res.acknowledged:
-        return "", const.Code.OPERATION_FAILED
+    # catch if id is duplicated
+    while True:
+        try:
+            res = await client.coll.users.insert_one(data)
+            if not res.acknowledged:
+                return "", const.Code.OPERATION_FAILED
+            break
+        except DuplicateKeyError:
+            data["id"] = utils.short_uuid()
+            continue
+
     return data["id"], const.Code.OK
 
 
@@ -93,7 +102,7 @@ async def update(
             return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
         new_data["lastState.nodeDisplaySortKey"] = node_display_sort_key
 
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": new_data},
     )
@@ -145,7 +154,7 @@ async def update_settings(
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorCodeTheme"] = editor_code_theme
 
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": new_data},
     )
@@ -155,12 +164,12 @@ async def update_settings(
 
 
 async def delete(uid: str) -> const.Code:
-    res = await COLL.users.delete_one({"id": uid})
+    res = await client.coll.users.delete_one({"id": uid})
     return const.Code.OK if res.deleted_count == 1 else const.Code.OPERATION_FAILED
 
 
 async def disable(uid: str) -> const.Code:
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"disabled": True}}
     )
@@ -168,7 +177,7 @@ async def disable(uid: str) -> const.Code:
 
 
 async def enable(uid: str) -> const.Code:
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"disabled": False}}
     )
@@ -184,19 +193,19 @@ async def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
 
 
 async def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u = await COLL.users.find_one({"source": source, "account": account, "disabled": False})
+    u = await client.coll.users.find_one({"source": source, "account": account, "disabled": False})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     return u, const.Code.OK
 
 
 async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u = await COLL.users.find_one({"id": uid, "disabled": False})
+    u = await client.coll.users.find_one({"id": uid, "disabled": False})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     if u["usedSpace"] < 0:
         # reset usedSpace to 0
-        await COLL.users.update_one(
+        await client.coll.users.update_one(
             {"id": uid},
             {"$set": {"usedSpace": 0}}
         )
@@ -206,7 +215,7 @@ async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
 
 
 async def get_hash_by_uid(uid: str) -> Optional[str]:
-    u = await COLL.users.find_one({"id": uid, "disabled": False})
+    u = await client.coll.users.find_one({"id": uid, "disabled": False})
     if u is None:
         return None
     return u["hashed"]
@@ -214,7 +223,7 @@ async def get_hash_by_uid(uid: str) -> Optional[str]:
 
 async def is_exist(uid: str) -> bool:
     try:
-        await COLL.users.find({"id": uid, "disabled": False}, limit=1).next()
+        await client.coll.users.find({"id": uid, "disabled": False}, limit=1).next()
     except StopIteration:
         return False
     return True
@@ -225,7 +234,7 @@ async def update_used_space(uid: str, delta: int) -> const.Code:
         return const.Code.OK
     if not await is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$inc": {"usedSpace": delta}}
     )
@@ -245,7 +254,7 @@ async def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool
 
 
 async def reset_password(uid: str, hashed: str) -> const.Code:
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"hashed": hashed}}
     )

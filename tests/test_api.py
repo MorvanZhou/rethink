@@ -16,7 +16,7 @@ from httpx import Response
 from rethink import const
 from rethink.application import app
 from rethink.core.verify import verification
-from rethink.models import database
+from rethink.models.client import client
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -27,11 +27,11 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         utils.set_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await database.init()
+        await client.init()
         self.client = TestClient(app)
 
     async def asyncTearDown(self) -> None:
-        await database.drop_all()
+        await client.drop()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -84,7 +84,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         utils.set_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await database.init()
+        await client.init()
         self.client = TestClient(app)
         resp = self.client.post("/api/login", json={
             "email": const.DEFAULT_USER["email"],
@@ -96,7 +96,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(811, len(self.token))
 
     async def asyncTearDown(self) -> None:
-        await database.drop_all()
+        await client.drop()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 

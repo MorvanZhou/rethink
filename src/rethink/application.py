@@ -8,7 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from rethink import const, config
 from rethink.logger import logger, add_rotating_file_handler
-from .models import database
+from .models.client import client
 from .routes import (
     user,
     oauth,
@@ -90,14 +90,14 @@ async def startup_event():
     logger.debug(f'startup_event VUE_APP_MODE: {os.environ.get("VUE_APP_MODE")}')
     logger.debug(f'startup_event VUE_APP_API_PORT: {os.environ.get("VUE_APP_API_PORT")}')
     logger.debug(f'startup_event VUE_APP_LANGUAGE: {os.environ.get("VUE_APP_LANGUAGE")}')
-    await database.init()
+    await client.init()
     logger.info("db initialized")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     try:
-        await database.searcher().es.close()
+        await client.search.es.close()
     except (AttributeError, ValueError):
         pass
     logger.info("db closed")

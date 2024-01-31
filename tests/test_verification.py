@@ -1,8 +1,9 @@
 import unittest
 from io import BytesIO
 
-from rethink import models, const
+from rethink import const
 from rethink.core.verify import verification
+from rethink.models.client import client
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -17,7 +18,7 @@ class VerificationTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await models.database.drop_all()
+        await client.drop()
 
     def test_verification_img(self):
         token, data = verification.random_captcha()

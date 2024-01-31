@@ -14,6 +14,7 @@ RECOMMEND_CONTENT_MAX_LENGTH = 200
 EMAIL_MAX_LENGTH = 100
 PASSWORD_MAX_LENGTH = 20
 NICKNAME_MAX_LENGTH = 20
+IMG_RESIZE_THRESHOLD = 1024 * 1024 * 3  # 3MB
 
 
 class NodeType(Enum):
@@ -286,3 +287,20 @@ class EditorFontSize(Enum):
     @classmethod
     def is_valid(cls, item: int):
         return cls.MIN.value <= item <= cls.MAX.value
+
+
+class FileTypes(Enum):
+    IMAGE = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+    DOC = {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"}
+    PLAIN = {".txt", ".md", ".csv", ".json", ".xml", ".yaml", ".yml", ".toml"}
+    PDF = {".pdf"}
+    VIDEO = {".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv"}
+    AUDIO = {".mp3", ".wav", ".wma", ".ogg", ".aac", ".flac"}
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def get_type(cls, ext: str):
+        for t in cls.__members__.values():
+            if ext in t.value:
+                return t
+        return cls.UNKNOWN

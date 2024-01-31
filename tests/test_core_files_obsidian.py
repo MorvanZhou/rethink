@@ -6,12 +6,14 @@ from zipfile import ZipFile, BadZipFile
 
 from bson import ObjectId
 
-from rethink import core, const, models
-from rethink.core.files import file_ops
+from rethink import core, const
+from rethink.core.files import saver
+from rethink.core.files.importing.async_tasks.obsidian import ops
+from rethink.models.client import client
 from . import utils
 
 
-class UnzipTest(unittest.IsolatedAsyncioTestCase):
+class ObsidianTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
@@ -27,13 +29,13 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
         }
 
     async def asyncSetUp(self) -> None:
-        await models.database.drop_all()
-        await models.database.init()
+        await client.drop()
+        await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
 
     async def asyncTearDown(self) -> None:
-        await models.database.drop_all()
+        await client.drop()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -47,11 +49,11 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
 
         # unzip
         with open("test.zip", "rb") as f:
-            extracted_files = file_ops.unzip_obsidian(f.read())
+            extracted_files = ops.unzip_obsidian(f.read())
         for full_path, meta in extracted_files.md_full.items():
             self.assertEqual(full_path, meta.filepath)
             self.assertEqual(
-                self.orig_folder_data["a" + "/" + full_path],
+                self.orig_folder_data[os.path.join("a", full_path)],
                 meta.file,
                 msg=str(self.orig_folder_data))
         for filename, meta in extracted_files.md.items():
@@ -69,7 +71,7 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
 
         # unzip
         with open("test.zip", "rb") as f:
-            extracted_files = file_ops.unzip_obsidian(f.read())
+            extracted_files = ops.unzip_obsidian(f.read())
         for filename, meta in extracted_files.md.items():
             self.assertEqual(
                 self.orig_data[filename],
@@ -82,19 +84,21 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
             f.write(b"hello world")
         with open("test.zip", "rb") as f:
             with self.assertRaises(BadZipFile):
-                _ = file_ops.unzip_obsidian(f.read())
+                _ = ops.unzip_obsidian(f.read())
         os.remove("test.zip")
 
     def test_file_hash(self):
-        self.assertEqual(
-            "d41d8cd98f00b204e9800998ecf8427e",
-            file_ops.file_hash(io.BytesIO(b"")))
-        bio = io.BytesIO(b"The quick brown fox jumps over the lazy dog")
-        self.assertEqual(
-            "9e107d9d372bb6826bd81d3542a419d6",
-            file_ops.file_hash(bio))
-
-        self.assertEqual(b"The quick brown fox jumps over the lazy dog", bio.read())
+        for h, b in [
+            ("d41d8cd98f00b204e9800998ecf8427e", b""),
+            ("9e107d9d372bb6826bd81d3542a419d6", b"The quick brown fox jumps over the lazy dog")
+        ]:
+            file = saver.File(
+                data=io.BytesIO(b),
+                filename="aa.md",
+            )
+            self.assertEqual(".md", file.ext)
+            self.assertEqual(const.FileTypes.PLAIN, file.type)
+            self.assertEqual(h + ".md", file.hashed_filename)
 
     async def test_replace_inner_link(self):
         md = dedent("""\
@@ -105,13 +109,12 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
         o1 = str(ObjectId())
         o2 = str(ObjectId())
         exist_path2nid = {"123.md": o1, "我哦.md": o2}
-        res = await file_ops.replace_inner_link_and_upload(
+        res = await ops.replace_inner_link_and_upload(
             uid="",
             md=md,
             exist_path2nid=exist_path2nid,
             others_full={},
             others_name={},
-            resize_threshold=0,
         )
         self.assertEqual(dedent(f"""\
             # 123
@@ -129,13 +132,12 @@ class UnzipTest(unittest.IsolatedAsyncioTestCase):
 
         o1 = str(ObjectId())
         exist_path2nid = {"123.md": o1}
-        res = await file_ops.replace_inner_link_and_upload(
+        res = await ops.replace_inner_link_and_upload(
             uid="",
             md=md,
             exist_path2nid=exist_path2nid,
             others_full={},
             others_name={},
-            resize_threshold=0,
         )
         self.assertEqual(dedent(f"""\
             # 123

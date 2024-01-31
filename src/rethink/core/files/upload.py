@@ -10,9 +10,9 @@ from starlette.datastructures import Headers
 from rethink import const, core
 from rethink.config import is_local_db
 from rethink.logger import logger
-from rethink.models.database import COLL
+from rethink.models.client import client
 from rethink.utils import ssrf_check, ASYNC_CLIENT_HEADERS
-from . import file_ops, queuing_upload
+from .importing import async_tasks, sync_tasks
 
 MAX_IMAGE_SIZE = 1024 * 1024 * 3  # 3 mb
 QUEUE_INITED = False
@@ -37,7 +37,7 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
 
     if is_local_db():
         # local db not support find_one_and_update
-        await queuing_upload.upload_obsidian_task(
+        await async_tasks.upload_obsidian_task(
             bytes_data=bytes_data,
             filename=filename,
             max_file_size=max_file_size,
@@ -46,9 +46,9 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
     else:
         global QUEUE_INITED
         if not QUEUE_INITED:
-            queuing_upload.init()
+            async_tasks.init()
             QUEUE_INITED = True
-        queuing_upload.QUEUE.put_nowait({
+        async_tasks.QUEUE.put_nowait({
             "task": "obsidian",
             "bytes_data": bytes_data,
             "filename": filename,
@@ -62,7 +62,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
 
-    doc = await COLL.import_data.find_one({"uid": uid})
+    doc = await client.coll.import_data.find_one({"uid": uid})
     if doc is not None and doc["running"]:
         return const.Code.IMPORT_PROCESS_NOT_FINISHED
 
@@ -77,7 +77,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
 
     if is_local_db():
         # local db not support find_one_and_update
-        await queuing_upload.update_text_task(
+        await async_tasks.update_text_task(
             files=file_list,
             max_file_size=max_file_size,
             uid=uid,
@@ -85,9 +85,9 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
     else:
         global QUEUE_INITED
         if not QUEUE_INITED:
-            queuing_upload.init()
+            async_tasks.init()
             QUEUE_INITED = True
-        queuing_upload.QUEUE.put_nowait({
+        async_tasks.QUEUE.put_nowait({
             "task": "md",
             "files": file_list,
             "max_file_size": max_file_size,
@@ -98,7 +98,7 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
 
 async def get_upload_process(uid: str) -> Optional[dict]:
     timeout_minus = 5
-    doc = await COLL.import_data.find_one({"uid": uid})
+    doc = await client.coll.import_data.find_one({"uid": uid})
     if doc is None:
         return None
     now = datetime.datetime.now(tz=utc)
@@ -108,7 +108,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
             now.replace(tzinfo=None) - doc["startAt"].replace(tzinfo=None) \
             > datetime.timedelta(minutes=timeout_minus):
         doc["running"] = False
-        await COLL.import_data.update_one(
+        await client.coll.import_data.update_one(
             {"uid": uid},
             {"$set": {
                 "running": False,
@@ -135,11 +135,10 @@ async def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
         res["code"] = const.Code.USER_SPACE_NOT_ENOUGH
         return res
 
-    return await file_ops.save_upload_files(
+    return await sync_tasks.save_editor_upload_files(
         uid=uid,
         files=files,
         max_image_size=MAX_IMAGE_SIZE,
-        resize_threshold=queuing_upload.RESIZE_IMG_THRESHOLD,
     )
 
 
@@ -186,11 +185,10 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
             size=len(content)
         )
 
-    res = await file_ops.save_upload_files(
+    res = await sync_tasks.save_editor_upload_files(
         uid=uid,
         files=[file],
         max_image_size=MAX_IMAGE_SIZE,
-        resize_threshold=queuing_upload.RESIZE_IMG_THRESHOLD,
     )
     if len(res["errFiles"]) > 0:
         return "", const.Code.FILE_OPEN_ERROR

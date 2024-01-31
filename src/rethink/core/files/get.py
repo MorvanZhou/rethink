@@ -1,6 +1,6 @@
 from typing import List, Tuple, Literal
 
-from rethink.models.database import COLL
+from rethink.models.client import client
 from rethink.models.tps import UserFile
 
 
@@ -10,7 +10,7 @@ def get_files(
         page_size: int,
         sort: Literal["filename", "created_at", "size"] = "created_at",
 ) -> Tuple[List[UserFile], int]:
-    docs = COLL.user_file.find({"uid": uid})
+    docs = client.coll.user_file.find({"uid": uid})
     total = docs.count()
     if sort == "filename":
         docs = docs.sort([("filename", 1), ("_id", -1)])

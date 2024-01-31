@@ -13,8 +13,11 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from rethink import const, models, core
-from rethink.core.files import queuing_upload
+from rethink import const, core
+from rethink.core.files.importing.async_tasks.utils import update_process
+from rethink.models import db_ops
+from rethink.models.client import client
+from rethink.models.tps import ImportData
 from rethink.utils import short_uuid
 from . import utils
 
@@ -34,13 +37,13 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(Path(__file__).parent / "tmp", ignore_errors=True)
 
     async def asyncSetUp(self) -> None:
-        await models.database.drop_all()
-        await models.database.init()
+        await client.drop()
+        await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
 
     async def asyncTearDown(self) -> None:
-        await models.database.drop_all()
+        await client.drop()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
 
@@ -116,11 +119,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("title", n["title"])
         self.assertEqual("body", n["snippet"])
 
-        ns, total = await models.database.searcher().search(uid=self.uid)
+        ns, total = await client.search.search(uid=self.uid)
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        ns, total = await models.database.searcher().search(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
+        ns, total = await client.search.search(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
@@ -185,7 +188,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.database.searcher().search(
+        nodes, total = await client.search.search(
             uid=self.uid,
             query="",
             sort_key="createdAt",
@@ -196,7 +199,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(5, len(nodes))
         self.assertEqual(5, total)
-        found, total = await models.database.searcher().search(uid=self.uid, query="我")
+        found, total = await client.search.search(uid=self.uid, query="我")
         self.assertEqual(2, len(found), msg=found)
         self.assertEqual(2, total)
 
@@ -228,7 +231,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(node["toNodeIds"]))
         self.assertEqual(const.Code.OK, code)
 
-        res = await models.db_ops.node_add_to_set(node["id"], "toNodeIds", short_uuid())
+        res = await db_ops.node_add_to_set(node["id"], "toNodeIds", short_uuid())
         self.assertEqual(1, res.modified_count)
         node, code = await core.node.get(uid=self.uid, nid=node["id"])
         self.assertEqual(const.Code.OK, code)
@@ -296,13 +299,13 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, total)
         self.assertEqual(n1["id"], ns[0]["id"])
 
-        ns, total = await models.database.searcher().search(self.uid, query="")
+        ns, total = await client.search.search(self.uid, query="")
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
         code = await core.node.restore_from_trash(self.uid, n1["id"])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.database.searcher().search(self.uid, query="")
+        nodes, total = await client.search.search(self.uid, query="")
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
@@ -328,7 +331,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await core.node.batch_to_trash(self.uid, [n["id"] for n in ns[:4]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.database.searcher().search(self.uid, query="")
+        nodes, total = await client.search.search(self.uid, query="")
         self.assertEqual(6 + base_count, len(nodes))
         self.assertEqual(6 + base_count, total)
 
@@ -338,7 +341,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         code = await core.node.restore_batch_from_trash(self.uid, [n["id"] for n in tns[:2]])
         self.assertEqual(const.Code.OK, code)
-        nodes, total = await models.database.searcher().search(self.uid)
+        nodes, total = await client.search.search(self.uid)
         self.assertEqual(8 + base_count, len(nodes))
         self.assertEqual(8 + base_count, total)
 
@@ -350,7 +353,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_files_upload_process(self):
         now = datetime.datetime.now(tz=utc)
-        doc: models.tps.ImportData = {
+        doc: ImportData = {
             "_id": ObjectId(),
             "uid": "xxx",
             "process": 0,
@@ -361,10 +364,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             "msg": "",
             "code": const.Code.OK.value,
         }
-        res = await models.database.COLL.import_data.insert_one(doc)
+        res = await client.coll.import_data.insert_one(doc)
         self.assertTrue(res.acknowledged)
 
-        doc, code = await queuing_upload.update_process("xxx", "obsidian", 10)
+        doc, code = await update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
         doc = await core.files.get_upload_process("xxx")
@@ -373,7 +376,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(now, doc["startAt"])
         self.assertTrue(doc["running"])
 
-        await models.database.COLL.import_data.delete_one({"uid": "xxx"})
+        await client.coll.import_data.delete_one({"uid": "xxx"})
 
     async def test_update_title_and_from_nodes_updates(self):
         n1, code = await core.node.add(

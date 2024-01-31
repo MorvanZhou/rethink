@@ -8,7 +8,7 @@ from bson.tz_util import utc
 from rethink import config, const, utils, regex
 from rethink.logger import logger
 from rethink.models import tps, db_ops
-from rethink.models.database import COLL, searcher
+from rethink.models.client import client
 from rethink.models.search_engine.engine import SearchDoc
 from . import user
 
@@ -117,7 +117,7 @@ async def add(
         "fromNodeIds": from_nids,
         "toNodeIds": new_to_node_ids,
     }
-    res = await COLL.nodes.insert_one(data)
+    res = await client.coll.nodes.insert_one(data)
     if not res.acknowledged:
         return None, const.Code.OPERATION_FAILED
 
@@ -126,7 +126,7 @@ async def add(
     __local_usage_write_file(nid=nid, md=md)
 
     if type_ == const.NodeType.MARKDOWN.value:
-        code = await searcher().add(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        code = await client.search.add(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"add search index failed, code: {code}")
     return data, const.Code.OK
@@ -137,11 +137,11 @@ async def __set_linked_nodes(
         with_disabled: bool = False,
 ):
     for doc in docs:
-        doc["fromNodes"] = await COLL.nodes.find({
+        doc["fromNodes"] = await client.coll.nodes.find({
             "id": {"$in": doc["fromNodeIds"]},
             "disabled": with_disabled,
         }).to_list(length=None)
-        doc["toNodes"] = await COLL.nodes.find({
+        doc["toNodes"] = await client.coll.nodes.find({
             "id": {"$in": doc["toNodeIds"]},
             "disabled": with_disabled,
         }).to_list(length=None)
@@ -179,7 +179,7 @@ async def get_batch(
         c["id"] = nids[0]
     if not with_disabled:
         c["disabled"] = False
-    docs = await COLL.nodes.find(c).to_list(length=None)
+    docs = await client.coll.nodes.find(c).to_list(length=None)
     if len(docs) != len(nids):
         logger.error(f"docs len != nids len: {nids}")
         return [], const.Code.NODE_NOT_EXIST
@@ -223,7 +223,7 @@ async def update(
 
     if n["title"] != title:
         # update it's title in fromNodes md's link
-        from_nodes = await COLL.nodes.find({"id": {"$in": n["fromNodeIds"]}}).to_list(length=None)
+        from_nodes = await client.coll.nodes.find({"id": {"$in": n["fromNodeIds"]}}).to_list(length=None)
         for from_node in from_nodes:
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
             n, code = await update(uid=uid, nid=from_node["id"], md=new_md)
@@ -242,21 +242,21 @@ async def update(
         return None, code
 
     if not config.is_local_db():
-        doc = await COLL.nodes.find_one_and_update(
+        doc = await client.coll.nodes.find_one_and_update(
             {"id": nid},
             {"$set": new_data},
             return_document=True,  # return updated doc
         )
     else:
         # local db not support find_one_and_update
-        res = await COLL.nodes.update_one(
+        res = await client.coll.nodes.update_one(
             {"id": nid},
             {"$set": new_data}
         )
         if res.modified_count != 1:
             logger.error(f"update node {nid} failed")
             return None, const.Code.OPERATION_FAILED
-        doc = await COLL.nodes.find_one({"id": nid})
+        doc = await client.coll.nodes.find_one({"id": nid})
 
     if doc is None:
         return None, const.Code.NODE_NOT_EXIST
@@ -269,7 +269,7 @@ async def update(
 
     __local_usage_write_file(nid=nid, md=md)
     if doc["type"] == const.NodeType.MARKDOWN.value:
-        code = await searcher().update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        code = await client.search.update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"update search index failed, code: {code}")
     return doc, code
@@ -283,7 +283,7 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
     ns, code = await get_batch(uid=uid, nids=nids, with_disabled=True, in_trash=False)
     if code != const.Code.OK:
         return code
-    u = await COLL.users.find_one({"id": uid})
+    u = await client.coll.users.find_one({"id": uid})
     changed = False
     for n in ns:
         try:
@@ -292,13 +292,13 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
         except ValueError:
             pass
     if changed:
-        res = await COLL.users.update_one({"id": uid}, {"$set": {
+        res = await client.coll.users.update_one({"id": uid}, {"$set": {
             "lastState.recentCursorSearchSelectedNIds": u["lastState"]["recentCursorSearchSelectedNIds"]
         }})
         if res.modified_count != 1:
             logger.error(f"update user {uid} failed")
             return const.Code.OPERATION_FAILED
-    res = await COLL.nodes.update_many({"id": {"$in": nids}}, {"$set": {
+    res = await client.coll.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": True,
         "inTrashAt": datetime.datetime.now(tz=utc)
     }})
@@ -306,7 +306,7 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"update nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    code = await searcher().batch_to_trash(uid=uid, nids=nids)
+    code = await client.search.batch_to_trash(uid=uid, nids=nids)
     if code != const.Code.OK:
         logger.error(f"update search index failed, code: {code}")
     return code
@@ -318,8 +318,8 @@ async def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[
         "disabled": False,
         "inTrash": True,
     }
-    docs = COLL.nodes.find(condition).sort([("inTrashAt", -1), ("_id", -1)])
-    total = await COLL.nodes.count_documents(condition)
+    docs = client.coll.nodes.find(condition).sort([("inTrashAt", -1), ("_id", -1)])
+    total = await client.coll.nodes.count_documents(condition)
     if page_size > 0:
         docs = docs.skip(page * page_size).limit(page_size)
 
@@ -336,7 +336,7 @@ async def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
         return code
 
     # remove nodes
-    res = await COLL.nodes.update_many({"id": {"$in": nids}}, {"$set": {
+    res = await client.coll.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": False,
         "inTrashAt": None,
     }})
@@ -344,7 +344,7 @@ async def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"restore nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    code = await searcher().restore_batch_from_trash(uid=uid, nids=nids)
+    code = await client.search.restore_batch_from_trash(uid=uid, nids=nids)
     if code != const.Code.OK:
         logger.error(f"restore search index failed, code: {code}")
     return code
@@ -375,14 +375,14 @@ async def batch_delete(uid: str, nids: List[str]) -> const.Code:
     await user.update_used_space(uid=uid, delta=used_space_delta)
 
     # remove node
-    res = await COLL.nodes.delete_many({"id": {"$in": nids}, "uid": uid})
+    res = await client.coll.nodes.delete_many({"id": {"$in": nids}, "uid": uid})
     if res.deleted_count != len(nids):
         logger.error(f"delete nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
     __local_usage_delete_files(nids=nids)
 
-    code = await searcher().delete_batch(uid=uid, nids=nids)
+    code = await client.search.delete_batch(uid=uid, nids=nids)
     if code != const.Code.OK:
         logger.error(f"delete search index failed, code: {code}")
     return code
@@ -396,14 +396,14 @@ async def disable(
         return const.Code.NODE_NOT_EXIST
     if not await user.is_exist(uid=uid):
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    res = await COLL.nodes.update_one(
+    res = await client.coll.nodes.update_one(
         {"id": nid},
         {"$set": {"disabled": True}}
     )
     if res.modified_count != 1:
         logger.error(f"disable node {nid} failed")
         return const.Code.OPERATION_FAILED
-    code = await searcher().disable(uid=uid, nid=nid)
+    code = await client.search.disable(uid=uid, nid=nid)
     if code != const.Code.OK:
         logger.error(f"disable search index failed, code: {code}")
     return const.Code.OK
@@ -421,7 +421,7 @@ async def core_nodes(
     }
     # the key of toNodeIds is a list, sort by the toNodeIds length, from large to small
     docs = db_ops.sort_nodes_by_to_nids(condition=condition, page=page, page_size=page_size)
-    total = await COLL.nodes.count_documents(condition)
+    total = await client.coll.nodes.count_documents(condition)
     return await docs.to_list(length=None), total
 
 
@@ -437,5 +437,5 @@ async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
         uid=uid,
         md=lns[1].format(n["id"]),
     )
-    await searcher().refresh()
+    await client.search.refresh()
     return code

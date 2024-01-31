@@ -4,14 +4,14 @@ from rethink import const
 from rethink.controllers.schemas.search import NodesSearchResponse
 from rethink.controllers.utils import datetime2str
 from rethink.models import tps
-from rethink.models.database import COLL, searcher
+from rethink.models.client import client
 from rethink.models.search_engine.engine import SearchResult
 
 
 async def _2node_data(
         hits: Sequence[SearchResult],
 ) -> List[NodesSearchResponse.Data.Node]:
-    nodes = await COLL.nodes.find({"id": {"$in": [hit.nid for hit in hits]}}).to_list(length=None)
+    nodes = await client.coll.nodes.find({"id": {"$in": [hit.nid for hit in hits]}}).to_list(length=None)
     nodes_map: Dict[str, tps.Node] = {n["id"]: n for n in nodes}
     results = []
     for hit in hits:
@@ -43,7 +43,7 @@ async def search(
         exclude_nids: Sequence[str],
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
     # search nodes
-    hits, total = await searcher().search(
+    hits, total = await client.search.search(
         uid=uid,
         query=query,
         sort_key=sort_key,
@@ -68,7 +68,7 @@ async def recommend(
     if content == "":
         return []
     # search nodes
-    hits = await searcher().recommend(
+    hits = await client.search.recommend(
         uid=uid,
         content=content,
         max_return=max_return,
@@ -88,7 +88,7 @@ async def cursor_query(
 
     # if query == "", return recent nodes
     if query == "":
-        u = await COLL.users.find_one({"id": uid})
+        u = await client.coll.users.find_one({"id": uid})
         if u is None:
             return [], 0
         rn = u["lastState"]["recentCursorSearchSelectedNIds"]
@@ -97,7 +97,7 @@ async def cursor_query(
         except ValueError:
             pass
         nodes = sorted(
-            await COLL.nodes.find({"id": {"$in": rn}}).to_list(length=None), key=lambda x: rn.index(x["id"])
+            await client.coll.nodes.find({"id": {"$in": rn}}).to_list(length=None), key=lambda x: rn.index(x["id"])
         )
         return [
             NodesSearchResponse.Data.Node(
@@ -134,12 +134,12 @@ async def add_recent_cursor_search(
     node_c = {"uid": uid, "id": {"$in": [nid, to_nid]}}
 
     # try finding user
-    u = await COLL.users.find_one(user_c)
+    u = await client.coll.users.find_one(user_c)
     if u is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
 
     # try finding node
-    ns = await COLL.nodes.find(node_c).to_list(length=None)
+    ns = await client.coll.nodes.find(node_c).to_list(length=None)
     if len(ns) != 2:
         return const.Code.NODE_NOT_EXIST
 
@@ -151,7 +151,7 @@ async def add_recent_cursor_search(
         rns = rns[:10]
 
     # add to recentCursorSearchSelectedNIds
-    res = await COLL.users.update_one(
+    res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
     )
@@ -162,14 +162,14 @@ async def add_recent_cursor_search(
 
 
 async def get_recent_search(uid: str) -> List[str]:
-    doc = await COLL.users.find_one({"id": uid})
+    doc = await client.coll.users.find_one({"id": uid})
     if doc is None:
         return []
     return doc["lastState"]["recentSearch"]
 
 
 async def put_recent_search(uid: str, query: str) -> const.Code:
-    doc = await COLL.users.find_one({"id": uid})
+    doc = await client.coll.users.find_one({"id": uid})
     if doc is None:
         return const.Code.ACCOUNT_OR_PASSWORD_ERROR
     rns = doc["lastState"]["recentSearch"]
@@ -180,7 +180,7 @@ async def put_recent_search(uid: str, query: str) -> const.Code:
     rns.insert(0, query)
     if len(rns) > 20:
         rns = rns[:20]
-    _ = await COLL.users.update_one(
+    _ = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"lastState.recentSearch": rns}}
     )
