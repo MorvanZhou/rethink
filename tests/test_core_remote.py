@@ -28,9 +28,13 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         if utils.skip_no_connect.skip:
             print("remote test asyncSetUp skipped")
             return
+
         try:
-            await client.drop()
+            client.connection_timeout = 1
             await client.init()
+            for coll in client.coll.__dict__.values():
+                await coll.delete_many({})
+
             uid, code = await register_user(
                 email=const.DEFAULT_USER["email"],
                 password=self.default_pwd,
@@ -45,9 +49,9 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
-                PermissionError,
-                RuntimeError,
         ):
+            with self.assertRaises(elastic_transport.ConnectionError):
+                await client.drop()
             print("remote test asyncSetUp timeout")
             utils.skip_no_connect.skip = True
 
@@ -61,7 +65,6 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
-                PermissionError,
                 RuntimeError,
         ):
             print("remote test asyncTearDown timeout")
@@ -99,6 +102,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                     "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
                 }
             })
+            us = await client.coll.users.find({"id": "same"}).to_list(length=2)
+            self.assertIsNotNone(us)
+            self.assertEqual(1, len(us))
+            self.assertEqual("a", us[0]["account"])
 
         await add()
         with self.assertRaises(pymongo.errors.DuplicateKeyError):

@@ -15,13 +15,12 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
-        await client.drop()
+        await client.init()
 
     async def asyncTearDown(self) -> None:
         await client.drop()
 
     async def test_restore_search(self):
-        await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
         base_count = 2

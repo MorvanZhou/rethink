@@ -214,7 +214,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             reverse=True,
             page=0,
             page_size=10,
-            exclude_nids=[f"nid19"]
+            exclude_nids=["nid19"]
         )
         self.assertEqual(9, len(docs))
         self.assertEqual(9, total)
@@ -227,7 +227,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             reverse=False,
             page=0,
             page_size=10,
-            exclude_nids=[f"nid19"]
+            exclude_nids=["nid19"]
         )
         self.assertEqual(9, len(docs))
         self.assertEqual(9, total)

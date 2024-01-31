@@ -7,7 +7,6 @@ from typing import Optional, Union, TYPE_CHECKING
 
 from bson import ObjectId
 from bson.tz_util import utc
-from pymongo.errors import ServerSelectionTimeoutError
 
 from rethink import config, const, utils
 from rethink.depend.mongita import MongitaClientDisk
@@ -27,6 +26,7 @@ class Client:
     coll: Collections = Collections()
     mongo: Optional[Union["AsyncIOMotorClient", MongitaClientDisk]] = None
     search: Optional[BaseEngine] = None
+    connection_timeout = 5
 
     async def init(self):
         self.init_mongo()
@@ -56,7 +56,7 @@ class Client:
                 port=conf.DB_PORT,
                 username=conf.DB_USER,
                 password=conf.DB_PASSWORD,
-                socketTimeoutMS=1000 * 5,
+                socketTimeoutMS=1000 * self.connection_timeout,
             )
 
         db = self.mongo[config.get_settings().DB_NAME]
@@ -80,31 +80,12 @@ class Client:
         await self.search.init()
 
     async def drop(self):
-        try:
-            if self.search is not None:
-                await self.search.drop()
-        except (
-                RuntimeError,
-                FileNotFoundError,
-                PermissionError,
-        ):
-            pass
-
-        try:
-            if self.mongo is not None:
-                db = self.mongo[config.get_settings().DB_NAME]
-                self.coll.users = db["users"]
-                self.coll.nodes = db["nodes"]
-                self.coll.import_data = db["importData"]
-                self.coll.user_file = db["userFile"]
-                await self.mongo.drop_database(config.get_settings().DB_NAME)
-        except (
-                RuntimeError,
-                FileNotFoundError,
-                PermissionError,
-                ServerSelectionTimeoutError,
-        ):
-            pass
+        if self.search is not None:
+            await self.search.drop()
+        if self.mongo is not None:
+            await self.mongo.drop_database(config.get_settings().DB_NAME)
+            if isinstance(self.mongo, MongitaClientDisk):
+                self.mongo.engine.delete_dir(config.get_settings().DB_NAME)
 
     async def local_try_add_default_user(self):
         dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"

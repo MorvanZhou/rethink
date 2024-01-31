@@ -29,7 +29,6 @@ class ObsidianTest(unittest.IsolatedAsyncioTestCase):
         }
 
     async def asyncSetUp(self) -> None:
-        await client.drop()
         await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.uid = u["id"]
