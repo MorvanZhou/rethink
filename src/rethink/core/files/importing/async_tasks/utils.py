@@ -70,7 +70,7 @@ async def finish_task(uid: str, obsidian=None):
         }})
 
     if resp.modified_count != 1:
-        await __set_running_false(
+        await set_running_false(
             uid=uid,
             code=const.Code.OPERATION_FAILED,
             msg="uploading importData process failed",
