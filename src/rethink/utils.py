@@ -198,6 +198,8 @@ def ssrf_check(url: str) -> bool:
     if '@' in url:
         return True
     host = urlparse(url).hostname
+    if host is None:
+        return True
     # cos url
     settings = config.get_settings()
     if host == f"{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com":

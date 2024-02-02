@@ -406,7 +406,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             buf, filename="fake.png", size=size,
             headers=Headers({"content-type": "image/png"})
         )
-        res = await core.files.upload_image_vditor(self.uid, [img_file])
+        res = await core.files.vditor_upload(self.uid, [img_file])
         self.assertIn("fake.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["fake.png"])
         local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["fake.png"][1:]

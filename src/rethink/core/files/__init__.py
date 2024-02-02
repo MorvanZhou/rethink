@@ -1,6 +1,6 @@
 # flake8: noqa
 from .upload import (
-    upload_image_vditor,
+    vditor_upload,
     get_upload_process,
     upload_text,
     upload_obsidian,

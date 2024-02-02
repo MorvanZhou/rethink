@@ -20,7 +20,7 @@ class FileUploadProcessResponse(BaseModel):
     msg: str
 
 
-class ImageVditorUploadResponse(BaseModel):
+class VditorUploadResponse(BaseModel):
     class Data(BaseModel):
         errFiles: List[str]
         succMap: Dict[str, str]

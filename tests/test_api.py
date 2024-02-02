@@ -559,7 +559,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         image.save("temp/test.png", format='PNG')
         f1 = open("temp/test.png", "rb")
         resp = self.client.post(
-            "/api/files/imageUploadVditor",
+            "/api/files/vditor/upload",
             files={"file[]": f1},
             headers={"token": self.token}
         )
@@ -573,17 +573,60 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         f1.close()
         shutil.rmtree("temp", ignore_errors=True)
 
+    def test_upload_file(self):
+        os.makedirs("temp", exist_ok=True)
+        f1 = open("temp/test.txt", "wb+")
+        f1.write("dasd".encode("utf-8"))
+        resp = self.client.post(
+            "/api/files/vditor/upload",
+            files={"file[]": f1},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual({
+            'errFiles': [],
+            'succMap': {
+                'test.txt': "/files/196b0f14eba66e10fba74dbf9e99c22f.txt"
+            }}, rj["data"])
+        f1.close()
+        shutil.rmtree("temp", ignore_errors=True)
+
+    def test_upload_invalid_file(self):
+        os.makedirs("temp", exist_ok=True)
+        f1 = open("temp/test.qw", "wb+")
+        f1.write("dasd".encode("utf-8"))
+        resp = self.client.post(
+            "/api/files/vditor/upload",
+            files={"file[]": f1},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(const.Code.INVALID_FILE_TYPE.value, rj["code"])
+        self.assertEqual({'errFiles': ['test.qw'], 'succMap': {}}, rj["data"])
+        f1.close()
+        shutil.rmtree("temp", ignore_errors=True)
+
     def test_fetch_image(self):
         img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/" \
               "w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
         resp = self.client.post(
-            "/api/files/imageFetchVditor",
+            "/api/files/vditor/imageFetch",
             json={"url": img},
             headers={"token": self.token}
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(img, rj["data"]["url"])
+
+        img = "fffew"
+        resp = self.client.post(
+            "/api/files/vditor/imageFetch",
+            json={"url": img},
+            headers={"token": self.token}
+        )
+        rj = resp.json()
+        self.assertEqual(const.Code.FILE_OPEN_ERROR.value, rj["code"])
 
     @patch(
         "rethink.utils.httpx.AsyncClient.get",

@@ -91,21 +91,24 @@ async def get_upload_process(
     )
 
 
-async def upload_image_vditor(
+async def upload_file_vditor(
         td: TokenDecode,
         file: UploadFile,
-) -> schemas.files.ImageVditorUploadResponse:
+) -> schemas.files.VditorUploadResponse:
     if td.code != const.Code.OK:
-        return schemas.files.ImageVditorUploadResponse(
+        return schemas.files.VditorUploadResponse(
             code=td.code.value,
             msg=const.get_msg_by_code(td.code, td.language),
             data={},
         )
-    res = await core.files.upload_image_vditor(uid=td.uid, files=[file])
-    return schemas.files.ImageVditorUploadResponse(
-        code=const.Code.OK.value,
-        msg=const.get_msg_by_code(const.Code.OK, td.language),
-        data=res,
+    res = await core.files.vditor_upload(uid=td.uid, files=[file])
+    return schemas.files.VditorUploadResponse(
+        code=res["code"].value,
+        msg=const.get_msg_by_code(res["code"], td.language),
+        data=schemas.files.VditorUploadResponse.Data(
+            errFiles=res["errFiles"],
+            succMap=res["succMap"],
+        ),
     )
 
 

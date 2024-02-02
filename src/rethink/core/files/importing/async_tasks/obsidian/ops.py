@@ -64,6 +64,10 @@ async def __file_ptn_replace_upload(
         filename=meta.filename,
         data=io.BytesIO(meta.file),
     )
+    # file type not recognized
+    if file.is_unknown_type():
+        return md
+
     url = await saver.save(
         uid=uid,
         file=file

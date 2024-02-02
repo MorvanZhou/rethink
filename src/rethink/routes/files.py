@@ -62,28 +62,28 @@ async def get_upload_process(
 
 
 @router.post(
-    path="/files/imageUploadVditor",
-    response_model=schemas.files.ImageVditorUploadResponse,
+    path="/files/vditor/upload",
+    response_model=schemas.files.VditorUploadResponse,
 )
 @measure_time_spend
-async def upload_image_vditor(
+async def vditor_upload(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: Request,
-) -> schemas.files.ImageVditorUploadResponse:
+) -> schemas.files.VditorUploadResponse:
     form = await req.form()
     file = form.get("file[]")
-    return await upload_files.upload_image_vditor(
+    return await upload_files.upload_file_vditor(
         td=token_decode,
         file=file,
     )
 
 
 @router.post(
-    path="/files/imageFetchVditor",
+    path="/files/vditor/imageFetch",
     response_model=schemas.files.ImageVditorFetchResponse,
 )
 @measure_time_spend
-async def fetch_image_vditor(
+async def vditor_fetch_image(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.files.ImageVditorFetchRequest,
 ) -> schemas.files.ImageVditorFetchResponse:

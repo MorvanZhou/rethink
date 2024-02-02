@@ -16,7 +16,7 @@ EMAIL_MAX_LENGTH = 100
 PASSWORD_MAX_LENGTH = 20
 NICKNAME_MAX_LENGTH = 20
 IMG_RESIZE_THRESHOLD = 1024 * 1024 * 3  # 3MB
-
+MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 10  # 10MB
 
 class NodeType(Enum):
     FILE = 0
@@ -305,3 +305,31 @@ class FileTypes(Enum):
             if ext in t.value:
                 return t
         return cls.UNKNOWN
+
+
+@unique
+class ValidUploadedFilePrefix(Enum):
+    # image/*,video/*,audio/*,application/pdf,text/plain,text/markdown
+    IMAGE = "image/"
+    VIDEO = "video/"
+    AUDIO = "audio/"
+    TEXT = "text/"
+    PDF = "application/pdf"
+    DOC = "application/msword"
+    DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    XLS = "application/vnd.ms-excel"
+    XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    PPT = "application/vnd.ms-powerpoint"
+    PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def is_valid(cls, item: str):
+        for pre in [v.value for v in cls.__members__.values()]:
+            if pre.endswith("/") and item.startswith(pre):
+                return True
+            elif pre == item:
+                return True
+        return False

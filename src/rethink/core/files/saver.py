@@ -49,6 +49,9 @@ class File:
         self.size = self.data.tell()
         self.data.seek(0)
 
+    def is_unknown_type(self):
+        return self.type == FileTypes.UNKNOWN
+
 
 async def add_to_db(
         uid: str,

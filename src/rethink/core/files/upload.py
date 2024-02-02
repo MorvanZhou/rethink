@@ -14,7 +14,6 @@ from rethink.models.client import client
 from rethink.utils import ssrf_check, ASYNC_CLIENT_HEADERS
 from .importing import async_tasks, sync_tasks
 
-MAX_IMAGE_SIZE = 1024 * 1024 * 3  # 3 mb
 QUEUE_INITED = False
 
 
@@ -119,7 +118,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
     return doc
 
 
-async def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
+async def vditor_upload(uid: str, files: List[UploadFile]) -> dict:
     res = {
         "errFiles": [],
         "succMap": {},
@@ -138,7 +137,6 @@ async def upload_image_vditor(uid: str, files: List[UploadFile]) -> dict:
     return await sync_tasks.save_editor_upload_files(
         uid=uid,
         files=files,
-        max_image_size=MAX_IMAGE_SIZE,
     )
 
 
@@ -185,10 +183,12 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
             size=len(content)
         )
 
+    if not file.content_type.startswith(const.ValidUploadedFilePrefix.IMAGE.value):
+        return "", const.Code.INVALID_FILE_TYPE
+
     res = await sync_tasks.save_editor_upload_files(
         uid=uid,
         files=[file],
-        max_image_size=MAX_IMAGE_SIZE,
     )
     if len(res["errFiles"]) > 0:
         return "", const.Code.FILE_OPEN_ERROR
