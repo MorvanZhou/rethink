@@ -267,7 +267,7 @@ class LocalSearcher(BaseEngine):
         return [r for r in res if r.score >= threshold]
 
     async def refresh(self):
-        raise NotImplementedError
+        pass
 
     async def count_all(self) -> int:
         with self.ix.searcher() as searcher:

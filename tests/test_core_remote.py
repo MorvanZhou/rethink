@@ -50,7 +50,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
         ):
-            await client.drop()
+            try:
+                await client.drop()
+            except pymongo.errors.ServerSelectionTimeoutError:
+                pass
             print("remote test asyncSetUp timeout")
             utils.skip_no_connect.skip = True
 

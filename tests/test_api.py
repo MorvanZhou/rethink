@@ -13,7 +13,7 @@ from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from rethink import const
+from rethink import const, config
 from rethink.application import app
 from rethink.core.verify import verification
 from rethink.models.client import client
@@ -103,6 +103,39 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
+
+    async def test_add_user(self):
+        config.get_settings().ONE_USER = False
+        token, code = verification.random_captcha()
+        data = jwt_decode(token)
+        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
+
+        email = "a@b.c"
+        resp = self.client.put("/api/user", json={
+            "email": email,
+            "password": "abc111",
+            "captchaToken": token,
+            "captchaCode": code,
+            "language": "zh",
+            "requestId": "xxx"
+        })
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertNotEqual("", rj["token"])
+
+        resp = self.client.get("/api/user", headers={"token": rj["token"], "rid": "xxx"})
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual("a**@b.c", rj["user"]["email"])
+        self.assertEqual("zh", rj["user"]["settings"]["language"])
+
+        uid = (await client.coll.users.find_one({"email": email}))["id"]
+        await client.coll.users.delete_one({"id": uid})
+        await client.coll.nodes.delete_many({"uid": uid})
+
+        config.get_settings().ONE_USER = True
 
     def test_get_user(self):
         resp = self.client.get(

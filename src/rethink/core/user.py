@@ -48,8 +48,8 @@ async def add(
         },
         "settings": {
             "language": language,
+            "theme": const.AppTheme.LIGHT.value,
             "editorMode": const.EditorMode.WYSIWYG.value,
-            "editorTheme": const.AppTheme.LIGHT.value,
             "editorFontSize": 15,
             "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
         }

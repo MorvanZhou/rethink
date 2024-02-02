@@ -35,7 +35,7 @@ def __get_user(u: dict) -> schemas.user.UserInfoResponse.User:
 
 
 async def put(req: schemas.user.RegisterRequest) -> schemas.base.TokenResponse:
-    if req.language not in const.Language.__members__:
+    if not const.Language.is_valid(req.language):
         req.language = const.Language.EN.value
     code = verify_captcha(token=req.captchaToken, code_str=req.captchaCode)
     if code != const.Code.OK:
