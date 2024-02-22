@@ -90,3 +90,14 @@ English and Chinese languages are supported, and the default is English `en`.
 If you want to use Chinese `zh`, you can use `language="zh"` parameter.
 
 Open your browser and visit `http://127.0.0.1:8080` to start recording your ideas.
+
+## Star History
+
+<a href="https://star-history.com/?utm_source=bestxtools.com#MorvanZhou/rethink&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date" />
+  </picture>
+</a>
+

@@ -70,7 +70,6 @@ async def add(
 
 async def update(
         uid: str,
-        hashed: str = "",
         nickname: str = "",
         avatar: str = "",
         node_display_method: int = -1,
@@ -82,9 +81,6 @@ async def update(
 
     new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
 
-    hashed = hashed.strip()
-    if hashed != "" and hashed != u["hashed"]:
-        new_data["hashed"] = hashed
     nickname = nickname.strip()
     nickname = html.escape(nickname)
     if nickname != "" and nickname != u["nickname"]:

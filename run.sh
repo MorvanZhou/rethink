@@ -58,6 +58,6 @@ export VUE_APP_MODE=$mode
 if [ $mode == "local" ]; then
   export LOCAL_STORAGE_PATH=.
 fi
-echo "Running in $mode mode with $reload on $host:$port"
+echo "Running in $mode mode with reload=$reload on $host:$port"
 # set working directory to rethink
 uvicorn rethink.application:app $reload --host $host --port $port --env-file .env.$mode

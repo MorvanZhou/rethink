@@ -81,3 +81,13 @@ rethink.run(
 当前语言暂时只英语和中文，且默认为英文 `en`，如果你想使用中文 `zh`，可以使用 `language` 参数。
 
 打开浏览器，访问 `http://127.0.0.1:8080`，开始记录想法。
+
+## Star History
+
+<a href="https://star-history.com/?utm_source=bestxtools.com#MorvanZhou/rethink&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MorvanZhou/rethink&type=Date" />
+  </picture>
+</a>

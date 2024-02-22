@@ -61,7 +61,18 @@ async def verify_user(u: tps.UserMeta, password: str) -> bool:
 
 
 def _base_password(password: str, email: str) -> bytes:
-    return base64.b64encode(hashlib.sha256(f"{password}&&{email}".encode("utf-8")).digest())
+    # update hash strategy
+    s = f"{password}&&{config.get_settings().DB_SALT}$${email}"
+    logger.info(f"hashing: {s}")
+    return base64.b64encode(
+        hashlib.sha256(s.encode("utf-8")).digest()
+    )
+
+
+def hash_password(password: str, email: str) -> str:
+    bpw = _base_password(password=password, email=email)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(bpw, salt=salt).decode("utf-8")
 
 
 def validate_email_pwd(email: str, password: str) -> const.Code:
@@ -87,13 +98,11 @@ async def register_user(
     if code == const.Code.OK or u is not None:
         return "", const.Code.USER_EXIST
 
-    bpw = _base_password(password=password, email=email)
-    hashed = bcrypt.hashpw(bpw, config.get_settings().DB_SALT)
     uid, code = await core.user.add(
         account=email,
         source=const.UserSource.EMAIL.value,
         email=email,
-        hashed=hashed.decode("utf-8"),
+        hashed=hash_password(password=password, email=email),
         nickname=email.split("@")[0],
         avatar="",
         language=language,
@@ -117,7 +126,8 @@ async def reset_password(
         return None, code
     if u is None:
         return None, const.Code.INVALID_AUTH
-    bpw = _base_password(password=password, email=email)
-    hashed = bcrypt.hashpw(bpw, config.get_settings().DB_SALT)
-    code = await core.user.reset_password(uid=u["id"], hashed=hashed.decode("utf-8"))
+    code = await core.user.reset_password(
+        uid=u["id"],
+        hashed=hash_password(password=password, email=email)
+    )
     return u, code

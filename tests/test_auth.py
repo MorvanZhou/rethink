@@ -67,3 +67,11 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(regex.VALID_PASSWORD.match(t), msg=t)
             else:
                 self.assertIsNone(regex.VALID_PASSWORD.match(t), msg=t)
+
+    def test_salt(self):
+        npw = "12345"
+        bpw = auth._base_password(password=npw, email="rethink@rethink.run")
+        salt = bcrypt.gensalt()
+        hpw = bcrypt.hashpw(bpw, salt).decode("utf-8")
+        self.assertEqual(salt.decode("utf-8"), hpw[:len(salt)])
+        self.assertNotEqual(bpw.decode("utf-8"), hpw[len(salt):])

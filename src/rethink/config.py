@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = Field(env='DB_PASSWORD', default="")
     DB_HOST: str = Field(env='DB_HOST', default="")
     DB_PORT: int = Field(env='DB_PORT', default=-1)
-    DB_SALT: bytes = Field(env='DB_SALT', default=b"")
+    DB_SALT: str = Field(env='BD_SALT', default="")
     ES_USER: str = Field(env='ES_USER', default="")
     ES_PASSWORD: str = Field(env='ES_PASSWORD', default="")
     ES_HOSTS: str = Field(env='ES_HOSTS', default="")
@@ -56,8 +56,8 @@ class Settings(BaseSettings):
         logger.debug(f'config - LOCAL_STORAGE_PATH: {self.LOCAL_STORAGE_PATH}')
         if self.LOCAL_STORAGE_PATH is None and self.DB_HOST == "":
             raise ValueError("LOCAL_STORAGE_PATH and DB_HOST cannot be empty at the same time")
-        if self.DB_SALT == b"":
-            self.DB_SALT = bcrypt.gensalt(4)
+        if self.DB_SALT == "":
+            self.DB_SALT = bcrypt.gensalt(4).decode("utf-8")
         if self.JWT_KEY == b"" or self.JWT_KEY_PUB == b"":
             key = rsa.generate_private_key(
                 backend=crypto_default_backend(),
