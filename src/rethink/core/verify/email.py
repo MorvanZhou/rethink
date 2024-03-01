@@ -19,7 +19,8 @@ class EmailServer:
         const.Language.EN.value: dedent("""\
         Please use the following security code for your Rethink account {email}:
         <br><br>
-        Security Code: <strong>{numbers}</strong>
+        Security Code: <br><br>
+        <strong style="font-size:26px;">{numbers}</strong>
         <br><br>
         Valid for {expire} minutes, please do not tell others to prevent personal information leakage.
         <br><br>
@@ -32,7 +33,8 @@ class EmailServer:
         const.Language.ZH.value: dedent("""\
         请使用以下用于 Rethink 账户 {email} 的安全代码：
         <br><br>
-        安全代码：<strong>{numbers}</strong>
+        安全代码：<br><br>
+        <strong style="font-size:26px;">{numbers}</strong>
         <br><br>
         有效期 {expire} 分钟，请勿告知他人，以防个人信息泄露。
         <br><br>
