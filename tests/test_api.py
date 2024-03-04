@@ -15,6 +15,7 @@ from httpx import Response
 
 from rethink import const, config
 from rethink.application import app
+from rethink.controllers import auth
 from rethink.core.verify import verification
 from rethink.models.client import client
 from rethink.utils import jwt_decode
@@ -104,8 +105,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
 
-    async def test_add_user(self):
+    async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
+        config.get_settings().DB_SALT = "test"
         token, code = verification.random_captcha()
         data = jwt_decode(token)
         code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
@@ -120,9 +122,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "requestId": "xxx"
         })
         rj = resp.json()
+        u_token = rj["token"]
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
-        self.assertNotEqual("", rj["token"])
+        self.assertNotEqual("", u_token)
 
         resp = self.client.get("/api/user", headers={"token": rj["token"], "rid": "xxx"})
         rj = resp.json()
@@ -131,10 +134,36 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("a**@b.c", rj["user"]["email"])
         self.assertEqual("zh", rj["user"]["settings"]["language"])
 
+        resp = self.client.post(
+            "/api/user/password/update", json={
+                "oldPassword": "xxx111",
+                "newPassword": "abc222",
+                "requestId": "xxx"
+            },
+            headers={"token": u_token}
+        )
+        rj = resp.json()
+        self.assertEqual(const.Code.OLD_PASSWORD_ERROR.value, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+
+        resp = self.client.post(
+            "/api/user/password/update", json={
+                "email": email,
+                "oldPassword": "abc111",
+                "newPassword": "abc222",
+                "requestId": "xxx"
+            },
+            headers={"token": u_token}
+        )
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        u = await client.coll.users.find_one({"email": email})
+        self.assertTrue(await auth.verify_user(u, "abc222"))
+
         uid = (await client.coll.users.find_one({"email": email}))["id"]
         await client.coll.users.delete_one({"id": uid})
         await client.coll.nodes.delete_many({"uid": uid})
-
         config.get_settings().ONE_USER = True
 
     def test_get_user(self):

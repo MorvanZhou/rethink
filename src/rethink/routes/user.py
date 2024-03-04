@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 
 from rethink.controllers import schemas
 from rethink.controllers.auth import token2uid
-from rethink.controllers.user import user_ops, forget_password
+from rethink.controllers.user import user_ops, password
 from rethink.controllers.utils import TokenDecode
 from rethink.routes.utils import measure_time_spend, verify_referer
 
@@ -87,12 +87,28 @@ async def update_user_settings(
 
 
 @router.post(
-    path="/user/password",
+    path="/user/password/forget",
     response_model=schemas.base.TokenResponse,
 )
 @measure_time_spend
-async def reset_password(
-        req: schemas.user.ResetPasswordRequest,
+async def forget_password(
+        req: schemas.user.ForgetPasswordRequest,
         referer: Optional[str] = Depends(verify_referer),
 ) -> schemas.base.AcknowledgeResponse:
-    return await forget_password.reset_password(req=req)
+    return await password.forget(req=req)
+
+
+@router.post(
+    path="/user/password/update",
+    response_model=schemas.base.AcknowledgeResponse,
+)
+@measure_time_spend
+async def update_user(
+        req: schemas.user.UpdatePasswordRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)],
+        referer: Optional[str] = Depends(verify_referer),
+) -> schemas.base.AcknowledgeResponse:
+    return await password.update(
+        td=token_decode,
+        req=req,
+    )

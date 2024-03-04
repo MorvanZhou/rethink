@@ -55,8 +55,7 @@ async def verify_user(u: tps.UserMeta, password: str) -> bool:
     if config.get_settings().ONE_USER:
         return True
     base_pw = _base_password(password=password, email=u["email"])
-    db_hash = await core.user.get_hash_by_uid(u["id"])
-    match = bcrypt.checkpw(base_pw, db_hash.encode("utf-8"))
+    match = bcrypt.checkpw(base_pw, u["hashed"].encode("utf-8"))
     return match
 
 
@@ -114,7 +113,7 @@ async def register_user(
     return uid, code
 
 
-async def reset_password(
+async def update_password(
         email: str,
         password: str,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:

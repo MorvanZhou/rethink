@@ -65,11 +65,17 @@ class EmailVerificationRequest(BaseModel):
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
-class ResetPasswordRequest(BaseModel):
+class ForgetPasswordRequest(BaseModel):
     email: str = Field(max_length=const.EMAIL_MAX_LENGTH)
     newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     verification: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     verificationToken: str = Field(max_length=2000)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+
+
+class UpdatePasswordRequest(BaseModel):
+    oldPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
+    newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 

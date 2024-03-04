@@ -56,6 +56,7 @@ class Code(Enum):
     INVALID_EMAIL = 27
     REQUEST_INPUT_ERROR = 28
     INVALID_SETTING = 29
+    OLD_PASSWORD_ERROR = 30
 
 
 INT_CODE_MAP = {
@@ -102,6 +103,7 @@ CODE_MESSAGES = {
     Code.INVALID_EMAIL: CodeMessage(zh="邮箱格式错误", en="Email format error"),
     Code.REQUEST_INPUT_ERROR: CodeMessage(zh="请求输入错误", en="Request input error"),
     Code.INVALID_SETTING: CodeMessage(zh="无效的设置", en="Invalid setting"),
+    Code.OLD_PASSWORD_ERROR: CodeMessage(zh="旧密码错误", en="Old password error"),
 }
 
 DEFAULT_USER = {
