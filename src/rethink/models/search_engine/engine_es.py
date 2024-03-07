@@ -109,6 +109,7 @@ class ESSearcher(BaseEngine):
         try:
             self.es
         except AttributeError:
+            # config the elastic.yml file, disable ssl for local usage, add a user and password
             self.es = AsyncElasticsearch(
                 hosts=get_settings().ES_HOSTS.split(","),
                 # sniff_on_start=True,

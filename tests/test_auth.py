@@ -70,6 +70,7 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
 
     def test_salt(self):
         npw = "12345"
+        self.assertLessEqual(len(npw), const.PASSWORD_MAX_LENGTH)
         bpw = auth._base_password(password=npw, email="rethink@rethink.run")
         salt = bcrypt.gensalt()
         hpw = bcrypt.hashpw(bpw, salt).decode("utf-8")
