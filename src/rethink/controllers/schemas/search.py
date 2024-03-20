@@ -35,7 +35,7 @@ class SearchUserNodesRequest(BaseModel):
     reverse: bool = False
     page: NonNegativeInt = 0
     pageSize: NonNegativeInt = 0
-    nidExclude: Sequence[str] = Field(default_factory=list, max_items=1000)
+    nidExclude: Sequence[str] = Field(default_factory=list, max_length=1000)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
@@ -49,7 +49,7 @@ class CursorQueryRequest(BaseModel):
 
 class RecommendNodesRequest(BaseModel):
     content: str = Field(max_length=const.RECOMMEND_CONTENT_MAX_LENGTH)
-    nidExclude: Sequence[str] = Field(default_factory=list, max_items=1000)
+    nidExclude: Sequence[str] = Field(default_factory=list, max_length=1000)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 

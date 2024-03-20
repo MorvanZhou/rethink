@@ -6,6 +6,7 @@ from bson import ObjectId
 from bson.tz_util import utc
 
 from rethink import config, const, utils, regex
+from rethink import plugins
 from rethink.logger import logger
 from rethink.models import tps, db_ops
 from rethink.models.client import client
@@ -67,6 +68,7 @@ def __local_usage_delete_files(nids: List[str]):
             md_dir.unlink()
 
 
+@plugins.handler.on_node_added
 async def add(  # noqa: C901
         uid: str,
         md: str,
@@ -191,6 +193,8 @@ async def get_batch(
     return docs, const.Code.OK
 
 
+@plugins.handler.on_node_updated
+@plugins.handler.before_node_updated
 async def update(  # noqa: C901
         uid: str,
         nid: str,

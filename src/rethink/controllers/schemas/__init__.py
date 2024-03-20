@@ -5,4 +5,5 @@ from . import (
     node,
     search,
     files,
+    plugin,
 )

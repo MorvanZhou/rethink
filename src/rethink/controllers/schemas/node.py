@@ -70,7 +70,7 @@ class GetFromTrashResponse(BaseModel):
 
 
 class BatchNodeIdsRequest(BaseModel):
-    nids: List[str] = Field(default_factory=list, min_items=1, max_items=1000)
+    nids: List[str] = Field(default_factory=list, min_length=1, max_length=1000)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 

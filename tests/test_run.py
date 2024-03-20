@@ -6,7 +6,8 @@ import unittest
 import urllib.request
 from pathlib import Path
 
-from rethink import run, config
+import rethink
+from rethink import config
 
 
 class TestRun(unittest.TestCase):
@@ -27,7 +28,7 @@ class TestRun(unittest.TestCase):
         port = 8001
 
         for _ in range(2):
-            p = multiprocessing.Process(target=run, kwargs={"path": self.path, "port": port, "language": "zh"})
+            p = multiprocessing.Process(target=rethink.run, kwargs={"path": self.path, "port": port, "language": "zh"})
             p.start()
             # p.join()
             while True:
@@ -60,3 +61,25 @@ class TestRun(unittest.TestCase):
             self.assertTrue(self.path.is_dir())
             self.assertTrue((self.path / ".data").exists())
             self.assertEqual(2, len(list((self.path / ".data" / "md").glob("*.md"))))
+
+    # def test_plugin(self):
+    #
+    #     class TestPlugin(rethink.Plugin):
+    #         name = "TestPlugin"
+    #         version = "0.1.0"
+    #         description = "A demo test plugin."
+    #         author = "morvanzhou"
+    #         template = "<h1>{h}</h1>\n<p>{p}</p>"
+    #         schedule_timing = rethink.schedule.every_minute_at(second=0)
+    #
+    #         def __init__(self):
+    #             super().__init__()
+    #             self.count = 0
+    #
+    #         def on_schedule(self) -> None:
+    #             print(self.count, time.time())
+    #             self.count += 1
+    #
+    #     plugin = TestPlugin()
+    #     rethink.add_plugin(plugin)
+    #     rethink.run()

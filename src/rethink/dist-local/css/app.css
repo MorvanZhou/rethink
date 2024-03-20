@@ -123,6 +123,8 @@ body,
 .right-app-section-sm {
   width: 100%;
   padding: 0;
+  overflow-y: auto;
+  height: auto;
 }
 
 .msg-box {
@@ -397,6 +399,12 @@ em.match {
   font-size: 1rem;
 }
 
+.checkbox-cross {
+  text-decoration: line-through;
+  color: #9e9e9e;
+  transition: 0.3s;
+}
+
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/App.vue?vue&type=style&index=0&id=7ba5bd90&scoped=true&lang=css ***!
   \********************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -531,7 +539,6 @@ footer {
 .rest-language-option {
   cursor: pointer;
 }
-
 .rest-language-option:hover {
   text-decoration: underline;
 }
@@ -543,22 +550,18 @@ footer {
 .home[data-v-9ea40744] {
   line-height: 2em;
 }
-
 .page[data-v-9ea40744] {
   padding-bottom: 80px;
   margin: 0 auto;
   width: 80%;
   max-width: 1000px;
 }
-
 .page-sm[data-v-9ea40744] {
   width: 90%;
 }
-
 ul[data-v-9ea40744] {
   padding-left: 20px;
 }
-
 li[data-v-9ea40744] {
   margin-bottom: 10px;
 }
@@ -570,14 +573,12 @@ li[data-v-9ea40744] {
 .home[data-v-4cebd208] {
   line-height: 2em;
 }
-
 .page[data-v-4cebd208] {
   padding-bottom: 80px;
   margin: 0 auto;
   width: 80%;
   max-width: 1000px;
 }
-
 .page-sm[data-v-4cebd208] {
   width: 90%;
 }
@@ -699,7 +700,7 @@ li[data-v-9ea40744] {
   position: fixed;
   top: 0;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.4);
-  z-index: 4;
+  z-index: 5;
 }
 .no-collapsed[data-v-573bae43] {
   width: 200px;
@@ -774,12 +775,10 @@ h2[data-v-6a626ebc] {
   justify-content: flex-start;
   width: 100%;
 }
-
 label[data-v-c84dbe12] {
   font-weight: 600;
   padding: 0.7rem 0 0.5rem 0;
 }
-
 input[data-v-c84dbe12] {
   border-radius: 5px;
   width: 95%;
@@ -787,7 +786,6 @@ input[data-v-c84dbe12] {
   padding: 0.3rem 0.5rem;
   border: 1px solid #ccc;
 }
-
 input[data-v-c84dbe12]:focus {
   outline: none;
   border: 1px solid #1f6feb;
@@ -801,38 +799,32 @@ label[data-v-2f79da00] {
   font-weight: 600;
   padding: 0.7rem 0 0.5rem 0;
 }
-
 .storage-usage[data-v-2f79da00] {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-
 .storage-usage span[data-v-2f79da00] {
   font-size: 0.8rem;
 }
-
 .progress-info[data-v-2f79da00] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 5px;
 }
-
 .progress-bar[data-v-2f79da00] {
   width: 100%;
   height: 13px;
   background-color: #e7e7e7;
   border-radius: 5px;
 }
-
 .progress[data-v-2f79da00] {
   height: 100%;
   background-color: #55bb8e;
   border-radius: 5px;
   transition: width 0.5s ease-in-out;
 }
-
 .percentage[data-v-2f79da00] {
   text-align: right;
   font-size: 0.7rem;
@@ -848,21 +840,17 @@ label[data-v-2f79da00] {
   width: 95%;
   max-width: 600px;
 }
-
 h1[data-v-19de6e7b] {
   text-align: center;
   margin-bottom: 20px;
 }
-
 label[data-v-19de6e7b] {
   font-weight: bold;
 }
-
 .user-img[data-v-19de6e7b] {
   margin: 0 auto;
   text-align: center;
 }
-
 .user-img img[data-v-19de6e7b] {
   width: 50px;
   height: 50px;
@@ -1019,23 +1007,19 @@ label[data-v-19de6e7b] {
   justify-content: flex-start;
   width: 100%;
 }
-
 label[data-v-2145b739] {
   font-weight: 600;
   padding: 0.7rem 0 0.5rem 0;
 }
-
 select[data-v-2145b739] {
   border-radius: 5px;
   border: 1px solid #ccc;
   width: 100%;
 }
-
 input[data-v-2145b739]:focus {
   outline: none;
   border: 1px solid #3d3d3d;
 }
-
 select[data-v-2145b739] {
   padding: 5px;
   border-radius: 5px;
@@ -1054,12 +1038,10 @@ select[data-v-2145b739] {
   justify-content: flex-start;
   width: 100%;
 }
-
 label[data-v-555d338e] {
   font-weight: 600;
   padding: 0.7rem 0 0.5rem 0;
 }
-
 input[data-v-555d338e] {
   border-radius: 5px;
   width: 95%;
@@ -1067,12 +1049,10 @@ input[data-v-555d338e] {
   padding: 0.3rem 0.5rem;
   border: 1px solid #ccc;
 }
-
 input[data-v-555d338e]:focus {
   outline: none;
   border: 1px solid #1f6feb;
 }
-
 button[data-v-555d338e] {
   margin-top: 1rem;
   padding: 0.4rem 1.5rem;
@@ -1082,19 +1062,16 @@ button[data-v-555d338e] {
   color: white;
   cursor: pointer;
 }
-
 button[data-v-555d338e]:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
-
 .hint[data-v-555d338e] {
   font-size: 0.8rem;
   padding: 0.5rem 0 0 0;
   margin: 0;
   color: #666;
 }
-
 .forget-password-link[data-v-555d338e] {
   font-size: 0.8rem;
   color: #1f6feb;
@@ -1111,7 +1088,6 @@ button[data-v-555d338e]:disabled {
   width: 95%;
   max-width: 600px;
 }
-
 h1[data-v-056b0cfe] {
   text-align: center;
   margin-bottom: 20px;
@@ -1124,6 +1100,7 @@ h1[data-v-056b0cfe] {
 
 .y-scroll[data-v-73578860] {
   overflow-y: auto;
+  max-width: 100% !important;
 }
 
 /*!********************************************************************************************************************************************************************************!*\
@@ -1681,10 +1658,27 @@ h1[data-v-056b0cfe] {
   .vditor-toolbar__item {
     padding: 0 5px;
     width: 25px !important;
+    display: flex;
+    height: 35px;
+    flex-direction: row;
+    justify-content: center;
   }
 
   .vditor-panel--left.vditor-panel--arrow:before {
     right: 17px;
+  }
+
+  .vditor-toolbar--pin {
+    background: #ffffff;
+    position: initial;
+    top: 0;
+    width: 100%;
+    margin-top: 3px;
+    height: 35px;
+  }
+
+  .vditor-hint {
+    background-color: #ffffff !important;
   }
 }
 
@@ -1710,6 +1704,10 @@ h1[data-v-056b0cfe] {
   border: 1px solid var(--border-color);
   border-radius: 3px;
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+}
+
+pre {
   font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
 }
 
@@ -3489,7 +3487,7 @@ img[data-v-4f42ee16] {
   position: fixed;
   display: flex;
   flex-direction: column;
-  height: 90vh;
+  top: 0;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -3499,7 +3497,7 @@ img[data-v-4f42ee16] {
   border-radius: 8px 8px 0 0;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
   background-color: #fff;
-  z-index: 3;
+  z-index: 5;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3633,6 +3631,7 @@ img[data-v-4f42ee16] {
   width: 100%;
   flex-direction: column;
   overflow-y: auto;
+  margin-top: 3px;
 }
 .md-editor[data-v-220b40cb] {
   flex: 1;
@@ -3644,8 +3643,8 @@ img[data-v-4f42ee16] {
 .md-editor-sm[data-v-220b40cb] {
   min-width: auto;
   width: 100%;
-  max-height: calc(100vh - 130px);
   flex-grow: initial;
+  max-height: initial;
 }
 
 
@@ -3744,7 +3743,7 @@ img[data-v-4f42ee16] {
   border: 1px solid #ccc;
   border-radius: 5px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  z-index: 2;
+  z-index: 5;
   padding: 5px 0;
 }
 .no-result[data-v-48038053] {
@@ -3820,17 +3819,12 @@ img[data-v-4f42ee16] {
   overflow: hidden;
   cursor: default;
 }
-
 .content-sm[data-v-7749260a] {
   width: 160px;
 }
-
 .content[data-v-7749260a]:hover {
-  box-shadow: 0 0 5px #f87575;
-  -webkit-clip-path: inset(-1px -1px -1px 1px);
-  clip-path: inset(-1px -1px -1px 1px);
+  background-color: #f5f5f5;
 }
-
 .head[data-v-7749260a] {
   display: flex;
   flex-direction: row;
@@ -3842,7 +3836,6 @@ img[data-v-4f42ee16] {
   max-height: 1rem;
   padding-bottom: 4px;
 }
-
 .title[data-v-7749260a] {
   font-weight: bold;
   color: #333;
@@ -3850,18 +3843,15 @@ img[data-v-4f42ee16] {
   clear: both;
   overflow: hidden;
 }
-
 .head img[data-v-7749260a] {
   width: 0.9rem;
   height: 0.9rem;
   cursor: pointer;
   padding-left: 0.7rem;
 }
-
 .head img[data-v-7749260a]:hover {
   filter: invert(0.5);
 }
-
 .snippet[data-v-7749260a] {
   flex: 1;
   font-size: 12px;
@@ -3892,7 +3882,6 @@ img[data-v-4f42ee16] {
   backdrop-filter: blur(4px);
   z-index: 9;
 }
-
 .popup[data-v-68a8b995] {
   position: fixed;
   top: 50%;
@@ -3902,7 +3891,6 @@ img[data-v-4f42ee16] {
   border-radius: 5px;
   z-index: 10;
 }
-
 .header[data-v-68a8b995] {
   display: flex;
   flex-direction: row;
@@ -3910,18 +3898,15 @@ img[data-v-4f42ee16] {
   align-items: center;
   padding: 5px 5px 5px 10px;
 }
-
 img[data-v-68a8b995] {
   padding: 5px 0 8px 5px;
   cursor: pointer;
   width: 25px;
   height: 25px;
 }
-
 img[data-v-68a8b995]:hover {
   opacity: 0.5;
 }
-
 .detail-md-content[data-v-68a8b995] {
   padding: 10px;
   max-height: 600px;
@@ -3929,7 +3914,6 @@ img[data-v-68a8b995]:hover {
   overflow-y: auto;
   word-break: break-all;
 }
-
 .detail-md-content-sm[data-v-68a8b995] {
   width: 90vw;
   height: 80vh;
@@ -3940,15 +3924,12 @@ img[data-v-68a8b995]:hover {
   \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 .editor-recommendations[data-v-c882c6c6] {
-  padding: 2px 0 4px 0;
-  margin: 2px 0 3px;
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
   height: 80px;
   overflow-y: hidden;
 }
-
 .auto-recommend[data-v-c882c6c6] {
   flex: 1;
   display: flex;
@@ -3962,15 +3943,12 @@ img[data-v-68a8b995]:hover {
   box-shadow: 0 0 5px #e5e5e5;
   border-left: 3px solid #f87575;
 }
-
 .height-sm[data-v-c882c6c6] {
   height: 67px !important;
 }
-
 .scroll-sm[data-v-c882c6c6] {
   overflow-x: scroll;
 }
-
 .item[data-v-c882c6c6] {
   height: 80px;
   margin-right: 5px;
@@ -3991,14 +3969,21 @@ img[data-v-68a8b995]:hover {
 .white-background[data-v-5cd56b1a] {
   background: #fff;
 }
-
 .gray-background[data-v-5cd56b1a] {
   background: #f5f7f8;
 }
+
 .node-edit[data-v-5cd56b1a] {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+}
+
+#sm-sticky-panel[data-v-5cd56b1a] {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: #f5f7f8;
 }
 
 /*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -4989,8 +4974,84 @@ h1[data-v-90e7b346] {
   margin-left: 10px;
   cursor: pointer;
 }
+
 .method button[data-v-90e7b346]:hover {
   background: #eee;
+}
+
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/plugin/PluginListPanel.vue?vue&type=style&index=0&id=61519a55&scoped=true&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.plugin-panel[data-v-61519a55] {
+  padding: 1em;
+}
+
+h1[data-v-61519a55] {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.list-plugins[data-v-61519a55] {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding-top: 1em;
+}
+
+.plugin-item[data-v-61519a55] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 1em;
+  border: 1px solid #eaeaea;
+  border-radius: 5px;
+  width: 300px;
+  cursor: default;
+}
+
+.plugin-item[data-v-61519a55]:hover {
+  border: 1px solid #c7c7c7;
+}
+
+.plugin-item .title[data-v-61519a55] {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.plugin-item .description[data-v-61519a55] {
+  font-size: 1em;
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/PluginsView.vue?vue&type=style&index=0&id=73a0b8ad&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.y-scroll[data-v-73a0b8ad] {
+  overflow-y: auto;
+  max-width: 100% !important;
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/plugin/PluginPanel.vue?vue&type=style&index=0&id=61cb665a&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.plugin-panel[data-v-61cb665a] {
+  padding: 1em;
+}
+
+h1[data-v-61cb665a] {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/PluginView.vue?vue&type=style&index=0&id=476192e0&scoped=true&lang=css ***!
+  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.y-scroll[data-v-476192e0] {
+  overflow-y: auto;
+  max-width: 100% !important;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\

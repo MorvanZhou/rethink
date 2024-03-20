@@ -8,6 +8,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from rethink import const, config
 from rethink.logger import logger, add_rotating_file_handler
+from rethink.plugins.base import add_plugin
+from rethink.plugins.official_plugins.summary.main import DailySummary
 from .models.client import client
 from .routes import (
     user,
@@ -18,6 +20,7 @@ from .routes import (
     verification,
     files,
     email,
+    plugin,
 )
 
 app = FastAPI(
@@ -76,6 +79,18 @@ app.include_router(trash.router)
 app.include_router(verification.router)
 app.include_router(files.router)
 app.include_router(email.router)
+app.include_router(plugin.router)
+
+
+def add_plugins():
+    if not config.get_settings().PLUGINS:
+        return
+
+    for _p_cls in [
+        DailySummary,
+    ]:
+        add_plugin(_p_cls())
+        logger.info(f"added plugin '{_p_cls.name}' (id={_p_cls.id})")
 
 
 @app.on_event("startup")
@@ -92,6 +107,8 @@ async def startup_event():
     logger.debug(f'startup_event VUE_APP_LANGUAGE: {os.environ.get("VUE_APP_LANGUAGE")}')
     await client.init()
     logger.info("db initialized")
+
+    add_plugins()
 
 
 @app.on_event("shutdown")
