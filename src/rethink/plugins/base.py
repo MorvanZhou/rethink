@@ -18,7 +18,7 @@ Usage:
         author = "me"
         template = "<h1>{{ h1 }}</h1>\n<p>{{ p }}</p>"
 
-        def before_node_updated(self, uid: str, nid: str, data: dict[str, Any]) -> None:
+        def before_node_updated(self, uid: str, nid: str, data: Dict[str, Any]) -> None:
             print("before_node_updated")
             data["md"] = "before_node_updated:" + data["md"]
     ```
@@ -85,7 +85,7 @@ class Plugin:
     def on_node_added(self, node: tps.Node) -> None:
         raise NotImplementedError
 
-    def before_node_updated(self, uid: str, nid: str, data: dict[str, Any]) -> None:
+    def before_node_updated(self, uid: str, nid: str, data: Dict[str, Any]) -> None:
         raise NotImplementedError
 
     def on_node_updated(self, node: tps.Node, old_md: str) -> None:
