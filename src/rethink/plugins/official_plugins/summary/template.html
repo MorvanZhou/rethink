@@ -1,0 +1,14 @@
+<h1>{{ name }}</h1>
+<p>today new thoughts: {{ data[0]["node"] }}</p>
+<p>today word count: {{ data[0]["word"] }}</p>
+<div>
+    <p>Last 6 days</p>
+    {% if data|length == 1 %}
+    <p>No data</p>
+    {% endif %}
+    {% for d in data[1:] %}
+    <p>{{ d["date"] }}: thoughts {{ d["node"] }}, word: {{ d["word"] }}</p>
+    {% endfor %}
+</div>
+
+

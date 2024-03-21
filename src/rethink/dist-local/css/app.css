@@ -3972,13 +3972,11 @@ img[data-v-68a8b995]:hover {
 .gray-background[data-v-5cd56b1a] {
   background: #f5f7f8;
 }
-
 .node-edit[data-v-5cd56b1a] {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
-
 #sm-sticky-panel[data-v-5cd56b1a] {
   position: sticky;
   top: 0;
@@ -4974,7 +4972,6 @@ h1[data-v-90e7b346] {
   margin-left: 10px;
   cursor: pointer;
 }
-
 .method button[data-v-90e7b346]:hover {
   background: #eee;
 }
@@ -4986,19 +4983,16 @@ h1[data-v-90e7b346] {
 .plugin-panel[data-v-61519a55] {
   padding: 1em;
 }
-
 h1[data-v-61519a55] {
   font-size: 1.5em;
   margin-bottom: 0.5em;
 }
-
 .list-plugins[data-v-61519a55] {
   display: flex;
   flex-direction: column;
   gap: 1em;
   padding-top: 1em;
 }
-
 .plugin-item[data-v-61519a55] {
   display: flex;
   flex-direction: column;
@@ -5009,16 +5003,13 @@ h1[data-v-61519a55] {
   width: 300px;
   cursor: default;
 }
-
 .plugin-item[data-v-61519a55]:hover {
   border: 1px solid #c7c7c7;
 }
-
 .plugin-item .title[data-v-61519a55] {
   font-size: 1.2em;
   font-weight: bold;
 }
-
 .plugin-item .description[data-v-61519a55] {
   font-size: 1em;
 }
@@ -5039,7 +5030,6 @@ h1[data-v-61519a55] {
 .plugin-panel[data-v-61cb665a] {
   padding: 1em;
 }
-
 h1[data-v-61cb665a] {
   font-size: 1.5em;
   margin-bottom: 0.5em;
