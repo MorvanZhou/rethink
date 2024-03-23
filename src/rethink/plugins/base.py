@@ -38,7 +38,9 @@ Usage:
 4. Check when update a node, the `before_node_updated` text will show on your note.
 """
 
+import base64
 import inspect
+import os
 from typing import Dict, List, Union, Optional, Any
 
 from jinja2 import Template
@@ -71,13 +73,28 @@ class Plugin:
     schedule_timing: Optional[Timing] = None
 
     def __init__(self):
-        for attr in ["id", "name", "version", "description", "author"]:
+        for attr in ["id", "name", "version", "description", "author", "icon"]:
             if not hasattr(self, attr):
                 raise ValueError(f"attribute '{attr}' is required")
         if len(self.id) == 0:
             raise ValueError("id is required")
         if len(self.id) > const.PLUGIN_ID_MAX_LENGTH:
             raise ValueError(f"id length should be less than {const.PLUGIN_ID_MAX_LENGTH}")
+
+        # get icon and convert to base64
+        if os.path.isfile(self.icon):
+            icon_path = self.icon
+        else:
+            pd = os.path.dirname(inspect.getfile(self.__class__))
+            icon_path = os.path.join(pd, str(self.icon))
+        with open(icon_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+            ext = str(self.icon).rsplit(".", 1)[-1]
+            if ext == "svg":
+                ext = "svg+xml"
+            elif ext == "jpg":
+                ext = "jpeg"
+            self.icon_src = f"data:image/{ext};base64,{b64}"
 
     def render(self) -> str:
         raise NotImplementedError
@@ -94,12 +111,24 @@ class Plugin:
     def on_schedule(self) -> None:
         raise NotImplementedError
 
+    def on_toolbar_click(self) -> None:
+        """
+        On node editing page, there will be a toolbar icon for all plugins which implement this method.
+
+        When click the toolbar icon, this method will be called.
+
+        Returns:
+            None
+        """
+        raise NotImplementedError
+
 
 event_plugin_map: Dict[str, List[Plugin]] = {
     "on_node_added": [],
     "before_node_updated": [],
     "on_node_updated": [],
     "on_schedule": [],
+    "on_toolbar_click": [],
 }
 _plugins: Dict[str, Plugin] = {}
 

@@ -16,6 +16,7 @@ class TestPlugin(rethink.Plugin):
     version = "0.1.0"
     description = "A demo test plugin."
     author = "morvanzhou"
+    icon = "tmp/back.svg"
     template = "<h1>{h}</h1>\n<p>{p}</p>"
 
     def __init__(self):
@@ -38,10 +39,23 @@ class TestPlugin(rethink.Plugin):
         self.cache[node["id"]] = node
 
 
+svg = """<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#000000" d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"/>
+    <path fill="#000000"
+          d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32
+           32 0 1 1 45.312 45.312L237.248 512z"/>
+</svg>"""
+
+
 class DemoCount(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
+        tmp_dir = Path(__file__).parent / "tmp"
+        tmp_dir.mkdir(exist_ok=True)
+        with open(tmp_dir / "back.svg", "w") as f:
+            f.write(svg)
 
     @classmethod
     def tearDownClass(cls) -> None:

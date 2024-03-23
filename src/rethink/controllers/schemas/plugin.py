@@ -11,6 +11,7 @@ class PluginsResponse(BaseModel):
         name: str
         version: str
         description: str
+        iconSrc: str
 
     code: NonNegativeInt
     message: str

@@ -8,8 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from rethink import const, config
 from rethink.logger import logger, add_rotating_file_handler
-from rethink.plugins.base import add_plugin
-from rethink.plugins.official_plugins.summary.main import DailySummary
+from rethink.plugins.register import register_official_plugins
 from .models.client import client
 from .routes import (
     user,
@@ -82,17 +81,6 @@ app.include_router(email.router)
 app.include_router(plugin.router)
 
 
-def add_plugins():
-    if not config.get_settings().PLUGINS:
-        return
-
-    for _p_cls in [
-        DailySummary,
-    ]:
-        add_plugin(_p_cls())
-        logger.info(f"added plugin '{_p_cls.name}' (id={_p_cls.id})")
-
-
 @app.on_event("startup")
 async def startup_event():
     if not config.is_local_db():
@@ -108,7 +96,7 @@ async def startup_event():
     await client.init()
     logger.info("db initialized")
 
-    add_plugins()
+    register_official_plugins()
 
 
 @app.on_event("shutdown")

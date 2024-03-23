@@ -13,6 +13,7 @@ class DailySummary(rethink.Plugin):
     version = "0.1.0"
     description = "summary my daily usage"
     author = "morvanzhou"
+    icon = Path("_static") / "image" / "logo.svg"
     template = Template(
         (Path(__file__).parent / "template.html").read_text(encoding="utf-8")
     )

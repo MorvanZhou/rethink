@@ -23,6 +23,7 @@ async def get_plugins(
             version=p.version,
             description=p.description,
             author=p.author,
+            iconSrc=p.icon_src,
         )
         for p in ps().values()
     ]
