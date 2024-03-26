@@ -21,11 +21,11 @@ body,
 }
 
 .hover-node-bg:hover {
-  background: #f6f6f6;
+  background: #ececec;
 }
 
 .selected-node {
-  background: #f6f6f6;
+  background: #ececec;
 }
 
 .bold-font {
@@ -3500,14 +3500,73 @@ img[data-v-4f42ee16] {
   z-index: 5;
 }
 
-/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/LinkedNodes.vue?vue&type=style&index=0&id=399c6114&scoped=true&lang=css ***!
-  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/sidebar/SideBar.vue?vue&type=style&index=0&id=3accabf6&scoped=true&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.linked-nodes-vertical[data-v-399c6114] {
-  width: 300px;
+.side-bar[data-v-3accabf6] {
+  background: #fff;
+  display: flex;
+  border-top-right-radius: 0.5em;
+  border-top: 1px solid #e0e0e0;
+  flex-direction: column;
+  width: 45px;
+  margin: 0 auto;
+  border-left: 1px solid #e0e0e0;
+  z-index: 1;
+}
+
+.item[data-v-3accabf6] {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.item img[data-v-3accabf6] {
+  width: 25px;
+  padding: 0.3em;
+  margin: 0.3em;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0.5em;
+}
+
+.item .hint[data-v-3accabf6] {
+  display: none;
+  position: absolute;
+  right: 100%;
+  top: 0;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5em;
+  padding: 0.5em;
+  margin: 0.5em;
+  z-index: 1;
+  box-shadow: 0 0 5px #e0e0e0;
+}
+
+
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/tools/SepLine.vue?vue&type=style&index=0&id=30512dd0&scoped=true&lang=css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.sep-line[data-v-30512dd0] {
+  cursor: col-resize;
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 1px;
+  background: #e5e5e5;
+}
+
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/sidebar/LinkedNodes.vue?vue&type=style&index=0&id=404f2c61&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.linked-nodes-vertical[data-v-404f2c61] {
   min-width: 150px;
-  margin-left: 10px;
   max-height: 70vh;
   overflow-y: auto;
   --mask: linear-gradient(to bottom,
@@ -3518,7 +3577,8 @@ img[data-v-4f42ee16] {
   -webkit-mask: var(--mask);
   mask: var(--mask);
 }
-.linked-nodes-horizontal[data-v-399c6114] {
+
+.linked-nodes-horizontal[data-v-404f2c61] {
   height: 100px;
   display: flex;
   flex-wrap: nowrap;
@@ -3533,7 +3593,8 @@ img[data-v-4f42ee16] {
   -webkit-mask: var(--mask);
   mask: var(--mask);
 }
-.no-linked-node[data-v-399c6114] {
+
+.no-linked-node[data-v-404f2c61] {
   max-width: 300px;
   display: flex;
   justify-content: center;
@@ -3541,64 +3602,76 @@ img[data-v-4f42ee16] {
   height: 20%;
   color: #919090;
   font-size: 1em;
+  margin: 2em auto;
 }
-.no-linked-node-sm[data-v-399c6114] {
+
+.no-linked-node-sm[data-v-404f2c61] {
   display: block;
   padding: 20px 0 10px 5px;
   height: auto;
 }
-.linked-node[data-v-399c6114] {
-  padding: 0 5px 5px 5px;
+
+.linked-node[data-v-404f2c61] {
+  padding: 5px;
   border: 1px solid #eaeaea;
   border-radius: 5px;
-  margin: 0 0 5px 5px;
+  margin: 5px;
   overflow: hidden;
   background: #ffffff;
-  box-shadow: 0 0 5px #e5e5e5;
+  box-shadow: 0 0 3px #b9b9b9;
   width: -webkit-fill-available;
 }
-.linked-node-sm[data-v-399c6114] {
+
+.linked-node-sm[data-v-404f2c61] {
   padding: 0 5px 5px 5px;
   margin: 0 3px 0 0;
   max-width: 150px;
   min-width: 100px;
   height: 80px;
 }
-.node-header[data-v-399c6114] {
+
+.node-header[data-v-404f2c61] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 5px 0 5px 0;
 }
-.node-header-sm[data-v-399c6114] {
+
+.node-header-sm[data-v-404f2c61] {
   padding: 0;
 }
-.title[data-v-399c6114] {
+
+.title[data-v-404f2c61] {
   font-weight: bold;
   color: #333333;
   overflow-x: hidden;
 }
-.title-sm[data-v-399c6114] {
+
+.title-sm[data-v-404f2c61] {
   font-size: 1em;
   overflow-x: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.right-buttons[data-v-399c6114] {
+
+.right-buttons[data-v-404f2c61] {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.right-buttons img[data-v-399c6114] {
+
+.right-buttons img[data-v-404f2c61] {
   width: 25px;
   height: 25px;
   cursor: pointer;
   margin-left: 5px;
 }
-.right-buttons img[data-v-399c6114]:hover {
+
+.right-buttons img[data-v-404f2c61]:hover {
   filter: invert(0.5);
 }
-.snippet[data-v-399c6114] {
+
+.snippet[data-v-404f2c61] {
   max-height: 90px;
   font-size: 0.9em;
   letter-spacing: 1px;
@@ -3610,11 +3683,21 @@ img[data-v-4f42ee16] {
   overflow-wrap: break-word;
   overflow: hidden;
 }
-.snippet-expanded[data-v-399c6114] {
+
+.snippet-expanded[data-v-404f2c61] {
   max-height: 400px;
   overflow-y: auto;
   white-space: break-spaces;
   overflow-wrap: break-word;
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/sidebar/SideBarItemView.vue?vue&type=style&index=0&id=41948506&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.item-view[data-v-41948506] {
+  width: 200px;
+  overflow-x: hidden;
 }
 
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3627,14 +3710,23 @@ img[data-v-4f42ee16] {
   flex-direction: row;
   height: 100%;
 }
+
 .work-place-sm[data-v-220b40cb] {
   width: 100%;
   flex-direction: column;
   overflow-y: auto;
   margin-top: 3px;
 }
+
+.container[data-v-220b40cb] {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  height: 100%;
+}
+
 .md-editor[data-v-220b40cb] {
-  min-width: 700px;
+  flex-grow: 1;
   max-height: calc(100vh - 145px);
   border: 1px solid #e5e5e5;
   box-shadow: 0 0 5px #e5e5e5;
@@ -4160,16 +4252,19 @@ table.view {
   display: block;
   background: #ffffff;
 }
-tr {
+
+.view tr {
   height: 3.5em;
   border-bottom: 1px solid #efefef;
 }
-tr:first-child {
+
+.view tr:first-child {
   position: sticky;
   top: 0;
   background-color: #fff;
   z-index: 1;
 }
+
 .cb-hide {
   display: none;
 }
@@ -4186,36 +4281,45 @@ tr:first-child {
 .checkbox:hover {
   background-color: #eaeaea;
 }
+
 .pointer {
   cursor: pointer;
 }
-tr.tr-sm {
+
+.view tr.tr-sm {
   font-size: 1em;
 }
-td.multi-select {
+
+.view td.multi-select {
   padding: 0 5px;
   width: 2%;
   min-width: 15px;
 }
-td.title {
+
+.view td.title {
   width: 45%;
   padding-left: 8px;
   padding-right: 10px;
 }
+
 .default-cursor {
   cursor: default;
 }
-tr.tr-sm td.title {
+
+.view tr.tr-sm td.title {
   width: 60%;
   padding-left: 3px;
 }
-td.time {
+
+.view td.time {
   width: 20%;
 }
-tr.tr-sm td.time {
+
+.view tr.tr-sm td.time {
   width: 30%;
 }
-td.snippet {
+
+.view td.snippet {
   width: 33%;
   max-width: 300px;
   overflow: hidden;
@@ -4223,7 +4327,8 @@ td.snippet {
   white-space: nowrap;
   padding-right: 20px;
 }
-tr.tr-sm .node-more-ops {
+
+.view tr.tr-sm .node-more-ops {
   margin-right: 0;
 }
 
