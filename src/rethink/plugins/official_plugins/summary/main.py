@@ -14,9 +14,7 @@ class DailySummary(rethink.Plugin):
     description = "summary my daily usage"
     author = "morvanzhou"
     icon = Path("_static") / "image" / "logo.svg"
-    template = Template(
-        (Path(__file__).parent / "template.html").read_text(encoding="utf-8")
-    )
+
     schedule_timing = rethink.schedule.every_day_at(hour=0, minute=0)
 
     def __init__(self):
@@ -41,6 +39,13 @@ class DailySummary(rethink.Plugin):
                 self.data = self.data[:120]
                 self.write_to_file()
 
+        self.template_home = Template(
+            (Path(__file__).parent / "templates" / "home.html").read_text(encoding="utf-8")
+        )
+        self.template_side = Template(
+            (Path(__file__).parent / "templates" / "side.html").read_text(encoding="utf-8")
+        )
+
     def on_node_updated(self, node: rethink.tps.Node, old_md: str) -> None:
         self.data[0]["word"] += len(node["md"]) - len(old_md)
         self.write_to_file()
@@ -59,9 +64,16 @@ class DailySummary(rethink.Plugin):
         self.data = self.data[:120]
         self.write_to_file()
 
-    def render(self):
+    def render_plugin_home(self):
         d = self.data[:7]
-        return self.template.render(
+        return self.template_home.render(
+            name=self.name,
+            data=d,
+        )
+
+    def render_editor_side(self):
+        d = self.data[:7]
+        return self.template_side.render(
             name=self.name,
             data=d,
         )

@@ -16,7 +16,7 @@ Usage:
         version = "0.1.0"
         description = "A demo plugin."
         author = "me"
-        template = "<h1>{{ h1 }}</h1>\n<p>{{ p }}</p>"
+
 
         def before_node_updated(self, uid: str, nid: str, data: Dict[str, Any]) -> None:
             print("before_node_updated")
@@ -41,9 +41,7 @@ Usage:
 import base64
 import inspect
 import os
-from typing import Dict, List, Union, Optional, Any
-
-from jinja2 import Template
+from typing import Dict, List, Optional, Any
 
 from rethink import const
 from rethink.models import tps
@@ -57,7 +55,6 @@ class Plugin:
         version (str): The version of the plugin.
         description (str): The description of the plugin.
         author (str): The author of the plugin.
-        template (Union[Template, str]): The template of the plugin.
         icon (str): The icon path for this plugin.
         activated (bool): Whether the plugin is activated.
         schedule_timing (Optional[Timing]): The schedule timing for the plugin if `on_schedule` method has been defined.
@@ -67,7 +64,6 @@ class Plugin:
     version: str = ""
     description: str = ""
     author: str = ""
-    template: Union[Template, str] = ""
     icon: str = ""
     activated: bool = True
     schedule_timing: Optional[Timing] = None
@@ -96,7 +92,10 @@ class Plugin:
                 ext = "jpeg"
             self.icon_src = f"data:image/{ext};base64,{b64}"
 
-    def render(self) -> str:
+    def render_plugin_home(self) -> str:
+        raise NotImplementedError
+
+    def render_editor_side(self):
         raise NotImplementedError
 
     def on_node_added(self, node: tps.Node) -> None:
@@ -129,6 +128,8 @@ event_plugin_map: Dict[str, List[Plugin]] = {
     "on_node_updated": [],
     "on_schedule": [],
     "on_toolbar_click": [],
+    "render_plugin_home": [],
+    "render_editor_side": [],
 }
 _plugins: Dict[str, Plugin] = {}
 
