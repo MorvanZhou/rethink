@@ -1,0 +1,135 @@
+<div class="plugin">
+  <h1>{{ h1 }}</h1>
+  <button id="add-favorites" onclick="addFavorite()">{{ add_btn_name }}</button>
+  <ul id="favorite-list">
+    {% for item in items %}
+      <li>
+      <span
+        onclick="remove('{{ item.nid }}')"
+      >✘</span>
+        <a href="{{ item.url }}" target="_parent">{{ item.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<style>
+  .plugin {
+    margin: 10px;
+    padding: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC,
+    Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+  }
+
+  h1 {
+    font-size: 14px;
+  }
+
+  #favorite-list {
+    list-style: none;
+    padding: 0;
+    overflow: scroll;
+  }
+
+  #favorite-list li {
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+  }
+
+  #favorite-list li a {
+    text-decoration: none;
+    color: rgb(49, 88, 191);
+    background-color: rgba(92, 125, 241, 0.1);
+  }
+
+  #favorite-list li span {
+    margin-right: 1rem;
+    cursor: pointer;
+  }
+
+  #add-favorites {
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    border: none;
+    color: #f1f1f1;
+    background: #fa5235;
+    cursor: pointer;
+    border-radius: 12px;
+    text-align: center;
+  }
+</style>
+
+<script>
+  var pathname = window.location.pathname;
+  var url = `${pathname.substring(0, pathname.lastIndexOf('/'))}`;
+  var nodeUrl = `${url}/n/{{ nid }}`;
+
+  async function addFavorite() {
+    try {
+      const resp = await fetch('{{ call_url }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pluginId: '{{ plugin_id }}',
+          method: 'add',
+          data: {
+            url: nodeUrl,
+            nid: '{{ nid }}',
+            title: '{{ title }}',
+          },
+          requestId: Math.random().toString(36).substring(7),
+        }),
+      });
+      if (resp.status !== 200) {
+        console.log(resp);
+        return;
+      }
+      const rj = await resp.json();
+      if (rj.data.done) {
+        document.getElementById('favorite-list').innerHTML +=
+          `<li>
+              <span onclick="remove('{{ nid }}')">✘</span>
+              <a href='${nodeUrl}' target="_parent">{{ title }}</a>
+              </li>`;
+      } else {
+        alert('已经收藏过了');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function remove(nid) {
+    try {
+      const resp = await fetch('{{ call_url }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pluginId: '{{ plugin_id }}',
+          method: 'remove',
+          data: {
+            nid: nid,
+          },
+          requestId: Math.random().toString(36).substring(7),
+        }),
+      });
+      if (resp.status !== 200) {
+        console.log(resp);
+        return;
+      }
+      const rj = await resp.json();
+      if (rj.data.done) {
+        const ul = document.getElementById('favorite-list');
+        const li = ul.querySelector(`a[href='${url}/n/${nid}']`).parentNode;
+        ul.removeChild(li);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+</script>

@@ -24,7 +24,7 @@ def on_node_updated(func: Callable):
             md: str,
             *args, **kwargs,
     ):
-        data, code = await func(
+        data, old_data, code = await func(
             uid=uid,
             nid=nid,
             md=md,
@@ -34,8 +34,8 @@ def on_node_updated(func: Callable):
             return data, code
         for inst in event_plugin_map["on_node_updated"]:
             # execute the class method
-            inst.on_node_updated(node=data, old_md=md)
-        return data, code
+            inst.on_node_updated(node=data, old_node=old_data)
+        return data, old_data, code
 
     return wrapper
 

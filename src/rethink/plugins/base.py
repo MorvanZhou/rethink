@@ -92,10 +92,10 @@ class Plugin:
                 ext = "jpeg"
             self.icon_src = f"data:image/{ext};base64,{b64}"
 
-    def render_plugin_home(self) -> str:
+    def render_plugin_home(self, language: str) -> str:
         raise NotImplementedError
 
-    def render_editor_side(self):
+    def render_editor_side(self, uid: str, nid: str, md: str, language: str) -> str:
         raise NotImplementedError
 
     def on_node_added(self, node: tps.Node) -> None:
@@ -104,22 +104,59 @@ class Plugin:
     def before_node_updated(self, uid: str, nid: str, data: Dict[str, Any]) -> None:
         raise NotImplementedError
 
-    def on_node_updated(self, node: tps.Node, old_md: str) -> None:
+    def on_node_updated(self, node: tps.Node, old_node: tps.Node) -> None:
         raise NotImplementedError
 
     def on_schedule(self) -> None:
         raise NotImplementedError
 
-    def on_toolbar_click(self) -> None:
+    def handle_api_call(self, method: str, data: Any) -> Any:
         """
-        On node editing page, there will be a toolbar icon for all plugins which implement this method.
+        api call from your plugin rendered page. etc. plugin home page, editor side bar.
 
-        When click the toolbar icon, this method will be called.
+        POST: https://ip:port/plugin/call
+
+        The exact POST url can be found in self.api_call_url
+
+        Body: {
+            "pluginId: "your plugin id",
+            "method": "your method",
+            "data": any data format,
+            "requestId": "unique request id string"
+        }
+        Response: {
+            "code": int code,
+            "message": "message",
+            "requestId": "unique request id string",
+            "pluginId: "your plugin id",
+            "method": "your method",
+            "data": any data format,
+        }
+
+        When your rendered page calls you this api, you will receive
+
+        Args:
+            method (str): your customized method name
+            data (Any): any data format you need to process
 
         Returns:
-            None
+            Any: the result data shows in your Response["data"]
         """
         raise NotImplementedError
+
+    @property
+    def api_call_url(self) -> str:
+        """
+        in your template html, you can pass this url to your javascript code to connect self.handle_api_call() method.
+
+        Returns:
+            str: the api call url
+        """
+        try:
+            port = os.environ["VUE_APP_API_PORT"]
+        except KeyError:
+            raise ValueError("the port number is not set in the environment variable VUE_APP_API_PORT.")
+        return f"http://localhost:{port}/api/plugin/call"
 
 
 event_plugin_map: Dict[str, List[Plugin]] = {

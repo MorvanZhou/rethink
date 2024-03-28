@@ -18,6 +18,8 @@ class UserInfoResponse(BaseModel):
             editorMode: Literal["ir", "wysiwyg"]
             editorFontSize: NonNegativeInt
             editorCodeTheme: str
+            editorSepRightWidth: float
+            editorSideCurrentToolId: str
 
         email: str
         nickname: str
@@ -85,4 +87,6 @@ class UpdateSettingsRequest(BaseModel):
     editorMode: Literal["ir", "wysiwyg", ""] = ""
     editorFontSize: int = -1
     editorCodeTheme: CODE_THEME_TYPES = ""
+    editorSepRightWidth: float = -1.
+    editorSideCurrentToolId: str = ""
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)

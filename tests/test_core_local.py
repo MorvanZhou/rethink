@@ -133,7 +133,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("createdAt", u["lastState"]["nodeDisplaySortKey"])
         used_space = u["usedSpace"]
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
@@ -206,7 +206,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(n["toNodeIds"]))
 
         cache = n["md"]
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(cache + "xxxx", n["md"])
 
@@ -214,7 +214,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["title"])
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["title"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
@@ -386,7 +386,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(const.Code.OK, code)
 
-        n1, code = await core.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
+        n1, _, code = await core.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
         self.assertEqual(const.Code.OK, code)
         n2, code = await core.node.get(uid=self.uid, nid=n2["id"])
         self.assertEqual(const.Code.OK, code)

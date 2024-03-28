@@ -46,8 +46,8 @@ class DailySummary(rethink.Plugin):
             (Path(__file__).parent / "templates" / "side.html").read_text(encoding="utf-8")
         )
 
-    def on_node_updated(self, node: rethink.tps.Node, old_md: str) -> None:
-        self.data[0]["word"] += len(node["md"]) - len(old_md)
+    def on_node_updated(self, node: rethink.tps.Node, old_node: rethink.tps.Node) -> None:
+        self.data[0]["word"] += len(node["md"]) - len(old_node["md"])
         self.write_to_file()
 
     def on_node_added(self, node: rethink.tps.Node) -> None:
@@ -64,14 +64,14 @@ class DailySummary(rethink.Plugin):
         self.data = self.data[:120]
         self.write_to_file()
 
-    def render_plugin_home(self):
+    def render_plugin_home(self, language: str):
         d = self.data[:7]
         return self.template_home.render(
             name=self.name,
             data=d,
         )
 
-    def render_editor_side(self):
+    def render_editor_side(self, uid: str, nid: str, md: str, language: str) -> str:
         d = self.data[:7]
         return self.template_side.render(
             name=self.name,

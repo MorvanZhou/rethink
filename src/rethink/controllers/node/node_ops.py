@@ -140,7 +140,7 @@ async def update_node(
             requestId=req.requestId,
             node=None
         )
-    n, code = await core.node.update(
+    n, old_n, code = await core.node.update(
         uid=td.uid,
         nid=req.nid,
         md=req.md,

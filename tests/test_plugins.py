@@ -35,7 +35,7 @@ class TestPlugin(rethink.Plugin):
     def before_node_updated(self, uid: str, nid: str, data: Dict[str, str]):
         self.bmd = "before_node_updated:" + data["md"]
 
-    def on_node_updated(self, node: rethink.tps.Node, old_md: str):
+    def on_node_updated(self, node: rethink.tps.Node, old_node: rethink.tps.Node):
         self.cache[node["id"]] = node
 
 
@@ -112,7 +112,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("a", self.p.cache[node["id"]]["md"])
 
         self.assertEqual("", self.p.bmd)
-        node, code = await core.node.update(
+        node, _, code = await core.node.update(
             uid=self.uid, nid=node["id"], md="b"
         )
         self.assertEqual(rethink.const.Code.OK, code)

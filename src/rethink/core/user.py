@@ -114,6 +114,8 @@ async def update_settings(  # noqa: C901
         editor_mode: Literal["", "ir", "wysiwyg"] = "",
         editor_font_size: int = -1,
         editor_code_theme: tps.CODE_THEME_TYPES = "",
+        editor_sep_right_width: float = -1,
+        editor_side_current_tool_id: str = "",
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u, code = await get(uid=uid)
     if code != const.Code.OK:
@@ -149,6 +151,14 @@ async def update_settings(  # noqa: C901
         if not const.EditorCodeTheme.is_valid(editor_code_theme):
             return None, const.Code.INVALID_SETTING
         new_data["settings.editorCodeTheme"] = editor_code_theme
+
+    if editor_sep_right_width != -1 and editor_sep_right_width != u["settings"].get("editorSepRightWidth", None):
+        if editor_sep_right_width <= 0:
+            return None, const.Code.INVALID_SETTING
+        new_data["settings.editorSepRightWidth"] = editor_sep_right_width
+
+    if editor_side_current_tool_id != u["settings"].get("editorSideCurrentToolId", None):
+        new_data["settings.editorSideCurrentToolId"] = editor_side_current_tool_id
 
     res = await client.coll.users.update_one(
         {"id": uid},

@@ -176,7 +176,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md="# title2\ntext2")
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="# title2\ntext2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("text2", n["snippet"])
@@ -252,7 +252,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(n["toNodeIds"]))
 
         tmp_text = n["md"]
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=tmp_text + "xxxx")
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=tmp_text + "xxxx")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(tmp_text + "xxxx", n["md"])
 
@@ -260,7 +260,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["md"])
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["md"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 

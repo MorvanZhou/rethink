@@ -45,7 +45,7 @@ async def render_plugin_home(
     response_model=schemas.plugin.PluginsResponse,
 )
 @measure_time_spend
-async def get_plugin_home(
+async def get_plugin_with_editor_side(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         rid: Optional[str] = Header(None),
 ) -> schemas.plugin.PluginsResponse:
@@ -57,8 +57,19 @@ async def get_plugin_home(
     response_model=schemas.plugin.RenderPluginResponse,
 )
 @measure_time_spend
-async def render_plugin_home(
+async def render_editor_side(
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         req: schemas.plugin.RenderPluginRequest,
 ) -> schemas.plugin.RenderPluginResponse:
     return await plugin_ops.render_editor_side(td=token_decode, req=req)
+
+
+@router.post(
+    path="/plugin/call",
+    response_model=schemas.plugin.PluginCallResponse
+)
+@measure_time_spend
+async def plugin_call(
+        req: schemas.plugin.PluginCallRequest,
+) -> schemas.plugin.PluginCallResponse:
+    return await plugin_ops.plugin_call(req=req)

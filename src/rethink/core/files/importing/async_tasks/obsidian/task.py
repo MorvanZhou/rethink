@@ -141,7 +141,7 @@ async def upload_obsidian_task(  # noqa: C901
         )
         md = meta.title + "\n\n" + md
         nid = existed_path2nid[full_path]
-        n, code = await core.node.update(
+        n, _, code = await core.node.update(
             uid=uid,
             nid=nid,
             md=md,
@@ -192,7 +192,7 @@ async def upload_obsidian_task(  # noqa: C901
             n, code = await core.node.get(uid=uid, nid=nid)
             if code != const.Code.OK:
                 continue
-            n, code = await core.node.update(
+            n, _, code = await core.node.update(
                 uid=uid,
                 nid=nid,
                 md=n["md"],

@@ -1,3 +1,4 @@
+import copy
 import datetime
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Dict, Any
@@ -200,25 +201,26 @@ async def update(  # noqa: C901
         nid: str,
         md: str,
         refresh_on_same_md: bool = False,
-) -> Tuple[Optional[tps.Node], const.Code]:
+) -> Tuple[Optional[tps.Node], Optional[tps.Node], const.Code]:
     if regex.NID.match(nid) is None:
-        return None, const.Code.NODE_NOT_EXIST
+        return None, None, const.Code.NODE_NOT_EXIST
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
-        return None, const.Code.NOTE_EXCEED_MAX_LENGTH
+        return None, None, const.Code.NOTE_EXCEED_MAX_LENGTH
     u, code = await user.get(uid=uid)
     if code != const.Code.OK:
-        return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
+        return None, None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     if await user.user_space_not_enough(u=u):
-        return None, const.Code.USER_SPACE_NOT_ENOUGH
+        return None, None, const.Code.USER_SPACE_NOT_ENOUGH
 
     title, body, snippet = utils.preprocess_md(md)
 
     n, code = await get(uid=uid, nid=nid)
     if code != const.Code.OK:
-        return None, code
+        return None, None, code
+    old_n = copy.deepcopy(n)
     if n["md"] == md and not refresh_on_same_md:
-        return n, const.Code.OK
+        return n, old_n, const.Code.OK
 
     old_md_size = len(n["md"].encode("utf-8"))
     new_data = {
@@ -230,7 +232,7 @@ async def update(  # noqa: C901
         from_nodes = await client.coll.nodes.find({"id": {"$in": n["fromNodeIds"]}}).to_list(length=None)
         for from_node in from_nodes:
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
-            n, code = await update(uid=uid, nid=from_node["id"], md=new_md)
+            n, old_n, code = await update(uid=uid, nid=from_node["id"], md=new_md)
             if code != const.Code.OK:
                 logger.info(f"update fromNode {from_node['id']} failed")
         new_data["title"] = title
@@ -243,7 +245,7 @@ async def update(  # noqa: C901
     new_data["toNodeIds"], code = await __flush_to_node_ids(
         nid=n["id"], orig_to_nid=n["toNodeIds"], new_md=md)
     if code != const.Code.OK:
-        return None, code
+        return None, old_n, code
 
     if not config.is_local_db():
         doc = await client.coll.nodes.find_one_and_update(
@@ -259,11 +261,11 @@ async def update(  # noqa: C901
         )
         if res.modified_count != 1:
             logger.error(f"update node {nid} failed")
-            return None, const.Code.OPERATION_FAILED
+            return None, old_n, const.Code.OPERATION_FAILED
         doc = await client.coll.nodes.find_one({"id": nid})
 
     if doc is None:
-        return None, const.Code.NODE_NOT_EXIST
+        return None, old_n, const.Code.NODE_NOT_EXIST
     await __set_linked_nodes(
         docs=[doc],
         with_disabled=False,
@@ -276,7 +278,7 @@ async def update(  # noqa: C901
         code = await client.search.update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"update search index failed, code: {code}")
-    return doc, code
+    return doc, old_n, code
 
 
 async def to_trash(uid: str, nid: str) -> const.Code:

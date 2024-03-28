@@ -49,6 +49,8 @@ class _Settings(TypedDict):
     editorMode: Literal["ir", "wysiwyg"]
     editorFontSize: int
     editorCodeTheme: CODE_THEME_TYPES
+    editorSepRightWidth: int
+    editorSideCurrentToolId: str
 
 
 class UserMeta(TypedDict):

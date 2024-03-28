@@ -3515,7 +3515,6 @@ img[data-v-4f42ee16] {
   border-left: 1px solid #e0e0e0;
   z-index: 1;
 }
-
 .item[data-v-3accabf6] {
   position: relative;
   display: flex;
@@ -3523,7 +3522,6 @@ img[data-v-4f42ee16] {
   align-items: center;
   width: 100%;
 }
-
 .item img[data-v-3accabf6] {
   width: 25px;
   padding: 0.3em;
@@ -3533,7 +3531,6 @@ img[data-v-4f42ee16] {
   cursor: pointer;
   border-radius: 0.5em;
 }
-
 .item .hint[data-v-3accabf6] {
   display: none;
   position: absolute;
@@ -3549,6 +3546,7 @@ img[data-v-4f42ee16] {
 }
 
 
+
 /*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/tools/SepLine.vue?vue&type=style&index=0&id=30512dd0&scoped=true&lang=css ***!
   \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -3557,8 +3555,7 @@ img[data-v-4f42ee16] {
   cursor: col-resize;
   flex-grow: 0;
   flex-shrink: 0;
-  width: 1px;
-  background: #e5e5e5;
+  width: 2px;
 }
 
 /*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3577,7 +3574,6 @@ img[data-v-4f42ee16] {
   -webkit-mask: var(--mask);
   mask: var(--mask);
 }
-
 .linked-nodes-horizontal[data-v-404f2c61] {
   height: 100px;
   display: flex;
@@ -3593,7 +3589,6 @@ img[data-v-4f42ee16] {
   -webkit-mask: var(--mask);
   mask: var(--mask);
 }
-
 .no-linked-node[data-v-404f2c61] {
   max-width: 300px;
   display: flex;
@@ -3604,13 +3599,11 @@ img[data-v-4f42ee16] {
   font-size: 1em;
   margin: 2em auto;
 }
-
 .no-linked-node-sm[data-v-404f2c61] {
   display: block;
   padding: 20px 0 10px 5px;
   height: auto;
 }
-
 .linked-node[data-v-404f2c61] {
   padding: 5px;
   border: 1px solid #eaeaea;
@@ -3621,7 +3614,6 @@ img[data-v-4f42ee16] {
   box-shadow: 0 0 3px #b9b9b9;
   width: -webkit-fill-available;
 }
-
 .linked-node-sm[data-v-404f2c61] {
   padding: 0 5px 5px 5px;
   margin: 0 3px 0 0;
@@ -3629,48 +3621,40 @@ img[data-v-4f42ee16] {
   min-width: 100px;
   height: 80px;
 }
-
 .node-header[data-v-404f2c61] {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 5px 0 5px 0;
 }
-
 .node-header-sm[data-v-404f2c61] {
   padding: 0;
 }
-
 .title[data-v-404f2c61] {
   font-weight: bold;
   color: #333333;
   overflow-x: hidden;
 }
-
 .title-sm[data-v-404f2c61] {
   font-size: 1em;
   overflow-x: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 .right-buttons[data-v-404f2c61] {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .right-buttons img[data-v-404f2c61] {
   width: 25px;
   height: 25px;
   cursor: pointer;
   margin-left: 5px;
 }
-
 .right-buttons img[data-v-404f2c61]:hover {
   filter: invert(0.5);
 }
-
 .snippet[data-v-404f2c61] {
   max-height: 90px;
   font-size: 0.9em;
@@ -3683,7 +3667,6 @@ img[data-v-4f42ee16] {
   overflow-wrap: break-word;
   overflow: hidden;
 }
-
 .snippet-expanded[data-v-404f2c61] {
   max-height: 400px;
   overflow-y: auto;
@@ -3700,6 +3683,13 @@ img[data-v-4f42ee16] {
   overflow-x: hidden;
 }
 
+.plugin[data-v-41948506] {
+  width: 100%;
+  height: 100%;
+  border-style: outset;
+  border-width: 1px;
+}
+
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/AppNodeEditPanel.vue?vue&type=style&index=0&id=220b40cb&scoped=true&lang=css ***!
   \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -3710,21 +3700,18 @@ img[data-v-4f42ee16] {
   flex-direction: row;
   height: 100%;
 }
-
 .work-place-sm[data-v-220b40cb] {
   width: 100%;
   flex-direction: column;
   overflow-y: auto;
   margin-top: 3px;
 }
-
 .container[data-v-220b40cb] {
   display: flex;
   flex-grow: 1;
   flex-direction: row;
   height: 100%;
 }
-
 .md-editor[data-v-220b40cb] {
   flex-grow: 1;
   max-height: calc(100vh - 145px);
@@ -4252,19 +4239,16 @@ table.view {
   display: block;
   background: #ffffff;
 }
-
 .view tr {
   height: 3.5em;
   border-bottom: 1px solid #efefef;
 }
-
 .view tr:first-child {
   position: sticky;
   top: 0;
   background-color: #fff;
   z-index: 1;
 }
-
 .cb-hide {
   display: none;
 }
@@ -4281,44 +4265,35 @@ table.view {
 .checkbox:hover {
   background-color: #eaeaea;
 }
-
 .pointer {
   cursor: pointer;
 }
-
 .view tr.tr-sm {
   font-size: 1em;
 }
-
 .view td.multi-select {
   padding: 0 5px;
   width: 2%;
   min-width: 15px;
 }
-
 .view td.title {
   width: 45%;
   padding-left: 8px;
   padding-right: 10px;
 }
-
 .default-cursor {
   cursor: default;
 }
-
 .view tr.tr-sm td.title {
   width: 60%;
   padding-left: 3px;
 }
-
 .view td.time {
   width: 20%;
 }
-
 .view tr.tr-sm td.time {
   width: 30%;
 }
-
 .view td.snippet {
   width: 33%;
   max-width: 300px;
@@ -4327,7 +4302,6 @@ table.view {
   white-space: nowrap;
   padding-right: 20px;
 }
-
 .view tr.tr-sm .node-more-ops {
   margin-right: 0;
 }

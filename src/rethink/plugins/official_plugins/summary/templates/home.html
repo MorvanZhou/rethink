@@ -1,14 +1,52 @@
-<h1>{{ name }}</h1>
-<p>today new thoughts: {{ data[0]["node"] }}</p>
-<p>today word count: {{ data[0]["word"] }}</p>
-<div>
-    <p>Last 6 days</p>
+<div class="plugin">
+  <h1>{{ name }}</h1>
+  <p>Today:</p>
+  <ul>
+    <li>thoughts: {{ data[0]["node"] }}</li>
+    <li>words: {{ data[0]["word"] }}</li>
+  </ul>
+  <div class="last">
+    <p>Last 6 days:</p>
     {% if data|length == 1 %}
-    <p>No data</p>
+      <p>No data</p>
     {% endif %}
     {% for d in data[1:] %}
-    <p>{{ d["date"] }}: thoughts {{ d["node"] }}, word: {{ d["word"] }}</p>
+      <p>{{ d["date"] }}:</p>
+      <ul>
+        <li>thoughts: {{ d["node"] }}</li>
+        <li>words: {{ d["word"] }}</li>
+      </ul>
     {% endfor %}
+  </div>
 </div>
 
+
+<style>
+  .plugin {
+    margin-top: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC,
+    Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+    font-size: 12px;
+    color: #333;
+  }
+
+  h1 {
+    color: #333;
+  }
+
+  .last {
+    margin-top: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-left: 1rem;
+  }
+
+  ul li {
+    margin-left: 2rem;
+  }
+
+</style>
 

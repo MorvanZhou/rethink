@@ -30,6 +30,8 @@ def __get_user(u: dict) -> schemas.user.UserInfoResponse.User:
             editorMode=u_settings["editorMode"],
             editorFontSize=u_settings["editorFontSize"],
             editorCodeTheme=u_settings["editorCodeTheme"],
+            editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
+            editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
         ),
     )
 
@@ -181,5 +183,7 @@ async def update_settings(
         editor_mode=req.editorMode,
         editor_font_size=req.editorFontSize,
         editor_code_theme=req.editorCodeTheme,
+        editor_sep_right_width=req.editorSepRightWidth,
+        editor_side_current_tool_id=req.editorSideCurrentToolId,
     )
     return __return_user_resp(u, code, req.requestId)
