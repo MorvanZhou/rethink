@@ -1,4 +1,5 @@
 import os
+import webbrowser
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -97,6 +98,11 @@ async def startup_event():
     logger.info("db initialized")
 
     register_official_plugins()
+
+    if os.getenv("REHINK_HEADLESS", "0") == "0":
+        webbrowser.open_new_tab(
+            f"http://{os.getenv('RETHINK_HOSTNAME')}:{os.getenv('VUE_APP_API_PORT')}"
+        )
 
 
 @app.on_event("shutdown")

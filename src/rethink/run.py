@@ -63,17 +63,20 @@ def run(
         host="127.0.0.1",
         port=8000,
         language: Literal["en", "zh"] = "en",
+        headless=False,
 ):
     """
     Run the server.
 
     Args:
         path (str): the database path for text and file data.
-         Rethink will create .data folder in this path, default is current working directory.
+            Rethink will create .data folder in this path, default is current working directory.
         host (str): server host, default is the localhost.
         port (int): server port, default is 8000.
         language (str): website language, default is English.
-         Possible values are "en" and "zh".
+            Possible values are "en" and "zh".
+        headless (bool): run the server in headless mode. if False, it will open a browser after startup.
+            default is False.
 
     Returns:
         None
@@ -94,6 +97,8 @@ def run(
     os.environ["VUE_APP_API_PORT"] = str(port)
     os.environ["VUE_APP_MODE"] = "local"
     os.environ["VUE_APP_LANGUAGE"] = language
+    os.environ["RETHINK_HEADLESS"] = "1" if headless else "0"
+    os.environ["RETHINK_HOSTNAME"] = host
 
     td = _start_on_schedule_plugins()
 
