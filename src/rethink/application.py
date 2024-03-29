@@ -131,7 +131,6 @@ except RuntimeError:
 @app.get("/r", response_class=HTMLResponse)
 @app.get("/r/{path}", response_class=HTMLResponse)
 @app.get("/r/plugin/{pid}", response_class=HTMLResponse)
-@app.get("/r/plugins", response_class=HTMLResponse)
 @app.get("/n/{nid}", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
     content = (const.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
