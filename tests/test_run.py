@@ -28,7 +28,9 @@ class TestRun(unittest.TestCase):
         port = 8001
 
         for _ in range(2):
-            p = multiprocessing.Process(target=rethink.run, kwargs={"path": self.path, "port": port, "language": "zh"})
+            p = multiprocessing.Process(target=rethink.run, kwargs={
+                "path": self.path, "port": port, "language": "zh", "headless": True,
+            })
             p.start()
             # p.join()
             while True:
