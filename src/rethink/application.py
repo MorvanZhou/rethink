@@ -99,9 +99,11 @@ async def startup_event():
 
     register_official_plugins()
 
-    if os.getenv("RETHINK_HEADLESS", "0") == "0":
+    host = os.getenv('RETHINK_HOSTNAME')
+    port = os.getenv('VUE_APP_API_PORT')
+    if os.getenv("RETHINK_HEADLESS", "0") == "0" and host and port:
         webbrowser.open_new_tab(
-            f"http://{os.getenv('RETHINK_HOSTNAME')}:{os.getenv('VUE_APP_API_PORT')}"
+            f"http://{host}:{port}"
         )
 
 
