@@ -1,5 +1,6 @@
 import unittest
 from textwrap import dedent
+from unittest.mock import patch
 
 import elastic_transport
 import pymongo.errors
@@ -152,7 +153,22 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
 
     @utils.skip_no_connect
-    async def test_node(self):
+    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("rethink.core.node.backup.__remove_md_from_cos")
+    @patch("rethink.core.node.backup.__get_md_from_cos")
+    @patch("rethink.core.node.backup.__save_md_to_cos")
+    async def test_node(
+            self,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.Code.OK
+        mock_get_md_from_cos.return_value = ("", const.Code.OK)
+        mock_remove_md_from_cos.return_value = const.Code.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+
         u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
@@ -213,7 +229,22 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, total)
 
     @utils.skip_no_connect
-    async def test_parse_at(self):
+    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("rethink.core.node.backup.__remove_md_from_cos")
+    @patch("rethink.core.node.backup.__get_md_from_cos")
+    @patch("rethink.core.node.backup.__save_md_to_cos")
+    async def test_parse_at(
+            self,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.Code.OK
+        mock_get_md_from_cos.return_value = ("", const.Code.OK)
+        mock_remove_md_from_cos.return_value = const.Code.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+
         nid1, _ = await core.node.add(
             uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
         )
@@ -315,7 +346,21 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(4, total)
 
     @utils.skip_no_connect
-    async def test_batch(self):
+    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("rethink.core.node.backup.__remove_md_from_cos")
+    @patch("rethink.core.node.backup.__get_md_from_cos")
+    @patch("rethink.core.node.backup.__save_md_to_cos")
+    async def test_batch(
+            self,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.Code.OK
+        mock_get_md_from_cos.return_value = ("", const.Code.OK)
+        mock_remove_md_from_cos.return_value = const.Code.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
         ns = []
         for i in range(10):
             n, code = await core.node.add(
