@@ -19,6 +19,7 @@ class LinkedNode(TypedDict):
     disabled: bool
     modifiedAt: datetime.datetime
 
+
 class Node(TypedDict):
     _id: ObjectId
     id: str
