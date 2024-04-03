@@ -1,1 +1,3 @@
-__version__ = "0.2.4"
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("rethink-note").version
