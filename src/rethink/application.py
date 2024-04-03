@@ -109,7 +109,11 @@ async def startup_event():
             f"http://{host}:{port}"
         )
 
-    print(f"Rethink running on http://{host}:{port} (Press CTRL+C to quit)")
+    if config.is_local_db():
+        if os.environ.get("VUE_APP_LANGUAGE", "en") == "zh":
+            print(f"Rethink 运行在 http://{host}:{port} (按 CTRL+C 退出)")
+        else:
+            print(f"Rethink running on http://{host}:{port} (Press CTRL+C to quit)")
 
 
 @app.on_event("shutdown")
