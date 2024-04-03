@@ -56,6 +56,9 @@ class Settings(BaseSettings):
 
     def __init__(self):
         super().__init__()
+        if self.DEBUG:
+            logger.setLevel("DEBUG")
+
         logger.debug(f'config - LOCAL_STORAGE_PATH: {self.LOCAL_STORAGE_PATH}')
         if self.LOCAL_STORAGE_PATH is None and self.DB_HOST == "":
             raise ValueError("LOCAL_STORAGE_PATH and DB_HOST cannot be empty at the same time")

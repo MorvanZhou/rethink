@@ -84,9 +84,6 @@ app.include_router(plugin.router)
 
 @app.on_event("startup")
 async def startup_event():
-    if config.get_settings().DEBUG:
-        logger.setLevel("DEBUG")
-
     if not config.is_local_db():
         add_rotating_file_handler(
             log_dir=const.RETHINK_DIR.parent.parent / "logs",
