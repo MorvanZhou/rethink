@@ -42,7 +42,8 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:
     if config.is_local_db():
         md_dir = __get_md_hist_dir(nid)
         md_dir.mkdir(parents=True, exist_ok=True)
-        with open(md_dir / f"{this_hist}.md", "w", encoding="utf-8") as f:
+        filename = __windows_safe_path(this_hist)
+        with open(md_dir / f"{filename}.md", "w", encoding="utf-8") as f:
             f.write(md)
     else:
         code = __save_md_to_cos(node["uid"], nid, this_hist, md)
@@ -54,7 +55,8 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:
         for h in drop:
             if config.is_local_db():
                 md_dir = __get_md_hist_dir(nid)
-                (md_dir / f"{h}.md").unlink()
+                filename = __windows_safe_path(h)
+                (md_dir / f"{filename}.md").unlink()
             else:
                 __remove_md_from_cos(node["uid"], nid, h)
         hist = hist[:-const.MAX_MD_BACKUP_VERSIONS]
@@ -86,13 +88,18 @@ def delete_node_md(uid: str, nids: List[str]):
 def get_md(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
     if config.is_local_db():
         md_dir = __get_md_hist_dir(nid)
-        with open(md_dir / f"{version}.md", "r", encoding="utf-8") as f:
+        filename = __windows_safe_path(version)
+        with open(md_dir / f"{filename}.md", "r", encoding="utf-8") as f:
             md = f.read()
     else:
         md, code = __get_md_from_cos(uid, nid, version)
         if code != const.Code.OK:
             return "", code
     return md, const.Code.OK
+
+
+def __windows_safe_path(filename: str) -> str:
+    return filename.replace(":", "_").replace("\\", "_").replace("/", "_")
 
 
 def __get_md_hist_dir(nid: str = None) -> Path:
