@@ -103,7 +103,7 @@ async def forget_password(
     response_model=schemas.base.AcknowledgeResponse,
 )
 @measure_time_spend
-async def update_user(
+async def update_user_password(
         req: schemas.user.UpdatePasswordRequest,
         token_decode: Annotated[TokenDecode, Depends(token2uid)],
         referer: Optional[str] = Depends(verify_referer),
