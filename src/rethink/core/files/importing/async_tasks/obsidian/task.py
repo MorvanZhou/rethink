@@ -31,10 +31,10 @@ async def upload_obsidian_task(  # noqa: C901
             const.Code.INVALID_FILE_TYPE,
             msg=f"unzip failed: {e}"
         )
-        logger.info(f"invalid file type: {filename}, uid: {uid}")
+        logger.error(f"invalid file type: {filename}, uid: {uid}")
         return
     t1 = time.time()
-    logger.info(f"obsidian upload, uid={uid}, unzip time: {t1 - t0:.2f}")
+    logger.debug(f"obsidian upload, uid={uid}, unzip time: {t1 - t0:.2f}")
 
     existed_path2nid = doc.get("obsidian", {}).copy()
     md_count = len(unzipped_files.md_full)
@@ -44,7 +44,7 @@ async def upload_obsidian_task(  # noqa: C901
             const.Code.INVALID_FILE_TYPE,
             msg="no md file found",
         )
-        logger.info(f"no md file found, uid: {uid}")
+        logger.debug(f"no md file found, uid: {uid}")
         return
     elif md_count > 2000:
         await utils.set_running_false(
@@ -52,7 +52,7 @@ async def upload_obsidian_task(  # noqa: C901
             const.Code.TOO_MANY_FILES,
             msg=f"md file count: {md_count} > 2000",
         )
-        logger.info(f"too many md files: {md_count}, uid: {uid}")
+        logger.debug(f"too many md files: {md_count}, uid: {uid}")
         return
 
     # check file size
@@ -66,11 +66,11 @@ async def upload_obsidian_task(  # noqa: C901
                     const.Code.TOO_LARGE_FILE,
                     msg=f"file size > {max_file_size}: {full_path}",
                 )
-                logger.info(f"too large file: {full_path}, uid: {uid}")
+                logger.debug(f"too large file: {full_path}, uid: {uid}")
                 return
 
     t2 = time.time()
-    logger.info(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
+    logger.debug(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
 
     # add new md files with only title
     for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
@@ -109,12 +109,12 @@ async def upload_obsidian_task(  # noqa: C901
                     code,
                     msg="process updating failed",
                 )
-                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
+                logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
     t3 = time.time()
-    logger.info(f"obsidian upload, uid={uid}, add new md time: {t3 - t2:.2f}")
+    logger.debug(f"obsidian upload, uid={uid}, add new md time: {t3 - t2:.2f}")
 
     # update all md content and update md files
     for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
@@ -129,7 +129,7 @@ async def upload_obsidian_task(  # noqa: C901
                 const.Code.FILE_OPEN_ERROR,
                 msg=f"file decode utf-8 failed, {e}: {full_path}",
             )
-            logger.info(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {full_path}, uid: {uid}")
+            logger.error(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {full_path}, uid: {uid}")
             return
 
         md = await ops.replace_inner_link_and_upload(
@@ -159,7 +159,7 @@ async def upload_obsidian_task(  # noqa: C901
                     code,
                     msg=f"file insert failed: {full_path}",
                 )
-                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
+                logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             existed_path2nid[full_path] = n["id"]
         elif code != const.Code.OK:
@@ -168,7 +168,7 @@ async def upload_obsidian_task(  # noqa: C901
                 code,
                 msg=f"file updating failed: {full_path}",
             )
-            logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
+            logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
             return
         if i % 20 == 0:
             doc, code = await utils.update_process(uid=uid, type_=type_, process=int(i / md_count * 80 + 10))
@@ -178,12 +178,12 @@ async def upload_obsidian_task(  # noqa: C901
                     code,
                     msg="uploading process update failed",
                 )
-                logger.info(f"error: {code}, filepath: {full_path}, uid: {uid}")
+                logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
     t4 = time.time()
-    logger.info(f"obsidian upload, uid={uid}, update all files time: {t4 - t3:.2f}")
+    logger.debug(f"obsidian upload, uid={uid}, update all files time: {t4 - t3:.2f}")
 
     # update for old obsidian files
     count = 0
@@ -209,7 +209,7 @@ async def upload_obsidian_task(  # noqa: C901
                     code,
                     msg="uploading process update failed",
                 )
-                logger.info(f"error: {code}, uid: {uid}")
+                logger.error(f"error: {code}, uid: {uid}")
                 return
             if not doc["running"]:
                 break
@@ -217,6 +217,6 @@ async def upload_obsidian_task(  # noqa: C901
         count += 1
 
     t5 = time.time()
-    logger.info(f"obsidian upload, uid={uid}, update for old obsidian files time: {t5 - t4:.2f}")
+    logger.debug(f"obsidian upload, uid={uid}, update for old obsidian files time: {t5 - t4:.2f}")
 
     await utils.finish_task(uid=uid, obsidian=existed_path2nid)

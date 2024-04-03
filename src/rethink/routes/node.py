@@ -91,3 +91,33 @@ async def get_core_nodes(
         td=token_decode,
         req=req,
     )
+
+
+@router.post(
+    path="/node/hist",
+    response_model=schemas.node.HistEditionsResponse,
+)
+@measure_time_spend
+async def get_hist_editions(
+        req: schemas.node.HistEditionsRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.node.HistEditionsResponse:
+    return await node_ops.get_hist_editions(
+        td=token_decode,
+        req=req,
+    )
+
+
+@router.post(
+    path="/node/hist/md",
+    response_model=schemas.node.HistEditionMdResponse,
+)
+@measure_time_spend
+async def get_hist_md(
+        req: schemas.node.HistEditionMdRequest,
+        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+) -> schemas.node.HistEditionMdResponse:
+    return await node_ops.get_hist_edition_md(
+        td=token_decode,
+        req=req,
+    )

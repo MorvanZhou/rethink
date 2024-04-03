@@ -33,7 +33,7 @@ def measure_time_spend(func):
             code = kwargs["token_decode"].code
         req_s = req_s[:200] + "..." if len(req_s) > 200 else req_s
         if func.__name__ not in ["login", "reset_password", "register"]:
-            logger.info(f"REQ: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | code='{code}' | {req_s}")
+            logger.debug(f"REQ: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | code='{code}' | {req_s}")
 
         resp = await func(*args, **kwargs)
         t1 = time.perf_counter()
@@ -41,7 +41,7 @@ def measure_time_spend(func):
             req_id = resp.requestId
         except AttributeError:
             req_id = ""
-        logger.info(f"RESP: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | spend={t1 - t0:.4f}s")
+        logger.debug(f"RESP: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | spend={t1 - t0:.4f}s")
         return resp
 
     return wrapper

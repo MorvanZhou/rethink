@@ -1,6 +1,5 @@
 import calendar
 import datetime
-import json
 import os
 import struct
 from typing import Optional, Union
@@ -8,7 +7,7 @@ from typing import Optional, Union
 from bson import ObjectId
 from bson.tz_util import utc
 
-from rethink import config, const, utils
+from rethink import config, const, utils, version_manager
 from rethink.depend.mongita import MongitaClientDisk
 from rethink.logger import logger
 from rethink.models.search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
@@ -88,29 +87,12 @@ class Client:
             await self.mongo.drop_database(config.get_settings().DB_NAME)
 
     async def local_try_add_default_user(self):
-        dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
-        u_insertion = {
-            "_id": ObjectId(),
-            "id": utils.short_uuid(),
-            "email": const.DEFAULT_USER["email"],
-            "nickname": const.DEFAULT_USER["nickname"],
-            "avatar": const.DEFAULT_USER["avatar"],
-            "account": const.DEFAULT_USER["email"],
-            "settings": {
-                "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
-                "theme": const.AppTheme.LIGHT.value,
-                "editorMode": const.EditorMode.WYSIWYG.value,
-                "editorFontSize": 15,
-                "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
-            }
-        }
-        with open(dot_rethink_path, "w", encoding="utf-8") as f:
-            out = u_insertion.copy()
-            out["_id"] = str(out["_id"])
-            json.dump(out, f, indent=2, ensure_ascii=False)
+        _v = version_manager.recover.dump_dot_rethink(
+            path=config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
+        )
 
         logger.info("running at the first time, a user with initial data will be created")
-        ns = const.NEW_USER_DEFAULT_NODES[u_insertion["settings"]["language"]]
+        ns = const.NEW_USER_DEFAULT_NODES[_v["settings"]["language"]]
         search_docs = []
 
         async def create_node(md: str, to_nid: Optional[str] = None):
@@ -118,7 +100,7 @@ class Client:
             n: Node = {
                 "_id": ObjectId(),
                 "id": utils.short_uuid(),
-                "uid": u_insertion["id"],
+                "uid": _v["id"],
                 "title": title_,
                 "snippet": snippet_,
                 "md": md,
@@ -129,6 +111,7 @@ class Client:
                 "inTrashAt": None,
                 "fromNodeIds": [],
                 "toNodeIds": [] if to_nid is None else [to_nid],
+                "history": [],
             }
             res = await self.coll.nodes.insert_one(n)
             if not res.acknowledged:
@@ -151,12 +134,12 @@ class Client:
         n1 = await create_node(_md, to_nid=n0["id"])
 
         u: UserMeta = {
-            "_id": ObjectId(u_insertion["_id"]),
-            "id": u_insertion["id"],
-            "email": u_insertion["email"],
-            "nickname": u_insertion["nickname"],
-            "avatar": u_insertion["avatar"],
-            "account": u_insertion["email"],
+            "_id": ObjectId(_v["_id"]),
+            "id": _v["id"],
+            "email": _v["email"],
+            "nickname": _v["nickname"],
+            "avatar": _v["avatar"],
+            "account": _v["email"],
 
             "source": const.UserSource.LOCAL.value,
             "hashed": "",
@@ -170,7 +153,7 @@ class Client:
                 "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
                 "nodeDisplaySortKey": "modifiedAt"
             },
-            "settings": u_insertion["settings"],
+            "settings": _v["settings"],
         }
         _ = await self.coll.users.insert_one(u)
 
@@ -183,6 +166,7 @@ class Client:
         if not config.get_settings().ONE_USER:
             return
 
+        version_manager.migrate.to_latest_version(config.get_settings().LOCAL_STORAGE_PATH)
         # check if field changes
         for c, t in [
             (self.coll.users, UserMeta),
@@ -234,19 +218,19 @@ class Client:
 
     async def _local_restore(self):
         # restore user
-        dot_rethink_path = config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
-        if not dot_rethink_path.exists():
+        _v = version_manager.recover.load_dot_rethink(
+            path=config.get_settings().LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
+        )
+        if _v is None:
             return
-        with open(dot_rethink_path, "r", encoding="utf-8") as f:
-            u_insertion = json.load(f)
 
         u: UserMeta = {
-            "_id": ObjectId(u_insertion["_id"]),
-            "id": u_insertion["id"],
-            "email": u_insertion["email"],
-            "nickname": u_insertion["nickname"],
-            "avatar": u_insertion["avatar"],
-            "account": u_insertion["email"],
+            "_id": ObjectId(_v["_id"]),
+            "id": _v["id"],
+            "email": _v["email"],
+            "nickname": _v["nickname"],
+            "avatar": _v["avatar"],
+            "account": _v["email"],
 
             "source": const.UserSource.LOCAL.value,
             "hashed": "",
@@ -260,12 +244,14 @@ class Client:
                 "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
                 "nodeDisplaySortKey": "modifiedAt"
             },
-            "settings": u_insertion.get("settings", {
+            "settings": _v.get("settings", {
                 "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
                 "theme": const.AppTheme.LIGHT.value,
                 "editorMode": const.EditorMode.WYSIWYG.value,
                 "editorFontSize": 15,
                 "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+                "editorSepRightWidth": 200,
+                "editorSideCurrentToolId": "",
             }),
         }
         _ = await self.coll.users.insert_one(u)
@@ -285,7 +271,7 @@ class Client:
             n: Node = {
                 "_id": _oid_from_datetime(created_time),
                 "id": md_path.stem,
-                "uid": u_insertion["id"],
+                "uid": _v["id"],
                 "title": title_,
                 "snippet": snippet_,
                 "md": md,
@@ -296,6 +282,7 @@ class Client:
                 "inTrashAt": None,
                 "fromNodeIds": [],
                 "toNodeIds": [],
+                "history": [],
             }
             ns.append(n)
             search_docs.append(
@@ -308,7 +295,7 @@ class Client:
         res = await self.coll.nodes.insert_many(ns)
         if not res.acknowledged:
             raise ValueError("cannot insert default node")
-        logger.info(f"restore nodes count: {len(res.inserted_ids)}")
+        logger.debug(f"restore nodes count: {len(res.inserted_ids)}")
 
         docs = []
         for f in config.get_settings().LOCAL_STORAGE_PATH.glob(".data/files/*"):
@@ -317,7 +304,7 @@ class Client:
             created_time = datetime.datetime.fromtimestamp(f.stat().st_ctime, tz=utc)
             docs.append({
                 "_id": _oid_from_datetime(created_time),
-                "uid": u_insertion["id"],
+                "uid": _v["id"],
                 "fid": fid,
                 "filename": filename,
                 "size": f.stat().st_size,
@@ -332,7 +319,7 @@ class Client:
             uid=u["id"],
             docs=search_docs,
         )
-        logger.info(f"restore files count: {len(res.inserted_ids)}")
+        logger.debug(f"restore files count: {len(res.inserted_ids)}")
 
     async def try_restore_search(self):
         count_mongo = await self.coll.nodes.count_documents({})
@@ -365,7 +352,7 @@ class Client:
             )
             if code != const.Code.OK:
                 raise ValueError("cannot restore search index")
-        logger.info(f"restore search index count: {count_mongo}")
+        logger.debug(f"restore search index count: {count_mongo}")
 
 
 def _oid_from_datetime(dt: datetime.datetime) -> ObjectId:

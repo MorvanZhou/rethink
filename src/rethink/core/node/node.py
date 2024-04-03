@@ -1,72 +1,18 @@
 import copy
 import datetime
-from pathlib import Path
-from typing import List, Optional, Set, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any
 
 from bson import ObjectId
 from bson.tz_util import utc
 
 from rethink import config, const, utils, regex
 from rethink import plugins
+from rethink.core import user
 from rethink.logger import logger
 from rethink.models import tps, db_ops
 from rethink.models.client import client
 from rethink.models.search_engine.engine import SearchDoc
-from . import user
-
-
-def __get_linked_nodes(new_md) -> Tuple[set, const.Code]:
-    # last first
-    cache_current_to_nid: Set[str] = set()
-
-    for match in list(regex.MD_AT_LINK.finditer(new_md))[::-1]:
-        l0, l1 = match.span(1)
-        link = new_md[l0:l1]
-        if link.startswith("/n/"):
-            # check existed nodes
-            to_nid = link[3:]
-            cache_current_to_nid.add(to_nid)
-    return cache_current_to_nid, const.Code.OK
-
-
-async def __flush_to_node_ids(
-        nid: str,
-        orig_to_nid: List[str],
-        new_md: str
-) -> Tuple[List[str], const.Code]:
-    new_to_nid, code = __get_linked_nodes(new_md=new_md)
-    if code != const.Code.OK:
-        return [], code
-
-    # remove fromNodes for linked nodes
-    orig_to_nid = set(orig_to_nid)
-    for to_nid in orig_to_nid.difference(new_to_nid):
-        await db_ops.remove_from_node(from_nid=nid, to_nid=to_nid)
-
-    # add fromNodes for linked nodes
-    for to_nid in new_to_nid.difference(orig_to_nid):
-        await db_ops.node_add_to_set(id_=to_nid, key="fromNodeIds", value=nid)
-
-    return list(new_to_nid), const.Code.OK
-
-
-def __local_usage_write_file(nid: str, md: str):
-    if not config.is_local_db():
-        return
-    md_dir = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md"
-    md_dir.mkdir(parents=True, exist_ok=True)
-    with open(md_dir / f"{nid}.md", "w", encoding="utf-8") as f:
-        f.write(md)
-
-
-def __local_usage_delete_files(nids: List[str]):
-    if not config.is_local_db():
-        return
-    dir_ = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md"
-    for nid in nids:
-        md_dir = dir_ / f"{nid}.md"
-        if md_dir.exists():
-            md_dir.unlink()
+from . import backup, node_utils
 
 
 @plugins.handler.on_node_added
@@ -101,7 +47,7 @@ async def add(  # noqa: C901
 
     new_to_node_ids = []
     if md != "":
-        new_to_node_ids, code = await __flush_to_node_ids(nid=nid, orig_to_nid=[], new_md=md)
+        new_to_node_ids, code = await node_utils.flush_to_node_ids(nid=nid, orig_to_nid=[], new_md=md)
         if code != const.Code.OK:
             return None, code
     _id = ObjectId()
@@ -119,6 +65,7 @@ async def add(  # noqa: C901
         "inTrashAt": None,
         "fromNodeIds": from_nids,
         "toNodeIds": new_to_node_ids,
+        "history": [],
     }
     res = await client.coll.nodes.insert_one(data)
     if not res.acknowledged:
@@ -126,28 +73,15 @@ async def add(  # noqa: C901
 
     await user.update_used_space(uid=uid, delta=new_size)
 
-    __local_usage_write_file(nid=nid, md=md)
+    code = await backup.storage_md(node=data, keep_hist=False)
+    if code != const.Code.OK:
+        return data, code
 
     if type_ == const.NodeType.MARKDOWN.value:
         code = await client.search.add(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"add search index failed, code: {code}")
     return data, const.Code.OK
-
-
-async def __set_linked_nodes(
-        docs: List[tps.Node],
-        with_disabled: bool = False,
-):
-    for doc in docs:
-        doc["fromNodes"] = await client.coll.nodes.find({
-            "id": {"$in": doc["fromNodeIds"]},
-            "disabled": with_disabled,
-        }).to_list(length=None)
-        doc["toNodes"] = await client.coll.nodes.find({
-            "id": {"$in": doc["toNodeIds"]},
-            "disabled": with_disabled,
-        }).to_list(length=None)
 
 
 async def get(
@@ -187,7 +121,7 @@ async def get_batch(
         logger.error(f"docs len != nids len: {nids}")
         return [], const.Code.NODE_NOT_EXIST
 
-    await __set_linked_nodes(
+    await node_utils.set_linked_nodes(
         docs=docs,
         with_disabled=with_disabled,
     )
@@ -234,7 +168,7 @@ async def update(  # noqa: C901
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
             n, old_n, code = await update(uid=uid, nid=from_node["id"], md=new_md)
             if code != const.Code.OK:
-                logger.info(f"update fromNode {from_node['id']} failed")
+                logger.error(f"update fromNode {from_node['id']} failed")
         new_data["title"] = title
 
     if n["md"] != md:
@@ -242,7 +176,7 @@ async def update(  # noqa: C901
         if n["snippet"] != snippet:
             new_data["snippet"] = snippet
 
-    new_data["toNodeIds"], code = await __flush_to_node_ids(
+    new_data["toNodeIds"], code = await node_utils.flush_to_node_ids(
         nid=n["id"], orig_to_nid=n["toNodeIds"], new_md=md)
     if code != const.Code.OK:
         return None, old_n, code
@@ -266,18 +200,21 @@ async def update(  # noqa: C901
 
     if doc is None:
         return None, old_n, const.Code.NODE_NOT_EXIST
-    await __set_linked_nodes(
+    await node_utils.set_linked_nodes(
         docs=[doc],
         with_disabled=False,
     )
 
     await user.update_used_space(uid=uid, delta=len(md.encode("utf-8")) - old_md_size)
 
-    __local_usage_write_file(nid=nid, md=md)
     if doc["type"] == const.NodeType.MARKDOWN.value:
         code = await client.search.update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"update search index failed, code: {code}")
+
+    code = await backup.storage_md(node=doc, keep_hist=True)
+    if code != const.Code.OK:
+        return doc, old_n, code
     return doc, old_n, code
 
 
@@ -386,11 +323,12 @@ async def batch_delete(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"delete nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    __local_usage_delete_files(nids=nids)
+    backup.delete_node_md(uid=uid, nids=nids)
 
     code = await client.search.delete_batch(uid=uid, nids=nids)
     if code != const.Code.OK:
         logger.error(f"delete search index failed, code: {code}")
+
     return code
 
 
@@ -445,3 +383,19 @@ async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
     )
     await client.search.refresh()
     return code
+
+
+async def get_hist_editions(uid: str, nid: str) -> Tuple[List[str], const.Code]:
+    n, code = await get(uid=uid, nid=nid)
+    if code != const.Code.OK:
+        return [], code
+    return n.get("history", []), const.Code.OK
+
+
+async def get_hist_edition_md(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
+    n, code = await get(uid=uid, nid=nid)
+    if code != const.Code.OK:
+        return "", code
+    if version not in n["history"]:
+        return "", const.Code.NODE_NOT_EXIST
+    return backup.get_md(uid=uid, nid=nid, version=version)

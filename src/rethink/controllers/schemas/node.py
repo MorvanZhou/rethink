@@ -85,3 +85,28 @@ class CoreNodesResponse(BaseModel):
     message: str
     data: NodesSearchResponse.Data
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+
+
+class HistEditionsRequest(BaseModel):
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+
+
+class HistEditionsResponse(BaseModel):
+    code: NonNegativeInt
+    message: str
+    requestId: str
+    versions: List[str] = Field(default_factory=list)
+
+
+class HistEditionMdRequest(BaseModel):
+    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+    version: str = Field(max_length=30)
+    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+
+
+class HistEditionMdResponse(BaseModel):
+    code: NonNegativeInt
+    message: str
+    requestId: str
+    md: str

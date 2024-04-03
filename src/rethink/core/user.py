@@ -52,6 +52,8 @@ async def add(
             "editorMode": const.EditorMode.WYSIWYG.value,
             "editorFontSize": 15,
             "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+            "editorSepRightWidth": 200,
+            "editorSideCurrentToolId": "",
         }
     }
     # catch if id is duplicated

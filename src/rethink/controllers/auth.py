@@ -62,7 +62,7 @@ async def verify_user(u: tps.UserMeta, password: str) -> bool:
 def _base_password(password: str, email: str) -> bytes:
     # update hash strategy
     s = f"{password}&&{config.get_settings().DB_SALT}$${email}"
-    logger.info(f"hashing: {s}")
+    logger.debug(f"hashing: {s}")
     return base64.b64encode(
         hashlib.sha256(s.encode("utf-8")).digest()
     )

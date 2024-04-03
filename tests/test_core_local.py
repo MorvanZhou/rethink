@@ -1,5 +1,6 @@
 import datetime
 import shutil
+import time
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -134,7 +135,6 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("createdAt", u["lastState"]["nodeDisplaySortKey"])
         used_space = u["usedSpace"]
         n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
-        self.assertEqual(const.Code.OK, code)
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("title2\nbody2", n["md"])
@@ -464,3 +464,24 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
                 now = 0
                 base_used_space = 0
             self.assertAlmostEqual(value, now, msg=f"delta: {delta}, value: {value}")
+
+    async def test_node_version(self):
+        node, code = await core.node.add(
+            uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+        md_path = Path(__file__).parent / "tmp" / ".data" / "md" / (node["id"] + ".md")
+        self.assertTrue(md_path.exists())
+
+        time.sleep(1)
+
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
+        self.assertEqual(const.Code.OK, code)
+        hist_dir = Path(__file__).parent / "tmp" / ".data" / "md" / "hist" / node["id"]
+        self.assertEqual(1, len(list(hist_dir.glob("*.md"))))
+
+        time.sleep(1)
+
+        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody3")
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(2, len(list(hist_dir.glob("*.md"))))

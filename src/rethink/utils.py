@@ -231,7 +231,7 @@ async def get_title_description_from_link(  # noqa: C901
         no_description = "No description found"
 
     if count > 2:
-        logger.info(f"too many 30X code, failed to get {url}")
+        logger.debug(f"too many 30X code, failed to get {url}")
         return no_title, no_description
 
     # SSRF protection
@@ -253,7 +253,7 @@ async def get_title_description_from_link(  # noqa: C901
                 httpx.ReadTimeout,
                 httpx.HTTPError
         ) as e:
-            logger.info(f"failed to get {url}: {e}")
+            logger.debug(f"failed to get {url}: {e}")
             return no_title, no_description
         if response.status_code in (301, 302):
             return await get_title_description_from_link(

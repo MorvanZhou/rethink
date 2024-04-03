@@ -14,6 +14,7 @@ from rethink.logger import logger
 
 class Settings(BaseSettings):
     ONE_USER: bool = Field(default=1, env='ONE_USER')
+    DEBUG: bool = Field(default=False, env='DEBUG')
     VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     PLUGINS: bool = Field(default=False, env='PLUGINS')
     LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='LOCAL_STORAGE_PATH', default=None)
@@ -45,6 +46,7 @@ class Settings(BaseSettings):
     COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
     COS_REGION: str = Field(env="COS_REGION", default="")
     COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
+    MD_BACKUP_INTERVAL: int = Field(env="MD_BACKUP_INTERVAL", default=60 * 5)  # 5 minutes
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -60,10 +60,11 @@ def _start_on_schedule_plugins():
 
 def run(
         path: Union[str, Path] = None,
-        host="127.0.0.1",
-        port=8000,
+        host: str = "127.0.0.1",
+        port: int = 8000,
         language: Literal["en", "zh"] = "en",
-        headless=False,
+        headless: bool = False,
+        debug: bool = False,
 ):
     """
     Run the server.
@@ -77,9 +78,7 @@ def run(
             Possible values are "en" and "zh".
         headless (bool): run the server in headless mode. if False, it will open a browser after startup.
             default is False.
-
-    Returns:
-        None
+        debug (bool): run the server in debug mode. default is False.
 
     Raises:
         FileNotFoundError: if the path not exists.
@@ -99,6 +98,7 @@ def run(
     os.environ["VUE_APP_LANGUAGE"] = language
     os.environ["RETHINK_HEADLESS"] = "1" if headless else "0"
     os.environ["RETHINK_HOSTNAME"] = host
+    os.environ["DEBUG"] = "true" if debug else "false"
 
     td = _start_on_schedule_plugins()
 
@@ -108,6 +108,7 @@ def run(
         port=port,
         reload=False,
         workers=1,
+        log_level="error",
         env_file=os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env.local"),
     )
     td.join()

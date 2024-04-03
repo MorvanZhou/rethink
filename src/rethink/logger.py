@@ -11,7 +11,7 @@ logging.basicConfig(
     datefmt=log_date_format,
 )
 logger = logging.getLogger("rethink")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
 # add rotating file handler

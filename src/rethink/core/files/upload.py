@@ -142,10 +142,10 @@ async def vditor_upload(uid: str, files: List[UploadFile]) -> dict:
 
 async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Code]:
     if count > 2:
-        logger.info(f"too many 30X code, failed to get {url}")
+        logger.debug(f"too many 30X code, failed to get {url}")
         return "", const.Code.FILE_OPEN_ERROR
     if ssrf_check(url):
-        logger.info(f"ssrf check failed: {url}")
+        logger.debug(f"ssrf check failed: {url}")
         return "", const.Code.FILE_OPEN_ERROR
     u, code = await core.user.get(uid=uid)
     if code != const.Code.OK:
@@ -167,7 +167,7 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
                 httpx.ReadTimeout,
                 httpx.HTTPError
         ) as e:
-            logger.info(f"failed to get {url}: {e}")
+            logger.debug(f"failed to get {url}: {e}")
             return "", const.Code.FILE_OPEN_ERROR
         if response.status_code in [301, 302]:
             return await fetch_image_vditor(uid=uid, url=response.headers["Location"], count=count + 1)

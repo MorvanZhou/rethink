@@ -19,7 +19,6 @@ class LinkedNode(TypedDict):
     disabled: bool
     modifiedAt: datetime.datetime
 
-
 class Node(TypedDict):
     _id: ObjectId
     id: str
@@ -34,6 +33,7 @@ class Node(TypedDict):
     inTrashAt: Optional[datetime.datetime]
     fromNodeIds: List[str]
     toNodeIds: List[str]
+    history: List[str]
 
 
 class _LastState(TypedDict):

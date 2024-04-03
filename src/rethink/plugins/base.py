@@ -154,9 +154,10 @@ class Plugin:
         """
         try:
             port = os.environ["VUE_APP_API_PORT"]
+            host = os.environ['RETHINK_HOSTNAME']
         except KeyError:
-            raise ValueError("the port number is not set in the environment variable VUE_APP_API_PORT.")
-        return f"http://localhost:{port}/api/plugin/call"
+            raise ValueError("the host or port number is not set in the environment.")
+        return f"http://{host}:{port}/api/plugin/call"
 
 
 event_plugin_map: Dict[str, List[Plugin]] = {

@@ -147,7 +147,6 @@ async def replace_inner_link_and_upload(
 
 
 def _decode_filename(filepath: str) -> str:
-    # 尝试使用不同的编码格式解码文件名
     encodings = ['utf-8', 'gbk', 'cp437']
     for encoding in encodings:
         try:

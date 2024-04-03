@@ -201,7 +201,7 @@ class ESSearcher(BaseEngine):
             raise RuntimeError(f"reindex failed, resp: {resp}")
 
         self.index = new_index
-        logger.info(f"elasticsearch reindex finished, new index: {self.index}")
+        logger.debug(f"elasticsearch reindex finished, new index: {self.index}")
 
     async def drop(self):
         await self.connect()

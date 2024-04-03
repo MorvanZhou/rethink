@@ -84,6 +84,9 @@ app.include_router(plugin.router)
 
 @app.on_event("startup")
 async def startup_event():
+    if config.get_settings().DEBUG:
+        logger.setLevel("DEBUG")
+
     if not config.is_local_db():
         add_rotating_file_handler(
             log_dir=const.RETHINK_DIR.parent.parent / "logs",
@@ -95,7 +98,7 @@ async def startup_event():
     logger.debug(f'startup_event VUE_APP_API_PORT: {os.environ.get("VUE_APP_API_PORT")}')
     logger.debug(f'startup_event VUE_APP_LANGUAGE: {os.environ.get("VUE_APP_LANGUAGE")}')
     await client.init()
-    logger.info("db initialized")
+    logger.debug("db initialized")
 
     register_official_plugins()
 
@@ -106,6 +109,8 @@ async def startup_event():
             f"http://{host}:{port}"
         )
 
+    print(f"Rethink running on http://{host}:{port} (Press CTRL+C to quit)")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -113,7 +118,7 @@ async def shutdown_event():
         await client.search.es.close()
     except (AttributeError, ValueError):
         pass
-    logger.info("db closed")
+    logger.debug("db closed")
 
 
 try:
@@ -124,7 +129,7 @@ try:
             name=name,
         )
 except RuntimeError:
-    logger.info("mount frontend failed")
+    logger.debug("mount frontend failed")
 
 
 @app.get("/", response_class=HTMLResponse)

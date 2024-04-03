@@ -189,3 +189,50 @@ async def get_core_nodes(
                 ) for n in nodes],
         ),
     )
+
+
+async def get_hist_editions(
+        td: TokenDecode,
+        req: schemas.node.HistEditionsRequest,
+) -> schemas.node.HistEditionsResponse:
+    if td.code != const.Code.OK:
+        return schemas.node.HistEditionsResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+            versions=[],
+        )
+    versions, code = await core.node.get_hist_editions(
+        uid=td.uid,
+        nid=req.nid,
+    )
+    return schemas.node.HistEditionsResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
+        versions=versions,
+    )
+
+
+async def get_hist_edition_md(
+        td: TokenDecode,
+        req: schemas.node.HistEditionMdRequest,
+) -> schemas.node.HistEditionMdResponse:
+    if td.code != const.Code.OK:
+        return schemas.node.HistEditionMdResponse(
+            code=td.code.value,
+            message=const.get_msg_by_code(td.code, td.language),
+            requestId=req.requestId,
+            md="",
+        )
+    md, code = await core.node.get_hist_edition_md(
+        uid=td.uid,
+        nid=req.nid,
+        version=req.version,
+    )
+    return schemas.node.HistEditionMdResponse(
+        code=code.value,
+        message=const.get_msg_by_code(code, td.language),
+        requestId=req.requestId,
+        md=md,
+    )

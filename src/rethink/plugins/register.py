@@ -14,4 +14,4 @@ def register_official_plugins():
         Favorites,
     ]:
         add_plugin(_p_cls())
-        logger.info(f"added plugin '{_p_cls.name}' (id={_p_cls.id})")
+        logger.debug(f"added plugin '{_p_cls.name}' (id={_p_cls.id})")

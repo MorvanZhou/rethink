@@ -18,6 +18,7 @@ NICKNAME_MAX_LENGTH = 20
 IMG_RESIZE_THRESHOLD = 1024 * 1024 * 3  # 3MB
 MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 50  # 50MB
 PLUGIN_ID_MAX_LENGTH = 40
+MAX_MD_BACKUP_VERSIONS = 10
 
 
 class NodeType(Enum):
@@ -59,6 +60,7 @@ class Code(Enum):
     INVALID_SETTING = 29
     OLD_PASSWORD_ERROR = 30
     PLUGIN_NOT_FOUND = 31
+    COS_ERROR = 32
 
 
 INT_CODE_MAP = {
@@ -107,6 +109,7 @@ CODE_MESSAGES = {
     Code.INVALID_SETTING: CodeMessage(zh="无效的设置", en="Invalid setting"),
     Code.OLD_PASSWORD_ERROR: CodeMessage(zh="旧密码错误", en="Old password error"),
     Code.PLUGIN_NOT_FOUND: CodeMessage(zh="插件未找到", en="Plugin not found"),
+    Code.COS_ERROR: CodeMessage(zh="COS 错误", en="COS error"),
 }
 
 DEFAULT_USER = {
