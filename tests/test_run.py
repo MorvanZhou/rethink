@@ -46,6 +46,7 @@ class TestRun(unittest.TestCase):
             "",
             "/login",
             "/about",
+            "/sauth",
             "/r",
             "/r/settings",
             "/r/user",
