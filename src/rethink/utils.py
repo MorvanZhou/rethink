@@ -1,9 +1,11 @@
 import datetime
 import ipaddress
 import math
+import os
 import re
 import socket
 import uuid
+import webbrowser
 from html.parser import HTMLParser
 from io import StringIO
 from typing import Tuple
@@ -299,3 +301,14 @@ def mask_email(email: str):
     else:
         e = f"{name[:2]}**{name[-1]}@{end}"
     return e
+
+
+def local_finish_up():
+    if config.is_local_db():
+        host = os.getenv('RETHINK_SERVER_HOSTNAME')
+        port = os.getenv('VUE_APP_API_PORT')
+        print(f"Rethink running on http://{host}:{port} (Press CTRL+C to quit)")
+        if os.getenv("RETHINK_SERVER_HEADLESS", "0") == "0" and host and port:
+            webbrowser.open_new_tab(
+                f"http://{host}:{port}"
+            )

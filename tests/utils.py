@@ -16,7 +16,7 @@ def set_env(file=".env.test.local"):
             if tmp.exists():
                 shutil.rmtree(tmp, ignore_errors=True)
             tmp.mkdir(exist_ok=True)
-            os.environ["LOCAL_STORAGE_PATH"] = str(tmp)
+            os.environ["RETHINK_LOCAL_STORAGE_PATH"] = str(tmp)
         cs = f.readlines()
         for c in cs:
             k, v = c.split("=")
@@ -31,7 +31,7 @@ def drop_env(file=".env.test.local"):
     except KeyError:
         pass
     try:
-        tmp = os.environ.pop("LOCAL_STORAGE_PATH")
+        tmp = os.environ.pop("RETHINK_LOCAL_STORAGE_PATH")
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
     except KeyError:

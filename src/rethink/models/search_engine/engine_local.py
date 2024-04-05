@@ -56,7 +56,7 @@ class LocalSearcher(BaseEngine):
 
     @property
     def index_path(self):
-        return config.get_settings().LOCAL_STORAGE_PATH / ".data" / "search"
+        return config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "search"
 
     async def init(self):
         def create_schema(analyzer):

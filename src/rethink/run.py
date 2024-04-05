@@ -63,6 +63,7 @@ def run(
         host: str = "127.0.0.1",
         port: int = 8000,
         language: Literal["en", "zh"] = "en",
+        password: str = None,
         headless: bool = False,
         debug: bool = False,
 ):
@@ -76,6 +77,8 @@ def run(
         port (int): server port, default is 8000.
         language (str): website language, default is English.
             Possible values are "en" and "zh".
+        password (str): the password for the server. default is None. If a string is provided,
+            the login page will appear.
         headless (bool): run the server in headless mode. if False, it will open a browser after startup.
             default is False.
         debug (bool): run the server in debug mode. default is False.
@@ -92,13 +95,20 @@ def run(
         raise FileNotFoundError(f"Path not exists: {path}")
     if not path.is_dir():
         raise NotADirectoryError(f"Path is not a directory: {path}")
-    os.environ["LOCAL_STORAGE_PATH"] = str(path)
     os.environ["VUE_APP_API_PORT"] = str(port)
     os.environ["VUE_APP_MODE"] = "local"
     os.environ["VUE_APP_LANGUAGE"] = language
-    os.environ["RETHINK_HEADLESS"] = "1" if headless else "0"
-    os.environ["RETHINK_HOSTNAME"] = host
-    os.environ["DEBUG"] = "true" if debug else "false"
+    os.environ["RETHINK_LOCAL_STORAGE_PATH"] = str(path)
+    os.environ["RETHINK_SERVER_HEADLESS"] = "1" if headless else "0"
+    os.environ["RETHINK_SERVER_HOSTNAME"] = host
+    os.environ["RETHINK_SERVER_DEBUG"] = "true" if debug else "false"
+    if password is not None:
+        l_pw = len(password)
+        if l_pw < 6 or l_pw > 20:
+            raise ValueError("Password length should be between 6 and 20 characters!")
+        if len(password) < 8:
+            print("Password is too short. The password is highly recommended to be at least 8 characters!")
+        os.environ["RETHINK_SERVER_PASSWORD"] = password
 
     td = _start_on_schedule_plugins()
 

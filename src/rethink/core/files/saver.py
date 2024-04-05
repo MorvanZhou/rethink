@@ -79,7 +79,7 @@ class Saver:
         return url
 
     async def save_local(self, uid: str, file: File) -> str:
-        path = get_settings().LOCAL_STORAGE_PATH / ".data" / "files" / file.hashed_filename
+        path = get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "files" / file.hashed_filename
         path.parent.mkdir(parents=True, exist_ok=True)
 
         if path.exists():

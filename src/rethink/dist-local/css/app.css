@@ -3667,7 +3667,6 @@ img[data-v-4f42ee16] {
   overflow-wrap: break-word;
   overflow: hidden;
 }
-
 .snippet-expanded[data-v-404f2c61] {
   max-height: 400px;
   overflow-y: auto;
@@ -3685,45 +3684,37 @@ img[data-v-4f42ee16] {
   overflow-y: auto;
   color: rgba(0, 0, 0, 0.88);
 }
-
 .no-versions[data-v-7e97cf55] {
   padding-top: 2rem;
   text-align: center;
 }
-
 .heading[data-v-7e97cf55] {
   padding: 1rem;
   font-weight: bold;
   border-bottom: 1px solid var(--border-color);
 }
-
 .version[data-v-7e97cf55] {
   padding: 1rem 1rem 0 1rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .version-info[data-v-7e97cf55] {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .time[data-v-7e97cf55] {
   font-size: 0.7rem;
   color: rgba(0, 0, 0, 0.6);
 }
-
 .right-buttons[data-v-7e97cf55] {
   display: flex;
   align-items: center;
   padding: 0 0.5rem;
   cursor: pointer;
 }
-
 .right-buttons img[data-v-7e97cf55] {
   width: 20px;
 }
-
 .restore-notice[data-v-7e97cf55] {
   font-size: 0.7rem;
 }
@@ -3817,12 +3808,10 @@ img[data-v-4f42ee16] {
   padding: 0 30px;
   height: 30px;
 }
-
 .sm[data-v-0c69ff34] {
   justify-content: center;
   width: 20px;
 }
-
 .create-node[data-v-0c69ff34]:hover {
   background: #f64324;
 }
@@ -5181,6 +5170,39 @@ h1[data-v-61cb665a] {
 .y-scroll[data-v-476192e0] {
   overflow-y: auto;
   max-width: 100% !important;
+}
+
+/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/SelfHostedAuth.vue?vue&type=style&index=0&id=f1de3396&lang=css ***!
+  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.login {
+  width: 60%;
+  margin: 100px auto;
+  max-width: 400px;
+  padding-bottom: 40px;
+}
+
+.sm {
+  margin: 10px auto;
+  width: 90%;
+}
+
+.login h1 {
+  text-align: center;
+}
+
+.submit {
+  display: block;
+  margin: 20px auto;
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\

@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import os
 import traceback
 from typing import Optional, Tuple
 
@@ -53,6 +54,9 @@ async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.C
 
 async def verify_user(u: tps.UserMeta, password: str) -> bool:
     if config.get_settings().ONE_USER:
+        pw = os.getenv("RETHINK_SERVER_PASSWORD", None)
+        if pw is not None:
+            return pw == password
         return True
     base_pw = _base_password(password=password, email=u["email"])
     match = bcrypt.checkpw(base_pw, u["hashed"].encode("utf-8"))

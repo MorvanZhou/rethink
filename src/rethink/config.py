@@ -14,10 +14,10 @@ from rethink.logger import logger
 
 class Settings(BaseSettings):
     ONE_USER: bool = Field(default=1, env='ONE_USER')
-    DEBUG: bool = Field(default=False, env='DEBUG')
+    RETHINK_SERVER_DEBUG: bool = Field(default=False, env='RETHINK_SERVER_DEBUG')
     VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     PLUGINS: bool = Field(default=False, env='PLUGINS')
-    LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='LOCAL_STORAGE_PATH', default=None)
+    RETHINK_LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='RETHINK_LOCAL_STORAGE_PATH', default=None)
     DB_NAME: str = Field(env='DB_NAME', default="")
     DB_USER: str = Field(env='DB_USER', default="")
     DB_PASSWORD: str = Field(env='DB_PASSWORD', default="")
@@ -56,12 +56,11 @@ class Settings(BaseSettings):
 
     def __init__(self):
         super().__init__()
-        if self.DEBUG:
+        if self.RETHINK_SERVER_DEBUG:
             logger.setLevel("DEBUG")
 
-        logger.debug(f'config - LOCAL_STORAGE_PATH: {self.LOCAL_STORAGE_PATH}')
-        if self.LOCAL_STORAGE_PATH is None and self.DB_HOST == "":
-            raise ValueError("LOCAL_STORAGE_PATH and DB_HOST cannot be empty at the same time")
+        if self.RETHINK_LOCAL_STORAGE_PATH is None and self.DB_HOST == "":
+            raise ValueError("RETHINK_LOCAL_STORAGE_PATH and DB_HOST cannot be empty at the same time")
         if self.DB_SALT == "":
             self.DB_SALT = bcrypt.gensalt(4).decode("utf-8")
         if self.JWT_KEY == b"" or self.JWT_KEY_PUB == b"":
@@ -89,4 +88,4 @@ def get_settings() -> Settings:
 
 
 def is_local_db() -> bool:
-    return get_settings().LOCAL_STORAGE_PATH is not None
+    return get_settings().RETHINK_LOCAL_STORAGE_PATH is not None

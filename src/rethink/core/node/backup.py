@@ -21,7 +21,7 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:
 
     if config.is_local_db():
         # save to local
-        md_path = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md" / (nid + ".md")
+        md_path = Path(config.get_settings().RETHINK_LOCAL_STORAGE_PATH) / ".data" / "md" / (nid + ".md")
         md_path.write_text(md, encoding="utf-8")
 
     if not keep_hist:
@@ -78,7 +78,7 @@ def delete_node_md(uid: str, nids: List[str]):
             # remove dir even if it's not empty
             shutil.rmtree(dir_, ignore_errors=True)
             # remove current node md
-            md_path = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md" / (nid + ".md")
+            md_path = Path(config.get_settings().RETHINK_LOCAL_STORAGE_PATH) / ".data" / "md" / (nid + ".md")
             md_path.unlink(missing_ok=True)
     else:
         for nid in nids:
@@ -103,7 +103,7 @@ def __windows_safe_path(filename: str) -> str:
 
 
 def __get_md_hist_dir(nid: str = None) -> Path:
-    p = Path(config.get_settings().LOCAL_STORAGE_PATH) / ".data" / "md" / "hist"
+    p = Path(config.get_settings().RETHINK_LOCAL_STORAGE_PATH) / ".data" / "md" / "hist"
     if nid is not None:
         p = p / nid
     return p

@@ -54,11 +54,11 @@ done
 
 export VUE_APP_API_PORT=$port
 export VUE_APP_MODE=$mode
-# if mode is local, export LOCAL_STORAGE_PATH to .data
+# if mode is local, export RETHINK_LOCAL_STORAGE_PATH to .data
 if [ $mode == "local" ]; then
-  export LOCAL_STORAGE_PATH=.
-  export RETHINK_HOSTNAME=localhost
-  export RETHINK_HEADLESS=1
+  export RETHINK_LOCAL_STORAGE_PATH=.
+  export RETHINK_SERVER_HOSTNAME=localhost
+  export RETHINK_SERVER_HEADLESS=1
 fi
 echo "Running in $mode mode with reload=$reload on $host:$port"
 # set working directory to rethink
