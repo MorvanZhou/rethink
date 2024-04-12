@@ -20,7 +20,7 @@ alphabet_len = len(alphabet)
 code_idx_range = list(range(0, alphabet_len - 1))
 
 
-def random_captcha(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, BytesIO]]:
+def generate(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, BytesIO]]:
     code = [alphabet[i] for i in choices(code_idx_range, k=length)]
     code_str = "".join(code)
     data = {
@@ -41,27 +41,6 @@ def verify_captcha(token: str, code_str: str) -> const.Code:
     try:
         data = jwt_decode(token)
         if data["code"] == code_str.lower() + config.get_settings().CAPTCHA_SALT:
-            code = const.Code.OK
-    except jwt.ExpiredSignatureError:
-        code = const.Code.CAPTCHA_EXPIRED
-    except (jwt.DecodeError, Exception):
-        code = const.Code.INVALID_AUTH
-    return code
-
-
-def encode_numbers(numbers: str, expired_min: int) -> str:
-    token = jwt_encode(
-        exp_delta=timedelta(minutes=expired_min),
-        data={"code": numbers + config.get_settings().CAPTCHA_SALT}
-    )
-    return token
-
-
-def verify_numbers(token: str, number_str: str) -> const.Code:
-    code = const.Code.CAPTCHA_ERROR
-    try:
-        data = jwt_decode(token)
-        if data["code"] == number_str + config.get_settings().CAPTCHA_SALT:
             code = const.Code.OK
     except jwt.ExpiredSignatureError:
         code = const.Code.CAPTCHA_EXPIRED

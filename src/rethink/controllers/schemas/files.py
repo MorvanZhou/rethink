@@ -20,13 +20,14 @@ class FileUploadProcessResponse(BaseModel):
     msg: str
 
 
-class VditorUploadResponse(BaseModel):
+class VditorFilesResponse(BaseModel):
     class Data(BaseModel):
         errFiles: List[str]
         succMap: Dict[str, str]
 
     code: NonNegativeInt
     msg: str
+    requestId: str
     data: Data
 
 
@@ -34,7 +35,7 @@ class ImageVditorFetchRequest(BaseModel):
     url: str
 
 
-class ImageVditorFetchResponse(BaseModel):
+class VditorImagesResponse(BaseModel):
     class Data(BaseModel):
         originalURL: str
         url: str

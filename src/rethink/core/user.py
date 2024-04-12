@@ -1,12 +1,13 @@
 import datetime
 import html
-from typing import Optional, Tuple, Literal
+from typing import Optional, Tuple
 
 from bson import ObjectId
 from bson.tz_util import utc
 from pymongo.errors import DuplicateKeyError
 
 from rethink import const, config, utils
+from rethink.controllers.schemas.user import PatchUserRequest
 from rethink.models import tps
 from rethink.models.client import client
 
@@ -26,36 +27,34 @@ async def add(
     # assert language in const.Language
     if not const.Language.is_valid(language):
         language = const.Language.EN.value
-    data: tps.UserMeta = {
-        "_id": oid,
-        "id": utils.short_uuid(),
-        "account": account,
-        "source": source,
-        "email": email,
-        "hashed": hashed,
-        "avatar": str(avatar),
-        "disabled": False,
-        "nickname": nickname,
-        "modifiedAt": oid.generation_time,
-        "nodeIds": [],
-        "usedSpace": 0,
-        "type": const.USER_TYPE.NORMAL.id,
-        "lastState": {
-            "recentCursorSearchSelectedNIds": [],
-            "recentSearch": [],
-            "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
-            "nodeDisplaySortKey": "modifiedAt"
-        },
-        "settings": {
-            "language": language,
-            "theme": const.AppTheme.LIGHT.value,
-            "editorMode": const.EditorMode.WYSIWYG.value,
-            "editorFontSize": 15,
-            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
-            "editorSepRightWidth": 200,
-            "editorSideCurrentToolId": "",
-        }
-    }
+    data = utils.get_user_dict(
+        _id=oid,
+        uid=utils.short_uuid(),
+        source=source,
+        account=account,
+        nickname=nickname,
+        email=email,
+        avatar=str(avatar),
+        hashed=hashed,
+        disabled=False,
+        modified_at=oid.generation_time,
+        used_space=0,
+        type_=const.USER_TYPE.NORMAL.id,
+
+        last_state_recent_cursor_search_selected_nids=[],
+        last_state_recent_search=[],
+        last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+        last_state_node_display_sort_key="modifiedAt",
+
+        settings_language=language,
+        settings_theme=const.AppTheme.LIGHT.value,
+        settings_editor_mode=const.EditorMode.WYSIWYG.value,
+        settings_editor_font_size=15,
+        settings_editor_code_theme=const.EditorCodeTheme.GITHUB.value,
+        settings_editor_sep_right_width=200,
+        settings_editor_side_current_tool_id="",
+    )
+
     # catch if id is duplicated
     while True:
         try:
@@ -70,104 +69,71 @@ async def add(
     return data["id"], const.Code.OK
 
 
-async def update(
+async def patch(
         uid: str,
-        nickname: str = "",
-        avatar: str = "",
-        node_display_method: int = -1,
-        node_display_sort_key: str = "",
+        req: PatchUserRequest,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u, code = await get(uid=uid)
     if code != const.Code.OK:
         return None, code
 
-    new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
+    new_data = {}
 
-    nickname = nickname.strip()
-    nickname = html.escape(nickname)
-    if nickname != "" and nickname != u["nickname"]:
-        new_data["nickname"] = nickname
-    avatar = str(avatar).strip()
-    if avatar != "" and avatar != u["avatar"]:
-        new_data["avatar"] = avatar
+    if req.nickname is not None:
+        nickname = req.nickname.strip()
+        nickname = html.escape(nickname)
+        if nickname != "":
+            new_data["nickname"] = nickname
 
-    if node_display_method != u["lastState"]["nodeDisplayMethod"] and node_display_method >= 0:
-        if node_display_method >= len(const.NodeDisplayMethod):
-            return None, const.Code.INVALID_NODE_DISPLAY_METHOD
-        new_data["lastState.nodeDisplayMethod"] = node_display_method
-    if node_display_sort_key != "" and node_display_sort_key != u["lastState"]["nodeDisplaySortKey"]:
-        if node_display_sort_key not in ["modifiedAt", "createdAt", "title"]:
-            return None, const.Code.INVALID_NODE_DISPLAY_SORT_KEY
-        new_data["lastState.nodeDisplaySortKey"] = node_display_sort_key
+    if req.avatar is not None:
+        avatar = str(req.avatar).strip()
+        if avatar != "":
+            new_data["avatar"] = avatar
 
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": new_data},
-    )
-    if res.modified_count != 1:
-        return None, const.Code.OPERATION_FAILED
-    return await get(uid=uid)
+    if req.lastState is not None:
+        if req.lastState.nodeDisplayMethod is not None:
+            if req.lastState.nodeDisplayMethod >= len(const.NodeDisplayMethod) or req.lastState.nodeDisplayMethod < 0:
+                return None, const.Code.INVALID_NODE_DISPLAY_METHOD
+            new_data["lastState.nodeDisplayMethod"] = req.lastState.nodeDisplayMethod
 
+        if req.lastState.nodeDisplaySortKey is not None:
+            new_data["lastState.nodeDisplaySortKey"] = req.lastState.nodeDisplaySortKey
 
-async def update_settings(  # noqa: C901
-        uid: str,
-        language: str = "",
-        theme: Literal["", "light", "dark"] = "",
-        editor_mode: Literal["", "ir", "wysiwyg"] = "",
-        editor_font_size: int = -1,
-        editor_code_theme: tps.CODE_THEME_TYPES = "",
-        editor_sep_right_width: float = -1,
-        editor_side_current_tool_id: str = "",
-) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u, code = await get(uid=uid)
-    if code != const.Code.OK:
-        return None, code
+    if req.settings is not None:
+        if req.settings.language is not None:
+            new_data["settings.language"] = req.settings.language
 
-    new_data = {"modifiedAt": datetime.datetime.now(tz=utc), }
+        if req.settings.theme is not None:
+            new_data["settings.theme"] = req.settings.theme
 
-    language = language.strip()
-    if language != "" and language != u["settings"]["language"]:
-        if not const.Language.is_valid(language):
-            return None, const.Code.INVALID_LANGUAGE
-        new_data["settings.language"] = language
+        if req.settings.editorMode is not None:
+            new_data["settings.editorMode"] = req.settings.editorMode
 
-    editor_mode = editor_mode.strip()
-    if editor_mode != "" and editor_mode != u["settings"]["editorMode"]:
-        if not const.EditorMode.is_valid(editor_mode):
-            return None, const.Code.INVALID_SETTING
-        new_data["settings.editorMode"] = editor_mode
+        if req.settings.editorFontSize is not None:
+            if not const.EditorFontSize.is_valid(req.settings.editorFontSize):
+                return None, const.Code.INVALID_SETTING
+            new_data["settings.editorFontSize"] = req.settings.editorFontSize
 
-    theme = theme.strip()
-    if theme != "" and theme != u["settings"]["theme"]:
-        if not const.AppTheme.is_valid(theme):
-            return None, const.Code.INVALID_SETTING
-        new_data["settings.theme"] = theme
+        if req.settings.editorCodeTheme is not None:
+            new_data["settings.editorCodeTheme"] = req.settings.editorCodeTheme
 
-    if editor_font_size != -1 and editor_font_size != u["settings"]["editorFontSize"]:
-        if not const.EditorFontSize.is_valid(editor_font_size):
-            return None, const.Code.INVALID_SETTING
-        new_data["settings.editorFontSize"] = editor_font_size
+        if req.settings.editorSepRightWidth is not None:
+            new_data["settings.editorSepRightWidth"] = req.settings.editorSepRightWidth
 
-    editor_code_theme = editor_code_theme.strip()
-    if editor_code_theme != "" and editor_code_theme != u["settings"]["editorCodeTheme"]:
-        if not const.EditorCodeTheme.is_valid(editor_code_theme):
-            return None, const.Code.INVALID_SETTING
-        new_data["settings.editorCodeTheme"] = editor_code_theme
+        if req.settings.editorSideCurrentToolId is not None:
+            new_data["settings.editorSideCurrentToolId"] = req.settings.editorSideCurrentToolId
 
-    if editor_sep_right_width != -1 and editor_sep_right_width != u["settings"].get("editorSepRightWidth", None):
-        if editor_sep_right_width <= 0:
-            return None, const.Code.INVALID_SETTING
-        new_data["settings.editorSepRightWidth"] = editor_sep_right_width
+    # has data to update
+    if len(new_data) != 0:
+        new_data["modifiedAt"] = datetime.datetime.now(tz=utc)
 
-    if editor_side_current_tool_id != u["settings"].get("editorSideCurrentToolId", None):
-        new_data["settings.editorSideCurrentToolId"] = editor_side_current_tool_id
+        res = await client.coll.users.update_one(
+            {"id": uid},
+            {"$set": new_data},
+        )
+        if res.modified_count != 1:
+            return None, const.Code.OPERATION_FAILED
 
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": new_data},
-    )
-    if res.modified_count != 1:
-        return None, const.Code.OPERATION_FAILED
     return await get(uid=uid)
 
 

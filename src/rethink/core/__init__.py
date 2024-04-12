@@ -2,7 +2,7 @@
 from . import (
     node,
     user,
-    search,
+    recent,
     files,
+    account,
 )
-from .verify import verification

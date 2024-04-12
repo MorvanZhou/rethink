@@ -1,17 +1,18 @@
 from rethink import const
 from rethink.controllers import schemas
-from rethink.controllers.utils import TokenDecode
+from rethink.controllers.utils import Headers
+from rethink.core import node
 from rethink.plugins.base import get_plugins, event_plugin_map
 
 
 async def get_all_plugins(
-        td: TokenDecode,
+        h: Headers,
         rid: str = "",
 ) -> schemas.plugin.PluginsResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.plugin.PluginsResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
             requestId=rid,
             plugins=[]
         )
@@ -29,21 +30,20 @@ async def get_all_plugins(
     ]
     return schemas.plugin.PluginsResponse(
         code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
+        message=const.get_msg_by_code(const.Code.OK, h.language),
         requestId=rid,
         plugins=plugins
     )
 
 
 async def get_plugins_with_render_editor_side(
-        td: TokenDecode,
-        rid: str = "",
+        h: Headers,
 ) -> schemas.plugin.PluginsResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.plugin.PluginsResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=rid,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             plugins=[]
         )
     plugins = []
@@ -60,90 +60,96 @@ async def get_plugins_with_render_editor_side(
         )
     return schemas.plugin.PluginsResponse(
         code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
-        requestId=rid,
+        message=const.get_msg_by_code(const.Code.OK, h.language),
+        requestId=h.request_id,
         plugins=plugins
     )
 
 
 def __render(
-        td: TokenDecode,
-        req: schemas.plugin.RenderPluginRequest,
-        method_name: str,
+        h: Headers,
+        pid: str,
+        nid: str = "",
 ):
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.plugin.RenderPluginResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             html=""
         )
     plugins = get_plugins()
-    if req.pluginId not in plugins:
+    if pid not in plugins:
         return schemas.plugin.RenderPluginResponse(
             code=const.Code.PLUGIN_NOT_FOUND.value,
-            message=const.get_msg_by_code(const.Code.PLUGIN_NOT_FOUND, td.language),
-            requestId=req.requestId,
+            message=const.get_msg_by_code(const.Code.PLUGIN_NOT_FOUND, h.language),
+            requestId=h.request_id,
             html=""
         )
 
     try:
-        plugin = plugins[req.pluginId]
+        plugin = plugins[pid]
     except KeyError:
         html = ""
         code = const.Code.PLUGIN_NOT_FOUND
         return schemas.plugin.RenderPluginResponse(
             code=code.value,
-            message=const.get_msg_by_code(code, td.language),
-            requestId=req.pluginId,
+            message=const.get_msg_by_code(code, h.language),
+            requestId=h.request_id,
             html=html,
         )
 
     code = const.Code.OK
     try:
-        if method_name == "render_plugin_home":
-            html = plugin.render_plugin_home(language=td.language)
-        elif method_name == "render_editor_side":
-            html = plugin.render_editor_side(uid=td.uid, nid=req.nid, md=req.md, language=td.language)
+        if nid != "":
+            n, code = node.get(uid=h.uid, nid=nid)
+            if code != const.Code.OK:
+                return schemas.plugin.RenderPluginResponse(
+                    code=code.value,
+                    message=const.get_msg_by_code(code, h.language),
+                    requestId=h.request_id,
+                    html=""
+                )
+            html = plugin.render_editor_side(uid=h.uid, nid=nid, md=n["md"], language=h.language)
         else:
-            html = ""
-            code = const.Code.INVALID_SETTING
+            html = plugin.render_plugin_home(language=h.language)
+
     except NotImplementedError:
         html = plugin.description
     return schemas.plugin.RenderPluginResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.pluginId,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         html=html,
     )
 
 
 async def render_plugin_home(
-        td: TokenDecode,
-        req: schemas.plugin.RenderPluginRequest,
+        h: Headers,
+        pid: str,
 ) -> schemas.plugin.RenderPluginResponse:
-    return __render(td, req, "render_plugin_home")
+    return __render(h, pid=pid)
 
 
 async def render_editor_side(
-        td: TokenDecode,
-        req: schemas.plugin.RenderPluginRequest,
+        h: Headers,
+        pid: str,
+        nid: str,
 ) -> schemas.plugin.RenderPluginResponse:
     code = const.Code.OK
-    if req.nid == "":
-        code = const.Code.INVALID_SETTING
     if code != const.Code.OK:
         return schemas.plugin.RenderPluginResponse(
             code=code.value,
-            message=const.get_msg_by_code(code, td.language),
-            requestId=req.requestId,
+            message=const.get_msg_by_code(code, h.language),
+            requestId=h.request_id,
             html=""
         )
 
-    return __render(td, req, "render_editor_side")
+    return __render(h, pid=pid, nid=nid)
 
 
 async def plugin_call(
+        h: Headers,
         req: schemas.plugin.PluginCallRequest,
 ) -> schemas.plugin.PluginCallResponse:
     plugins = get_plugins()
@@ -154,7 +160,7 @@ async def plugin_call(
         return schemas.plugin.PluginCallResponse(
             code=code.value,
             message=const.get_msg_by_code(code, const.Language.EN.value),
-            requestId=req.pluginId,
+            requestId=h.request_id,
             method=req.method,
             data=None,
         )
@@ -162,7 +168,7 @@ async def plugin_call(
     return schemas.plugin.PluginCallResponse(
         code=const.Code.OK.value,
         message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
-        requestId=req.requestId,
+        requestId=h.request_id,
         pluginId=req.pluginId,
         method=req.method,
         data=data,

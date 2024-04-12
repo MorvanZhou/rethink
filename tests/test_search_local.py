@@ -40,7 +40,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
         )
 
         self.assertEqual(10, len(docs))
@@ -54,7 +54,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             uid="uid",
             query="doc",
             page=200,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(0, len(docs))
         self.assertEqual(20, total)
@@ -63,7 +63,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             uid="uid",
             query="",
             page=0,
-            page_size=50,
+            limit=50,
         )
         self.assertEqual(20, len(docs))
         self.assertEqual(20, total)
@@ -87,7 +87,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(10, len(docs))
         self.assertEqual(20, total)
@@ -108,7 +108,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(10, len(docs))
         self.assertEqual(20, total)
@@ -124,7 +124,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(10, len(docs))
         self.assertEqual(19, total)
@@ -147,7 +147,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(10, len(docs))
         self.assertEqual(10, total)
@@ -161,7 +161,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
             exclude_nids=["nid19"]
         )
         self.assertEqual(9, len(docs))
@@ -174,7 +174,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             sort_key="title",
             reverse=False,
             page=0,
-            page_size=10,
+            limit=10,
             exclude_nids=["nid19"]
         )
         self.assertEqual(9, len(docs))

@@ -133,7 +133,7 @@ class BaseEngine(ABC):
             ] = None,
             reverse: bool = False,
             page: int = 1,
-            page_size: int = 10,
+            limit: int = 10,
             exclude_nids: Sequence[str] = None,
     ) -> Tuple[List[SearchResult], int]:
         ...

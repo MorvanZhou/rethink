@@ -1,11 +1,13 @@
 import os
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, FastAPI
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from rethink import const, config
 from rethink.logger import logger
 from rethink.models.client import client
+from rethink.routes import utils
 
 router = APIRouter(
     tags=["self_hosted"],
@@ -45,9 +47,13 @@ async def index() -> HTMLResponse:
     )
 
 
-@router.get("/files/{fid}", response_class=FileResponse)
+@router.get(
+    "/files/{fid}",
+    status_code=200,
+    response_class=FileResponse,
+)
 async def user_data(
-        fid: str,
+        fid: str = utils.ANNOTATED_FID
 ) -> FileResponse:
     if config.is_local_db():
         prefix = config.get_settings().RETHINK_LOCAL_STORAGE_PATH
@@ -57,3 +63,15 @@ async def user_data(
         path=prefix / ".data" / "files" / fid,
         status_code=200,
     )
+
+
+def mount_static(app: FastAPI):
+    try:
+        for name in ["css", "js", "img", "dist"]:
+            app.mount(
+                f"/{name}",
+                StaticFiles(directory=const.FRONTEND_DIR / name),
+                name=name,
+            )
+    except RuntimeError:
+        logger.debug("mount frontend failed, the frontend files is in somewhere else")

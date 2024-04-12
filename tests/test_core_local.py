@@ -14,7 +14,8 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from rethink import const, core
+from rethink import const, core, config
+from rethink.controllers.schemas.user import PatchUserRequest
 from rethink.core.files.importing.async_tasks.utils import update_process
 from rethink.models import db_ops
 from rethink.models.client import client
@@ -63,11 +64,15 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("ccc", u["nickname"])
 
-        u, code = await core.user.update(
+        u, code = await core.user.patch(
             uid=_id,
-            nickname="2",
-            avatar="3",
-            node_display_method=const.NodeDisplayMethod.LIST.value,
+            req=PatchUserRequest(
+                nickname="2",
+                avatar="3",
+                lastState=PatchUserRequest.LastState(
+                    nodeDisplayMethod=const.NodeDisplayMethod.LIST.value,
+                )
+            )
         )
         self.assertEqual(const.Code.OK, code)
 
@@ -95,7 +100,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
 
     async def test_node(self):
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="a" * (const.MD_MAX_LENGTH + 1), type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.NOTE_EXCEED_MAX_LENGTH, code)
@@ -104,7 +109,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -122,19 +127,23 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, len(ns))
         self.assertEqual(3, total)
 
-        ns, total = await client.search.search(uid=self.uid, page_size=5, page=12, sort_key="createdAt")
+        ns, total = await client.search.search(uid=self.uid, limit=5, page=12, sort_key="createdAt")
         self.assertEqual(0, len(ns))
         self.assertEqual(3, total)
 
-        u, code = await core.user.update(
+        u, code = await core.user.patch(
             uid=self.uid,
-            node_display_sort_key="createdAt",
+            req=PatchUserRequest(
+                lastState=PatchUserRequest.LastState(
+                    nodeDisplaySortKey="createdAt",
+                )
+            )
         )
 
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("createdAt", u["lastState"]["nodeDisplaySortKey"])
         used_space = u["usedSpace"]
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("title2\nbody2", n["md"])
@@ -170,10 +179,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, total)
 
     async def test_parse_at(self):
-        nid1, _ = await core.node.add(
+        nid1, _ = await core.node.post(
             uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
         )
-        nid2, _ = await core.node.add(
+        nid2, _ = await core.node.post(
             uid=self.uid, md="我133", type_=const.NodeType.MARKDOWN.value,
         )
         md = dedent(f"""title
@@ -182,7 +191,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         [@我133](/n/{nid2['id']})
         ffq
         """)
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -192,7 +201,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             sort_key="createdAt",
             reverse=True,
             page=0,
-            page_size=10,
+            limit=10,
             exclude_nids=[],
         )
         self.assertEqual(5, len(nodes))
@@ -206,7 +215,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(n["toNodeIds"]))
 
         cache = n["md"]
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md=f'{cache}xxxx')
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(cache + "xxxx", n["md"])
 
@@ -214,7 +223,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["title"])
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md=n["title"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
@@ -223,7 +232,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(n["fromNodeIds"]))
 
     async def test_add_set(self):
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(0, len(node["toNodeIds"]))
@@ -236,55 +245,55 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(node["toNodeIds"]))
 
     async def test_cursor_text(self):
-        n1, code = await core.node.add(
+        n1, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.add(
+        n2, code = await core.node.post(
             uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
-        recom, total = await core.search.cursor_query(
+        recom, total = await core.node.search.at(
             uid=self.uid,
             nid=n2["id"],
             query="text",
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(1, len(recom))
         self.assertEqual(1, total)
 
-        recom, total = await core.search.cursor_query(
+        recom, total = await core.node.search.at(
             uid=self.uid,
             nid=n2["id"],  # exclude the second node
             query="",  # return recent nodes only
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(2, len(recom))
         self.assertEqual(2, total)
 
-        code = await core.search.add_recent_cursor_search(self.uid, n1["id"], n2["id"])
+        code = await core.recent.added_at_node(self.uid, n1["id"], n2["id"])
         self.assertEqual(const.Code.OK, code)
 
-        recom, total = await core.search.cursor_query(
+        recom, total = await core.node.search.at(
             uid=self.uid,
             nid=n1["id"],  # exclude the second node
             query="",
             page=0,
-            page_size=10,
+            limit=10,
         )
         self.assertEqual(3, len(recom))
         self.assertEqual(3, total)
         self.assertEqual("Welcome to Rethink", recom[2].title)
 
     async def test_to_trash(self):
-        n1, code = await core.node.add(
+        n1, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.add(
+        n2, code = await core.node.post(
             uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -308,18 +317,18 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(4, total)
 
     async def test_search(self):
-        code = await core.search.put_recent_search(self.uid, "a")
+        code = await core.recent.put_recent_search(self.uid, "a")
         self.assertEqual(const.Code.OK, code)
-        await core.search.put_recent_search(self.uid, "c")
-        await core.search.put_recent_search(self.uid, "b")
+        await core.recent.put_recent_search(self.uid, "c")
+        await core.recent.put_recent_search(self.uid, "b")
 
-        queries = await core.search.get_recent_search(self.uid)
+        queries = await core.recent.get_recent_searched(self.uid)
         self.assertEqual(["b", "c", "a"], queries)
 
     async def test_batch(self):
         ns = []
         for i in range(10):
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=self.uid, md=f"title{i}\ntext", type_=const.NodeType.MARKDOWN.value
             )
             self.assertEqual(const.Code.OK, code)
@@ -377,16 +386,16 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         await client.coll.import_data.delete_one({"uid": "xxx"})
 
     async def test_update_title_and_from_nodes_updates(self):
-        n1, code = await core.node.add(
+        n1, code = await core.node.post(
             uid=self.uid, md="title1\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.add(
+        n2, code = await core.node.post(
             uid=self.uid, md=f"title2\n[@title1](/n/{n1['id']})", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
 
-        n1, _, code = await core.node.update(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
+        n1, _, code = await core.node.update_md(uid=self.uid, nid=n1["id"], md="title1Changed\ntext")
         self.assertEqual(const.Code.OK, code)
         n2, code = await core.node.get(uid=self.uid, nid=n2["id"])
         self.assertEqual(const.Code.OK, code)
@@ -466,7 +475,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             self.assertAlmostEqual(value, now, msg=f"delta: {delta}, value: {value}")
 
     async def test_node_version(self):
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="[title](/qqq)\nbody", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -475,13 +484,50 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         time.sleep(1)
 
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody2")
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         hist_dir = Path(__file__).parent / "tmp" / ".data" / "md" / "hist" / node["id"]
         self.assertEqual(1, len(list(hist_dir.glob("*.md"))))
 
         time.sleep(1)
 
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="title2\nbody3")
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md="title2\nbody3")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(2, len(list(hist_dir.glob("*.md"))))
+
+    async def test_md_history(self):
+        bi = config.get_settings().MD_BACKUP_INTERVAL
+        config.get_settings().MD_BACKUP_INTERVAL = 0.0001
+        n1, code = await core.node.post(
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+        time.sleep(0.001)
+
+        n2, old_n, code = await core.node.update_md(
+            uid=self.uid, nid=n1["id"], md="title2\ntext",
+        )
+        self.assertEqual(const.Code.OK, code)
+        time.sleep(0.001)
+
+        n2, old_n, code = await core.node.update_md(
+            uid=self.uid, nid=n1["id"], md="title3\ntext",
+        )
+        self.assertEqual(const.Code.OK, code)
+
+        hist, code = await core.node.get_hist_editions(
+            uid=self.uid,
+            nid=n1["id"],
+        )
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(2, len(hist))
+
+        hist_md, code = await core.node.get_hist_edition_md(
+            uid=self.uid,
+            nid=n1["id"],
+            version=hist[1],
+        )
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual("title2\ntext", hist_md)
+
+        config.get_settings().MD_BACKUP_INTERVAL = bi

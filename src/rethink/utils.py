@@ -8,15 +8,17 @@ import uuid
 import webbrowser
 from html.parser import HTMLParser
 from io import StringIO
-from typing import Tuple
+from typing import Tuple, Optional, List, Dict, Any
 from urllib.parse import urlparse
 
 import httpx
 import jwt
+from bson import ObjectId
 from markdown import Markdown
 
 from rethink import config, const, regex
 from rethink.logger import logger
+from rethink.models import tps
 
 HEADERS = {
     'typ': 'jwt',
@@ -312,3 +314,140 @@ def local_finish_up():
             webbrowser.open_new_tab(
                 f"http://{host}:{port}"
             )
+
+
+def get_user_dict(
+        _id: ObjectId,
+        uid: str,
+        source: int,
+        account: str,
+        nickname: str,
+        email: str,
+        avatar: str,
+        hashed: str,
+        disabled: bool,
+        modified_at: datetime.datetime,
+        used_space: int,
+        type_: int,
+
+        last_state_recent_cursor_search_selected_nids: List[str],
+        last_state_recent_search: List[str],
+        last_state_node_display_method: int,
+        last_state_node_display_sort_key: str,
+
+        settings_language: str,
+        settings_theme: str,
+        settings_editor_mode: str,
+        settings_editor_font_size: int,
+        settings_editor_code_theme: str,
+        settings_editor_sep_right_width: int,
+        settings_editor_side_current_tool_id: str,
+) -> tps.UserMeta:
+    return {
+        "_id": _id,
+        "id": uid,
+        "source": source,
+        "account": account,
+        "nickname": nickname,
+        "email": email,
+        "avatar": avatar,
+        "hashed": hashed,
+        "disabled": disabled,
+        "modifiedAt": modified_at,
+        "usedSpace": used_space,
+        "type": type_,
+
+        "lastState": {
+            "recentCursorSearchSelectedNIds": last_state_recent_cursor_search_selected_nids,
+            "recentSearch": last_state_recent_search,
+            "nodeDisplayMethod": last_state_node_display_method,
+            "nodeDisplaySortKey": last_state_node_display_sort_key,
+        },
+        "settings": {
+            "language": settings_language,
+            "theme": settings_theme,
+            "editorMode": settings_editor_mode,
+            "editorFontSize": settings_editor_font_size,
+            "editorCodeTheme": settings_editor_code_theme,
+            "editorSepRightWidth": settings_editor_sep_right_width,
+            "editorSideCurrentToolId": settings_editor_side_current_tool_id,
+        },
+    }
+
+
+def get_node_dict(
+        _id: ObjectId,
+        nid: str,
+        uid: str,
+        md: str,
+        title: str,
+        snippet: str,
+        type_: int,
+        disabled: bool,
+        in_trash: bool,
+        modified_at: datetime.datetime,
+        in_trash_at: Optional[datetime.datetime],
+        from_node_ids: List[str],
+        to_node_ids: List[str],
+        history: List[Dict[str, Any]],
+) -> tps.Node:
+    return {
+        "_id": _id,
+        "id": nid,
+        "uid": uid,
+        "md": md,
+        "title": title,
+        "snippet": snippet,
+        "type": type_,
+        "disabled": disabled,
+        "inTrash": in_trash,
+        "modifiedAt": modified_at,
+        "inTrashAt": in_trash_at,
+        "fromNodeIds": from_node_ids,
+        "toNodeIds": to_node_ids,
+        "history": history,
+    }
+
+
+async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
+    url = f'https://pypi.org/pypi/rethink-note/json'
+    default_version = (0, 0, 0)
+    async with httpx.AsyncClient() as ac:
+        try:
+            response = await ac.get(
+                url=url,
+                headers=ASYNC_CLIENT_HEADERS,
+                follow_redirects=False,
+                timeout=2.
+            )
+        except (
+                httpx.ConnectTimeout,
+                RuntimeError,
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.HTTPError
+        ) as e:
+            logger.debug(f"failed to get {url}: {e}")
+            return default_version, const.Code.OPERATION_FAILED
+
+    if response.status_code != 200:
+        logger.debug(f"failed to get {url}: {response.status_code}, {response.text}")
+        return default_version, const.Code.OPERATION_FAILED
+
+    package_info = response.json()
+
+    try:
+        v = package_info['info']['version']
+    except KeyError:
+        logger.debug(f"failed to get {url}: {response.text}")
+        return default_version, const.Code.OPERATION_FAILED
+    vs = v.split(".")
+    if len(vs) != 3:
+        logger.debug(f"failed to get {url}: {v}")
+        return default_version, const.Code.OPERATION_FAILED
+    try:
+        vs = (int(vs[0]), int(vs[1]), int(vs[2]))
+    except ValueError:
+        logger.debug(f"failed to get {url}: {v}")
+        return default_version, const.Code.OPERATION_FAILED
+    return vs, const.Code.OK

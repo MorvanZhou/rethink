@@ -1,9 +1,11 @@
 # flake8: noqa
 from . import (
     base,
+    account,
     user,
     node,
-    search,
+    recent,
     files,
     plugin,
+    app_system,
 )

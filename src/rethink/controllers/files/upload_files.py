@@ -5,73 +5,72 @@ from fastapi import UploadFile
 from rethink import const, core
 from rethink.controllers import schemas
 from rethink.controllers.utils import (
-    TokenDecode,
+    Headers,
     datetime2str,
     is_allowed_mime_type,
 )
 
 
 async def upload_obsidian_files(
-        td: TokenDecode,
+        h: Headers,
         files: List[UploadFile]
 ) -> schemas.files.FileUploadResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.files.FileUploadResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId="",
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             failedFilename="",
         )
-    code = await core.files.upload_obsidian(uid=td.uid, zipped_files=files)
+    code = await core.files.upload_obsidian(uid=h.uid, zipped_files=files)
 
     return schemas.files.FileUploadResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId="",
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
     )
 
 
 async def upload_text_files(
-        td: TokenDecode,
+        h: Headers,
         files: List[UploadFile]
 ) -> schemas.files.FileUploadResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.files.FileUploadResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId="",
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             failedFilename="",
         )
-    code = await core.files.upload_text(uid=td.uid, files=files)
+    code = await core.files.upload_text(uid=h.uid, files=files)
     return schemas.files.FileUploadResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId="",
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         failedFilename="",
     )
 
 
 async def get_upload_process(
-        td: TokenDecode,
-        rid: str,
+        h: Headers,
 ) -> schemas.files.FileUploadProcessResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.files.FileUploadProcessResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=rid,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             process=0.,
             type="",
             startAt="",
             running=False,
             msg="",
         )
-    doc = await core.files.get_upload_process(uid=td.uid)
+    doc = await core.files.get_upload_process(uid=h.uid)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
             code=const.Code.OK.value,
-            message=const.get_msg_by_code(const.Code.OK, td.language),
-            requestId=rid,
+            message=const.get_msg_by_code(const.Code.OK, h.language),
+            requestId=h.request_id,
             process=0.,
             type="",
             startAt="",
@@ -81,8 +80,8 @@ async def get_upload_process(
     code = const.INT_CODE_MAP[doc["code"]]
     return schemas.files.FileUploadProcessResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=rid,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         process=doc["process"],
         type=doc["type"],
         startAt=datetime2str(doc["startAt"]),
@@ -92,20 +91,22 @@ async def get_upload_process(
 
 
 async def upload_file_vditor(
-        td: TokenDecode,
+        h: Headers,
         file: UploadFile,
-) -> schemas.files.VditorUploadResponse:
-    if td.code != const.Code.OK:
-        return schemas.files.VditorUploadResponse(
-            code=td.code.value,
-            msg=const.get_msg_by_code(td.code, td.language),
+) -> schemas.files.VditorFilesResponse:
+    if h.code != const.Code.OK:
+        return schemas.files.VditorFilesResponse(
+            code=h.code.value,
+            msg=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             data={},
         )
-    res = await core.files.vditor_upload(uid=td.uid, files=[file])
-    return schemas.files.VditorUploadResponse(
+    res = await core.files.vditor_upload(uid=h.uid, files=[file])
+    return schemas.files.VditorFilesResponse(
         code=res["code"].value,
-        msg=const.get_msg_by_code(res["code"], td.language),
-        data=schemas.files.VditorUploadResponse.Data(
+        msg=const.get_msg_by_code(res["code"], h.language),
+        requestId=h.request_id,
+        data=schemas.files.VditorFilesResponse.Data(
             errFiles=res["errFiles"],
             succMap=res["succMap"],
         ),
@@ -113,41 +114,41 @@ async def upload_file_vditor(
 
 
 async def fetch_image_vditor(
-        td: TokenDecode,
+        h: Headers,
         req: schemas.files.ImageVditorFetchRequest,
-) -> schemas.files.ImageVditorFetchResponse:
-    if td.code != const.Code.OK:
-        return schemas.files.ImageVditorFetchResponse(
-            code=td.code.value,
-            msg=const.get_msg_by_code(td.code, td.language),
-            data=schemas.files.ImageVditorFetchResponse.Data(
+) -> schemas.files.VditorImagesResponse:
+    if h.code != const.Code.OK:
+        return schemas.files.VditorImagesResponse(
+            code=h.code.value,
+            msg=const.get_msg_by_code(h.code, h.language),
+            data=schemas.files.VditorImagesResponse.Data(
                 originalURL=req.url,
                 url="",
             ),
         )
     if is_allowed_mime_type(req.url, ["image/svg+xml", "image/png", "image/jpeg", "image/gif"]):
-        return schemas.files.ImageVditorFetchResponse(
+        return schemas.files.VditorImagesResponse(
             code=const.Code.OK.value,
-            msg=const.get_msg_by_code(const.Code.OK, td.language),
-            data=schemas.files.ImageVditorFetchResponse.Data(
+            msg=const.get_msg_by_code(const.Code.OK, h.language),
+            data=schemas.files.VditorImagesResponse.Data(
                 originalURL=req.url,
                 url=req.url,
             ),
         )
     if len(req.url) > 2048:
-        return schemas.files.ImageVditorFetchResponse(
+        return schemas.files.VditorImagesResponse(
             code=const.Code.REQUEST_INPUT_ERROR.value,
-            msg=const.get_msg_by_code(const.Code.REQUEST_INPUT_ERROR, td.language),
-            data=schemas.files.ImageVditorFetchResponse.Data(
+            msg=const.get_msg_by_code(const.Code.REQUEST_INPUT_ERROR, h.language),
+            data=schemas.files.VditorImagesResponse.Data(
                 originalURL=req.url,
                 url="",
             ),
         )
-    new_url, code = await core.files.fetch_image_vditor(uid=td.uid, url=req.url)
-    return schemas.files.ImageVditorFetchResponse(
+    new_url, code = await core.files.fetch_image_vditor(uid=h.uid, url=req.url)
+    return schemas.files.VditorImagesResponse(
         code=code.value,
-        msg=const.get_msg_by_code(code, td.language),
-        data=schemas.files.ImageVditorFetchResponse.Data(
+        msg=const.get_msg_by_code(code, h.language),
+        data=schemas.files.VditorImagesResponse.Data(
             originalURL=req.url,
             url=new_url,
         ),

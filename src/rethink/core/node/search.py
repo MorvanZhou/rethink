@@ -1,8 +1,8 @@
 from typing import List, Dict, Tuple, Sequence, Literal
 
-from rethink import const
-from rethink.controllers.schemas.search import NodesSearchResponse
+from rethink.controllers.schemas.node import NodesSearchResponse
 from rethink.controllers.utils import datetime2str
+from rethink.core.recent import put_recent_search
 from rethink.models import tps
 from rethink.models.client import client
 from rethink.models.search_engine.engine import SearchResult
@@ -31,7 +31,7 @@ async def _2node_data(
     return results
 
 
-async def search(
+async def user_nodes(
         uid: str,
         query: str,
         sort_key: Literal[
@@ -39,7 +39,7 @@ async def search(
         ],
         reverse: bool,
         page: int,
-        page_size: int,
+        limit: int,
         exclude_nids: Sequence[str],
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
     # search nodes
@@ -49,7 +49,7 @@ async def search(
         sort_key=sort_key,
         reverse=reverse,
         page=page,
-        page_size=page_size,
+        limit=limit,
         exclude_nids=exclude_nids,
     )
     results = await _2node_data(hits)
@@ -77,12 +77,12 @@ async def recommend(
     return await _2node_data(hits)
 
 
-async def cursor_query(
+async def at(
         uid: str,
         nid: str,
         query: str,
         page: int,
-        page_size: int,
+        limit: int,
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
     query = query.strip()
 
@@ -96,7 +96,7 @@ async def cursor_query(
             rn.remove(nid)
         except ValueError:
             pass
-        nodes = sorted(
+        _nodes = sorted(
             await client.coll.nodes.find({"id": {"$in": rn}}).to_list(length=None), key=lambda x: rn.index(x["id"])
         )
         return [
@@ -110,78 +110,15 @@ async def cursor_query(
                 type=n["type"],
                 createdAt=datetime2str(n["_id"].generation_time),
                 modifiedAt=datetime2str(n["modifiedAt"]),
-            ) for n in nodes
+            ) for n in _nodes
         ], len(rn)
 
-    return await search(
+    return await user_nodes(
         uid=uid,
         query=query,
         sort_key="similarity",
         reverse=True,
         page=page,
-        page_size=page_size,
+        limit=limit,
         exclude_nids=[nid],
     )
-
-
-async def add_recent_cursor_search(
-        uid: str,
-        nid: str,
-        to_nid: str,
-) -> const.Code:
-    # add selected node to recentCursorSearchSelectedNIds
-    user_c = {"id": uid, "disabled": False}
-    node_c = {"uid": uid, "id": {"$in": [nid, to_nid]}}
-
-    # try finding user
-    u = await client.coll.users.find_one(user_c)
-    if u is None:
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-
-    # try finding node
-    ns = await client.coll.nodes.find(node_c).to_list(length=None)
-    if len(ns) != 2:
-        return const.Code.NODE_NOT_EXIST
-
-    rns = u["lastState"]["recentCursorSearchSelectedNIds"]
-    if to_nid in rns:
-        rns.remove(to_nid)
-    rns.insert(0, to_nid)
-    if len(rns) > 10:
-        rns = rns[:10]
-
-    # add to recentCursorSearchSelectedNIds
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
-    )
-    if res.matched_count != 1:
-        return const.Code.OPERATION_FAILED
-
-    return const.Code.OK
-
-
-async def get_recent_search(uid: str) -> List[str]:
-    doc = await client.coll.users.find_one({"id": uid})
-    if doc is None:
-        return []
-    return doc["lastState"]["recentSearch"]
-
-
-async def put_recent_search(uid: str, query: str) -> const.Code:
-    doc = await client.coll.users.find_one({"id": uid})
-    if doc is None:
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    rns = doc["lastState"]["recentSearch"]
-    try:
-        rns.remove(query)
-    except ValueError:
-        pass
-    rns.insert(0, query)
-    if len(rns) > 20:
-        rns = rns[:20]
-    _ = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"lastState.recentSearch": rns}}
-    )
-    return const.Code.OK

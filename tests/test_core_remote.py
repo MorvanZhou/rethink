@@ -1,3 +1,4 @@
+import time
 import unittest
 from textwrap import dedent
 from unittest.mock import patch
@@ -7,7 +8,8 @@ import pymongo.errors
 from bson import ObjectId
 
 from rethink import const, config, core
-from rethink.controllers.auth import register_user
+from rethink.controllers.schemas.user import PatchUserRequest
+from rethink.core.account.manager import signup
 from rethink.models import db_ops
 from rethink.models.client import client
 from rethink.utils import jwt_encode
@@ -36,7 +38,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             for coll in client.coll.__dict__.values():
                 await coll.delete_many({})
 
-            uid, code = await register_user(
+            uid, code = await signup(
                 email=const.DEFAULT_USER["email"],
                 password=self.default_pwd,
                 language=const.Language.EN.value)
@@ -116,7 +118,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_user(self):
-        _id, code = await register_user(email="aaa@rethink.run", password="bbb123")
+        _id, code = await signup(email="aaa@rethink.run", password="bbb123")
         self.assertNotEqual("", str(_id))
         self.assertEqual(const.Code.OK, code)
 
@@ -129,7 +131,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("aaa", u["nickname"])
 
-        u, code = await core.user.update(uid=_id, nickname="2", avatar="3")
+        u, code = await core.user.patch(uid=_id, req=PatchUserRequest(nickname="2", avatar="3"))
         self.assertEqual(const.Code.OK, code)
 
         u, code = await core.user.get(_id)
@@ -172,7 +174,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -192,7 +194,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.uid)
         self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md="# title2\ntext2")
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md="# title2\ntext2")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("text2", n["snippet"])
@@ -245,10 +247,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         mock_remove_md_from_cos.return_value = const.Code.OK
         mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
 
-        nid1, _ = await core.node.add(
+        nid1, _ = await core.node.post(
             uid=self.uid, md="c", type_=const.NodeType.MARKDOWN.value,
         )
-        nid2, _ = await core.node.add(
+        nid2, _ = await core.node.post(
             uid=self.uid, md="我133", type_=const.NodeType.MARKDOWN.value,
         )
         md = dedent(
@@ -258,7 +260,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             [@我133](/n/{nid2['id']})
             ffq
             """)
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md=md, type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -283,7 +285,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(n["toNodeIds"]))
 
         tmp_text = n["md"]
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=tmp_text + "xxxx")
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md=tmp_text + "xxxx")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(tmp_text + "xxxx", n["md"])
 
@@ -291,7 +293,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
-        n, _, code = await core.node.update(uid=self.uid, nid=node["id"], md=n["md"])
+        n, _, code = await core.node.update_md(uid=self.uid, nid=node["id"], md=n["md"])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
@@ -301,7 +303,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_add_set(self):
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(0, len(node["toNodeIds"]))
@@ -315,11 +317,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_to_trash(self):
-        n1, code = await core.node.add(
+        n1, code = await core.node.post(
             uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.add(
+        n2, code = await core.node.post(
             uid=self.uid, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -363,7 +365,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
         ns = []
         for i in range(10):
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=self.uid, md=f"title{i}\ntext", type_=const.NodeType.MARKDOWN.value
             )
             self.assertEqual(const.Code.OK, code)
@@ -418,3 +420,56 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 now = 0
                 base_used_space = 0
             self.assertAlmostEqual(value, now, msg=f"delta: {delta}, value: {value}")
+
+    @utils.skip_no_connect
+    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("rethink.core.node.backup.__remove_md_from_cos")
+    @patch("rethink.core.node.backup.__get_md_from_cos")
+    @patch("rethink.core.node.backup.__save_md_to_cos")
+    async def test_md_history(
+            self,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.Code.OK
+        mock_get_md_from_cos.return_value = ("title2\ntext", const.Code.OK)
+        mock_remove_md_from_cos.return_value = const.Code.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+
+        bi = config.get_settings().MD_BACKUP_INTERVAL
+        config.get_settings().MD_BACKUP_INTERVAL = 0.0001
+        n1, code = await core.node.post(
+            uid=self.uid, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+        )
+        self.assertEqual(const.Code.OK, code)
+        time.sleep(0.001)
+
+        n2, old_n, code = await core.node.update_md(
+            uid=self.uid, nid=n1["id"], md="title2\ntext",
+        )
+        self.assertEqual(const.Code.OK, code)
+        time.sleep(0.001)
+
+        n2, old_n, code = await core.node.update_md(
+            uid=self.uid, nid=n1["id"], md="title3\ntext",
+        )
+        self.assertEqual(const.Code.OK, code)
+
+        hist, code = await core.node.get_hist_editions(
+            uid=self.uid,
+            nid=n1["id"],
+        )
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(2, len(hist))
+
+        hist_md, code = await core.node.get_hist_edition_md(
+            uid=self.uid,
+            nid=n1["id"],
+            version=hist[1],
+        )
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual("title2\ntext", hist_md)
+
+        config.get_settings().MD_BACKUP_INTERVAL = bi

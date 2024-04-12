@@ -2,10 +2,13 @@ import time
 from functools import wraps
 from typing import Optional
 
-from fastapi import HTTPException, Header
+from fastapi import HTTPException, Header, Depends
+from fastapi.params import Path
 from starlette.status import HTTP_403_FORBIDDEN
+from typing_extensions import Annotated
 
 from rethink import const, config
+from rethink.controllers.utils import Headers, process_headers
 from rethink.logger import logger
 
 REFERER_PREFIX = f"https://{const.DOMAIN}"
@@ -15,17 +18,13 @@ def measure_time_spend(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         t0 = time.perf_counter()
-        req_id = ""
-        req_s = ""
-        if "req" in kwargs:
-            req = kwargs["req"]
-            try:
-                req_id = req.requestId
-            except AttributeError:
-                req_id = ""
-            req_s = str(req)
-        if "rid" in kwargs:
-            req_id = kwargs["rid"]
+        try:
+            td = kwargs["td"]
+            req_id = td.request_id
+        except KeyError:
+            req_id = ""
+
+        req_s = str(kwargs.get("req", ""))
         uid = ""
         code = ""
         if "token_decode" in kwargs:
@@ -55,3 +54,10 @@ def verify_referer(referer: Optional[str] = Header(None)):
             detail="Invalid referer",
         )
     return referer
+
+
+ANNOTATED_HEADERS = Annotated[Headers, Depends(process_headers)]
+ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.NID_MAX_LENGTH, min_length=8)]
+ANNOTATED_PID = Annotated[str, Path(title="The ID of plugin", max_length=const.PLUGIN_ID_MAX_LENGTH)]
+ANNOTATED_FID = Annotated[str, Path(title="The ID of file", max_length=const.FID_MAX_LENGTH)]
+DEPENDS_REFERER = Depends(verify_referer)

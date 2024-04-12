@@ -104,7 +104,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         print(event_plugin_map["on_node_added"])
         self.assertIn(self.p, event_plugin_map["on_node_added"])
 
-        node, code = await core.node.add(
+        node, code = await core.node.post(
             uid=self.uid, md="a", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(rethink.const.Code.OK, code)
@@ -112,7 +112,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("a", self.p.cache[node["id"]]["md"])
 
         self.assertEqual("", self.p.bmd)
-        node, _, code = await core.node.update(
+        node, _, code = await core.node.update_md(
             uid=self.uid, nid=node["id"], md="b"
         )
         self.assertEqual(rethink.const.Code.OK, code)

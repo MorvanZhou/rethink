@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Literal, Optional
 
-from pydantic import BaseModel, NonNegativeInt, EmailStr, Field
+from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
 from rethink import const
 from rethink.models.tps import CODE_THEME_TYPES
@@ -36,57 +36,30 @@ class UserInfoResponse(BaseModel):
     user: User = None
 
 
-class RegisterRequest(BaseModel):
-    email: EmailStr = Field(max_length=const.EMAIL_MAX_LENGTH)
-    password: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    captchaToken: str = Field(max_length=2000)
-    captchaCode: str = Field(max_length=10)
-    language: Literal["en", "zh"]
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+class PatchUserRequest(BaseModel):
+    class LastState(BaseModel):
+        nodeDisplayMethod: Optional[NonNegativeInt] = Field(default=None, ge=-1, le=10)
+        nodeDisplaySortKey: Optional[Literal["modifiedAt", "createdAt", "title"]] = Field(
+            default=None, max_length=20
+        )
 
+    class Settings(BaseModel):
+        language: Optional[Literal["en", "zh"]] = Field(default=None)
+        theme: Optional[Literal["light", "dark"]] = Field(default=None)
+        editorMode: Optional[Literal["ir", "wysiwyg"]] = Field(default=None)
+        editorFontSize: Optional[NonNegativeInt] = Field(default=None)
+        editorCodeTheme: Optional[CODE_THEME_TYPES] = Field(default=None)
+        editorSepRightWidth: Optional[NonNegativeFloat] = Field(default=None)
+        editorSideCurrentToolId: Optional[str] = Field(default=None)
 
-class LoginRequest(BaseModel):
-    email: EmailStr = Field(max_length=const.EMAIL_MAX_LENGTH)
-    password: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
-class UpdateRequest(BaseModel):
-    nickname: str = Field(default="", max_length=const.NICKNAME_MAX_LENGTH)
-    avatar: str = Field(default="", max_length=2048)
-    nodeDisplayMethod: int = Field(default=-1, ge=-1, le=10)
-    nodeDisplaySortKey: Literal["modifiedAt", "createdAt", "title", ""] = Field(default="", max_length=20)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
-class EmailVerificationRequest(BaseModel):
-    email: str = Field(max_length=const.EMAIL_MAX_LENGTH)
-    captchaToken: str = Field(max_length=2000)
-    captchaCode: str = Field(max_length=10)
-    language: Literal["en", "zh"] = const.Language.EN.value
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
-class ForgetPasswordRequest(BaseModel):
-    email: str = Field(max_length=const.EMAIL_MAX_LENGTH)
-    newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    verification: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    verificationToken: str = Field(max_length=2000)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+    nickname: Optional[str] = Field(default=None, max_length=const.NICKNAME_MAX_LENGTH)
+    avatar: Optional[str] = Field(default=None, max_length=2048)
+    lastState: Optional[LastState] = Field(default=None)
+    settings: Optional[Settings] = Field(default=None)
 
 
 class UpdatePasswordRequest(BaseModel):
     oldPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
-class UpdateSettingsRequest(BaseModel):
-    language: Literal["en", "zh"] = const.Language.EN.value
-    theme: Literal["light", "dark", ""] = ""
-    editorMode: Literal["ir", "wysiwyg", ""] = ""
-    editorFontSize: int = -1
-    editorCodeTheme: CODE_THEME_TYPES = ""
-    editorSepRightWidth: float = -1.
-    editorSideCurrentToolId: str = ""
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)

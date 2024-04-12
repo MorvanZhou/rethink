@@ -19,13 +19,6 @@ class PluginsResponse(BaseModel):
     plugins: List[Plugin]
 
 
-class RenderPluginRequest(BaseModel):
-    pluginId: str = Field(max_length=const.PLUGIN_ID_MAX_LENGTH)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-    nid: str = Field(default="", max_length=const.NID_MAX_LENGTH)
-    md: str = Field(default="", max_length=const.MD_MAX_LENGTH)
-
-
 class RenderPluginResponse(BaseModel):
     code: NonNegativeInt
     message: str
@@ -37,7 +30,6 @@ class PluginCallRequest(BaseModel):
     pluginId: str = Field(max_length=const.PLUGIN_ID_MAX_LENGTH)
     method: str
     data: Any
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class PluginCallResponse(BaseModel):

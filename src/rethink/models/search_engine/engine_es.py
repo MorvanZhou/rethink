@@ -570,7 +570,7 @@ class ESSearcher(BaseEngine):
             ] = None,
             reverse: bool = False,
             page: int = 0,
-            page_size: int = 10,
+            limit: int = 10,
             exclude_nids: Sequence[str] = None,
     ) -> Tuple[List[SearchResult], int]:
         resp = await self._search(
@@ -579,7 +579,7 @@ class ESSearcher(BaseEngine):
             sort_key=sort_key,
             reverse=reverse,
             page=page,
-            page_size=page_size,
+            page_size=limit,
             exclude_nids=exclude_nids,
             with_stop_analyzer=False,
         )

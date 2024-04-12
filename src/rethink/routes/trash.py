@@ -1,125 +1,134 @@
 from typing import Optional
 
-from fastapi import Depends, APIRouter, Header
-from typing_extensions import Annotated
+from fastapi import APIRouter, Query
 
 from rethink.controllers import schemas
-from rethink.controllers.auth import token2uid
 from rethink.controllers.node import trash_ops
-from rethink.controllers.utils import TokenDecode
-from rethink.routes.utils import measure_time_spend
+from rethink.routes import utils
 
 router = APIRouter(
-    prefix="/api",
+    prefix="/api/trash",
     tags=["trash"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.put(
-    path="/trash",
-    response_model=schemas.base.AcknowledgeResponse,
-)
-@measure_time_spend
-async def move_to_trash(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        req: schemas.node.RestoreFromTrashRequest
-) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.move_to_trash(
-        td=token_decode,
-        req=req
-    )
-
-
 @router.get(
-    path="/trash",
+    path="/",
+    status_code=200,
     response_model=schemas.node.GetFromTrashResponse,
 )
-@measure_time_spend
+@utils.measure_time_spend
 async def get_from_trash(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        p: int = 0,
-        ps: int = 10,
-        rid: Optional[str] = Header(None),
+        h: utils.ANNOTATED_HEADERS,
+        p: int = Query(default=0, ge=0, description="page number"),
+        limit: int = Query(default=10, ge=0, le=200, description="page size"),
+        referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.GetFromTrashResponse:
     return await trash_ops.get_from_trash(
-        td=token_decode,
+        h=h,
         p=p,
-        ps=ps,
-        rid=rid,
+        limit=limit,
     )
 
 
-@router.post(
-    path="/trashRestore",
+# has to be before /{nid} otherwise it will be treated as a nid
+@router.put(
+    path="/batch",
+    status_code=200,
     response_model=schemas.base.AcknowledgeResponse,
 )
-@measure_time_spend
-async def restore_node_in_trash(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        req: schemas.node.RestoreFromTrashRequest,
+@utils.measure_time_spend
+async def batch_nodes_to_trash(
+        h: utils.ANNOTATED_HEADERS,
+        req: schemas.node.BatchNodeIdsRequest,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.restore_from_trash(
-        td=token_decode,
+    return await trash_ops.move_batch_to_trash(
+        h=h,
         req=req,
     )
 
 
-@router.delete(
-    path="/trash/{nid}",
+@router.put(
+    path="/batch/restore",
+    status_code=200,
     response_model=schemas.base.AcknowledgeResponse,
 )
-@measure_time_spend
-async def delete_node(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        nid: str,
+@utils.measure_time_spend
+async def restore_batch_node_in_trash(
+        h: utils.ANNOTATED_HEADERS,
+        req: schemas.node.BatchNodeIdsRequest,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.delete_node(
-        td=token_decode,
+    return await trash_ops.restore_batch_from_trash(
+        h=h,
+        req=req,
+    )
+
+
+@router.put(
+    path="/batch/delete",
+    status_code=200,
+    response_model=schemas.base.AcknowledgeResponse,
+)
+@utils.measure_time_spend
+async def delete_batch_node(
+        h: utils.ANNOTATED_HEADERS,
+        req: schemas.node.BatchNodeIdsRequest,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.base.AcknowledgeResponse:
+    return await trash_ops.delete_batch_node(
+        h=h,
+        req=req,
+    )
+
+
+@router.put(
+    path="/{nid}",
+    status_code=200,
+    response_model=schemas.base.AcknowledgeResponse,
+)
+@utils.measure_time_spend
+async def move_to_trash(
+        h: utils.ANNOTATED_HEADERS,
+        nid: str = utils.ANNOTATED_NID,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.base.AcknowledgeResponse:
+    return await trash_ops.move_to_trash(
+        h=h,
         nid=nid,
     )
 
 
 @router.put(
-    path="/trash/batch",
+    path="/{nid}/restore",
+    status_code=200,
     response_model=schemas.base.AcknowledgeResponse,
 )
-@measure_time_spend
-async def batch_nodes_to_trash(
-        req: schemas.node.BatchNodeIdsRequest,
-        token_decode: Annotated[TokenDecode, Depends(token2uid)]
+@utils.measure_time_spend
+async def restore_node_in_trash(
+        h: utils.ANNOTATED_HEADERS,
+        nid: str = utils.ANNOTATED_NID,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.move_batch_to_trash(
-        td=token_decode,
-        req=req,
+    return await trash_ops.restore_from_trash(
+        h=h,
+        nid=nid,
     )
 
 
-@router.post(
-    path="/trashRestore/batch",
+@router.delete(
+    path="/{nid}",
     response_model=schemas.base.AcknowledgeResponse,
 )
-@measure_time_spend
-async def restore_batch_node_in_trash(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        req: schemas.node.BatchNodeIdsRequest,
+@utils.measure_time_spend
+async def delete_node(
+        h: utils.ANNOTATED_HEADERS,
+        nid: str = utils.ANNOTATED_NID,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.restore_batch_from_trash(
-        td=token_decode,
-        req=req,
-    )
-
-
-@router.post(
-    path="/trashDelete/batch",
-    response_model=schemas.base.AcknowledgeResponse,
-)
-@measure_time_spend
-async def delete_batch_node(
-        token_decode: Annotated[TokenDecode, Depends(token2uid)],
-        req: schemas.node.BatchNodeIdsRequest,
-) -> schemas.base.AcknowledgeResponse:
-    return await trash_ops.delete_batch_node(
-        td=token_decode,
-        req=req,
+    return await trash_ops.delete_node(
+        h=h,
+        nid=nid,
     )

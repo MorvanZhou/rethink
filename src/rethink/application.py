@@ -2,7 +2,6 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from rethink import const, config, safety, utils
 from rethink.logger import logger, add_rotating_file_handler
@@ -12,13 +11,14 @@ from .routes import (
     user,
     oauth,
     node,
-    search,
+    recent,
     trash,
-    verification,
+    app_captcha,
     files,
-    email,
     plugin,
     self_hosted,
+    app_system,
+    account,
 )
 
 app = FastAPI(
@@ -40,23 +40,16 @@ app.add_middleware(safety.FrameOptionsMiddleware)
 app.include_router(node.router)
 app.include_router(user.router)
 app.include_router(oauth.router)
-app.include_router(search.router)
+app.include_router(recent.router)
 app.include_router(trash.router)
-app.include_router(verification.router)
+app.include_router(app_captcha.router)
 app.include_router(files.router)
-app.include_router(email.router)
 app.include_router(plugin.router)
 app.include_router(self_hosted.router)
+app.include_router(app_system.router)
+app.include_router(account.router)
 
-try:
-    for name in ["css", "js", "img", "dist"]:
-        app.mount(
-            f"/{name}",
-            StaticFiles(directory=const.FRONTEND_DIR / name),
-            name=name,
-        )
-except RuntimeError:
-    logger.debug("mount frontend failed, the frontend files is in somewhere else")
+self_hosted.mount_static(app=app)
 
 
 @app.on_event("startup")

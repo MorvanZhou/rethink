@@ -1,14 +1,16 @@
 import unittest
+from io import BytesIO
 
 import bcrypt
 
 from rethink import const, regex
-from rethink.controllers import auth
+from rethink.core import account
 from rethink.models.client import client
+from rethink.utils import jwt_decode
 from . import utils
 
 
-class AuthTest(unittest.IsolatedAsyncioTestCase):
+class AccountTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         utils.set_env(".env.test.local")
@@ -25,10 +27,10 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
     def test_verify(self):
         password = "123abc"
         email = "rethink@rethink.run"
-        bpw = auth._base_password(password=password, email=email)
+        bpw = account.manager._base_password(password=password, email=email)
         token_str = bcrypt.hashpw(bpw, self.salt).decode("utf-8")
         self.assertEqual(60, len(token_str))
-        hashed = auth._base_password(password=password, email=email)
+        hashed = account.manager._base_password(password=password, email=email)
         match = bcrypt.checkpw(hashed, token_str.encode("utf-8"))
         self.assertTrue(match)
 
@@ -41,14 +43,14 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(match)
 
     async def test_one_user(self):
-        uid, code = await auth.register_user("a@q.com", "rethink", const.Language.EN.value)
+        uid, code = await account.manager.signup("a@q.com", "rethink", const.Language.EN.value)
         self.assertEqual(const.Code.ONE_USER_MODE, code)
         self.assertEqual("", uid)
 
     async def test_verify_user(self):
-        u, err = await auth.get_user_by_email("rethink@rethink.run")
+        u, err = await account.manager.get_user_by_email("rethink@rethink.run")
         self.assertEqual(const.Code.OK, err)
-        ok = await auth.verify_user(u, "rethink")
+        ok = await account.manager.is_right_password(u, "rethink")
         self.assertTrue(ok)
 
     def test_valid_password(self):
@@ -71,8 +73,24 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
     def test_salt(self):
         npw = "12345"
         self.assertLessEqual(len(npw), const.PASSWORD_MAX_LENGTH)
-        bpw = auth._base_password(password=npw, email="rethink@rethink.run")
+        bpw = account.manager._base_password(password=npw, email="rethink@rethink.run")
         salt = bcrypt.gensalt()
         hpw = bcrypt.hashpw(bpw, salt).decode("utf-8")
         self.assertEqual(salt.decode("utf-8"), hpw[:len(salt)])
         self.assertNotEqual(bpw.decode("utf-8"), hpw[len(salt):])
+
+    def test_verification_img(self):
+        token, data = account.app_captcha.generate()
+        self.assertIsInstance(token, str)
+        self.assertIn("img", data)
+        self.assertIsInstance(data["img"], BytesIO)
+        self.assertNotIn("sound", data)
+
+    def test_verify_img(self):
+        token, data = account.app_captcha.generate()
+        decoded = jwt_decode(token)
+        code = account.app_captcha.verify_captcha(token=token, code_str=decoded["code"])
+        self.assertEqual(const.Code.OK, code)
+
+        code = account.app_captcha.verify_captcha(token=token, code_str="1234")
+        self.assertEqual(const.Code.CAPTCHA_ERROR, code)

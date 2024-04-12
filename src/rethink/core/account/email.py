@@ -1,9 +1,12 @@
 import email.header
 import smtplib
+from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from textwrap import dedent
 from typing import List, Tuple
+
+import jwt
 
 from rethink import const, config, regex, utils
 
@@ -94,3 +97,24 @@ class EmailServer:
 
 
 email_server = EmailServer()
+
+
+def encode_number(number: str, expired_min: int) -> str:
+    token = utils.jwt_encode(
+        exp_delta=timedelta(minutes=expired_min),
+        data={"code": number + config.get_settings().CAPTCHA_SALT}
+    )
+    return token
+
+
+def verify_number(token: str, number_str: str) -> const.Code:
+    code = const.Code.CAPTCHA_ERROR
+    try:
+        data = utils.jwt_decode(token)
+        if data["code"] == number_str + config.get_settings().CAPTCHA_SALT:
+            code = const.Code.OK
+    except jwt.ExpiredSignatureError:
+        code = const.Code.CAPTCHA_EXPIRED
+    except (jwt.DecodeError, Exception):
+        code = const.Code.INVALID_AUTH
+    return code

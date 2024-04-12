@@ -1,58 +1,21 @@
 import base64
 import hashlib
 import os
-import traceback
 from typing import Optional, Tuple
 
 import bcrypt
-import jwt
-from fastapi import Header
 
-from rethink import config, const, core, regex
-from rethink.controllers.utils import TokenDecode
+from rethink import config, const, regex
+from rethink.core import user, node
 from rethink.logger import logger
 from rethink.models import tps
-from rethink.utils import jwt_decode
-
-
-def __one_line_traceback() -> str:
-    return traceback.format_exc().replace("\n", "\\n")
-
-
-async def token2uid(token: str = Header(...)) -> TokenDecode:
-    uid = ""
-    err = ""
-    language = const.Language.EN.value
-    try:
-        payload = jwt_decode(token=token)
-        u, code = await core.user.get(uid=payload["uid"])
-        if code != const.Code.OK:
-            logger.error(f"core.user.get err: {const.CODE_MESSAGES[code].zh}")
-            return TokenDecode(code=code, language=language)
-        uid = u["id"]
-        language = u["settings"]["language"]
-    except jwt.exceptions.ExpiredSignatureError:
-        code = const.Code.EXPIRED_AUTH
-        err = "auth token expired"
-    except jwt.exceptions.DecodeError:
-        code = const.Code.INVALID_AUTH
-        err = __one_line_traceback()
-    except jwt.exceptions.InvalidTokenError:
-        code = const.Code.INVALID_AUTH
-        err = __one_line_traceback()
-    except Exception:  # pylint: disable=broad-except
-        code = const.Code.INVALID_AUTH
-        err = __one_line_traceback()
-    if code != const.Code.OK:
-        logger.error(f"jwt_decode err: {err}")
-    return TokenDecode(code=code, uid=uid, language=language)
 
 
 async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    return await core.user.get_by_email(email=email)
+    return await user.get_by_email(email=email)
 
 
-async def verify_user(u: tps.UserMeta, password: str) -> bool:
+async def is_right_password(u: tps.UserMeta, password: str) -> bool:
     if config.get_settings().ONE_USER:
         pw = os.getenv("RETHINK_SERVER_PASSWORD", None)
         if pw is not None:
@@ -78,7 +41,7 @@ def hash_password(password: str, email: str) -> str:
     return bcrypt.hashpw(bpw, salt=salt).decode("utf-8")
 
 
-def validate_email_pwd(email: str, password: str) -> const.Code:
+def login_by_email_pwd(email: str, password: str) -> const.Code:
     if config.get_settings().ONE_USER:
         logger.warning("on ONE_USER mode, user registration will be skipped")
         return const.Code.ONE_USER_MODE
@@ -89,19 +52,19 @@ def validate_email_pwd(email: str, password: str) -> const.Code:
     return const.Code.OK
 
 
-async def register_user(
+async def signup(
         email: str,
         password: str,
         language: str = const.Language.EN.value,
 ) -> Tuple[str, const.Code]:
-    code = validate_email_pwd(email=email, password=password)
+    code = login_by_email_pwd(email=email, password=password)
     if code != const.Code.OK:
         return "", code
-    u, code = await core.user.get_by_email(email=email)
+    u, code = await user.get_by_email(email=email)
     if code == const.Code.OK or u is not None:
         return "", const.Code.USER_EXIST
 
-    uid, code = await core.user.add(
+    uid, code = await user.add(
         account=email,
         source=const.UserSource.EMAIL.value,
         email=email,
@@ -113,23 +76,23 @@ async def register_user(
     if code != const.Code.OK:
         return "", code
 
-    code = await core.node.new_user_add_default_nodes(uid=uid, language=language)
+    code = await node.new_user_add_default_nodes(uid=uid, language=language)
     return uid, code
 
 
-async def update_password(
+async def reset_password(
         email: str,
         password: str,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    code = validate_email_pwd(email=email, password=password)
+    code = login_by_email_pwd(email=email, password=password)
     if code != const.Code.OK:
         return None, code
-    u, code = await core.user.get_by_email(email=email)
+    u, code = await user.get_by_email(email=email)
     if code != const.Code.OK:
         return None, code
     if u is None:
         return None, const.Code.INVALID_AUTH
-    code = await core.user.reset_password(
+    code = await user.reset_password(
         uid=u["id"],
         hashed=hash_password(password=password, email=email)
     )

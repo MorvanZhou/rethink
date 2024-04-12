@@ -49,7 +49,7 @@ async def update_text_task(  # noqa: C901
         title = file["filename"].rsplit(".", 1)[0]
         md = title + "\n\n" + md
         try:
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=uid,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,

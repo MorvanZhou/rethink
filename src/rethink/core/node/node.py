@@ -16,7 +16,7 @@ from . import backup, node_utils
 
 
 @plugins.handler.on_node_added
-async def add(  # noqa: C901
+async def post(  # noqa: C901
         uid: str,
         md: str,
         type_: int = const.NodeType.MARKDOWN.value,
@@ -51,22 +51,23 @@ async def add(  # noqa: C901
         if code != const.Code.OK:
             return None, code
     _id = ObjectId()
-    data: tps.Node = {
-        "_id": _id,
-        "id": nid,
-        "uid": uid,
-        "title": title,
-        "snippet": snippet,
-        "md": md,
-        "type": type_,
-        "disabled": False,
-        "inTrash": False,
-        "modifiedAt": _id.generation_time,
-        "inTrashAt": None,
-        "fromNodeIds": from_nids,
-        "toNodeIds": new_to_node_ids,
-        "history": [],
-    }
+    data = utils.get_node_dict(
+        _id=_id,
+        nid=nid,
+        uid=uid,
+        md=md,
+        title=title,
+        snippet=snippet,
+        type_=type_,
+        disabled=False,
+        in_trash=False,
+        modified_at=_id.generation_time,
+        in_trash_at=None,
+        from_node_ids=from_nids,
+        to_node_ids=new_to_node_ids,
+        history=[],
+    )
+
     res = await client.coll.nodes.insert_one(data)
     if not res.acknowledged:
         return None, const.Code.OPERATION_FAILED
@@ -130,12 +131,23 @@ async def get_batch(
 
 @plugins.handler.on_node_updated
 @plugins.handler.before_node_updated
-async def update(  # noqa: C901
+async def update_md(  # noqa: C901
         uid: str,
         nid: str,
         md: str,
         refresh_on_same_md: bool = False,
 ) -> Tuple[Optional[tps.Node], Optional[tps.Node], const.Code]:
+    """
+
+    Args:
+        uid:
+        nid:
+        md:
+        refresh_on_same_md:
+
+    Returns:
+        Tuple[Optional[tps.Node], Optional[tps.Node], const.Code]: new node, old node, code
+    """
     if regex.NID.match(nid) is None:
         return None, None, const.Code.NODE_NOT_EXIST
     md = md.strip()
@@ -166,7 +178,7 @@ async def update(  # noqa: C901
         from_nodes = await client.coll.nodes.find({"id": {"$in": n["fromNodeIds"]}}).to_list(length=None)
         for from_node in from_nodes:
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
-            n, old_n, code = await update(uid=uid, nid=from_node["id"], md=new_md)
+            n, old_n, code = await update_md(uid=uid, nid=from_node["id"], md=new_md)
             if code != const.Code.OK:
                 logger.error(f"update fromNode {from_node['id']} failed")
         new_data["title"] = title
@@ -255,7 +267,11 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
     return code
 
 
-async def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[tps.Node], int]:
+async def get_nodes_in_trash(
+        uid: str,
+        page: int,
+        limit: int
+) -> Tuple[List[tps.Node], int]:
     condition = {
         "uid": uid,
         "disabled": False,
@@ -263,8 +279,8 @@ async def get_nodes_in_trash(uid: str, page: int, page_size: int) -> Tuple[List[
     }
     docs = client.coll.nodes.find(condition).sort([("inTrashAt", -1), ("_id", -1)])
     total = await client.coll.nodes.count_documents(condition)
-    if page_size > 0:
-        docs = docs.skip(page * page_size).limit(page_size)
+    if limit > 0:
+        docs = docs.skip(page * limit).limit(limit)
 
     return await docs.to_list(length=None), total
 
@@ -356,7 +372,7 @@ async def disable(
 async def core_nodes(
         uid: str,
         page: int,
-        page_size: int,
+        limit: int,
 ) -> Tuple[List[tps.Node], int]:
     condition = {
         "uid": uid,
@@ -364,20 +380,20 @@ async def core_nodes(
         "inTrash": False,
     }
     # the key of toNodeIds is a list, sort by the toNodeIds length, from large to small
-    docs = db_ops.sort_nodes_by_to_nids(condition=condition, page=page, page_size=page_size)
+    docs = db_ops.sort_nodes_by_to_nids(condition=condition, page=page, limit=limit)
     total = await client.coll.nodes.count_documents(condition)
     return await docs.to_list(length=None), total
 
 
 async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
     lns = const.NEW_USER_DEFAULT_NODES[language]
-    n, code = await add(
+    n, code = await post(
         uid=uid,
         md=lns[0],
     )
     if code != const.Code.OK:
         return code
-    _, code = await add(
+    _, code = await post(
         uid=uid,
         md=lns[1].format(n["id"]),
     )
@@ -386,6 +402,15 @@ async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
 
 
 async def get_hist_editions(uid: str, nid: str) -> Tuple[List[str], const.Code]:
+    """
+
+    Args:
+        uid:
+        nid:
+
+    Returns:
+        Tuple[List[str], const.Code]: history, code
+    """
     n, code = await get(uid=uid, nid=nid)
     if code != const.Code.OK:
         return [], code

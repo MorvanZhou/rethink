@@ -15,8 +15,7 @@ from httpx import Response
 
 from rethink import const, config
 from rethink.application import app
-from rethink.controllers import auth
-from rethink.core.verify import verification
+from rethink.core import account
 from rethink.models.client import client
 from rethink.utils import jwt_decode
 from . import utils
@@ -45,38 +44,49 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(Response, type(resp))
 
     def test_register(self):
-        token, _ = verification.random_captcha()
+        token, _ = account.app_captcha.generate()
         data = jwt_decode(token)
-        resp = self.client.put("/api/user", json={
-            "email": "a@c.com",
-            "password": "a",
-            "captchaToken": token,
-            "captchaCode": data["code"],
-            "language": const.Language.EN.value,
-            "requestId": "xxx"
-        })
+        resp = self.client.post(
+            "/api/account",
+            json={
+                "email": "a@c.com",
+                "password": "a",
+                "captchaToken": token,
+                "captchaCode": data["code"],
+                "language": const.Language.EN.value,
+                "requestId": "xxx"
+            },
+            headers={"RequestId": "xxx"}
+        )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.ONE_USER_MODE.value, rj["code"])
         self.assertEqual(len(rj["token"]), 0)
         self.assertEqual("xxx", rj["requestId"])
 
     @patch(
-        "rethink.core.verify.email.EmailServer._send"
+        "rethink.core.account.email.EmailServer._send"
     )
     def test_email_verification(self, mock_send):
         mock_send.return_value = const.Code.OK
-        token, _ = verification.random_captcha()
+        token, _ = account.app_captcha.generate()
         data = jwt_decode(token)
-        resp = self.client.post("/api/email/register", json={
-            "email": "a@c.com",
-            "captchaToken": token,
-            "captchaCode": data["code"],
-            "language": "zh",
-            "requestId": "xxx"
-        })
+
+        resp = self.client.put(
+            "/api/account/email/send-code",
+            json={
+                "email": "a@c.com",
+                "captchaToken": token,
+                "captchaCode": data["code"],
+                "language": "zh",
+            },
+            headers={"RequestId": "xxx"}
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertNotEqual("", rj["token"])
+        self.assertEqual("xxx", rj["requestId"])
 
 
 class TokenApiTest(unittest.IsolatedAsyncioTestCase):
@@ -87,14 +97,20 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         await client.init()
         self.client = TestClient(app)
-        resp = self.client.post("/api/login", json={
-            "email": const.DEFAULT_USER["email"],
-            "password": "",
-        })
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": const.DEFAULT_USER["email"],
+                "password": "",
+            })
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
-        self.token = rj["token"]
-        self.assertEqual(811, len(self.token))
+        self.assertEqual(811, len(rj["token"]))
+        self.default_headers = {
+            "Authorization": rj["token"],
+            "RequestId": "xxx",
+        }
 
     async def asyncTearDown(self) -> None:
         await client.drop()
@@ -108,58 +124,75 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
-        token, code = verification.random_captcha()
+        token, code = account.app_captcha.generate()
         data = jwt_decode(token)
         code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
 
         email = "a@b.c"
-        resp = self.client.put("/api/user", json={
-            "email": email,
-            "password": "abc111",
-            "captchaToken": token,
-            "captchaCode": code,
-            "language": "zh",
-            "requestId": "xxx"
-        })
+        resp = self.client.post(
+            "/api/account",
+            json={
+                "email": email,
+                "password": "abc111",
+                "captchaToken": token,
+                "captchaCode": code,
+                "language": "zh",
+            },
+            headers={"RequestId": "xxx"}
+        )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         u_token = rj["token"]
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertNotEqual("", u_token)
 
-        resp = self.client.get("/api/user", headers={"token": rj["token"], "rid": "xxx"})
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": rj["token"],
+                "RequestId": "xxx"
+            })
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual("a**@b.c", rj["user"]["email"])
         self.assertEqual("zh", rj["user"]["settings"]["language"])
 
-        resp = self.client.post(
-            "/api/user/password/update", json={
+        resp = self.client.put(
+            "/api/users/password",
+            json={
                 "oldPassword": "xxx111",
                 "newPassword": "abc222",
-                "requestId": "xxx"
             },
-            headers={"token": u_token}
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx"
+            }
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(const.Code.OLD_PASSWORD_ERROR.value, rj["code"])
+        self.assertEqual(const.Code.OLD_PASSWORD_ERROR.value, rj["code"], msg=rj)
         self.assertEqual("xxx", rj["requestId"])
 
-        resp = self.client.post(
-            "/api/user/password/update", json={
+        resp = self.client.put(
+            "/api/users/password", json={
                 "email": email,
                 "oldPassword": "abc111",
                 "newPassword": "abc222",
-                "requestId": "xxx"
             },
-            headers={"token": u_token}
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx",
+            }
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        self.assertEqual(0, rj["code"], msg=rj)
         self.assertEqual("xxx", rj["requestId"])
         u = await client.coll.users.find_one({"email": email})
-        self.assertTrue(await auth.verify_user(u, "abc222"))
+        self.assertTrue(await account.manager.is_right_password(u, "abc222"))
 
         uid = (await client.coll.users.find_one({"email": email}))["id"]
         await client.coll.users.delete_one({"id": uid})
@@ -168,31 +201,42 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
     def test_get_user(self):
         resp = self.client.get(
-            "/api/user",
-            headers={"token": self.token, "rid": "xxx"})
+            "/api/users",
+            headers=self.default_headers,
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("rethink", rj["user"]["nickname"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertGreater(
-            datetime.datetime.strptime(rj["user"]["createdAt"], "%Y-%m-%dT%H:%M:%SZ").timestamp(),
+            datetime.datetime.strptime(
+                rj["user"]["createdAt"], "%Y-%m-%dT%H:%M:%SZ"
+            ).timestamp(),
             0., msg=rj["user"]["createdAt"])
 
     def test_update_user(self):
-        resp = self.client.post("/api/user", json={
-            "requestId": "xxx",
-            "nickname": "new nickname",
-            "avatar": "http://new.avatar/aa.png",
-            "nodeDisplayMethod": const.NodeDisplayMethod.LIST.value,
-        }, headers={"token": self.token})
+        resp = self.client.patch(
+            "/api/users",
+            json={
+                "nickname": "new nickname",
+                "avatar": "http://new.avatar/aa.png",
+                "lastState": {
+                    "nodeDisplayMethod": const.NodeDisplayMethod.LIST.value,
+                }
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
 
         resp = self.client.get(
-            "/api/user",
-            headers={"token": self.token, "rid": "xxx"}
+            "/api/users",
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("new nickname", rj["user"]["nickname"])
@@ -200,14 +244,20 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
         self.assertEqual("xxx", rj["requestId"])
 
-        resp = self.client.post("/api/user/settings", json={
-            "requestId": "xxx",
-            "language": const.Language.ZH.value,
-            "theme": "dark",
-            "editorMode": "ir",
-            "editorFontSize": 20,
-            "editorCodeTheme": "dracula",
-        }, headers={"token": self.token})
+        resp = self.client.patch(
+            "/api/users",
+            json={
+                "settings": {
+                    "language": const.Language.ZH.value,
+                    "theme": "dark",
+                    "editorMode": "ir",
+                    "editorFontSize": 20,
+                    "editorCodeTheme": "dracula",
+                }
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -218,19 +268,22 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("dracula", rj["user"]["settings"]["editorCodeTheme"])
 
     def test_recent_search(self):
-        resp = self.client.post(
-            "/api/search/node",
-            json={
-                "requestId": "xxx",
-                "query": "aaa",
-                "page": 0, "pageSize": 5
-            }, headers={"token": self.token})
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "aaa",
+                "p": 0,
+                "limit": 5
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"], msg=rj)
 
         resp = self.client.get(
-            "/api/search/recent",
-            headers={"token": self.token, "rid": "xxx"}
+            "/api/recent/searched",
+            headers=self.default_headers
         )
         rj = resp.json()
         self.assertEqual(0, rj["code"])
@@ -238,41 +291,53 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(["aaa"], rj["queries"])
 
     def test_node(self):
-        resp = self.client.post(
-            "/api/search/node",
-            json={
-                "query": "",
-                "requestId": "xxx",
-                "sortKey": "createdAt",
-                "sortOrder": -1, "page": 0, "pageSize": 5},
-            headers={"token": self.token})
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertGreater(len(rj["data"]["nodes"]), 0)
 
-        self.client.post(
-            "/api/search/node",
-            json={
-                "query": "",
-                "requestId": "xxx",
-                "sortKey": "createdAt",
-                "sortOrder": -1, "page": 0, "pageSize": 5},
-            headers={"token": self.token})
+        self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
 
-        resp = self.client.put("/api/node", json={
-            "requestId": "xxx",
-            "md": "node1\ntext",
-            "type": const.NodeType.MARKDOWN.value,
-        }, headers={"token": self.token})
+        resp = self.client.post(
+            "/api/nodes",
+            json={
+                "md": "node1\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         node = rj["node"]
 
         resp = self.client.get(
-            "/api/node",
-            params={"nid": node["id"]},
-            headers={"token": self.token, "rid": "xxx"}
+            f'/api/nodes/{node["id"]}',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -281,24 +346,23 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("node1\ntext", n["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
-        resp = self.client.post(
-            "/api/node",
+        resp = self.client.put(
+            f'/api/nodes/{node["id"]}/md',
             json={
-                "requestId": "xxx",
-                "nid": node["id"],
-                "md": "node2\ntext"
+                "md": "node2\ntext",
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
 
         resp = self.client.get(
-            "/api/node",
-            params={"nid": node["id"]},
-            headers={"token": self.token, "rid": "xxx"}
+            f'/api/nodes/{node["id"]}',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         n = rj["node"]
         self.assertEqual(0, rj["code"])
@@ -308,62 +372,55 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
 
         resp = self.client.put(
-            "/api/trash",
-            json={
-                "requestId": "xxx",
-                "nid": node["id"],
-            },
-            headers={"token": self.token}
+            f'/api/trash/{node["id"]}',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
 
         resp = self.client.get(
             "/api/trash",
-            params={"p": 0, "ps": 10},
-            headers={"token": self.token, "rid": "xxx"}
+            params={"p": 0, "limit": 10},
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(1, len(rj["data"]["nodes"]))
 
-        resp = self.client.post(
-            "/api/trashRestore",
-            json={
-                "requestId": "xxx",
-                "nid": node["id"],
-            },
-            headers={"token": self.token}
+        resp = self.client.put(
+            f'/api/trash/{node["id"]}/restore',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
 
-        resp = self.client.post(
-            "/api/search/cursor",
-            json={
-                "requestId": "xxx",
-                "nid": node["id"],
-                "query": "How",
-                "page": 0,
-                "pageSize": 10,
+        resp = self.client.get(
+            f'/api/nodes/{node["id"]}/at',
+            params={
+                "q": "How",
+                "p": 0,
+                "limit": 10,
             },
-            headers={"token": self.token},
+            headers=self.default_headers,
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual(2, len(rj["data"]["nodes"]))
         self.assertEqual("Welcome to Rethink", rj["data"]["nodes"][0]["title"])
 
-        resp = self.client.post(
-            "/api/search/recommend",
-            json={
-                "requestId": "xxx",
+        resp = self.client.get(
+            f'/api/nodes/{node["id"]}/recommend',
+            params={
                 "content": "I do need a Knowledge Management System. This is a good one to try.",
-                "nidExclude": [],
             },
-            headers={"token": self.token},
+            headers=self.default_headers,
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -371,44 +428,43 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("Welcome to Rethink", rj["nodes"][0]["title"])
 
         self.client.put(
-            "/api/trash",
-            json={
-                "requestId": "xxx",
-                "nid": node["id"],
-            },
-            headers={"token": self.token}
+            f'/api/trash/{node["id"]}',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         resp = self.client.delete(
             f"/api/trash/{node['id']}",
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
 
         resp = self.client.delete(
             "/api/trash/ssa",
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
 
         resp = self.client.get(
-            "/api/node",
-            params={"nid": node["id"]},
-            headers={"token": self.token, "rid": "xxx"}
+            f'/api/nodes/{node["id"]}',
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
 
-        resp = self.client.post(
-            "/api/node/core",
-            json={
-                "requestId": "xxx",
-                "page": 0,
-                "pageSize": 10,
+        resp = self.client.get(
+            "/api/nodes/core",
+            params={
+                "p": 0,
+                "limit": 10,
             },
-            headers={"token": self.token},
+            headers=self.default_headers,
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -426,21 +482,29 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     def test_batch(self):
         base_count = 2
         for i in range(10):
-            resp = self.client.put("/api/node", json={
-                "requestId": "xxx",
-                "md": f"node{i}\ntext",
-                "type": const.NodeType.MARKDOWN.value,
-            }, headers={"token": self.token})
+            resp = self.client.post(
+                "/api/nodes",
+                json={
+                    "md": f"node{i}\ntext",
+                    "type": const.NodeType.MARKDOWN.value,
+                },
+                headers=self.default_headers
+            )
+            self.assertEqual(201, resp.status_code)
             rj = resp.json()
             self.assertEqual(0, rj["code"])
-        resp = self.client.post(
-            "/api/search/node",
-            json={
-                "query": "",
-                "requestId": "xxx",
-                "sortKey": "createdAt",
-                "sortOrder": -1, "page": 0, "pageSize": 5},
-            headers={"token": self.token})
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(5, len(rj["data"]["nodes"]))
@@ -449,58 +513,63 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.put(
             "/api/trash/batch",
             json={
-                "requestId": "xxx",
                 "nids": [n["id"] for n in rj["data"]["nodes"][:3]],
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
+
         resp = self.client.get(
             "/api/trash",
-            params={"p": 0, "ps": 10},
-            headers={"token": self.token, "rid": "xxx"}
+            params={"p": 0, "limit": 10},
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(3, len(rj["data"]["nodes"]))
         self.assertEqual(3, rj["data"]["total"])
 
-        resp = self.client.post(
-            "/api/trashRestore/batch",
+        resp = self.client.put(
+            "/api/trash/batch/restore",
             json={
-                "requestId": "xxx",
                 "nids": [n["id"] for n in rj["data"]["nodes"][:2]],
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
+
         resp = self.client.get(
             "/api/trash",
-            params={"p": 0, "ps": 10},
-            headers={"token": self.token, "rid": "xxx"}
+            params={"p": 0, "limit": 10},
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(1, len(rj["data"]["nodes"]))
         self.assertEqual(1, rj["data"]["total"])
 
-        resp = self.client.post(
-            "/api/trashDelete/batch",
+        resp = self.client.put(
+            "/api/trash/batch/delete",
             json={
-                "requestId": "xxx",
                 "nids": [n["id"] for n in rj["data"]["nodes"]],
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         resp = self.client.get(
             "/api/trash",
-            params={"p": 0, "ps": 10},
-            headers={"token": self.token, "rid": "xxx"}
+            params={"p": 0, "limit": 10},
+            headers=self.default_headers
         )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(0, len(rj["data"]["nodes"]))
@@ -530,19 +599,20 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             files=[
                 ("files", f),
             ],
-            headers={
-                "token": self.token
-            },
+            headers=self.default_headers,
         )
+        self.assertEqual(202, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"], msg=rj)
+        self.assertEqual("xxx", rj["requestId"])
 
         for _ in range(10):
             time.sleep(0.1)
             resp = self.client.get(
-                "/api/files/uploadProcess",
-                headers={"token": self.token, "rid": "xxx"}
+                "/api/files/upload-process",
+                headers=self.default_headers
             )
+            self.assertEqual(200, resp.status_code)
             rj = resp.json()
             self.assertEqual("obsidian", rj["type"], msg=rj)
             self.assertEqual("done", rj["msg"], msg=rj)
@@ -550,14 +620,18 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 break
         self.assertFalse(rj["running"], msg=rj)
 
-        resp = self.client.post(
-            "/api/search/node",
-            json={
-                "query": "",
-                "requestId": "xxx",
-                "sortKey": "createdAt",
-                "sortOrder": -1, "page": 0, "pageSize": 5},
-            headers={"token": self.token})
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5,
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(5, len(rj["data"]["nodes"]))
@@ -579,19 +653,20 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 ("files", f1),
                 ("files", f2),
             ],
-            headers={
-                "token": self.token
-            },
+            headers=self.default_headers,
         )
+        self.assertEqual(202, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
 
         for _ in range(10):
             time.sleep(0.1)
             resp = self.client.get(
-                "/api/files/uploadProcess",
-                headers={"token": self.token, "rid": "xxx"}
+                "/api/files/upload-process",
+                headers=self.default_headers
             )
+            self.assertEqual(200, resp.status_code)
             rj = resp.json()
             self.assertEqual("md", rj["type"], msg=rj)
             self.assertEqual("done", rj["msg"], msg=rj)
@@ -599,14 +674,18 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 break
         self.assertFalse(rj["running"], msg=rj)
 
-        resp = self.client.post(
-            "/api/search/node",
-            json={
-                "query": "",
-                "requestId": "xxx",
-                "sortKey": "createdAt",
-                "sortOrder": -1, "page": 0, "pageSize": 5},
-            headers={"token": self.token})
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5,
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(4, len(rj["data"]["nodes"]))
@@ -621,10 +700,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         image.save("temp/test.png", format='PNG')
         f1 = open("temp/test.png", "rb")
         resp = self.client.post(
-            "/api/files/vditor/upload",
+            "/api/files/vditor",
             files={"file[]": f1},
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual({
@@ -640,10 +720,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         f1 = open("temp/test.txt", "wb+")
         f1.write("dasd".encode("utf-8"))
         resp = self.client.post(
-            "/api/files/vditor/upload",
+            "/api/files/vditor",
             files={"file[]": f1},
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual({
@@ -659,10 +740,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         f1 = open("temp/test.qw", "wb+")
         f1.write("dasd".encode("utf-8"))
         resp = self.client.post(
-            "/api/files/vditor/upload",
+            "/api/files/vditor",
             files={"file[]": f1},
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.INVALID_FILE_TYPE.value, rj["code"])
         self.assertEqual({'errFiles': ['test.qw'], 'succMap': {}}, rj["data"])
@@ -673,20 +755,22 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/" \
               "w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
         resp = self.client.post(
-            "/api/files/vditor/imageFetch",
+            "/api/files/vditor/images",
             json={"url": img},
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual(img, rj["data"]["url"])
 
         img = "fffew"
         resp = self.client.post(
-            "/api/files/vditor/imageFetch",
+            "/api/files/vditor/images",
             json={"url": img},
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.FILE_OPEN_ERROR.value, rj["code"])
 
@@ -695,15 +779,15 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         return_value=Response(200, content="<title>百度一下</title>".encode("utf-8"))
     )
     def test_put_quick_node(self, mocker):
-        resp = self.client.put(
-            "/api/node/quick",
+        resp = self.client.post(
+            "/api/nodes/quick",
             json={
-                "requestId": "xxx",
                 "md": "node1\ntext",
                 "type": const.NodeType.MARKDOWN.value,
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -712,18 +796,109 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("node1\ntext", node["md"])
         self.assertEqual(const.NodeType.MARKDOWN.value, node["type"])
 
-        resp = self.client.put(
-            "/api/node/quick",
+        resp = self.client.post(
+            "/api/nodes/quick",
             json={
-                "requestId": "xxx",
                 "md": "https://baidu.com",
                 "type": const.NodeType.MARKDOWN.value,
             },
-            headers={"token": self.token}
+            headers=self.default_headers
         )
+        self.assertEqual(201, resp.status_code)
         rj = resp.json()
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         node = rj["node"]
         self.assertIn("https://baidu.com", node["md"])
         self.assertIn("百度", node["md"])
+
+    def test_system_latest_version(self):
+        resp = self.client.get(
+            "/api/system/latest-version",
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(0, rj["code"])
+        self.assertEqual("xxx", rj["requestId"])
+        for n in rj["version"]:
+            self.assertTrue(isinstance(n, int))
+        self.assertEqual("OK", rj["message"])
+
+    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("rethink.core.node.backup.__remove_md_from_cos")
+    @patch("rethink.core.node.backup.__get_md_from_cos")
+    @patch("rethink.core.node.backup.__save_md_to_cos")
+    def test_md_history(
+            self,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.Code.OK
+        mock_get_md_from_cos.return_value = ("title2\ntext", const.Code.OK)
+        mock_remove_md_from_cos.return_value = const.Code.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+
+        bi = config.get_settings().MD_BACKUP_INTERVAL
+        config.get_settings().MD_BACKUP_INTERVAL = 0.0001
+        resp = self.client.post(
+            "/api/nodes",
+            json={
+                "md": "title\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(201, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.OK.value, rj["code"])
+        n1 = rj["node"]
+
+        time.sleep(0.001)
+
+        resp = self.client.put(
+            f"/api/nodes/{n1['id']}/md",
+            json={
+                "md": "title1\ntext",
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.OK.value, rj["code"])
+
+        time.sleep(0.001)
+
+        resp = self.client.put(
+            f"/api/nodes/{n1['id']}/md",
+            json={
+                "md": "title2\ntext",
+            },
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.OK.value, rj["code"])
+
+        resp = self.client.get(
+            f"/api/nodes/{n1['id']}/history",
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.OK.value, rj["code"])
+        hist = rj["versions"]
+        self.assertEqual(2, len(hist))
+
+        resp = self.client.get(
+            f"/api/nodes/{n1['id']}/history/{hist[1]}/md",
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.OK.value, rj["code"])
+        self.assertEqual("title1\ntext", rj["md"])
+
+        config.get_settings().MD_BACKUP_INTERVAL = bi

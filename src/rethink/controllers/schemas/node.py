@@ -3,7 +3,6 @@ from typing import List, Optional
 from pydantic import BaseModel, NonNegativeInt, Field
 
 from rethink import const
-from .search import NodesSearchResponse
 
 
 class NodeData(BaseModel):
@@ -30,14 +29,13 @@ class NodeData(BaseModel):
     toNodes: List[LinkedNode] = Field(default_factory=list)
 
 
-class PutRequest(BaseModel):
+class CreateRequest(BaseModel):
     md: str = Field(max_length=const.MD_MAX_LENGTH)
     type: NonNegativeInt
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
     fromNid: str = Field(default="", max_length=const.NID_MAX_LENGTH)
 
 
-class PutResponse(BaseModel):
+class CreateResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
@@ -51,15 +49,30 @@ class GetResponse(BaseModel):
     node: Optional[NodeData]
 
 
-class UpdateRequest(BaseModel):
-    nid: str = Field(max_length=const.NID_MAX_LENGTH)
+class PatchMdRequest(BaseModel):
     md: str = Field(max_length=const.MD_MAX_LENGTH)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
-class RestoreFromTrashRequest(BaseModel):
-    nid: str = Field(max_length=const.NID_MAX_LENGTH)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
+class NodesSearchResponse(BaseModel):
+    class Data(BaseModel):
+        class Node(BaseModel):
+            id: str
+            title: str
+            snippet: str
+            titleHighlight: str
+            bodyHighlights: List[str]
+            score: float
+            type: int
+            createdAt: str
+            modifiedAt: str
+
+        nodes: List[Node]
+        total: NonNegativeInt
+
+    code: NonNegativeInt
+    message: str
+    requestId: str
+    data: Data
 
 
 class GetFromTrashResponse(BaseModel):
@@ -71,24 +84,12 @@ class GetFromTrashResponse(BaseModel):
 
 class BatchNodeIdsRequest(BaseModel):
     nids: List[str] = Field(default_factory=list, min_length=1, max_length=1000)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
-class CoreNodesRequest(BaseModel):
-    page: NonNegativeInt = 0
-    pageSize: NonNegativeInt = 10
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
 class CoreNodesResponse(BaseModel):
     code: NonNegativeInt
     message: str
     data: NodesSearchResponse.Data
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
-class HistEditionsRequest(BaseModel):
-    nid: str = Field(max_length=const.NID_MAX_LENGTH)
     requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
 
 
@@ -99,14 +100,15 @@ class HistEditionsResponse(BaseModel):
     versions: List[str] = Field(default_factory=list)
 
 
-class HistEditionMdRequest(BaseModel):
-    nid: str = Field(max_length=const.NID_MAX_LENGTH)
-    version: str = Field(max_length=30)
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
 class HistEditionMdResponse(BaseModel):
     code: NonNegativeInt
     message: str
     requestId: str
     md: str
+
+
+class RecommendNodesResponse(BaseModel):
+    code: NonNegativeInt
+    message: str
+    requestId: str
+    nodes: List[NodesSearchResponse.Data.Node] = Field(default_factory=list)

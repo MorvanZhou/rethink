@@ -26,7 +26,7 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
         base_count = 2
         nids = []
         for i in range(20):
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=self.uid,
                 md=f"title{i}\ntext{i}",
                 type_=const.NodeType.MARKDOWN.value,

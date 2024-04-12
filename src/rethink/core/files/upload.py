@@ -152,9 +152,9 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
         return "", code
     if await core.user.user_space_not_enough(u=u):
         return "", const.Code.USER_SPACE_NOT_ENOUGH
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as ac:
         try:
-            response = await client.get(
+            response = await ac.get(
                 url=url,
                 headers=ASYNC_CLIENT_HEADERS,
                 follow_redirects=False,

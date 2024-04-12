@@ -80,7 +80,7 @@ async def upload_obsidian_task(  # noqa: C901
             continue
 
         try:
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=uid,
                 md=meta.title,
                 type_=const.NodeType.MARKDOWN.value,
@@ -141,14 +141,14 @@ async def upload_obsidian_task(  # noqa: C901
         )
         md = meta.title + "\n\n" + md
         nid = existed_path2nid[full_path]
-        n, _, code = await core.node.update(
+        n, _, code = await core.node.update_md(
             uid=uid,
             nid=nid,
             md=md,
             refresh_on_same_md=True,
         )
         if code == const.Code.NODE_NOT_EXIST:
-            n, code = await core.node.add(
+            n, code = await core.node.post(
                 uid=uid,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,
@@ -192,7 +192,7 @@ async def upload_obsidian_task(  # noqa: C901
             n, code = await core.node.get(uid=uid, nid=nid)
             if code != const.Code.OK:
                 continue
-            n, _, code = await core.node.update(
+            n, _, code = await core.node.update_md(
                 uid=uid,
                 nid=nid,
                 md=n["md"],

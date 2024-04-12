@@ -97,22 +97,22 @@ class Client:
 
         async def create_node(md: str, to_nid: Optional[str] = None):
             title_, body_, snippet_ = utils.preprocess_md(md)
-            n: Node = {
-                "_id": ObjectId(),
-                "id": utils.short_uuid(),
-                "uid": _v["id"],
-                "title": title_,
-                "snippet": snippet_,
-                "md": md,
-                "type": const.NodeType.MARKDOWN.value,
-                "disabled": False,
-                "inTrash": False,
-                "modifiedAt": datetime.datetime.now(tz=utc),
-                "inTrashAt": None,
-                "fromNodeIds": [],
-                "toNodeIds": [] if to_nid is None else [to_nid],
-                "history": [],
-            }
+            n = utils.get_node_dict(
+                _id=ObjectId(),
+                nid=utils.short_uuid(),
+                uid=_v["id"],
+                md=md,
+                title=title_,
+                snippet=snippet_,
+                type_=const.NodeType.MARKDOWN.value,
+                disabled=False,
+                in_trash=False,
+                modified_at=datetime.datetime.now(tz=utc),
+                in_trash_at=None,
+                from_node_ids=[],
+                to_node_ids=[] if to_nid is None else [to_nid],
+                history=[],
+            )
             res = await self.coll.nodes.insert_one(n)
             if not res.acknowledged:
                 raise ValueError("cannot insert default node")
@@ -133,28 +133,34 @@ class Client:
         _md = ns[1].format(n0["id"])
         n1 = await create_node(_md, to_nid=n0["id"])
 
-        u: UserMeta = {
-            "_id": ObjectId(_v["_id"]),
-            "id": _v["id"],
-            "email": _v["email"],
-            "nickname": _v["nickname"],
-            "avatar": _v["avatar"],
-            "account": _v["email"],
+        u = utils.get_user_dict(
+            _id=ObjectId(_v["_id"]),
+            uid=_v["id"],
+            source=const.UserSource.LOCAL.value,
+            account=_v["email"],
+            nickname=_v["nickname"],
+            email=_v["email"],
+            avatar=_v["avatar"],
+            hashed="",
+            disabled=False,
+            modified_at=datetime.datetime.now(tz=utc),
+            used_space=0,
+            type_=const.USER_TYPE.NORMAL.id,
 
-            "source": const.UserSource.LOCAL.value,
-            "hashed": "",
-            "disabled": False,
-            "modifiedAt": datetime.datetime.now(tz=utc),
-            "usedSpace": 0,
-            "type": const.USER_TYPE.NORMAL.id,
-            "lastState": {
-                "recentCursorSearchSelectedNIds": [n0["id"], n1["id"]],
-                "recentSearch": [],
-                "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
-                "nodeDisplaySortKey": "modifiedAt"
-            },
-            "settings": _v["settings"],
-        }
+            last_state_recent_cursor_search_selected_nids=[n0["id"], n1["id"]],
+            last_state_recent_search=[],
+            last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+            last_state_node_display_sort_key="modifiedAt",
+
+            settings_language=_v["settings"]["language"],
+            settings_theme=_v["settings"].get("theme", const.AppTheme.LIGHT.value),
+            settings_editor_mode=_v["settings"].get("editorMode", const.EditorMode.WYSIWYG.value),
+            settings_editor_font_size=_v["settings"].get("editorFontSize", 15),
+            settings_editor_code_theme=_v["settings"].get("editorCodeTheme", const.EditorCodeTheme.GITHUB.value),
+            settings_editor_sep_right_width=_v["settings"].get("editorSepRightWidth", 200),
+            settings_editor_side_current_tool_id=_v["settings"].get("editorSideCurrentToolId", ""),
+        )
+
         _ = await self.coll.users.insert_one(u)
 
         await self.search.add_batch(
@@ -224,36 +230,34 @@ class Client:
         if _v is None:
             return
 
-        u: UserMeta = {
-            "_id": ObjectId(_v["_id"]),
-            "id": _v["id"],
-            "email": _v["email"],
-            "nickname": _v["nickname"],
-            "avatar": _v["avatar"],
-            "account": _v["email"],
+        u = utils.get_user_dict(
+            _id=ObjectId(_v["_id"]),
+            uid=_v["id"],
+            source=const.UserSource.LOCAL.value,
+            account=_v["email"],
+            nickname=_v["nickname"],
+            email=_v["email"],
+            avatar=_v["avatar"],
+            hashed="",
+            disabled=False,
+            modified_at=datetime.datetime.now(tz=utc),
+            used_space=0,
+            type_=const.USER_TYPE.NORMAL.id,
 
-            "source": const.UserSource.LOCAL.value,
-            "hashed": "",
-            "disabled": False,
-            "modifiedAt": datetime.datetime.now(tz=utc),
-            "usedSpace": 0,
-            "type": const.USER_TYPE.NORMAL.id,
-            "lastState": {
-                "recentCursorSearchSelectedNIds": [],
-                "recentSearch": [],
-                "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
-                "nodeDisplaySortKey": "modifiedAt"
-            },
-            "settings": _v.get("settings", {
-                "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
-                "theme": const.AppTheme.LIGHT.value,
-                "editorMode": const.EditorMode.WYSIWYG.value,
-                "editorFontSize": 15,
-                "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
-                "editorSepRightWidth": 200,
-                "editorSideCurrentToolId": "",
-            }),
-        }
+            last_state_recent_cursor_search_selected_nids=[],
+            last_state_recent_search=[],
+            last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+            last_state_node_display_sort_key="modifiedAt",
+
+            settings_language=_v["settings"].get("language", os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value)),
+            settings_theme=_v["settings"].get("theme", const.AppTheme.LIGHT.value),
+            settings_editor_mode=_v["settings"].get("editorMode", const.EditorMode.WYSIWYG.value),
+            settings_editor_font_size=_v["settings"].get("editorFontSize", 15),
+            settings_editor_code_theme=_v["settings"].get("editorCodeTheme", const.EditorCodeTheme.GITHUB.value),
+            settings_editor_sep_right_width=_v["settings"].get("editorSepRightWidth", 200),
+            settings_editor_side_current_tool_id=_v["settings"].get("editorSideCurrentToolId", ""),
+        )
+
         _ = await self.coll.users.insert_one(u)
 
         # restore nodes
@@ -267,23 +271,22 @@ class Client:
             created_time = datetime.datetime.fromtimestamp(md_path.stat().st_ctime, tz=utc)
             modified_time = datetime.datetime.fromtimestamp(md_path.stat().st_mtime, tz=utc)
             title_, body_, snippet_ = utils.preprocess_md(md)
-
-            n: Node = {
-                "_id": _oid_from_datetime(created_time),
-                "id": md_path.stem,
-                "uid": _v["id"],
-                "title": title_,
-                "snippet": snippet_,
-                "md": md,
-                "type": const.NodeType.MARKDOWN.value,
-                "disabled": False,
-                "inTrash": False,
-                "modifiedAt": modified_time,
-                "inTrashAt": None,
-                "fromNodeIds": [],
-                "toNodeIds": [],
-                "history": [],
-            }
+            n = utils.get_node_dict(
+                _id=_oid_from_datetime(created_time),
+                nid=md_path.stem,
+                uid=_v["id"],
+                md=md,
+                title=title_,
+                snippet=snippet_,
+                type_=const.NodeType.MARKDOWN.value,
+                disabled=False,
+                in_trash=False,
+                modified_at=modified_time,
+                in_trash_at=None,
+                from_node_ids=[],
+                to_node_ids=[],
+                history=[],
+            )
             ns.append(n)
             search_docs.append(
                 SearchDoc(

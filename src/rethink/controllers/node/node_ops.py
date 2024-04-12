@@ -2,7 +2,7 @@ from typing import List
 
 from rethink import const, core
 from rethink.controllers import schemas
-from rethink.controllers.utils import TokenDecode, datetime2str
+from rethink.controllers.utils import Headers, datetime2str
 from rethink.models import tps
 from rethink.utils import contain_only_http_link, get_title_description_from_link
 
@@ -41,60 +41,60 @@ def __get_node_data(n: tps.Node) -> schemas.node.NodeData:
     )
 
 
-async def put_node(
-        td: TokenDecode,
-        req: schemas.node.PutRequest,
-) -> schemas.node.PutResponse:
-    if td.code != const.Code.OK:
-        return schemas.node.PutResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+async def post_node(
+        h: Headers,
+        req: schemas.node.CreateRequest,
+) -> schemas.node.CreateResponse:
+    if h.code != const.Code.OK:
+        return schemas.node.CreateResponse(
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             node=None
         )
 
-    n, code = await core.node.add(
-        uid=td.uid,
+    n, code = await core.node.post(
+        uid=h.uid,
         md=req.md,
         type_=req.type,
         from_nid=req.fromNid,
     )
     if code != const.Code.OK:
-        return schemas.node.PutResponse(
+        return schemas.node.CreateResponse(
             code=code.value,
-            message=const.get_msg_by_code(code, td.language),
-            requestId=req.requestId,
+            message=const.get_msg_by_code(code, h.language),
+            requestId=h.request_id,
             node=None,
         )
-    return schemas.node.PutResponse(
+    return schemas.node.CreateResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.requestId,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         node=__get_node_data(n),
     )
 
 
-async def put_quick_node(
-        td: TokenDecode,
-        req: schemas.node.PutRequest,
-) -> schemas.node.PutResponse:
-    if td.code != const.Code.OK:
-        return schemas.node.PutResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+async def post_quick_node(
+        h: Headers,
+        req: schemas.node.CreateRequest,
+) -> schemas.node.CreateResponse:
+    if h.code != const.Code.OK:
+        return schemas.node.CreateResponse(
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             node=None
         )
 
     if contain_only_http_link(req.md) != "":
         title, description = await get_title_description_from_link(
             url=req.md,
-            language=td.language,
+            language=h.language,
         )
-        if td.language == const.Language.ZH.value:
+        if h.language == const.Language.ZH.value:
             desc_prefix = "**描述：**\n\n"
             link_prefix = "*链接：*"
-        elif td.language == const.Language.EN.value:
+        elif h.language == const.Language.EN.value:
             desc_prefix = "**Description:**\n\n"
             link_prefix = "*Link:* "
         else:
@@ -102,77 +102,78 @@ async def put_quick_node(
             link_prefix = "*Link:* "
         req.md = f"{title}\n\n{desc_prefix}{description}\n\n{link_prefix}[{req.md}]({req.md})"
 
-    return await put_node(
-        td=td,
+    return await post_node(
+        h=h,
         req=req,
     )
 
 
 async def get_node(
-        td: TokenDecode,
-        req_id: str,
+        h: Headers,
         nid: str,
 ) -> schemas.node.GetResponse:
-    n, code = await core.node.get(uid=td.uid, nid=nid)
+    n, code = await core.node.get(uid=h.uid, nid=nid)
     if code != const.Code.OK:
         return schemas.node.GetResponse(
-            requestId=req_id,
+            requestId=h.request_id,
             code=code.value,
-            message=const.get_msg_by_code(code, td.language),
+            message=const.get_msg_by_code(code, h.language),
             node=None,
         )
     return schemas.node.GetResponse(
-        requestId=req_id,
+        requestId=h.request_id,
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
+        message=const.get_msg_by_code(code, h.language),
         node=__get_node_data(n),
     )
 
 
-async def update_node(
-        td: TokenDecode,
-        req: schemas.node.UpdateRequest,
+async def update_md(
+        h: Headers,
+        req: schemas.node.PatchMdRequest,
+        nid: str,
 ) -> schemas.node.GetResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.node.GetResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             node=None
         )
-    n, old_n, code = await core.node.update(
-        uid=td.uid,
-        nid=req.nid,
+    n, old_n, code = await core.node.update_md(
+        uid=h.uid,
+        nid=nid,
         md=req.md,
     )
     return schemas.node.GetResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.requestId,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         node=__get_node_data(n),
     )
 
 
 async def get_core_nodes(
-        td: TokenDecode,
-        req: schemas.node.CoreNodesRequest,
+        h: Headers,
+        p: int,
+        limit: int,
 ) -> schemas.node.CoreNodesResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.node.CoreNodesResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             data=None,
         )
     nodes, total = await core.node.core_nodes(
-        uid=td.uid,
-        page=req.page,
-        page_size=req.pageSize,
+        uid=h.uid,
+        page=p,
+        limit=limit,
     )
     return schemas.node.CoreNodesResponse(
         code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, td.language),
-        requestId=req.requestId,
+        message=const.get_msg_by_code(const.Code.OK, h.language),
+        requestId=h.request_id,
         data=schemas.node.NodesSearchResponse.Data(
             total=total,
             nodes=[
@@ -192,47 +193,48 @@ async def get_core_nodes(
 
 
 async def get_hist_editions(
-        td: TokenDecode,
-        req: schemas.node.HistEditionsRequest,
+        h: Headers,
+        nid: str,
 ) -> schemas.node.HistEditionsResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.node.HistEditionsResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             versions=[],
         )
     versions, code = await core.node.get_hist_editions(
-        uid=td.uid,
-        nid=req.nid,
+        uid=h.uid,
+        nid=nid,
     )
     return schemas.node.HistEditionsResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.requestId,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         versions=versions,
     )
 
 
 async def get_hist_edition_md(
-        td: TokenDecode,
-        req: schemas.node.HistEditionMdRequest,
+        h: Headers,
+        nid: str,
+        version: str,
 ) -> schemas.node.HistEditionMdResponse:
-    if td.code != const.Code.OK:
+    if h.code != const.Code.OK:
         return schemas.node.HistEditionMdResponse(
-            code=td.code.value,
-            message=const.get_msg_by_code(td.code, td.language),
-            requestId=req.requestId,
+            code=h.code.value,
+            message=const.get_msg_by_code(h.code, h.language),
+            requestId=h.request_id,
             md="",
         )
     md, code = await core.node.get_hist_edition_md(
-        uid=td.uid,
-        nid=req.nid,
-        version=req.version,
+        uid=h.uid,
+        nid=nid,
+        version=version,
     )
     return schemas.node.HistEditionMdResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, td.language),
-        requestId=req.requestId,
+        message=const.get_msg_by_code(code, h.language),
+        requestId=h.request_id,
         md=md,
     )

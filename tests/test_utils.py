@@ -237,3 +237,10 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             s.DB_HOST = "127.0.0.1"
             mock_get_settings.return_value = s
             self.assertTrue(utils.ssrf_check(url), msg=url)
+
+    async def test_get_version(self):
+        v, code = await utils.get_latest_version()
+        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(3, len(v))
+        for num in v:
+            self.assertTrue(isinstance(num, int))
