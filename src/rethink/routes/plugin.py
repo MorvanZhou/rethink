@@ -45,7 +45,7 @@ async def render_plugin_home(
 async def get_plugin_with_editor_side(
         au: utils.ANNOTATED_AUTHED_USER,
 ) -> schemas.plugin.PluginsResponse:
-    return await plugin_ops.get_plugins_with_render_editor_side(h=h)
+    return await plugin_ops.get_plugins_with_render_editor_side(au=au)
 
 
 @router.get(
