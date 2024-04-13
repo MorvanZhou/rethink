@@ -5,6 +5,7 @@ import pymongo.errors
 
 from rethink import const, core
 from rethink.logger import logger
+from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from . import ops
 from .. import utils
 
@@ -14,6 +15,7 @@ async def upload_obsidian_task(  # noqa: C901
         filename: str,
         max_file_size: int,
         uid: str,
+        request_id: str,
 ) -> None:
     type_ = "obsidian"
     await utils.import_set_modules()
@@ -73,6 +75,12 @@ async def upload_obsidian_task(  # noqa: C901
     logger.debug(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
 
     # add new md files with only title
+    u, code = await core.user.get(uid=uid)
+    au = AuthedUser(
+        u=convert_user_dict_to_authed_user(u),
+        request_id=request_id,
+        language=u["settings"].get("language", const.Language.EN.value),
+    )
     for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
         meta: ops.UnzipObsidian.Meta
 
@@ -81,7 +89,7 @@ async def upload_obsidian_task(  # noqa: C901
 
         try:
             n, code = await core.node.post(
-                uid=uid,
+                au=au,
                 md=meta.title,
                 type_=const.NodeType.MARKDOWN.value,
             )
@@ -142,14 +150,14 @@ async def upload_obsidian_task(  # noqa: C901
         md = meta.title + "\n\n" + md
         nid = existed_path2nid[full_path]
         n, _, code = await core.node.update_md(
-            uid=uid,
+            au=au,
             nid=nid,
             md=md,
             refresh_on_same_md=True,
         )
         if code == const.Code.NODE_NOT_EXIST:
             n, code = await core.node.post(
-                uid=uid,
+                au=au,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,
             )
@@ -189,11 +197,11 @@ async def upload_obsidian_task(  # noqa: C901
     count = 0
     for base_name, nid in doc["obsidian"].items():
         if base_name not in existed_path2nid:
-            n, code = await core.node.get(uid=uid, nid=nid)
+            n, code = await core.node.get(au=au, nid=nid)
             if code != const.Code.OK:
                 continue
             n, _, code = await core.node.update_md(
-                uid=uid,
+                au=au,
                 nid=nid,
                 md=n["md"],
                 refresh_on_same_md=True,

@@ -1,9 +1,12 @@
+import datetime
 import unittest
 
 import elastic_transport
+from bson import ObjectId
 
 from rethink import const, config
 from rethink.models.search_engine.engine_es import ESSearcher, SearchDoc
+from rethink.models.tps import AuthedUser
 from . import utils
 
 
@@ -30,6 +33,40 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             print("remote test asyncSetUp timeout")
             if self.searcher.es is not None:
                 await self.searcher.es.close()
+        self.au = AuthedUser(
+            u=AuthedUser.User(
+                _id=ObjectId(),
+                id="uid",
+                source=0,
+                account="rethink",
+                nickname="rethink",
+                email="rethink@rethink.run",
+                avatar="",
+                hashed="",
+                disabled=False,
+                modified_at=datetime.datetime.now(),
+                used_space=0,
+                type=0,
+
+                last_state=AuthedUser.User.LastState(
+                    node_display_method=0,
+                    node_display_sort_key="",
+                    recent_search=[],
+                    recent_cursor_search_selected_nids=[],
+                ),
+                settings=AuthedUser.User.Settings(
+                    language="en",
+                    theme="light",
+                    editor_mode="markdown",
+                    editor_font_size=14,
+                    editor_code_theme="github",
+                    editor_sep_right_width=0,
+                    editor_side_current_tool_id="",
+                ),
+            ),
+            language="en",
+            request_id="request_id",
+        )
 
     async def asyncTearDown(self) -> None:
         if utils.skip_no_connect.skip:
@@ -42,7 +79,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_reindex(self):
-        code = await self.searcher.add_batch(uid="uid", docs=[SearchDoc(
+        code = await self.searcher.add_batch(au=self.au, docs=[SearchDoc(
             nid=f"nid{i}",
             title=f"title{i}",
             body=f"this is {i} doc, 这是第 {i} 个文档",
@@ -53,7 +90,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("1", self.searcher.index.split("-")[-1])
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="title doc",
             sort_key="createdAt",
             reverse=True,
@@ -72,7 +109,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
     @utils.skip_no_connect
     async def test_add(self):
         for i in range(20):
-            code = await self.searcher.add(uid="uid", doc=SearchDoc(
+            code = await self.searcher.add(au=self.au, doc=SearchDoc(
                 nid=f"nid{i}",
                 title=f"title{i}",
                 body=f"this is {i} doc, 这是第 {i} 个文档",
@@ -81,7 +118,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
 
         await self.searcher.refresh()
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="title doc",
             sort_key="createdAt",
             reverse=True,
@@ -96,7 +133,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(['this is 19 <em class="match term0">doc</em>, 这是第 19 个文档'], docs[0].bodyHighlights)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             page=200,
             limit=10,
@@ -105,7 +142,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="",
             page=0,
             limit=50,
@@ -119,7 +156,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_batch_add_update_delete(self):
-        code = await self.searcher.add_batch(uid="uid", docs=[
+        code = await self.searcher.add_batch(au=self.au, docs=[
             SearchDoc(
                 nid=f"nid{i}",
                 title=f"title{i}",
@@ -132,7 +169,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, count)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -143,7 +180,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
         self.assertEqual("nid19", docs[0].nid)
 
-        code = await self.searcher.update_batch(uid="uid", docs=[
+        code = await self.searcher.update_batch(au=self.au, docs=[
             SearchDoc(
                 nid=f"nid{i}",
                 title=f"title_update{i}",
@@ -155,7 +192,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -166,12 +203,12 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
         self.assertEqual("nid19", docs[0].nid)
 
-        code = await self.searcher.disable(uid="uid", nid="nid18")
+        code = await self.searcher.disable(au=self.au, nid="nid18")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -182,19 +219,19 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(19, total)
         self.assertEqual("nid17", docs[1].nid)
 
-        code = await self.searcher.enable(uid="uid", nid="nid18")
+        code = await self.searcher.enable(au=self.au, nid="nid18")
         self.assertEqual(const.Code.OK, code)
 
-        code = await self.searcher.batch_to_trash(uid="uid", nids=[f"nid{i}" for i in range(10)])
+        code = await self.searcher.batch_to_trash(au=self.au, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
 
-        code = await self.searcher.delete_batch(uid="uid", nids=[f"nid{i}" for i in range(10)])
+        code = await self.searcher.delete_batch(au=self.au, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(10, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -208,7 +245,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid17", docs[2].nid)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -221,7 +258,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid18", docs[0].nid)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="title",
             reverse=False,
@@ -235,8 +272,10 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
 
     @utils.skip_no_connect
     async def test_multi_user(self):
+
         for uid in ["uid1", "uid2"]:
-            code = await self.searcher.add_batch(uid=uid, docs=[
+            self.au.u.id = uid
+            code = await self.searcher.add_batch(au=self.au, docs=[
                 SearchDoc(
                     nid=f"{uid}nid{i}",
                     title=f"title{i}",
@@ -248,8 +287,9 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         await self.searcher.refresh()
 
         for uid in ["uid1", "uid2"]:
+            self.au.u.id = uid
             docs, total = await self.searcher.search(
-                uid=uid,
+                au=self.au,
                 query="doc",
                 sort_key="createdAt",
                 reverse=True,

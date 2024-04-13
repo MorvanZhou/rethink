@@ -2,26 +2,19 @@ from typing import Literal, Optional
 
 from rethink import const, core
 from rethink.controllers import schemas
-from rethink.controllers.utils import Headers
+from rethink.models.tps import AuthedUser
 
 
 async def user_nodes(
-        h: Headers,
+        au: AuthedUser,
         q: str,
         sort: Literal["createdAt", "modifiedAt", "title", "similarity"],
         order: Literal["asc", "desc"],
         page: int,
         limit: int,
 ) -> schemas.node.NodesSearchResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.NodesSearchResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            nodes=[],
-        )
     nodes, total = await core.node.search.user_nodes(
-        uid=h.uid,
+        au=au,
         query=q,
         sort_key=sort,
         reverse=order == "desc",
@@ -32,8 +25,8 @@ async def user_nodes(
     code = const.Code.OK
     return schemas.node.NodesSearchResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(
             nodes=nodes,
             total=total,
@@ -42,21 +35,14 @@ async def user_nodes(
 
 
 async def node_at_query(
-        h: Headers,
+        au: AuthedUser,
         nid: str,
         q: Optional[str],
         p: int,
         limit: int,
 ) -> schemas.node.NodesSearchResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.NodesSearchResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            data=None
-        )
     nodes, total = await core.node.search.at(
-        uid=h.uid,
+        au=au,
         nid=nid,
         query=q,
         page=p,
@@ -65,8 +51,8 @@ async def node_at_query(
     code = const.Code.OK
     return schemas.node.NodesSearchResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(
             nodes=nodes,
             total=total,
@@ -75,20 +61,13 @@ async def node_at_query(
 
 
 async def recommend_nodes(
-        h: Headers,
+        au: AuthedUser,
         nid: str,
         content: str,
 ) -> schemas.node.RecommendNodesResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.RecommendNodesResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            nodes=[],
-        )
     max_return = 5
     nodes = await core.node.search.recommend(
-        uid=h.uid,
+        au=au,
         content=content,
         max_return=max_return,
         exclude_nids=[nid],
@@ -96,7 +75,7 @@ async def recommend_nodes(
     code = const.Code.OK
     return schemas.node.RecommendNodesResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         nodes=nodes
     )

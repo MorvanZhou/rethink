@@ -11,13 +11,14 @@ from rethink import const, core
 from rethink.config import is_local_db
 from rethink.logger import logger
 from rethink.models.client import client
+from rethink.models.tps import AuthedUser
 from rethink.utils import ssrf_check, ASYNC_CLIENT_HEADERS
 from .importing import async_tasks, sync_tasks
 
 QUEUE_INITED = False
 
 
-async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Code:
+async def upload_obsidian(au: AuthedUser, zipped_files: List[UploadFile]) -> const.Code:
     max_file_count = 1
     max_file_size = 1024 * 1024 * 200  # 200 mb
 
@@ -40,7 +41,8 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
             bytes_data=bytes_data,
             filename=filename,
             max_file_size=max_file_size,
-            uid=uid,
+            uid=au.u.id,
+            request_id=au.request_id,
         )
     else:
         global QUEUE_INITED
@@ -52,16 +54,17 @@ async def upload_obsidian(uid: str, zipped_files: List[UploadFile]) -> const.Cod
             "bytes_data": bytes_data,
             "filename": filename,
             "max_file_size": max_file_size,
-            "uid": uid,
+            "uid": au.u.id,
+            "request_id": au.request_id,
         })
     return const.Code.OK
 
 
-async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
+async def upload_text(au: AuthedUser, files: List[UploadFile]) -> const.Code:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
 
-    doc = await client.coll.import_data.find_one({"uid": uid})
+    doc = await client.coll.import_data.find_one({"uid": au.u.id})
     if doc is not None and doc["running"]:
         return const.Code.IMPORT_PROCESS_NOT_FINISHED
 
@@ -79,7 +82,8 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
         await async_tasks.update_text_task(
             files=file_list,
             max_file_size=max_file_size,
-            uid=uid,
+            uid=au.u.id,
+            request_id=au.request_id,
         )
     else:
         global QUEUE_INITED
@@ -90,7 +94,8 @@ async def upload_text(uid: str, files: List[UploadFile]) -> const.Code:
             "task": "md",
             "files": file_list,
             "max_file_size": max_file_size,
-            "uid": uid,
+            "uid": au.u.id,
+            "request_id": au.request_id,
         })
     return const.Code.OK
 
@@ -118,39 +123,31 @@ async def get_upload_process(uid: str) -> Optional[dict]:
     return doc
 
 
-async def vditor_upload(uid: str, files: List[UploadFile]) -> dict:
+async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:
     res = {
         "errFiles": [],
         "succMap": {},
         "code": const.Code.OK,
     }
-    u, code = await core.user.get(uid=uid)
-    if code != const.Code.OK:
-        res["errFiles"] = [file.filename for file in files]
-        res["code"] = code
-        return res
-    if await core.user.user_space_not_enough(u=u):
+    if await core.user.user_space_not_enough(au=au):
         res["errFiles"] = [file.filename for file in files]
         res["code"] = const.Code.USER_SPACE_NOT_ENOUGH
         return res
 
     return await sync_tasks.save_editor_upload_files(
-        uid=uid,
+        uid=au.u.id,
         files=files,
     )
 
 
-async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Code]:
+async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, const.Code]:
     if count > 2:
         logger.debug(f"too many 30X code, failed to get {url}")
         return "", const.Code.FILE_OPEN_ERROR
     if ssrf_check(url):
         logger.debug(f"ssrf check failed: {url}")
         return "", const.Code.FILE_OPEN_ERROR
-    u, code = await core.user.get(uid=uid)
-    if code != const.Code.OK:
-        return "", code
-    if await core.user.user_space_not_enough(u=u):
+    if await core.user.user_space_not_enough(au=au):
         return "", const.Code.USER_SPACE_NOT_ENOUGH
     async with httpx.AsyncClient() as ac:
         try:
@@ -170,7 +167,7 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
             logger.debug(f"failed to get {url}: {e}")
             return "", const.Code.FILE_OPEN_ERROR
         if response.status_code in [301, 302]:
-            return await fetch_image_vditor(uid=uid, url=response.headers["Location"], count=count + 1)
+            return await fetch_image_vditor(au=au, url=response.headers["Location"], count=count + 1)
         elif response.status_code != 200:
             return "", const.Code.FILE_OPEN_ERROR
 
@@ -187,7 +184,7 @@ async def fetch_image_vditor(uid: str, url: str, count=0) -> Tuple[str, const.Co
         return "", const.Code.INVALID_FILE_TYPE
 
     res = await sync_tasks.save_editor_upload_files(
-        uid=uid,
+        uid=au.u.id,
         files=[file],
     )
     if len(res["errFiles"]) > 0:

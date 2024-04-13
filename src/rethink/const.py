@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, auto, unique
 from pathlib import Path
 from textwrap import dedent
+from typing import Dict
 
 DOMAIN = "rethink.run"
 RETHINK_DIR = Path(__file__).parent
@@ -39,9 +40,9 @@ class Code(Enum):
     NODE_NOT_EXIST = 6
     OPERATION_FAILED = 7
     EMAIL_OCCUPIED = 8
-    EMPTY_CONTENT = 9
-    INVALID_TITLE = 10
-    INVALID_LANGUAGE = 11
+    PLUGIN_NOT_FOUND = 9
+    COS_ERROR = 10
+    OLD_PASSWORD_ERROR = 11
     ONE_USER_MODE = 12
     INVALID_PASSWORD = 13
     CAPTCHA_ERROR = 14
@@ -52,20 +53,15 @@ class Code(Enum):
     TOO_LARGE_FILE = 19
     INVALID_FILE_TYPE = 20
     FILE_OPEN_ERROR = 21
-    FILENAME_EXIST = 22
+    INVALID_SETTING = 22
     IMPORT_PROCESS_NOT_FINISHED = 23
     UPLOAD_TASK_TIMEOUT = 24
     USER_SPACE_NOT_ENOUGH = 25
-    INVALID_NODE_DISPLAY_SORT_KEY = 26
-    INVALID_EMAIL = 27
-    REQUEST_INPUT_ERROR = 28
-    INVALID_SETTING = 29
-    OLD_PASSWORD_ERROR = 30
-    PLUGIN_NOT_FOUND = 31
-    COS_ERROR = 32
+    INVALID_EMAIL = 26
+    URL_TOO_LONG = 27
 
 
-INT_CODE_MAP = {
+INT_CODE_MAP: Dict[int, Code] = {
     c.value: c for c in Code
 }
 
@@ -76,7 +72,7 @@ class CodeMessage:
     en: str
 
 
-CODE_MESSAGES = {
+CODE_MESSAGES: Dict[Code, CodeMessage] = {
     Code.OK: CodeMessage(zh="成功", en="OK"),
     Code.ACCOUNT_OR_PASSWORD_ERROR: CodeMessage(zh="账号不存在或者密码错误", en="No such user or password error"),
     Code.INVALID_AUTH: CodeMessage(zh="无效的认证信息", en="Invalid authentication information"),
@@ -86,9 +82,9 @@ CODE_MESSAGES = {
     Code.NODE_NOT_EXIST: CodeMessage(zh="节点不存在", en="Node does not exist"),
     Code.OPERATION_FAILED: CodeMessage(zh="操作失败", en="Operation failed"),
     Code.EMAIL_OCCUPIED: CodeMessage(zh="邮箱已被占用", en="Email is occupied"),
-    Code.EMPTY_CONTENT: CodeMessage(zh="内容不能为空", en="Content cannot be empty"),
-    Code.INVALID_TITLE: CodeMessage(zh="标题格式错误", en="Title format error"),
-    Code.INVALID_LANGUAGE: CodeMessage(zh="无效的语言", en="Invalid language"),
+    Code.PLUGIN_NOT_FOUND: CodeMessage(zh="插件未找到", en="Plugin not found"),
+    Code.COS_ERROR: CodeMessage(zh="COS 错误", en="COS error"),
+    Code.OLD_PASSWORD_ERROR: CodeMessage(zh="旧密码错误", en="Old password error"),
     Code.ONE_USER_MODE: CodeMessage(zh="单用户模式，不支持注册", en="Single user mode, registration is not supported"),
     Code.INVALID_PASSWORD: CodeMessage(zh="密码格式错误", en="Password format error"),
     Code.CAPTCHA_ERROR: CodeMessage(zh="验证码输入错误", en="Captcha not match"),
@@ -99,19 +95,45 @@ CODE_MESSAGES = {
     Code.TOO_LARGE_FILE: CodeMessage(zh="文件过大", en="Too large file"),
     Code.INVALID_FILE_TYPE: CodeMessage(zh="无效的文件类型", en="Invalid file type"),
     Code.FILE_OPEN_ERROR: CodeMessage(zh="文件打开失败", en="File open error"),
-    Code.FILENAME_EXIST: CodeMessage(zh="文件名已存在", en="Filename already exists"),
+    Code.INVALID_SETTING: CodeMessage(zh="无效的设置", en="Invalid setting"),
     Code.IMPORT_PROCESS_NOT_FINISHED: CodeMessage(
         zh="正在完成上一批数据导入，请稍后再试",
         en="Last import process not finished, please try again later"),
     Code.UPLOAD_TASK_TIMEOUT: CodeMessage(zh="文件上传任务超时", en="Upload task timeout"),
     Code.USER_SPACE_NOT_ENOUGH: CodeMessage(zh="用户空间不足", en="User space not enough"),
-    Code.INVALID_NODE_DISPLAY_SORT_KEY: CodeMessage(zh="无效的排序方式", en="Invalid sort key"),
     Code.INVALID_EMAIL: CodeMessage(zh="邮箱格式错误", en="Email format error"),
-    Code.REQUEST_INPUT_ERROR: CodeMessage(zh="请求输入错误", en="Request input error"),
-    Code.INVALID_SETTING: CodeMessage(zh="无效的设置", en="Invalid setting"),
-    Code.OLD_PASSWORD_ERROR: CodeMessage(zh="旧密码错误", en="Old password error"),
-    Code.PLUGIN_NOT_FOUND: CodeMessage(zh="插件未找到", en="Plugin not found"),
-    Code.COS_ERROR: CodeMessage(zh="COS 错误", en="COS error"),
+    Code.URL_TOO_LONG: CodeMessage(zh="URL字符太长", en="URL too long"),
+}
+
+CODE2STATUS_CODE: Dict[Code, int] = {
+    Code.OK: 200,
+    Code.ACCOUNT_OR_PASSWORD_ERROR: 401,
+    Code.INVALID_AUTH: 401,
+    Code.EXPIRED_AUTH: 401,
+    Code.USER_EXIST: 422,
+    Code.NODE_EXIST: 422,
+    Code.NODE_NOT_EXIST: 404,
+    Code.OPERATION_FAILED: 500,
+    Code.EMAIL_OCCUPIED: 422,
+    Code.PLUGIN_NOT_FOUND: 404,
+    Code.COS_ERROR: 500,
+    Code.OLD_PASSWORD_ERROR: 400,
+    Code.ONE_USER_MODE: 403,
+    Code.INVALID_PASSWORD: 400,
+    Code.CAPTCHA_ERROR: 400,
+    Code.CAPTCHA_EXPIRED: 400,
+    Code.NOTE_EXCEED_MAX_LENGTH: 400,
+    Code.INVALID_NODE_DISPLAY_METHOD: 400,
+    Code.TOO_MANY_FILES: 400,
+    Code.TOO_LARGE_FILE: 400,
+    Code.INVALID_FILE_TYPE: 400,
+    Code.FILE_OPEN_ERROR: 400,
+    Code.INVALID_SETTING: 400,
+    Code.IMPORT_PROCESS_NOT_FINISHED: 403,
+    Code.UPLOAD_TASK_TIMEOUT: 408,
+    Code.USER_SPACE_NOT_ENOUGH: 403,
+    Code.INVALID_EMAIL: 400,
+    Code.URL_TOO_LONG: 406,
 }
 
 DEFAULT_USER = {

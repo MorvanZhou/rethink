@@ -20,12 +20,12 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def upload_obsidian_files(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.files.FileUploadResponse:
     return await upload_files.upload_obsidian_files(
-        h=h,
+        au=au,
         files=files,
     )
 
@@ -37,48 +37,48 @@ async def upload_obsidian_files(
 )
 @utils.measure_time_spend
 async def upload_text_files(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.files.FileUploadResponse:
     return await upload_files.upload_text_files(
-        h=h,
+        au=au,
         files=files,
     )
 
 
 @router.post(
     path="/vditor",
-    status_code=201,
+    status_code=200,
     response_model=schemas.files.VditorFilesResponse,
 )
 @utils.measure_time_spend
 async def vditor_upload(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: Request,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.files.VditorFilesResponse:
     form = await req.form()
     file = form.get("file[]")
     return await upload_files.upload_file_vditor(
-        h=h,
+        au=au,
         file=file,
     )
 
 
 @router.post(
     path="/vditor/images",
-    status_code=201,
+    status_code=200,
     response_model=schemas.files.VditorImagesResponse,
 )
 @utils.measure_time_spend
 async def vditor_fetch_image(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.files.ImageVditorFetchRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.files.VditorImagesResponse:
     return await upload_files.fetch_image_vditor(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -90,9 +90,9 @@ async def vditor_fetch_image(
 )
 @utils.measure_time_spend
 async def get_upload_process(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.files.FileUploadProcessResponse:
     return await upload_files.get_upload_process(
-        h=h,
+        au=au,
     )

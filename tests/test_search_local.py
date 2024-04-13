@@ -1,8 +1,12 @@
+import datetime
 import time
 import unittest
 
+from bson import ObjectId
+
 from rethink import const
 from rethink.models.search_engine.engine_local import LocalSearcher, SearchDoc
+from rethink.models.tps import AuthedUser
 from . import utils
 
 
@@ -20,13 +24,47 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         await self.searcher.drop()
         await self.searcher.init()
         self.assertTrue(self.searcher.index_path.exists())
+        self.au = AuthedUser(
+            u=AuthedUser.User(
+                _id=ObjectId(),
+                id="uid",
+                source=0,
+                account="rethink",
+                nickname="rethink",
+                email="rethink@rethink.run",
+                avatar="",
+                hashed="",
+                disabled=False,
+                modified_at=datetime.datetime.now(),
+                used_space=0,
+                type=0,
+
+                last_state=AuthedUser.User.LastState(
+                    node_display_method=0,
+                    node_display_sort_key="",
+                    recent_search=[],
+                    recent_cursor_search_selected_nids=[],
+                ),
+                settings=AuthedUser.User.Settings(
+                    language="en",
+                    theme="light",
+                    editor_mode="markdown",
+                    editor_font_size=14,
+                    editor_code_theme="github",
+                    editor_sep_right_width=0,
+                    editor_side_current_tool_id="",
+                ),
+            ),
+            language="en",
+            request_id="request_id",
+        )
 
     async def asyncTearDown(self) -> None:
         await self.searcher.drop()
 
     async def test_add(self):
         for i in range(20):
-            code = await self.searcher.add(uid="uid", doc=SearchDoc(
+            code = await self.searcher.add(au=self.au, doc=SearchDoc(
                 nid=f"nid{i}",
                 title=f"title {i}",
                 body=f"this is {i} doc, 这是第 {i} 个文档",
@@ -35,7 +73,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
             time.sleep(0.0001)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="title doc",
             sort_key="createdAt",
             reverse=True,
@@ -51,7 +89,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("<em class=\"match term0\">title</em> 19", docs[0].titleHighlight)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             page=200,
             limit=10,
@@ -60,7 +98,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="",
             page=0,
             limit=50,
@@ -72,7 +110,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, count)
 
     async def test_batch_add_update_delete(self):
-        code = await self.searcher.add_batch(uid="uid", docs=[
+        code = await self.searcher.add_batch(au=self.au, docs=[
             SearchDoc(
                 nid=f"nid{i}",
                 title=f"title{i}",
@@ -82,7 +120,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -92,7 +130,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(10, len(docs))
         self.assertEqual(20, total)
 
-        code = await self.searcher.update_batch(uid="uid", docs=[
+        code = await self.searcher.update_batch(au=self.au, docs=[
             SearchDoc(
                 nid=f"nid{i}",
                 title=f"title_update{i}",
@@ -103,7 +141,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -114,12 +152,12 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20, total)
         self.assertEqual("nid19", docs[0].nid)
 
-        code = await self.searcher.disable(uid="uid", nid="nid18")
+        code = await self.searcher.disable(au=self.au, nid="nid18")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -131,18 +169,18 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid17", docs[1].nid)
         self.assertEqual(20, await self.searcher.count_all())
 
-        code = await self.searcher.enable(uid="uid", nid="nid18")
+        code = await self.searcher.enable(au=self.au, nid="nid18")
         self.assertEqual(const.Code.OK, code)
 
-        code = await self.searcher.batch_to_trash(uid="uid", nids=[f"nid{i}" for i in range(10)])
+        code = await self.searcher.batch_to_trash(au=self.au, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
-        code = await self.searcher.delete_batch(uid="uid", nids=[f"nid{i}" for i in range(10)])
+        code = await self.searcher.delete_batch(au=self.au, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(10, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -156,7 +194,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid17", docs[2].nid)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="createdAt",
             reverse=True,
@@ -169,7 +207,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid18", docs[0].nid)
 
         docs, total = await self.searcher.search(
-            uid="uid",
+            au=self.au,
             query="doc",
             sort_key="title",
             reverse=False,

@@ -32,7 +32,7 @@ async def _2node_data(
 
 
 async def user_nodes(
-        uid: str,
+        au: tps.AuthedUser,
         query: str,
         sort_key: Literal[
             "createdAt", "modifiedAt", "title", "similarity"
@@ -44,7 +44,7 @@ async def user_nodes(
 ) -> Tuple[List[NodesSearchResponse.Data.Node], int]:
     # search nodes
     hits, total = await client.search.search(
-        uid=uid,
+        au=au,
         query=query,
         sort_key=sort_key,
         reverse=reverse,
@@ -55,12 +55,12 @@ async def user_nodes(
     results = await _2node_data(hits)
 
     if query != "":
-        await put_recent_search(uid, query)
+        await put_recent_search(au=au, query=query)
     return results, total
 
 
 async def recommend(
-        uid: str,
+        au: tps.AuthedUser,
         content: str,
         max_return: int = 5,
         exclude_nids: Sequence[str] = None,
@@ -69,7 +69,7 @@ async def recommend(
         return []
     # search nodes
     hits = await client.search.recommend(
-        uid=uid,
+        au=au,
         content=content,
         max_return=max_return,
         exclude_nids=exclude_nids,
@@ -78,7 +78,7 @@ async def recommend(
 
 
 async def at(
-        uid: str,
+        au: tps.AuthedUser,
         nid: str,
         query: str,
         page: int,
@@ -88,10 +88,7 @@ async def at(
 
     # if query == "", return recent nodes
     if query == "":
-        u = await client.coll.users.find_one({"id": uid})
-        if u is None:
-            return [], 0
-        rn = u["lastState"]["recentCursorSearchSelectedNIds"]
+        rn = au.u.last_state.recent_cursor_search_selected_nids
         try:
             rn.remove(nid)
         except ValueError:
@@ -114,7 +111,7 @@ async def at(
         ], len(rn)
 
     return await user_nodes(
-        uid=uid,
+        au=au,
         query=query,
         sort_key="similarity",
         reverse=True,

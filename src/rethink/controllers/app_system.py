@@ -1,22 +1,18 @@
 from rethink import const, utils
 from rethink.controllers import schemas
-from rethink.controllers.utils import Headers
+from rethink.controllers.utils import maybe_raise_json_exception
+from rethink.models.tps import AuthedUser
 
 
 async def get_latest_version(
-        h: Headers,
+        au: AuthedUser,
 ) -> schemas.app_system.LatestVersionResponse:
-    if h.code != const.Code.OK:
-        return schemas.app_system.LatestVersionResponse(
-            code=h.code.value,
-            requestId=h.request_id,
-            version=()
-        )
-
     version, code = await utils.get_latest_version()
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.app_system.LatestVersionResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         version=version
     )

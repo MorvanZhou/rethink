@@ -1,6 +1,7 @@
 from typing import Callable
 
 from rethink.const import Code
+from rethink.models.tps import AuthedUser
 from .base import event_plugin_map
 
 
@@ -19,13 +20,13 @@ def on_node_added(func: Callable):
 
 def on_node_updated(func: Callable):
     async def wrapper(
-            uid: str,
+            au: AuthedUser,
             nid: str,
             md: str,
             *args, **kwargs,
     ):
         data, old_data, code = await func(
-            uid=uid,
+            au=au,
             nid=nid,
             md=md,
             *args, **kwargs
@@ -42,7 +43,7 @@ def on_node_updated(func: Callable):
 
 def before_node_updated(func: Callable):
     async def wrapper(
-            uid: str,
+            au: AuthedUser,
             nid: str,
             md: str,
             *args, **kwargs,
@@ -51,12 +52,12 @@ def before_node_updated(func: Callable):
         for inst in event_plugin_map["before_node_updated"]:
             # execute the class method
             inst.before_node_updated(
-                uid=uid,
+                uid=au.u.id,
                 nid=nid,
                 data=data,
             )
         return await func(
-            uid=uid,
+            au=au,
             nid=nid,
             md=data["md"],
             *args, **kwargs

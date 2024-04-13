@@ -2,6 +2,7 @@ import unittest
 
 from rethink import const, core
 from rethink.models.client import client
+from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from . import utils
 
 
@@ -22,12 +23,16 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_restore_search(self):
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
-        self.uid = u["id"]
+        self.au = AuthedUser(
+            u=convert_user_dict_to_authed_user(u),
+            request_id="test",
+            language=const.Language.EN.value,
+        )
         base_count = 2
         nids = []
         for i in range(20):
             n, code = await core.node.post(
-                uid=self.uid,
+                au=self.au,
                 md=f"title{i}\ntext{i}",
                 type_=const.NodeType.MARKDOWN.value,
             )
@@ -35,12 +40,12 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(const.Code.OK, code)
         self.assertEqual(20 + base_count, await client.search.count_all())
 
-        code = await core.node.batch_to_trash(uid=self.uid, nids=nids[:10])
+        code = await core.node.batch_to_trash(au=self.au, nids=nids[:10])
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(20 + base_count, await client.search.count_all())
 
         code = await client.search.delete_batch(
-            uid=self.uid,
+            au=self.au,
             nids=nids[:10],
         )
         self.assertEqual(const.Code.OK, code)

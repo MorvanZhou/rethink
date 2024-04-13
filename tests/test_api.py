@@ -17,6 +17,7 @@ from rethink import const, config
 from rethink.application import app
 from rethink.core import account
 from rethink.models.client import client
+from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -58,11 +59,10 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers={"RequestId": "xxx"}
         )
-        self.assertEqual(201, resp.status_code)
+        self.assertEqual(403, resp.status_code)
         rj = resp.json()
-        self.assertEqual(const.Code.ONE_USER_MODE.value, rj["code"])
-        self.assertEqual(len(rj["token"]), 0)
-        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(const.Code.ONE_USER_MODE.value, rj["detail"]["code"])
+        self.assertEqual("xxx", rj["detail"]["requestId"])
 
     @patch(
         "rethink.core.account.email.EmailServer._send"
@@ -121,6 +121,22 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
 
+    def error_check(self, resp: Response, status_code: int, code: const.Code, rid="xxx", language="en"):
+        self.assertEqual(status_code, resp.status_code)
+        rj = resp.json()
+        self.assertIn("detail", rj, msg=rj)
+        detail = rj["detail"]
+        self.assertEqual(code.value, detail["code"], msg=detail)
+        self.assertEqual(rid, detail["requestId"], msg=detail)
+        self.assertEqual(const.get_msg_by_code(code, language=language), detail["msg"], msg=detail)
+
+    def check_ok_response(self, resp: Response, status_code: int = 200, rid="xxx") -> dict:
+        self.assertEqual(status_code, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(0, rj["code"], msg=rj)
+        self.assertEqual(rid, rj["requestId"])
+        return rj
+
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
@@ -129,6 +145,16 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
 
         email = "a@b.c"
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": "xxxx",
+                "RequestId": "xxx"
+            })
+        self.assertEqual(401, resp.status_code)
+        self.error_check(resp, 401, const.Code.INVALID_AUTH)
+
+        lang = "zh"
         resp = self.client.post(
             "/api/account",
             json={
@@ -136,15 +162,12 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "password": "abc111",
                 "captchaToken": token,
                 "captchaCode": code,
-                "language": "zh",
+                "language": lang,
             },
             headers={"RequestId": "xxx"}
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
+        rj = self.check_ok_response(resp, 201)
         u_token = rj["token"]
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
         self.assertNotEqual("", u_token)
 
         resp = self.client.get(
@@ -153,10 +176,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "Authorization": rj["token"],
                 "RequestId": "xxx"
             })
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual("a**@b.c", rj["user"]["email"])
         self.assertEqual("zh", rj["user"]["settings"]["language"])
 
@@ -171,10 +191,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OLD_PASSWORD_ERROR.value, rj["code"], msg=rj)
-        self.assertEqual("xxx", rj["requestId"])
+        self.error_check(resp, 400, const.Code.OLD_PASSWORD_ERROR, language=lang)
 
         resp = self.client.put(
             "/api/users/password", json={
@@ -187,12 +204,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx",
             }
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"], msg=rj)
-        self.assertEqual("xxx", rj["requestId"])
+        _ = self.check_ok_response(resp, 200)
         u = await client.coll.users.find_one({"email": email})
-        self.assertTrue(await account.manager.is_right_password(u, "abc222"))
+        au = AuthedUser(
+            u=convert_user_dict_to_authed_user(u),
+            language=lang,
+            request_id="xxx"
+        )
+        self.assertTrue(await account.manager.is_right_password(au, "abc222"))
 
         uid = (await client.coll.users.find_one({"email": email}))["id"]
         await client.coll.users.delete_one({"id": uid})
@@ -204,11 +223,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/users",
             headers=self.default_headers,
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(0, rj["code"])
         self.assertEqual("rethink", rj["user"]["nickname"])
-        self.assertEqual("xxx", rj["requestId"])
         self.assertGreater(
             datetime.datetime.strptime(
                 rj["user"]["createdAt"], "%Y-%m-%dT%H:%M:%SZ"
@@ -227,22 +244,16 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        _ = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/users",
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual("new nickname", rj["user"]["nickname"])
         self.assertEqual("http://new.avatar/aa.png", rj["user"]["avatar"])
         self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
-        self.assertEqual("xxx", rj["requestId"])
 
         resp = self.client.patch(
             "/api/users",
@@ -257,10 +268,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual("zh", rj["user"]["settings"]["language"])
         self.assertEqual("ir", rj["user"]["settings"]["editorMode"])
         self.assertEqual("dark", rj["user"]["settings"]["theme"])
@@ -277,17 +285,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"], msg=rj)
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/recent/searched",
             headers=self.default_headers
         )
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(["aaa"], rj["queries"])
 
     def test_node(self):
@@ -302,8 +306,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
+        rj = self.check_ok_response(resp, 200)
         self.assertGreater(len(rj["data"]["nodes"]), 0)
 
         self.client.get(
@@ -317,7 +320,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.post(
             "/api/nodes",
@@ -327,20 +330,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 201)
         node = rj["node"]
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         n = rj["node"]
         self.assertEqual("node1", n["title"], msg=rj)
         self.assertEqual("node1\ntext", n["md"])
@@ -353,17 +350,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
+        rj = self.check_ok_response(resp, 200)
         n = rj["node"]
         self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
@@ -375,27 +368,21 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             f'/api/trash/{node["id"]}',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["data"]["nodes"]))
 
         resp = self.client.put(
             f'/api/trash/{node["id"]}/restore',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}/at',
@@ -406,10 +393,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers,
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(2, len(rj["data"]["nodes"]))
         self.assertEqual("Welcome to Rethink", rj["data"]["nodes"][0]["title"])
 
@@ -420,10 +404,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers,
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["nodes"]))
         self.assertEqual("Welcome to Rethink", rj["nodes"][0]["title"])
 
@@ -431,7 +412,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             f'/api/trash/{node["id"]}',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
+        rj = self.check_ok_response(resp, 200)
         resp = self.client.delete(
             f"/api/trash/{node['id']}",
             headers=self.default_headers
@@ -444,17 +425,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/trash/ssa",
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
+        self.error_check(resp, 404, const.Code.NODE_NOT_EXIST)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.NODE_NOT_EXIST.value, rj["code"])
+        self.error_check(resp, 404, const.Code.NODE_NOT_EXIST)
 
         resp = self.client.get(
             "/api/nodes/core",
@@ -464,10 +441,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers,
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(2, rj["data"]["total"])
         self.assertEqual(2, len(rj["data"]["nodes"]))
 
@@ -490,9 +464,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 },
                 headers=self.default_headers
             )
-            self.assertEqual(201, resp.status_code)
-            rj = resp.json()
-            self.assertEqual(0, rj["code"])
+            self.check_ok_response(resp, 201)
+
         resp = self.client.get(
             "/api/nodes",
             params={
@@ -504,9 +477,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(5, len(rj["data"]["nodes"]))
         self.assertEqual(10 + base_count, rj["data"]["total"])
 
@@ -517,18 +488,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(3, len(rj["data"]["nodes"]))
         self.assertEqual(3, rj["data"]["total"])
 
@@ -539,18 +506,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["data"]["nodes"]))
         self.assertEqual(1, rj["data"]["total"])
 
@@ -561,17 +524,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(0, len(rj["data"]["nodes"]))
         self.assertEqual(0, rj["data"]["total"])
 
@@ -601,10 +560,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             ],
             headers=self.default_headers,
         )
-        self.assertEqual(202, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"], msg=rj)
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 202)
 
         for _ in range(10):
             time.sleep(0.1)
@@ -612,8 +568,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "/api/files/upload-process",
                 headers=self.default_headers
             )
-            self.assertEqual(200, resp.status_code)
-            rj = resp.json()
+            rj = self.check_ok_response(resp, 200)
             self.assertEqual("obsidian", rj["type"], msg=rj)
             self.assertEqual("done", rj["msg"], msg=rj)
             if rj["process"] == 100:
@@ -631,9 +586,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(5, len(rj["data"]["nodes"]))
         self.assertEqual(5, rj["data"]["total"])
 
@@ -655,10 +608,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             ],
             headers=self.default_headers,
         )
-        self.assertEqual(202, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 202)
 
         for _ in range(10):
             time.sleep(0.1)
@@ -685,9 +635,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(4, len(rj["data"]["nodes"]))
 
         f1.close()
@@ -704,9 +652,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             files={"file[]": f1},
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual({
             'errFiles': [],
             'succMap': {
@@ -724,9 +670,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             files={"file[]": f1},
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual({
             'errFiles': [],
             'succMap': {
@@ -744,7 +688,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             files={"file[]": f1},
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
+        self.assertEqual(200, resp.status_code)
         rj = resp.json()
         self.assertEqual(const.Code.INVALID_FILE_TYPE.value, rj["code"])
         self.assertEqual({'errFiles': ['test.qw'], 'succMap': {}}, rj["data"])
@@ -759,9 +703,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={"url": img},
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual(img, rj["data"]["url"])
 
         img = "fffew"
@@ -770,9 +712,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={"url": img},
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.FILE_OPEN_ERROR.value, rj["code"])
+        self.error_check(resp, 400, const.Code.FILE_OPEN_ERROR)
 
     @patch(
         "rethink.utils.httpx.AsyncClient.get",
@@ -787,10 +727,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 201)
         node = rj["node"]
         self.assertEqual("node1", node["title"])
         self.assertEqual("node1\ntext", node["md"])
@@ -804,10 +741,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 201)
         node = rj["node"]
         self.assertIn("https://baidu.com", node["md"])
         self.assertIn("百度", node["md"])
@@ -817,10 +751,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/system/latest-version",
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(0, rj["code"])
-        self.assertEqual("xxx", rj["requestId"])
+        rj = self.check_ok_response(resp, 200)
         for n in rj["version"]:
             self.assertTrue(isinstance(n, int))
         self.assertEqual("OK", rj["message"])
@@ -851,9 +782,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(201, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OK.value, rj["code"])
+        rj = self.check_ok_response(resp, 201)
         n1 = rj["node"]
 
         time.sleep(0.001)
@@ -865,9 +794,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OK.value, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         time.sleep(0.001)
 
@@ -878,17 +805,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OK.value, rj["code"])
+        rj = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f"/api/nodes/{n1['id']}/history",
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OK.value, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         hist = rj["versions"]
         self.assertEqual(2, len(hist))
 
@@ -896,9 +819,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             f"/api/nodes/{n1['id']}/history/{hist[1]}/md",
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(const.Code.OK.value, rj["code"])
+        rj = self.check_ok_response(resp, 200)
         self.assertEqual("title1\ntext", rj["md"])
 
         config.get_settings().MD_BACKUP_INTERVAL = bi

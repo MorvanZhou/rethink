@@ -6,6 +6,7 @@ import bcrypt
 from rethink import const, regex
 from rethink.core import account
 from rethink.models.client import client
+from rethink.models.tps import convert_user_dict_to_authed_user
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -43,14 +44,16 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(match)
 
     async def test_one_user(self):
-        uid, code = await account.manager.signup("a@q.com", "rethink", const.Language.EN.value)
+        u, code = await account.manager.signup("a@q.com", "rethink", const.Language.EN.value)
         self.assertEqual(const.Code.ONE_USER_MODE, code)
-        self.assertEqual("", uid)
+        self.assertIsNone(u)
 
     async def test_verify_user(self):
         u, err = await account.manager.get_user_by_email("rethink@rethink.run")
         self.assertEqual(const.Code.OK, err)
-        ok = await account.manager.is_right_password(u, "rethink")
+        self.assertIsNotNone(u)
+        au = convert_user_dict_to_authed_user(u)
+        ok = await account.manager.is_right_password(au, "rethink")
         self.assertTrue(ok)
 
     def test_valid_password(self):

@@ -2,12 +2,12 @@ from typing import List
 
 from rethink import const, core
 from rethink.controllers import schemas
-from rethink.controllers.utils import Headers, datetime2str
-from rethink.models import tps
+from rethink.controllers.utils import datetime2str, maybe_raise_json_exception
+from rethink.models.tps import AuthedUser, Node
 from rethink.utils import contain_only_http_link, get_title_description_from_link
 
 
-def __get_node_data(n: tps.Node) -> schemas.node.NodeData:
+def __get_node_data(n: Node) -> schemas.node.NodeData:
     from_nodes: List[schemas.node.NodeData.LinkedNode] = []
     to_nodes: List[schemas.node.NodeData.LinkedNode] = []
     for nodes, n_nodes in zip(
@@ -42,59 +42,38 @@ def __get_node_data(n: tps.Node) -> schemas.node.NodeData:
 
 
 async def post_node(
-        h: Headers,
+        au: AuthedUser,
         req: schemas.node.CreateRequest,
 ) -> schemas.node.CreateResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.CreateResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            node=None
-        )
-
     n, code = await core.node.post(
-        uid=h.uid,
+        au=au,
         md=req.md,
         type_=req.type,
         from_nid=req.fromNid,
     )
-    if code != const.Code.OK:
-        return schemas.node.CreateResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-            requestId=h.request_id,
-            node=None,
-        )
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.node.CreateResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         node=__get_node_data(n),
     )
 
 
 async def post_quick_node(
-        h: Headers,
+        au: AuthedUser,
         req: schemas.node.CreateRequest,
 ) -> schemas.node.CreateResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.CreateResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            node=None
-        )
-
     if contain_only_http_link(req.md) != "":
         title, description = await get_title_description_from_link(
             url=req.md,
-            language=h.language,
+            language=au.language,
         )
-        if h.language == const.Language.ZH.value:
+        if au.language == const.Language.ZH.value:
             desc_prefix = "**描述：**\n\n"
             link_prefix = "*链接：*"
-        elif h.language == const.Language.EN.value:
+        elif au.language == const.Language.EN.value:
             desc_prefix = "**Description:**\n\n"
             link_prefix = "*Link:* "
         else:
@@ -103,138 +82,115 @@ async def post_quick_node(
         req.md = f"{title}\n\n{desc_prefix}{description}\n\n{link_prefix}[{req.md}]({req.md})"
 
     return await post_node(
-        h=h,
+        au=au,
         req=req,
     )
 
 
 async def get_node(
-        h: Headers,
+        au: AuthedUser,
         nid: str,
 ) -> schemas.node.GetResponse:
-    n, code = await core.node.get(uid=h.uid, nid=nid)
-    if code != const.Code.OK:
-        return schemas.node.GetResponse(
-            requestId=h.request_id,
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-            node=None,
-        )
+    n, code = await core.node.get(au=au, nid=nid)
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.node.GetResponse(
-        requestId=h.request_id,
+        requestId=au.request_id,
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
+        message=const.get_msg_by_code(code, au.language),
         node=__get_node_data(n),
     )
 
 
 async def update_md(
-        h: Headers,
+        au: AuthedUser,
         req: schemas.node.PatchMdRequest,
         nid: str,
 ) -> schemas.node.GetResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.GetResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            node=None
-        )
     n, old_n, code = await core.node.update_md(
-        uid=h.uid,
+        au=au,
         nid=nid,
         md=req.md,
     )
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.node.GetResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         node=__get_node_data(n),
     )
 
 
 async def get_core_nodes(
-        h: Headers,
+        au: AuthedUser,
         p: int,
         limit: int,
 ) -> schemas.node.CoreNodesResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.CoreNodesResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            data=None,
-        )
     nodes, total = await core.node.core_nodes(
-        uid=h.uid,
+        au=au,
         page=p,
         limit=limit,
     )
     return schemas.node.CoreNodesResponse(
         code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, h.language),
-        requestId=h.request_id,
-        data=schemas.node.NodesSearchResponse.Data(
-            total=total,
-            nodes=[
-                schemas.node.NodesSearchResponse.Data.Node(
-                    id=n["id"],
-                    title=n["title"],
-                    snippet=n["snippet"],
-                    titleHighlight="",
-                    bodyHighlights=[],
-                    score=0,
-                    type=n["type"],
-                    createdAt=datetime2str(n["_id"].generation_time),
-                    modifiedAt=datetime2str(n["modifiedAt"]),
-                ) for n in nodes],
-        ),
+        message=const.get_msg_by_code(const.Code.OK, au.language),
+        requestId=au.request_id,
+        data=_get_node_search_response_data(nodes=nodes, total=total),
+    )
+
+
+def _get_node_search_response_data(nodes: List[Node], total: int) -> schemas.node.NodesSearchResponse.Data:
+    return schemas.node.NodesSearchResponse.Data(
+        nodes=[
+            schemas.node.NodesSearchResponse.Data.Node(
+                id=n["id"],
+                title=n["title"],
+                snippet=n["snippet"],
+                titleHighlight="",
+                bodyHighlights=[],
+                score=0,
+                type=n["type"],
+                createdAt=datetime2str(n["_id"].generation_time),
+                modifiedAt=datetime2str(n["modifiedAt"]),
+            ) for n in nodes],
+        total=total,
     )
 
 
 async def get_hist_editions(
-        h: Headers,
+        au: AuthedUser,
         nid: str,
 ) -> schemas.node.HistEditionsResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.HistEditionsResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            versions=[],
-        )
     versions, code = await core.node.get_hist_editions(
-        uid=h.uid,
+        au=au,
         nid=nid,
     )
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.node.HistEditionsResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         versions=versions,
     )
 
 
 async def get_hist_edition_md(
-        h: Headers,
+        au: AuthedUser,
         nid: str,
         version: str,
 ) -> schemas.node.HistEditionMdResponse:
-    if h.code != const.Code.OK:
-        return schemas.node.HistEditionMdResponse(
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-            requestId=h.request_id,
-            md="",
-        )
     md, code = await core.node.get_hist_edition_md(
-        uid=h.uid,
+        au=au,
         nid=nid,
         version=version,
     )
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.node.HistEditionMdResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
         md=md,
     )

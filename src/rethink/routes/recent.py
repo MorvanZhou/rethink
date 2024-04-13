@@ -17,11 +17,11 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def add_recent_at_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.recent.AddToRecentSearchHistRequest,
 ) -> schemas.base.AcknowledgeResponse:
     return await recent.add_recent_at_node(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -33,8 +33,8 @@ async def add_recent_at_node(
 )
 @utils.measure_time_spend
 async def get_recent_searched(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
 ) -> schemas.recent.GetRecentSearchResponse:
     return await recent.get_recent_searched(
-        h=h,
+        au=au,
     )

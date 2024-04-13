@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import Request
 
 from rethink import config, const, core, utils
+from rethink.controllers.utils import json_exception
 from rethink.depend.sso.base import SSOLoginError
 from rethink.depend.sso.facebook import FacebookSSO
 from rethink.depend.sso.github import GithubSSO
@@ -38,20 +39,14 @@ async def callback_github(req: Request) -> TokenResponse:
     try:
         user = await GITHUB_SSO.verify_and_process(req)
     except SSOLoginError:
-        code = const.Code.INVALID_AUTH
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=const.Code.INVALID_AUTH,
         )
     if user is None:
-        code = const.Code.INVALID_AUTH
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=const.Code.INVALID_AUTH,
         )
     u, code = await core.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
@@ -67,7 +62,7 @@ async def callback_github(req: Request) -> TokenResponse:
 
     # no user found, create one
     language = const.Language.EN.value
-    uid, code = await core.user.add(
+    u, code = await core.user.add(
         account=user.id,
         source=const.UserSource.GITHUB.value,
         email=user.email if user.email else "",
@@ -77,18 +72,21 @@ async def callback_github(req: Request) -> TokenResponse:
         language=language,
     )
     if code != const.Code.OK:
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=code,
         )
+
     token = utils.jwt_encode(
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": uid, "language": language},
+        data={"uid": u["id"], "language": language},
     )
-    code = await core.node.new_user_add_default_nodes(language=language, uid=uid)
-
+    code = await core.node.new_user_add_default_nodes(language=language, uid=u["id"])
+    if code != const.Code.OK:
+        raise json_exception(
+            request_id="",
+            code=code,
+        )
     return TokenResponse(
         requestId="",
         code=code.value,
@@ -120,21 +118,16 @@ async def callback_facebook(req: Request) -> TokenResponse:
     try:
         user = await FACEBOOK_SSO.verify_and_process(req)
     except SSOLoginError:
-        code = const.Code.INVALID_AUTH
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=const.Code.INVALID_AUTH,
         )
     if user is None:
-        code = const.Code.INVALID_AUTH
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=const.Code.INVALID_AUTH,
         )
+
     u, code = await core.user.get_account(account=user.id, source=const.UserSource.GITHUB.value)
     if code == const.Code.OK:
         return TokenResponse(
@@ -149,7 +142,7 @@ async def callback_facebook(req: Request) -> TokenResponse:
 
     # no user found, create one
     language = const.Language.EN.value
-    uid, code = await core.user.add(
+    u, code = await core.user.add(
         account=user.id,
         source=const.UserSource.FACEBOOK.value,
         email=user.email,
@@ -159,17 +152,20 @@ async def callback_facebook(req: Request) -> TokenResponse:
         language=language,
     )
     if code != const.Code.OK:
-        return TokenResponse(
-            requestId="",
-            code=code.value,
-            message=const.get_msg_by_code(code, const.Language.EN.value),
-            token="",
+        raise json_exception(
+            request_id="",
+            code=code,
         )
     token = utils.jwt_encode(
         exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": uid, "language": language},
+        data={"uid": u["id"], "language": language},
     )
-    code = await core.node.new_user_add_default_nodes(language=language, uid=uid)
+    code = await core.node.new_user_add_default_nodes(language=language, uid=u["id"])
+    if code != const.Code.OK:
+        raise json_exception(
+            request_id="",
+            code=code,
+        )
     return TokenResponse(
         requestId="",
         code=code.value,

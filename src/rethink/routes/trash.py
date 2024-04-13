@@ -20,13 +20,13 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def get_from_trash(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         p: int = Query(default=0, ge=0, description="page number"),
         limit: int = Query(default=10, ge=0, le=200, description="page size"),
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.GetFromTrashResponse:
     return await trash_ops.get_from_trash(
-        h=h,
+        au=au,
         p=p,
         limit=limit,
     )
@@ -40,12 +40,12 @@ async def get_from_trash(
 )
 @utils.measure_time_spend
 async def batch_nodes_to_trash(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.move_batch_to_trash(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -57,12 +57,12 @@ async def batch_nodes_to_trash(
 )
 @utils.measure_time_spend
 async def restore_batch_node_in_trash(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.restore_batch_from_trash(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -74,12 +74,12 @@ async def restore_batch_node_in_trash(
 )
 @utils.measure_time_spend
 async def delete_batch_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.delete_batch_node(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -91,12 +91,12 @@ async def delete_batch_node(
 )
 @utils.measure_time_spend
 async def move_to_trash(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.move_to_trash(
-        h=h,
+        au=au,
         nid=nid,
     )
 
@@ -108,12 +108,12 @@ async def move_to_trash(
 )
 @utils.measure_time_spend
 async def restore_node_in_trash(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.restore_from_trash(
-        h=h,
+        au=au,
         nid=nid,
     )
 
@@ -124,11 +124,11 @@ async def restore_node_in_trash(
 )
 @utils.measure_time_spend
 async def delete_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await trash_ops.delete_node(
-        h=h,
+        au=au,
         nid=nid,
     )

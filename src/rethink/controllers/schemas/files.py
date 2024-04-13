@@ -42,4 +42,5 @@ class VditorImagesResponse(BaseModel):
 
     code: NonNegativeInt
     msg: str
+    requestId: str
     data: Data

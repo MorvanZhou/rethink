@@ -4,6 +4,7 @@ import pymongo.errors
 
 from rethink import const, core
 from rethink.logger import logger
+from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from .. import utils
 
 
@@ -11,6 +12,7 @@ async def update_text_task(  # noqa: C901
         files: List[dict],
         max_file_size: int,
         uid: str,
+        request_id: str,
 ):
     type_ = "md"
     await utils.import_set_modules()
@@ -35,6 +37,12 @@ async def update_text_task(  # noqa: C901
             )
             return
 
+    u, code = await core.user.get(uid=uid)
+    au = AuthedUser(
+        u=convert_user_dict_to_authed_user(u),
+        request_id=request_id,
+        language=u["settings"].get("language", const.Language.EN.value),
+    )
     for i, file in enumerate(files):
         try:
             md = file["content"].decode("utf-8")
@@ -50,7 +58,7 @@ async def update_text_task(  # noqa: C901
         md = title + "\n\n" + md
         try:
             n, code = await core.node.post(
-                uid=uid,
+                au=au,
                 md=md,
                 type_=const.NodeType.MARKDOWN.value,
             )

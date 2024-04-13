@@ -16,6 +16,7 @@ from rethink.logger import logger
 from rethink.models.search_engine.engine import (
     BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc, STOPWORDS,
 )
+from rethink.models.tps import AuthedUser
 
 jieba.setLogLevel(logging.ERROR)
 
@@ -27,7 +28,7 @@ class LocalSearcher(BaseEngine):
 
     async def _trash_disable_ops_batch(
             self,
-            uid: str,
+            au: AuthedUser,
             nids: List[str],
             disable: bool = None,
             in_trash: bool = None
@@ -35,7 +36,7 @@ class LocalSearcher(BaseEngine):
         writer = self.ix.writer()
         for nid in nids:
             with self.ix.searcher() as searcher:
-                resp = searcher.search(And([Term("uid", uid), Term("nid", nid)]))
+                resp = searcher.search(And([Term("uid", au.u.id), Term("nid", nid)]))
                 if len(resp) != 1:
                     logger.error(f"nid {nid} not found or more than one found")
                     return const.Code.NODE_NOT_EXIST
@@ -50,7 +51,7 @@ class LocalSearcher(BaseEngine):
                     "inTrash": in_trash if in_trash is not None else res["inTrash"],
                 }
 
-            writer.update_document(uid=uid, **new)
+            writer.update_document(uid=au.u.id, **new)
         writer.commit()
         return const.Code.OK
 
@@ -92,28 +93,28 @@ class LocalSearcher(BaseEngine):
         # if self.index_path.exists():
         #     rmtree(self.index_path)
 
-    async def add(self, uid: str, doc: SearchDoc) -> const.Code:
-        return await self.add_batch(uid=uid, docs=[doc])
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+        return await self.add_batch(au=au, docs=[doc])
 
-    async def update(self, uid: str, doc: SearchDoc) -> const.Code:
-        return await self.update_batch(uid=uid, docs=[doc])
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+        return await self.update_batch(au=au, docs=[doc])
 
-    async def to_trash(self, uid: str, nid: str) -> const.Code:
-        return await self.batch_to_trash(uid=uid, nids=[nid])
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
+        return await self.batch_to_trash(au=au, nids=[nid])
 
-    async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
-        return await self.restore_batch_from_trash(uid=uid, nids=[nid])
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
+        return await self.restore_batch_from_trash(au=au, nids=[nid])
 
-    async def disable(self, uid: str, nid: str) -> const.Code:
-        return await self._trash_disable_ops_batch(uid=uid, nids=[nid], disable=True)
+    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
+        return await self._trash_disable_ops_batch(au=au, nids=[nid], disable=True)
 
-    async def enable(self, uid: str, nid: str) -> const.Code:
-        return await self._trash_disable_ops_batch(uid=uid, nids=[nid], disable=False)
+    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
+        return await self._trash_disable_ops_batch(au=au, nids=[nid], disable=False)
 
-    async def delete(self, uid: str, nid: str) -> const.Code:
-        return await self.delete_batch(uid=uid, nids=[nid])
+    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
+        return await self.delete_batch(au=au, nids=[nid])
 
-    async def add_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         writer = self.ix.writer()
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
@@ -126,22 +127,22 @@ class LocalSearcher(BaseEngine):
             d["modifiedAt"] = d["createdAt"]
             d["disabled"] = False
             d["inTrash"] = False
-            writer.add_document(uid=uid, **d)
+            writer.add_document(uid=au.u.id, **d)
             now = now_
 
         writer.commit()
         return const.Code.OK
 
-    async def batch_to_trash(self, uid: str, nids: List[str]) -> const.Code:
-        return await self._trash_disable_ops_batch(uid=uid, nids=nids, in_trash=True)
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+        return await self._trash_disable_ops_batch(au=au, nids=nids, in_trash=True)
 
-    async def restore_batch_from_trash(self, uid: str, nids: List[str]) -> const.Code:
-        return await self._trash_disable_ops_batch(uid=uid, nids=nids, in_trash=False)
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+        return await self._trash_disable_ops_batch(au=au, nids=nids, in_trash=False)
 
-    async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
         writer = self.ix.writer()
         for nid in nids:
-            q = And([Term("uid", uid), Term("nid", nid), Term("inTrash", True)])
+            q = And([Term("uid", au.u.id), Term("nid", nid), Term("inTrash", True)])
             count = writer.delete_by_query(q=q)
             if count != 1:
                 logger.error(f"nid {nid} not found or more than one found")
@@ -149,11 +150,11 @@ class LocalSearcher(BaseEngine):
         writer.commit()
         return const.Code.OK
 
-    async def update_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         writer = self.ix.writer()
         for doc in docs:
             with self.ix.searcher() as searcher:
-                resp = searcher.search(And([Term("uid", uid), Term("nid", doc.nid)]))
+                resp = searcher.search(And([Term("uid", au.u.id), Term("nid", doc.nid)]))
                 if len(resp) != 1:
                     logger.error(f"nid {doc.nid} not found or more than one found")
                     return const.Code.NODE_NOT_EXIST
@@ -167,13 +168,13 @@ class LocalSearcher(BaseEngine):
                     "disabled": res["disabled"],
                     "inTrash": res["inTrash"],
                 }
-            writer.update_document(uid=uid, **new)
+            writer.update_document(uid=au.u.id, **new)
         writer.commit()
         return const.Code.OK
 
     async def _search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: Literal[
                 "createdAt", "modifiedAt", "title", "similarity"
@@ -187,7 +188,7 @@ class LocalSearcher(BaseEngine):
         if sort_key in ["", "similarity"]:
             sort_key = None
         with self.ix.searcher() as searcher:
-            cs = [Term("uid", uid), Term("disabled", False), Term("inTrash", False)]
+            cs = [Term("uid", au.u.id), Term("disabled", False), Term("inTrash", False)]
             if query != "":
                 schema = self.search_stop_schema if with_stop_analyzer else self.indexing_schema
                 q_body = QueryParser("body", schema, group=syntax.OrGroup).parse(query.lower())
@@ -225,7 +226,7 @@ class LocalSearcher(BaseEngine):
 
     async def search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: Literal[
                 "createdAt", "modifiedAt", "title", "similarity"
@@ -236,7 +237,7 @@ class LocalSearcher(BaseEngine):
             exclude_nids: Sequence[str] = None,
     ) -> Tuple[List[SearchResult], int]:
         return await self._search(
-            uid=uid,
+            au=au,
             query=query,
             sort_key=sort_key,
             reverse=reverse,
@@ -248,14 +249,14 @@ class LocalSearcher(BaseEngine):
 
     async def recommend(
             self,
-            uid: str,
+            au: AuthedUser,
             content: str,
             max_return: int = 10,
             exclude_nids: Sequence[str] = None,
     ) -> List[SearchResult]:
         threshold = 5.
         res, total = await self._search(
-            uid=uid,
+            au=au,
             query=content,
             sort_key="similarity",
             reverse=True,
@@ -274,10 +275,10 @@ class LocalSearcher(BaseEngine):
             resp = searcher.search(Every("nid"))
             return len(resp)
 
-    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
         writer = self.ix.writer()
         for doc in docs:
-            writer.add_document(uid=uid, **doc.__dict__)
+            writer.add_document(uid=au.u.id, **doc.__dict__)
         writer.commit()
         return const.Code.OK
 

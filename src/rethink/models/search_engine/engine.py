@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Tuple, Sequence, Literal
 
 from rethink import const
+from rethink.models.tps import AuthedUser
 from rethink.utils import strip_html_tags
 
 
@@ -62,57 +63,57 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def add(self, uid: str, doc: SearchDoc) -> const.Code:
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
         ...
 
     @abstractmethod
-    async def update(self, uid: str, doc: SearchDoc) -> const.Code:
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
         ...
 
     @abstractmethod
-    async def to_trash(self, uid: str, nid: str) -> const.Code:
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
         ...
 
     @abstractmethod
-    async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
         ...
 
     @abstractmethod
-    async def disable(self, uid: str, nid: str) -> const.Code:
+    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
         ...
 
     @abstractmethod
-    async def enable(self, uid: str, nid: str) -> const.Code:
+    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
         ...
 
     @abstractmethod
-    async def delete(self, uid: str, nid: str) -> const.Code:
+    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
         ...
 
     @abstractmethod
-    async def add_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         ...
 
     @abstractmethod
-    async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
         ...
 
     @abstractmethod
-    async def update_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         ...
 
     @abstractmethod
-    async def batch_to_trash(self, uid: str, nids: List[str]) -> const.Code:
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
         ...
 
     @abstractmethod
-    async def restore_batch_from_trash(self, uid: str, nids: List[str]) -> const.Code:
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
         ...
 
     @abstractmethod
     async def _search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: str = None,
             reverse: bool = False,
@@ -126,7 +127,7 @@ class BaseEngine(ABC):
     @abstractmethod
     async def search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: Literal[
                 "createdAt", "modifiedAt", "title", "similarity"
@@ -141,7 +142,7 @@ class BaseEngine(ABC):
     @abstractmethod
     async def recommend(
             self,
-            uid: str,
+            au: AuthedUser,
             content: str,
             max_return: int = 10,
             exclude_nids: Sequence[str] = None,
@@ -157,5 +158,5 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
         ...

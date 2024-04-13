@@ -1,29 +1,22 @@
-from typing import List
-
 from rethink import const
 from rethink.models.client import client
+from rethink.models.tps import AuthedUser
 
 
 async def added_at_node(
-        uid: str,
+        au: AuthedUser,
         nid: str,
         to_nid: str,
 ) -> const.Code:
     # add selected node to recentCursorSearchSelectedNIds
-    user_c = {"id": uid, "disabled": False}
-    node_c = {"uid": uid, "id": {"$in": [nid, to_nid]}}
-
-    # try finding user
-    u = await client.coll.users.find_one(user_c)
-    if u is None:
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
+    node_c = {"uid": au.u.id, "id": {"$in": [nid, to_nid]}}
 
     # try finding node
     ns = await client.coll.nodes.find(node_c).to_list(length=None)
     if len(ns) != 2:
         return const.Code.NODE_NOT_EXIST
 
-    rns = u["lastState"]["recentCursorSearchSelectedNIds"]
+    rns = au.u.last_state.recent_cursor_search_selected_nids
     if to_nid in rns:
         rns.remove(to_nid)
     rns.insert(0, to_nid)
@@ -32,7 +25,7 @@ async def added_at_node(
 
     # add to recentCursorSearchSelectedNIds
     res = await client.coll.users.update_one(
-        {"id": uid},
+        {"id": au.u.id},
         {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
     )
     if res.matched_count != 1:
@@ -41,18 +34,8 @@ async def added_at_node(
     return const.Code.OK
 
 
-async def get_recent_searched(uid: str) -> List[str]:
-    doc = await client.coll.users.find_one({"id": uid})
-    if doc is None:
-        return []
-    return doc["lastState"]["recentSearch"]
-
-
-async def put_recent_search(uid: str, query: str) -> const.Code:
-    doc = await client.coll.users.find_one({"id": uid})
-    if doc is None:
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    rns = doc["lastState"]["recentSearch"]
+async def put_recent_search(au: AuthedUser, query: str) -> const.Code:
+    rns = au.u.last_state.recent_search
     try:
         rns.remove(query)
     except ValueError:
@@ -61,7 +44,7 @@ async def put_recent_search(uid: str, query: str) -> const.Code:
     if len(rns) > 20:
         rns = rns[:20]
     _ = await client.coll.users.update_one(
-        {"id": uid},
+        {"id": au.u.id},
         {"$set": {"lastState.recentSearch": rns}}
     )
     return const.Code.OK

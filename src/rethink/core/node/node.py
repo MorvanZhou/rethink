@@ -17,7 +17,7 @@ from . import backup, node_utils
 
 @plugins.handler.on_node_added
 async def post(  # noqa: C901
-        uid: str,
+        au: tps.AuthedUser,
         md: str,
         type_: int = const.NodeType.MARKDOWN.value,
         from_nid: str = "",
@@ -26,12 +26,8 @@ async def post(  # noqa: C901
     if len(md) > const.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
 
-    u, code = await user.get(uid=uid)
-    if code != const.Code.OK:
-        return None, code
-
     new_size = len(md.encode("utf-8"))
-    if await user.user_space_not_enough(u=u):
+    if await user.user_space_not_enough(au=au):
         return None, const.Code.USER_SPACE_NOT_ENOUGH
 
     title, body, snippet = utils.preprocess_md(md)
@@ -54,7 +50,7 @@ async def post(  # noqa: C901
     data = utils.get_node_dict(
         _id=_id,
         nid=nid,
-        uid=uid,
+        uid=au.u.id,
         md=md,
         title=title,
         snippet=snippet,
@@ -72,27 +68,27 @@ async def post(  # noqa: C901
     if not res.acknowledged:
         return None, const.Code.OPERATION_FAILED
 
-    await user.update_used_space(uid=uid, delta=new_size)
+    await user.update_used_space(uid=au.u.id, delta=new_size)
 
     code = await backup.storage_md(node=data, keep_hist=False)
     if code != const.Code.OK:
         return data, code
 
     if type_ == const.NodeType.MARKDOWN.value:
-        code = await client.search.add(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        code = await client.search.add(au=au, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"add search index failed, code: {code}")
     return data, const.Code.OK
 
 
 async def get(
-        uid: str,
+        au: tps.AuthedUser,
         nid: str,
         with_disabled: bool = False,
         in_trash: bool = False,
 ) -> Tuple[Optional[tps.Node], const.Code]:
     docs, code = await get_batch(
-        uid=uid,
+        au=au,
         nids=[nid],
         with_disabled=with_disabled,
         in_trash=in_trash,
@@ -101,7 +97,7 @@ async def get(
 
 
 async def get_batch(
-        uid: str,
+        au: tps.AuthedUser,
         nids: List[str],
         with_disabled: bool = False,
         in_trash: bool = False,
@@ -110,7 +106,7 @@ async def get_batch(
         if regex.NID.match(nid) is None:
             logger.error(f"invalid nid: {nid}")
             return [], const.Code.NODE_NOT_EXIST
-    c: Dict[str, Any] = {"uid": uid, "inTrash": in_trash}
+    c: Dict[str, Any] = {"uid": au.u.id, "inTrash": in_trash}
     if len(nids) > 1:
         c["id"] = {"$in": nids}
     elif len(nids) == 1:
@@ -132,7 +128,7 @@ async def get_batch(
 @plugins.handler.on_node_updated
 @plugins.handler.before_node_updated
 async def update_md(  # noqa: C901
-        uid: str,
+        au: tps.AuthedUser,
         nid: str,
         md: str,
         refresh_on_same_md: bool = False,
@@ -140,7 +136,7 @@ async def update_md(  # noqa: C901
     """
 
     Args:
-        uid:
+        au:
         nid:
         md:
         refresh_on_same_md:
@@ -153,15 +149,12 @@ async def update_md(  # noqa: C901
     md = md.strip()
     if len(md) > const.MD_MAX_LENGTH:
         return None, None, const.Code.NOTE_EXCEED_MAX_LENGTH
-    u, code = await user.get(uid=uid)
-    if code != const.Code.OK:
-        return None, None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    if await user.user_space_not_enough(u=u):
+    if await user.user_space_not_enough(au=au):
         return None, None, const.Code.USER_SPACE_NOT_ENOUGH
 
     title, body, snippet = utils.preprocess_md(md)
 
-    n, code = await get(uid=uid, nid=nid)
+    n, code = await get(au=au, nid=nid)
     if code != const.Code.OK:
         return None, None, code
     old_n = copy.deepcopy(n)
@@ -178,7 +171,7 @@ async def update_md(  # noqa: C901
         from_nodes = await client.coll.nodes.find({"id": {"$in": n["fromNodeIds"]}}).to_list(length=None)
         for from_node in from_nodes:
             new_md = utils.change_link_title(md=from_node["md"], nid=nid, new_title=title)
-            n, old_n, code = await update_md(uid=uid, nid=from_node["id"], md=new_md)
+            n, old_n, code = await update_md(au=au, nid=from_node["id"], md=new_md)
             if code != const.Code.OK:
                 logger.error(f"update fromNode {from_node['id']} failed")
         new_data["title"] = title
@@ -217,10 +210,10 @@ async def update_md(  # noqa: C901
         with_disabled=False,
     )
 
-    await user.update_used_space(uid=uid, delta=len(md.encode("utf-8")) - old_md_size)
+    await user.update_used_space(uid=au.u.id, delta=len(md.encode("utf-8")) - old_md_size)
 
     if doc["type"] == const.NodeType.MARKDOWN.value:
-        code = await client.search.update(uid=uid, doc=SearchDoc(nid=nid, title=title, body=body))
+        code = await client.search.update(au=au, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.Code.OK:
             logger.error(f"update search index failed, code: {code}")
 
@@ -230,28 +223,29 @@ async def update_md(  # noqa: C901
     return doc, old_n, code
 
 
-async def to_trash(uid: str, nid: str) -> const.Code:
-    return await batch_to_trash(uid=uid, nids=[nid])
+async def to_trash(au: tps.AuthedUser, nid: str) -> const.Code:
+    return await batch_to_trash(au=au, nids=[nid])
 
 
-async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
-    ns, code = await get_batch(uid=uid, nids=nids, with_disabled=True, in_trash=False)
+async def batch_to_trash(au: tps.AuthedUser, nids: List[str]) -> const.Code:
+    ns, code = await get_batch(au=au, nids=nids, with_disabled=True, in_trash=False)
     if code != const.Code.OK:
         return code
-    u = await client.coll.users.find_one({"id": uid})
+
+    recent_cursor_search_selected_nids = au.u.last_state.recent_cursor_search_selected_nids
     changed = False
     for n in ns:
         try:
-            u["lastState"]["recentCursorSearchSelectedNIds"].remove(n["id"])
+            recent_cursor_search_selected_nids.remove(n["id"])
             changed = True
         except ValueError:
             pass
     if changed:
-        res = await client.coll.users.update_one({"id": uid}, {"$set": {
-            "lastState.recentCursorSearchSelectedNIds": u["lastState"]["recentCursorSearchSelectedNIds"]
+        res = await client.coll.users.update_one({"id": au.u.id}, {"$set": {
+            "lastState.recentCursorSearchSelectedNIds": recent_cursor_search_selected_nids
         }})
         if res.modified_count != 1:
-            logger.error(f"update user {uid} failed")
+            logger.error(f"update user {au.u.id} failed")
             return const.Code.OPERATION_FAILED
     res = await client.coll.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": True,
@@ -261,19 +255,19 @@ async def batch_to_trash(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"update nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    code = await client.search.batch_to_trash(uid=uid, nids=nids)
+    code = await client.search.batch_to_trash(au=au, nids=nids)
     if code != const.Code.OK:
         logger.error(f"update search index failed, code: {code}")
     return code
 
 
 async def get_nodes_in_trash(
-        uid: str,
+        au: tps.AuthedUser,
         page: int,
         limit: int
 ) -> Tuple[List[tps.Node], int]:
     condition = {
-        "uid": uid,
+        "uid": au.u.id,
         "disabled": False,
         "inTrash": True,
     }
@@ -285,12 +279,12 @@ async def get_nodes_in_trash(
     return await docs.to_list(length=None), total
 
 
-async def restore_from_trash(uid: str, nid: str) -> const.Code:
-    return await restore_batch_from_trash(uid=uid, nids=[nid])
+async def restore_from_trash(au: tps.AuthedUser, nid: str) -> const.Code:
+    return await restore_batch_from_trash(au=au, nids=[nid])
 
 
-async def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
-    ns, code = await get_batch(uid=uid, nids=nids, with_disabled=False, in_trash=True)
+async def restore_batch_from_trash(au: tps.AuthedUser, nids: List[str]) -> const.Code:
+    ns, code = await get_batch(au=au, nids=nids, with_disabled=False, in_trash=True)
     if code != const.Code.OK:
         return code
 
@@ -303,18 +297,18 @@ async def restore_batch_from_trash(uid: str, nids: List[str]) -> const.Code:
         logger.error(f"restore nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    code = await client.search.restore_batch_from_trash(uid=uid, nids=nids)
+    code = await client.search.restore_batch_from_trash(au=au, nids=nids)
     if code != const.Code.OK:
         logger.error(f"restore search index failed, code: {code}")
     return code
 
 
-async def delete(uid: str, nid: str) -> const.Code:
-    return await batch_delete(uid=uid, nids=[nid])
+async def delete(au: tps.AuthedUser, nid: str) -> const.Code:
+    return await batch_delete(au=au, nids=[nid])
 
 
-async def batch_delete(uid: str, nids: List[str]) -> const.Code:
-    ns, code = await get_batch(uid=uid, nids=nids, with_disabled=True, in_trash=True)
+async def batch_delete(au: tps.AuthedUser, nids: List[str]) -> const.Code:
+    ns, code = await get_batch(au=au, nids=nids, with_disabled=True, in_trash=True)
     if code != const.Code.OK:
         return code
 
@@ -331,17 +325,17 @@ async def batch_delete(uid: str, nids: List[str]) -> const.Code:
             await db_ops.remove_from_node(from_nid=n["id"], to_nid=linked_nid)
 
     # delete user file
-    await user.update_used_space(uid=uid, delta=used_space_delta)
+    await user.update_used_space(uid=au.u.id, delta=used_space_delta)
 
     # remove node
-    res = await client.coll.nodes.delete_many({"id": {"$in": nids}, "uid": uid})
+    res = await client.coll.nodes.delete_many({"id": {"$in": nids}, "uid": au.u.id})
     if res.deleted_count != len(nids):
         logger.error(f"delete nodes {nids} failed")
         return const.Code.OPERATION_FAILED
 
-    backup.delete_node_md(uid=uid, nids=nids)
+    backup.delete_node_md(uid=au.u.id, nids=nids)
 
-    code = await client.search.delete_batch(uid=uid, nids=nids)
+    code = await client.search.delete_batch(au=au, nids=nids)
     if code != const.Code.OK:
         logger.error(f"delete search index failed, code: {code}")
 
@@ -349,13 +343,11 @@ async def batch_delete(uid: str, nids: List[str]) -> const.Code:
 
 
 async def disable(
-        uid: str,
+        au: tps.AuthedUser,
         nid: str,
 ) -> const.Code:
     if regex.NID.match(nid) is None:
         return const.Code.NODE_NOT_EXIST
-    if not await user.is_exist(uid=uid):
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
     res = await client.coll.nodes.update_one(
         {"id": nid},
         {"$set": {"disabled": True}}
@@ -363,19 +355,19 @@ async def disable(
     if res.modified_count != 1:
         logger.error(f"disable node {nid} failed")
         return const.Code.OPERATION_FAILED
-    code = await client.search.disable(uid=uid, nid=nid)
+    code = await client.search.disable(au=au, nid=nid)
     if code != const.Code.OK:
         logger.error(f"disable search index failed, code: {code}")
     return const.Code.OK
 
 
 async def core_nodes(
-        uid: str,
+        au: tps.AuthedUser,
         page: int,
         limit: int,
 ) -> Tuple[List[tps.Node], int]:
     condition = {
-        "uid": uid,
+        "uid": au.u.id,
         "disabled": False,
         "inTrash": False,
     }
@@ -387,40 +379,47 @@ async def core_nodes(
 
 async def new_user_add_default_nodes(language: str, uid: str) -> const.Code:
     lns = const.NEW_USER_DEFAULT_NODES[language]
+    u = await client.coll.users.find_one({"id": uid})
+    if u is None:
+        return const.Code.USER_NOT_EXIST
+    au = tps.AuthedUser(u=tps.convert_user_dict_to_authed_user(u), language=language, request_id="")
     n, code = await post(
-        uid=uid,
+        au=au,
         md=lns[0],
     )
     if code != const.Code.OK:
         return code
     _, code = await post(
-        uid=uid,
+        au=au,
         md=lns[1].format(n["id"]),
     )
     await client.search.refresh()
     return code
 
 
-async def get_hist_editions(uid: str, nid: str) -> Tuple[List[str], const.Code]:
+async def get_hist_editions(
+        au: tps.AuthedUser,
+        nid: str
+) -> Tuple[List[str], const.Code]:
     """
 
     Args:
-        uid:
+        au:
         nid:
 
     Returns:
         Tuple[List[str], const.Code]: history, code
     """
-    n, code = await get(uid=uid, nid=nid)
+    n, code = await get(au=au, nid=nid)
     if code != const.Code.OK:
         return [], code
     return n.get("history", []), const.Code.OK
 
 
-async def get_hist_edition_md(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
-    n, code = await get(uid=uid, nid=nid)
+async def get_hist_edition_md(au: tps.AuthedUser, nid: str, version: str) -> Tuple[str, const.Code]:
+    n, code = await get(au=au, nid=nid)
     if code != const.Code.OK:
         return "", code
     if version not in n["history"]:
         return "", const.Code.NODE_NOT_EXIST
-    return backup.get_md(uid=uid, nid=nid, version=version)
+    return backup.get_md(uid=au.u.id, nid=nid, version=version)

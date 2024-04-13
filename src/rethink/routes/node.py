@@ -23,12 +23,12 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def post_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.CreateResponse:
     return await node_ops.post_node(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -40,12 +40,12 @@ async def post_node(
 )
 @utils.measure_time_spend
 async def post_quick_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.CreateResponse:
     return await node_ops.post_quick_node(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -57,7 +57,7 @@ async def post_quick_node(
 )
 @utils.measure_time_spend
 async def get_search_nodes(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         q: str = Query(max_length=const.SEARCH_QUERY_MAX_LENGTH),
         sort: Optional[
             Literal["createdAt", "modifiedAt", "title", "similarity"]
@@ -68,7 +68,7 @@ async def get_search_nodes(
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.NodesSearchResponse:
     return await search.user_nodes(
-        h=h,
+        au=au,
         q=q,
         sort=sort,
         order=order,
@@ -85,13 +85,13 @@ async def get_search_nodes(
 )
 @utils.measure_time_spend
 async def get_core_nodes(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         p: int = Query(default=0, ge=0, description="page number"),
         limit: int = Query(default=10, ge=0, le=const.SEARCH_LIMIT_MAX),
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.CoreNodesResponse:
     return await node_ops.get_core_nodes(
-        h=h,
+        au=au,
         p=p,
         limit=limit,
     )
@@ -104,12 +104,12 @@ async def get_core_nodes(
 )
 @utils.measure_time_spend
 async def get_node(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.GetResponse:
     return await node_ops.get_node(
-        h=h,
+        au=au,
         nid=nid,
     )
 
@@ -121,7 +121,7 @@ async def get_node(
 )
 @utils.measure_time_spend
 async def get_at_query(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         q: Optional[str] = Query(default="", max_length=const.SEARCH_QUERY_MAX_LENGTH),
         page: Optional[int] = Query(default=0, ge=0, description="page number"),
@@ -129,7 +129,7 @@ async def get_at_query(
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.NodesSearchResponse:
     return await search.node_at_query(
-        h=h,
+        au=au,
         nid=nid,
         q=q,
         p=page,
@@ -144,7 +144,7 @@ async def get_at_query(
 )
 @utils.measure_time_spend
 async def get_recommend_nodes(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         content: str = Query(
             max_length=const.RECOMMEND_CONTENT_MAX_LENGTH,
@@ -153,7 +153,7 @@ async def get_recommend_nodes(
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.RecommendNodesResponse:
     return await search.recommend_nodes(
-        h=h,
+        au=au,
         nid=nid,
         content=content,
     )
@@ -166,12 +166,12 @@ async def get_recommend_nodes(
 )
 @utils.measure_time_spend
 async def get_hist_editions(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.HistEditionsResponse:
     return await node_ops.get_hist_editions(
-        h=h,
+        au=au,
         nid=nid,
     )
 
@@ -183,13 +183,13 @@ async def get_hist_editions(
 )
 @utils.measure_time_spend
 async def get_hist_md(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         version: str = Annotated[str, Path(max_length=30)],
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.HistEditionMdResponse:
     return await node_ops.get_hist_edition_md(
-        h=h,
+        au=au,
         nid=nid,
         version=version,
     )
@@ -202,13 +202,13 @@ async def get_hist_md(
 )
 @utils.measure_time_spend
 async def put_node_md(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.PatchMdRequest,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.GetResponse:
     return await node_ops.update_md(
-        h=h,
+        au=au,
         req=req,
         nid=nid,
     )

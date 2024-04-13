@@ -19,11 +19,11 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def register(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.account.SignupRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.TokenResponse:
-    return await account.signup(h=h, req=req)
+    return await account.signup(au=au, req=req)
 
 
 @router.put(
@@ -33,11 +33,11 @@ async def register(
 )
 @utils.measure_time_spend
 async def login(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.account.LoginRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.TokenResponse:
-    return await account.login(h=h, req=req)
+    return await account.login(au=au, req=req)
 
 
 @router.put(
@@ -47,11 +47,11 @@ async def login(
 )
 @utils.measure_time_spend
 async def forget_password(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.account.ForgetPasswordRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
-    return await account.forget(h=h, req=req)
+    return await account.forget(au=au, req=req)
 
 
 @router.put(
@@ -61,8 +61,8 @@ async def forget_password(
 )
 @utils.measure_time_spend
 async def email_verification(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.account.EmailVerificationRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.TokenResponse:
-    return account.email_send_code(h=h, req=req)
+    return account.email_send_code(au=au, req=req)

@@ -20,9 +20,9 @@ async def add(
         nickname: str,
         avatar: str,
         language: str,
-) -> Tuple[str, const.Code]:
+) -> Tuple[Optional[tps.UserMeta], const.Code]:
     if await client.coll.users.find_one({"account": account, "source": source}) is not None:
-        return "", const.Code.EMAIL_OCCUPIED
+        return None, const.Code.EMAIL_OCCUPIED
     oid = ObjectId()
     # assert language in const.Language
     if not const.Language.is_valid(language):
@@ -60,23 +60,19 @@ async def add(
         try:
             res = await client.coll.users.insert_one(data)
             if not res.acknowledged:
-                return "", const.Code.OPERATION_FAILED
+                return None, const.Code.OPERATION_FAILED
             break
         except DuplicateKeyError:
             data["id"] = utils.short_uuid()
             continue
 
-    return data["id"], const.Code.OK
+    return data, const.Code.OK
 
 
 async def patch(
-        uid: str,
+        au: tps.AuthedUser,
         req: PatchUserRequest,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u, code = await get(uid=uid)
-    if code != const.Code.OK:
-        return None, code
-
     new_data = {}
 
     if req.nickname is not None:
@@ -128,13 +124,13 @@ async def patch(
         new_data["modifiedAt"] = datetime.datetime.now(tz=utc)
 
         res = await client.coll.users.update_one(
-            {"id": uid},
+            {"id": au.u.id},
             {"$set": new_data},
         )
         if res.modified_count != 1:
             return None, const.Code.OPERATION_FAILED
 
-    return await get(uid=uid)
+    return await get(uid=au.u.id)
 
 
 async def delete(uid: str) -> const.Code:
@@ -188,26 +184,9 @@ async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     return u, const.Code.OK
 
 
-async def get_hash_by_uid(uid: str) -> Optional[str]:
-    u = await client.coll.users.find_one({"id": uid, "disabled": False})
-    if u is None:
-        return None
-    return u["hashed"]
-
-
-async def is_exist(uid: str) -> bool:
-    try:
-        await client.coll.users.find({"id": uid, "disabled": False}, limit=1).next()
-    except StopIteration:
-        return False
-    return True
-
-
 async def update_used_space(uid: str, delta: int) -> const.Code:
     if delta == 0:
         return const.Code.OK
-    if not await is_exist(uid=uid):
-        return const.Code.ACCOUNT_OR_PASSWORD_ERROR
     res = await client.coll.users.update_one(
         {"id": uid},
         {"$inc": {"usedSpace": delta}}
@@ -215,21 +194,15 @@ async def update_used_space(uid: str, delta: int) -> const.Code:
     return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
 
 
-async def user_space_not_enough(uid: str = None, u: tps.UserMeta = None) -> bool:
-    if uid is None and u is None:
-        raise ValueError("uid and u cannot be None at the same time")
+async def user_space_not_enough(au: tps.AuthedUser) -> bool:
     if config.is_local_db():
         return False
-    if uid is not None:
-        u, code = await get(uid=uid)
-        if code != const.Code.OK:
-            return True
-    return u["usedSpace"] > const.USER_TYPE.id2config(u["type"]).max_store_space
+    return au.u.used_space > const.USER_TYPE.id2config(au.u.type).max_store_space
 
 
-async def reset_password(uid: str, hashed: str) -> const.Code:
+async def reset_password(au: tps.AuthedUser, hashed: str) -> const.Code:
     res = await client.coll.users.update_one(
-        {"id": uid},
+        {"id": au.u.id},
         {"$set": {"hashed": hashed}}
     )
     return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED

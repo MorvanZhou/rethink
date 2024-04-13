@@ -6,6 +6,7 @@ from typing import Dict
 import rethink
 from rethink import core, const
 from rethink.models.client import client
+from rethink.models.tps import convert_user_dict_to_authed_user, AuthedUser
 from rethink.plugins.base import event_plugin_map
 from . import utils
 
@@ -68,7 +69,11 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
 
         await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
-        self.uid = u["id"]
+        self.au = AuthedUser(
+            u=convert_user_dict_to_authed_user(u),
+            request_id="test",
+            language=const.Language.EN.value,
+        )
 
     async def asyncTearDown(self) -> None:
         rethink.remove_plugin(self.p)
@@ -101,11 +106,10 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_event(self):
-        print(event_plugin_map["on_node_added"])
         self.assertIn(self.p, event_plugin_map["on_node_added"])
 
         node, code = await core.node.post(
-            uid=self.uid, md="a", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="a", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(rethink.const.Code.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])
@@ -113,7 +117,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual("", self.p.bmd)
         node, _, code = await core.node.update_md(
-            uid=self.uid, nid=node["id"], md="b"
+            au=self.au, nid=node["id"], md="b"
         )
         self.assertEqual(rethink.const.Code.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])

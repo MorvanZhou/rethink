@@ -14,7 +14,7 @@ from rethink.models.search_engine.engine import BaseEngine, SearchDoc, RestoreSe
 from rethink.models.search_engine.engine_local import LocalSearcher
 from .coll import Collections
 from .indexing import remote_try_build_index
-from .tps import UserFile, ImportData, UserMeta, Node
+from .tps import UserFile, ImportData, UserMeta, Node, AuthedUser, convert_user_dict_to_authed_user
 
 try:
     from motor.motor_asyncio import AsyncIOMotorClient
@@ -164,7 +164,11 @@ class Client:
         _ = await self.coll.users.insert_one(u)
 
         await self.search.add_batch(
-            uid=u["id"],
+            au=AuthedUser(
+                u=convert_user_dict_to_authed_user(u),
+                language=u["settings"]["language"],
+                request_id="",
+            ),
             docs=search_docs,
         )
 
@@ -319,7 +323,11 @@ class Client:
         await self.search.drop()
         await self.search.init()
         await self.search.add_batch(
-            uid=u["id"],
+            au=AuthedUser(
+                u=convert_user_dict_to_authed_user(u),
+                language=u["settings"]["language"],
+                request_id="",
+            ),
             docs=search_docs,
         )
         logger.debug(f"restore files count: {len(res.inserted_ids)}")
@@ -349,8 +357,13 @@ class Client:
                 )
             )
         for uid, docs in search_docs.items():
+            u = await self.coll.users.find_one({"id": uid})
             code = await self.search.batch_restore_docs(
-                uid=uid,
+                au=AuthedUser(
+                    u=convert_user_dict_to_authed_user(u),
+                    language="en",
+                    request_id="",
+                ),
                 docs=docs,
             )
             if code != const.Code.OK:

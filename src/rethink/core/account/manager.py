@@ -15,14 +15,14 @@ async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.C
     return await user.get_by_email(email=email)
 
 
-async def is_right_password(u: tps.UserMeta, password: str) -> bool:
+async def is_right_password(au: tps.AuthedUser, password: str) -> bool:
     if config.get_settings().ONE_USER:
         pw = os.getenv("RETHINK_SERVER_PASSWORD", None)
         if pw is not None:
             return pw == password
         return True
-    base_pw = _base_password(password=password, email=u["email"])
-    match = bcrypt.checkpw(base_pw, u["hashed"].encode("utf-8"))
+    base_pw = _base_password(password=password, email=au.u.email)
+    match = bcrypt.checkpw(base_pw, au.u.hashed.encode("utf-8"))
     return match
 
 
@@ -56,15 +56,15 @@ async def signup(
         email: str,
         password: str,
         language: str = const.Language.EN.value,
-) -> Tuple[str, const.Code]:
+) -> Tuple[Optional[tps.UserMeta], const.Code]:
     code = login_by_email_pwd(email=email, password=password)
     if code != const.Code.OK:
-        return "", code
+        return None, code
     u, code = await user.get_by_email(email=email)
     if code == const.Code.OK or u is not None:
-        return "", const.Code.USER_EXIST
+        return None, const.Code.USER_EXIST
 
-    uid, code = await user.add(
+    u, code = await user.add(
         account=email,
         source=const.UserSource.EMAIL.value,
         email=email,
@@ -74,10 +74,10 @@ async def signup(
         language=language,
     )
     if code != const.Code.OK:
-        return "", code
+        return None, code
 
-    code = await node.new_user_add_default_nodes(uid=uid, language=language)
-    return uid, code
+    code = await node.new_user_add_default_nodes(uid=u["id"], language=language)
+    return u, code
 
 
 async def reset_password(

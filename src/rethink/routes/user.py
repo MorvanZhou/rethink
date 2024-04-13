@@ -19,11 +19,11 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def get_user(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.user.UserInfoResponse:
     return await user.get_user(
-        h=h,
+        au=au,
     )
 
 
@@ -34,12 +34,12 @@ async def get_user(
 )
 @utils.measure_time_spend
 async def update_user(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.user.PatchUserRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.user.UserInfoResponse:
     return await user.patch_user(
-        h=h,
+        au=au,
         req=req,
     )
 
@@ -51,11 +51,11 @@ async def update_user(
 )
 @utils.measure_time_spend
 async def update_user_password(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.user.UpdatePasswordRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.base.AcknowledgeResponse:
     return await user.update_password(
-        h=h,
+        au=au,
         req=req,
     )

@@ -8,8 +8,9 @@ from starlette.status import HTTP_403_FORBIDDEN
 from typing_extensions import Annotated
 
 from rethink import const, config
-from rethink.controllers.utils import Headers, process_headers
+from rethink.controllers.utils import process_headers
 from rethink.logger import logger
+from rethink.models.tps import AuthedUser
 
 REFERER_PREFIX = f"https://{const.DOMAIN}"
 
@@ -56,7 +57,7 @@ def verify_referer(referer: Optional[str] = Header(None)):
     return referer
 
 
-ANNOTATED_HEADERS = Annotated[Headers, Depends(process_headers)]
+ANNOTATED_AUTHED_USER = Annotated[AuthedUser, Depends(process_headers)]
 ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.NID_MAX_LENGTH, min_length=8)]
 ANNOTATED_PID = Annotated[str, Path(title="The ID of plugin", max_length=const.PLUGIN_ID_MAX_LENGTH)]
 ANNOTATED_FID = Annotated[str, Path(title="The ID of file", max_length=const.FID_MAX_LENGTH)]

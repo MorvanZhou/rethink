@@ -1,12 +1,58 @@
 from rethink import const, core, config
 from rethink.controllers import schemas
-from rethink.controllers.utils import Headers, datetime2str
+from rethink.controllers.utils import datetime2str, maybe_raise_json_exception
 from rethink.core import account
-from rethink.core.user import get, reset_password
+from rethink.core.user import reset_password
+from rethink.models.tps import AuthedUser
 from rethink.utils import mask_email, regex
 
 
-def __get_user(u: dict) -> schemas.user.UserInfoResponse.User:
+async def get_user(
+        au: AuthedUser,
+) -> schemas.user.UserInfoResponse:
+    _email = mask_email(au.u.email)
+    if config.is_local_db():
+        max_space = 0
+    else:
+        max_space = const.USER_TYPE.id2config(au.u.type).max_store_space
+    return schemas.user.UserInfoResponse(
+        requestId=au.request_id,
+        code=const.Code.OK.value,
+        message=const.get_msg_by_code(const.Code.OK, au.language),
+        user=schemas.user.UserInfoResponse.User(
+            email=_email,
+            nickname=au.u.nickname,
+            avatar=au.u.avatar,
+            createdAt=datetime2str(au.u._id.generation_time),
+            usedSpace=au.u.used_space,
+            maxSpace=max_space,
+            lastState=schemas.user.UserInfoResponse.User.LastState(
+                nodeDisplayMethod=au.u.last_state.node_display_method,
+                nodeDisplaySortKey=au.u.last_state.node_display_sort_key,
+            ),
+            settings=schemas.user.UserInfoResponse.User.Settings(
+                language=au.u.settings.language,
+                theme=au.u.settings.theme,
+                editorMode=au.u.settings.editor_mode,
+                editorFontSize=au.u.settings.editor_font_size,
+                editorCodeTheme=au.u.settings.editor_code_theme,
+                editorSepRightWidth=au.u.settings.editor_sep_right_width,
+                editorSideCurrentToolId=au.u.settings.editor_side_current_tool_id,
+            ),
+        ),
+    )
+
+
+async def patch_user(
+        au: AuthedUser,
+        req: schemas.user.PatchUserRequest,
+) -> schemas.user.UserInfoResponse:
+    u, code = await core.user.patch(
+        au=au,
+        req=req,
+    )
+    maybe_raise_json_exception(au=au, code=code)
+
     u["email"] = mask_email(u["email"])
     if config.is_local_db():
         max_space = 0
@@ -14,125 +60,51 @@ def __get_user(u: dict) -> schemas.user.UserInfoResponse.User:
         max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
     last_state = u["lastState"]
     u_settings = u["settings"]
-    return schemas.user.UserInfoResponse.User(
-        email=u["email"],
-        nickname=u["nickname"],
-        avatar=u["avatar"],
-        createdAt=datetime2str(u["_id"].generation_time),
-        usedSpace=u["usedSpace"],
-        maxSpace=max_space,
-        lastState=schemas.user.UserInfoResponse.User.LastState(
-            nodeDisplayMethod=last_state["nodeDisplayMethod"],
-            nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
-        ),
-        settings=schemas.user.UserInfoResponse.User.Settings(
-            language=u_settings["language"],
-            theme=u_settings["theme"],
-            editorMode=u_settings["editorMode"],
-            editorFontSize=u_settings["editorFontSize"],
-            editorCodeTheme=u_settings["editorCodeTheme"],
-            editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
-            editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
-        ),
-    )
-
-
-async def get_user(
-        h: Headers,
-) -> schemas.user.UserInfoResponse:
-    if h.code != const.Code.OK:
-        return schemas.user.UserInfoResponse(
-            requestId=h.request_id,
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-        )
-    u, code = await core.user.get(uid=h.uid)
-    if code != const.Code.OK:
-        return schemas.user.UserInfoResponse(
-            requestId=h.request_id,
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-        )
-    user_meta = __get_user(u)
     return schemas.user.UserInfoResponse(
-        requestId=h.request_id,
-        code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        user=user_meta,
-    )
-
-
-def __return_user_resp(u: dict, code: const.Code, req_id: str) -> schemas.user.UserInfoResponse:
-    if code != const.Code.OK:
-        return schemas.user.UserInfoResponse(
-            requestId=req_id,
-            code=code.value,
-            message=const.get_msg_by_code(code, u["settings"]["language"]),
-        )
-    user_meta = __get_user(u)
-    return schemas.user.UserInfoResponse(
-        requestId=req_id,
+        requestId=au.request_id,
         code=code.value,
         message=const.get_msg_by_code(code, u["settings"]["language"]),
-        user=user_meta,
+        user=schemas.user.UserInfoResponse.User(
+            email=u["email"],
+            nickname=u["nickname"],
+            avatar=u["avatar"],
+            createdAt=datetime2str(u["_id"].generation_time),
+            usedSpace=u["usedSpace"],
+            maxSpace=max_space,
+            lastState=schemas.user.UserInfoResponse.User.LastState(
+                nodeDisplayMethod=last_state["nodeDisplayMethod"],
+                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
+            ),
+            settings=schemas.user.UserInfoResponse.User.Settings(
+                language=u_settings["language"],
+                theme=u_settings["theme"],
+                editorMode=u_settings["editorMode"],
+                editorFontSize=u_settings["editorFontSize"],
+                editorCodeTheme=u_settings["editorCodeTheme"],
+                editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
+                editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
+            ),
+        ),
     )
-
-
-async def patch_user(
-        h: Headers,
-        req: schemas.user.PatchUserRequest,
-) -> schemas.user.UserInfoResponse:
-    if h.code != const.Code.OK:
-        return schemas.user.UserInfoResponse(
-            requestId=h.request_id,
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-        )
-    u, code = await core.user.patch(
-        uid=h.uid,
-        req=req,
-    )
-    return __return_user_resp(u, code, h.request_id)
 
 
 async def update_password(
-        h: Headers,
+        au: AuthedUser,
         req: schemas.user.UpdatePasswordRequest
 ) -> schemas.base.AcknowledgeResponse:
-    if h.code != const.Code.OK:
-        return schemas.base.AcknowledgeResponse(
-            requestId=h.request_id,
-            code=h.code.value,
-            message=const.get_msg_by_code(h.code, h.language),
-        )
     if regex.VALID_PASSWORD.match(req.newPassword) is None:
-        code = const.Code.INVALID_PASSWORD
-        return schemas.base.AcknowledgeResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-            requestId=h.request_id,
-        )
+        return maybe_raise_json_exception(au=au, code=const.Code.INVALID_PASSWORD)
 
-    u, code = await get(uid=h.uid)
-    if code != const.Code.OK:
-        return schemas.base.AcknowledgeResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-            requestId=h.request_id,
-        )
-    ok = await account.manager.is_right_password(u, req.oldPassword)
+    ok = await account.manager.is_right_password(au, req.oldPassword)
     if not ok:
-        code = const.Code.OLD_PASSWORD_ERROR
-        return schemas.base.AcknowledgeResponse(
-            code=code.value,
-            message=const.get_msg_by_code(code, h.language),
-            requestId=h.request_id,
-        )
+        return maybe_raise_json_exception(au=au, code=const.Code.OLD_PASSWORD_ERROR)
 
-    hashed = account.manager.hash_password(password=req.newPassword, email=u["email"])
-    code = await reset_password(uid=h.uid, hashed=hashed)
+    hashed = account.manager.hash_password(password=req.newPassword, email=au.u.email)
+    code = await reset_password(au=au, hashed=hashed)
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.base.AcknowledgeResponse(
         code=code.value,
-        message=const.get_msg_by_code(code, h.language),
-        requestId=h.request_id,
+        message=const.get_msg_by_code(code, au.language),
+        requestId=au.request_id,
     )

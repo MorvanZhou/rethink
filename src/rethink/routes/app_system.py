@@ -20,7 +20,7 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def latest_version(
-        h: utils.ANNOTATED_HEADERS,
+        au: utils.ANNOTATED_AUTHED_USER,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.app_system.LatestVersionResponse:
-    return await get_latest_version(h=h)
+    return await get_latest_version(au=au)

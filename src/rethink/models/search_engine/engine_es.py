@@ -11,6 +11,7 @@ from rethink.logger import logger
 from rethink.models.search_engine.engine import (
     BaseEngine, SearchDoc, SearchResult, RestoreSearchDoc, STOPWORDS,
 )
+from rethink.models.tps import AuthedUser
 
 
 def datetime2str(dt: datetime.datetime) -> str:
@@ -211,12 +212,12 @@ class ESSearcher(BaseEngine):
         await self.es.close()
         del self.es
 
-    async def add(self, uid: str, doc: SearchDoc) -> const.Code:
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.index(
             index=self.index,
             document={
-                "uid": uid,
+                "uid": au.u.id,
                 "title": doc.title,
                 "body": doc.body,
                 "modifiedAt": now,
@@ -227,18 +228,18 @@ class ESSearcher(BaseEngine):
             id=doc.nid,
         )
         if resp.meta.status != 201:
-            logger.error(f"add failed {uid=} {doc.nid=}")
+            logger.error(f"add failed {au.u.id=} {doc.nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def update(self, uid: str, doc: SearchDoc) -> const.Code:
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
         now = get_utc_now()
         resp = await self.es.update(
             index=self.index,
             id=doc.nid,
             body={
                 "doc": {
-                    "uid": uid,
+                    "uid": au.u.id,
                     "title": doc.title,
                     "body": doc.body,
                     "modifiedAt": now,
@@ -246,11 +247,11 @@ class ESSearcher(BaseEngine):
             }
         )
         if resp.meta.status != 200:
-            logger.error(f"update failed {uid=} {doc.nid=}")
+            logger.error(f"update failed {au.u.id=} {doc.nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def to_trash(self, uid: str, nid: str) -> const.Code:
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -262,11 +263,11 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 200:
-            logger.error(f"to trash failed {uid=} {nid=}")
+            logger.error(f"to trash failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def batch_to_trash(self, uid: str, nids: List[str]) -> const.Code:
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
         resp = await helpers.async_bulk(
             client=self.es,
             actions=[
@@ -287,7 +288,7 @@ class ESSearcher(BaseEngine):
         await self.refresh()
         return const.Code.OK
 
-    async def restore_from_trash(self, uid: str, nid: str) -> const.Code:
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -299,11 +300,11 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 200:
-            logger.error(f"restore from trash failed {uid=} {nid=}")
+            logger.error(f"restore from trash failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def restore_batch_from_trash(self, uid: str, nids: str) -> const.Code:
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: str) -> const.Code:
         resp = await helpers.async_bulk(
             client=self.es,
             actions=[
@@ -324,7 +325,7 @@ class ESSearcher(BaseEngine):
         await self.refresh()
         return const.Code.OK
 
-    async def disable(self, uid: str, nid: str) -> const.Code:
+    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -336,11 +337,11 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 200:
-            logger.error(f"disable failed {uid=} {nid=}")
+            logger.error(f"disable failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def enable(self, uid: str, nid: str) -> const.Code:
+    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -352,20 +353,20 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 200:
-            logger.error(f"enable failed {uid=} {nid=}")
+            logger.error(f"enable failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def delete(self, uid: str, nid: str) -> const.Code:
+    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
         doc = await self.es.get(
             index=self.index,
             id=nid,
         )
-        if doc["_source"]["uid"] != uid:
-            logger.error(f"node not belong to user {uid=} {nid=}")
+        if doc["_source"]["uid"] != au.u.id:
+            logger.error(f"node not belong to user {au.u.id=} {nid=}")
             return const.Code.NODE_NOT_EXIST
         if not doc["_source"]["inTrash"]:
-            logger.error(f"doc not in trash, deletion failed {uid=} {nid=}")
+            logger.error(f"doc not in trash, deletion failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
 
         resp = await self.es.delete(
@@ -374,11 +375,11 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 201:
-            logger.error(f"delete failed {uid=} {nid=}")
+            logger.error(f"delete failed {au.u.id=} {nid=}")
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def add_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         actions = []
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
@@ -387,7 +388,7 @@ class ESSearcher(BaseEngine):
             d["disabled"] = False
             d["createdAt"] = datetime2str(now)
             d["modifiedAt"] = d["createdAt"]
-            d["uid"] = uid
+            d["uid"] = au.u.id
             nid = d.pop("nid")
             # insert a creation operation
             actions.append({
@@ -399,7 +400,7 @@ class ESSearcher(BaseEngine):
             now = now + datetime.timedelta(seconds=0.001)
         return await self._batch_ops(actions, op_type="add", refresh=False)
 
-    async def delete_batch(self, uid: str, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
         resp = await self.es.delete_by_query(
             index=self.index,
             body={
@@ -409,7 +410,7 @@ class ESSearcher(BaseEngine):
                             {"ids": {"values": nids}},
                             {
                                 "term": {
-                                    "uid": uid
+                                    "uid": au.u.id
                                 }
                             },
                             {
@@ -432,13 +433,13 @@ class ESSearcher(BaseEngine):
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
-    async def update_batch(self, uid: str, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         actions = []
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
             d = doc.__dict__
             d["modifiedAt"] = datetime2str(now)
-            d["uid"] = uid
+            d["uid"] = au.u.id
             nid = d.pop("nid")
             actions.append({
                 "_op_type": "update",
@@ -449,13 +450,13 @@ class ESSearcher(BaseEngine):
             now = now + datetime.timedelta(seconds=0.001)
         return await self._batch_ops(actions, op_type="update", refresh=False)
 
-    async def batch_restore_docs(self, uid: str, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
         actions = []
         for doc in docs:
             d = doc.__dict__
             d["createdAt"] = datetime2str(d["createdAt"])
             d["modifiedAt"] = datetime2str(d["modifiedAt"])
-            d["uid"] = uid
+            d["uid"] = au.u.id
             nid = d.pop("nid")
             # insert a creation operation
             actions.append({
@@ -468,7 +469,7 @@ class ESSearcher(BaseEngine):
 
     async def _search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: Literal[
                 "createdAt", "modifiedAt", "title", "similarity"
@@ -495,11 +496,11 @@ class ESSearcher(BaseEngine):
             ]
         else:
             raise ValueError(f"sort_key {sort_key} not supported")
-        # select uid = uid, disabled = false, inTrash = false
+        # select uid = au.u.id, disabled = false, inTrash = false
         query_dict: Dict[str, Any] = {
             "bool": {
                 "must": [
-                    {"constant_score": {"filter": {"term": {"uid": uid}}}},
+                    {"constant_score": {"filter": {"term": {"uid": au.u.id}}}},
                     {"constant_score": {"filter": {"term": {"disabled": False}}}},
                     {"constant_score": {"filter": {"term": {"inTrash": False}}}},
                 ]
@@ -563,7 +564,7 @@ class ESSearcher(BaseEngine):
 
     async def search(
             self,
-            uid: str,
+            au: AuthedUser,
             query: str = "",
             sort_key: Literal[
                 "createdAt", "modifiedAt", "title", "similarity"
@@ -574,7 +575,7 @@ class ESSearcher(BaseEngine):
             exclude_nids: Sequence[str] = None,
     ) -> Tuple[List[SearchResult], int]:
         resp = await self._search(
-            uid=uid,
+            au=au,
             query=query,
             sort_key=sort_key,
             reverse=reverse,
@@ -596,14 +597,14 @@ class ESSearcher(BaseEngine):
 
     async def recommend(
             self,
-            uid: str,
+            au: AuthedUser,
             content: str,
             max_return: int = 10,
             exclude_nids: int = None,
     ) -> List[SearchResult]:
         threshold = 3.
         resp = await self._search(
-            uid=uid,
+            au=au,
             query=content,
             sort_key="similarity",
             reverse=False,
