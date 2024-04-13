@@ -16,14 +16,14 @@ router = APIRouter(
 @router.post(
     path="/obsidian",
     status_code=202,
-    response_model=schemas.files.FileUploadResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def upload_obsidian_files(
         au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.files.FileUploadResponse:
+) -> schemas.RequestIdResponse:
     return await upload_files.upload_obsidian_files(
         au=au,
         files=files,
@@ -33,14 +33,14 @@ async def upload_obsidian_files(
 @router.post(
     path="/text",
     status_code=202,
-    response_model=schemas.files.FileUploadResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def upload_text_files(
         au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.files.FileUploadResponse:
+) -> schemas.RequestIdResponse:
     return await upload_files.upload_text_files(
         au=au,
         files=files,

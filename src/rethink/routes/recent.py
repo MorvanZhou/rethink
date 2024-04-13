@@ -13,13 +13,13 @@ router = APIRouter(
 @router.post(
     path="/at",
     status_code=201,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def add_recent_at_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.recent.AddToRecentSearchHistRequest,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await recent.add_recent_at_node(
         au=au,
         req=req,

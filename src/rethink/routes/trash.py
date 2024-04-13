@@ -36,14 +36,14 @@ async def get_from_trash(
 @router.put(
     path="/batch",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def batch_nodes_to_trash(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.move_batch_to_trash(
         au=au,
         req=req,
@@ -53,14 +53,14 @@ async def batch_nodes_to_trash(
 @router.put(
     path="/batch/restore",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def restore_batch_node_in_trash(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.restore_batch_from_trash(
         au=au,
         req=req,
@@ -70,14 +70,14 @@ async def restore_batch_node_in_trash(
 @router.put(
     path="/batch/delete",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def delete_batch_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.BatchNodeIdsRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.delete_batch_node(
         au=au,
         req=req,
@@ -87,14 +87,14 @@ async def delete_batch_node(
 @router.put(
     path="/{nid}",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def move_to_trash(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.move_to_trash(
         au=au,
         nid=nid,
@@ -104,14 +104,14 @@ async def move_to_trash(
 @router.put(
     path="/{nid}/restore",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def restore_node_in_trash(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.restore_from_trash(
         au=au,
         nid=nid,
@@ -120,14 +120,14 @@ async def restore_node_in_trash(
 
 @router.delete(
     path="/{nid}",
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def delete_node(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await trash_ops.delete_node(
         au=au,
         nid=nid,

@@ -5,6 +5,11 @@ from pydantic import BaseModel, EmailStr, Field
 from rethink import const
 
 
+class TokenResponse(BaseModel):
+    requestId: str
+    token: str = ""
+
+
 class SignupRequest(BaseModel):
     email: EmailStr = Field(max_length=const.EMAIL_MAX_LENGTH)
     password: str = Field(max_length=const.PASSWORD_MAX_LENGTH)

@@ -1,7 +1,5 @@
-from pydantic import BaseModel, NonNegativeInt, HttpUrl
+from pydantic import BaseModel, HttpUrl
 
 
 class OAuthResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
     uri: HttpUrl

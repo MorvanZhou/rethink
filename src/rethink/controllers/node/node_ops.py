@@ -54,8 +54,6 @@ async def post_node(
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.node.CreateResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         node=__get_node_data(n),
     )
@@ -96,8 +94,6 @@ async def get_node(
 
     return schemas.node.GetResponse(
         requestId=au.request_id,
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         node=__get_node_data(n),
     )
 
@@ -115,8 +111,6 @@ async def update_md(
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.node.GetResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         node=__get_node_data(n),
     )
@@ -133,8 +127,6 @@ async def get_core_nodes(
         limit=limit,
     )
     return schemas.node.CoreNodesResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, au.language),
         requestId=au.request_id,
         data=_get_node_search_response_data(nodes=nodes, total=total),
     )
@@ -169,8 +161,6 @@ async def get_hist_editions(
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.node.HistEditionsResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         versions=versions,
     )
@@ -189,8 +179,6 @@ async def get_hist_edition_md(
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.node.HistEditionMdResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         md=md,
     )

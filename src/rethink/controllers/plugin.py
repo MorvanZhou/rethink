@@ -21,8 +21,6 @@ async def get_all_plugins(
         for p in get_plugins().values()
     ]
     return schemas.plugin.PluginsResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, au.language),
         requestId=au.request_id,
         plugins=plugins
     )
@@ -44,8 +42,6 @@ async def get_plugins_with_render_editor_side(
             )
         )
     return schemas.plugin.PluginsResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, au.language),
         requestId=au.request_id,
         plugins=plugins
     )
@@ -79,8 +75,6 @@ def __render(
     except NotImplementedError:
         html = plugin.description
     return schemas.plugin.RenderPluginResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, au.language),
         requestId=au.request_id,
         html=html,
     )
@@ -113,8 +107,6 @@ async def plugin_call(
 
     data = plugin.handle_api_call(req.method, req.data)
     return schemas.plugin.PluginCallResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
         requestId=au.request_id,
         pluginId=req.pluginId,
         method=req.method,

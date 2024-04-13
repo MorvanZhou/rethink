@@ -8,7 +8,7 @@ from rethink.depend.sso.base import SSOLoginError
 from rethink.depend.sso.facebook import FacebookSSO
 from rethink.depend.sso.github import GithubSSO
 from rethink.depend.sso.qq import QQSSO
-from .schemas.base import TokenResponse
+from .schemas.account import TokenResponse
 from .schemas.oauth import OAuthResponse
 
 GITHUB_SSO: Optional[GithubSSO] = None
@@ -29,8 +29,6 @@ async def login_github() -> OAuthResponse:
         )
     uri = await GITHUB_SSO.get_login_url()
     return OAuthResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
         uri=uri,
     )
 
@@ -52,8 +50,6 @@ async def callback_github(req: Request) -> TokenResponse:
     if code == const.Code.OK:
         return TokenResponse(
             requestId="",
-            code=const.Code.OK.value,
-            message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
             token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
                 data={"uid": u["id"], "language": u["settings"]["language"]},
@@ -89,8 +85,6 @@ async def callback_github(req: Request) -> TokenResponse:
         )
     return TokenResponse(
         requestId="",
-        code=code.value,
-        message=const.get_msg_by_code(const.Code.OK, language=language),
         token=token,
     )
 
@@ -108,8 +102,6 @@ async def login_facebook() -> OAuthResponse:
         )
     uri = await FACEBOOK_SSO.get_login_url()
     return OAuthResponse(
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
         uri=uri,
     )
 
@@ -132,8 +124,6 @@ async def callback_facebook(req: Request) -> TokenResponse:
     if code == const.Code.OK:
         return TokenResponse(
             requestId="",
-            code=const.Code.OK.value,
-            message=const.get_msg_by_code(const.Code.OK, const.Language.EN.value),
             token=utils.jwt_encode(
                 exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
                 data={"uid": u["id"], "language": u["settings"]["language"]},
@@ -168,8 +158,6 @@ async def callback_facebook(req: Request) -> TokenResponse:
         )
     return TokenResponse(
         requestId="",
-        code=code.value,
-        message=const.get_msg_by_code(const.Code.OK, language=language),
         token=token,
     )
 

@@ -1,7 +1,7 @@
 from fastapi import Request, APIRouter
 
 from rethink.controllers import oauth as co
-from rethink.controllers.schemas.base import TokenResponse
+from rethink.controllers.schemas.account import TokenResponse
 from rethink.routes import utils
 
 router = APIRouter(

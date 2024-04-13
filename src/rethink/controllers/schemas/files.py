@@ -3,15 +3,7 @@ from typing import List, Dict
 from pydantic import BaseModel, NonNegativeInt
 
 
-class FileUploadResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
-    requestId: str
-
-
 class FileUploadProcessResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
     requestId: str
     process: int
     type: str
@@ -40,7 +32,5 @@ class VditorImagesResponse(BaseModel):
         originalURL: str
         url: str
 
-    code: NonNegativeInt
-    msg: str
     requestId: str
     data: Data

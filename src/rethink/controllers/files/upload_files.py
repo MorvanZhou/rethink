@@ -15,13 +15,11 @@ from rethink.controllers.utils import (
 async def upload_obsidian_files(
         au: AuthedUser,
         files: List[UploadFile]
-) -> schemas.files.FileUploadResponse:
+) -> schemas.RequestIdResponse:
     code = await core.files.upload_obsidian(au=au, zipped_files=files)
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.files.FileUploadResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
+    return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
 
@@ -29,15 +27,12 @@ async def upload_obsidian_files(
 async def upload_text_files(
         au: AuthedUser,
         files: List[UploadFile]
-) -> schemas.files.FileUploadResponse:
+) -> schemas.RequestIdResponse:
     code = await core.files.upload_text(au=au, files=files)
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.files.FileUploadResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
+    return schemas.RequestIdResponse(
         requestId=au.request_id,
-        failedFilename="",
     )
 
 
@@ -47,8 +42,6 @@ async def get_upload_process(
     doc = await core.files.get_upload_process(uid=au.u.id)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
-            code=const.Code.OK.value,
-            message=const.get_msg_by_code(const.Code.OK, au.language),
             requestId=au.request_id,
             process=0.,
             type="",
@@ -57,9 +50,9 @@ async def get_upload_process(
             msg="",
         )
     code = const.INT_CODE_MAP[doc["code"]]
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.files.FileUploadProcessResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         process=doc["process"],
         type=doc["type"],
@@ -91,8 +84,6 @@ async def fetch_image_vditor(
 ) -> schemas.files.VditorImagesResponse:
     if is_allowed_mime_type(req.url, ["image/svg+xml", "image/png", "image/jpeg", "image/gif"]):
         return schemas.files.VditorImagesResponse(
-            code=const.Code.OK.value,
-            msg=const.get_msg_by_code(const.Code.OK, au.language),
             requestId=au.request_id,
             data=schemas.files.VditorImagesResponse.Data(
                 originalURL=req.url,
@@ -109,8 +100,6 @@ async def fetch_image_vditor(
     new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)
     maybe_raise_json_exception(au=au, code=code)
     return schemas.files.VditorImagesResponse(
-        code=code.value,
-        msg=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         data=schemas.files.VditorImagesResponse.Data(
             originalURL=req.url,

@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from pydantic import BaseModel, NonNegativeInt, Field
+from pydantic import BaseModel, Field
 
 from rethink import const
 
@@ -13,15 +13,11 @@ class PluginsResponse(BaseModel):
         description: str
         iconSrc: str
 
-    code: NonNegativeInt
-    message: str
     requestId: str
     plugins: List[Plugin]
 
 
 class RenderPluginResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
     requestId: str
     html: str
 
@@ -33,8 +29,6 @@ class PluginCallRequest(BaseModel):
 
 
 class PluginCallResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
     requestId: str
     pluginId: str
     method: str

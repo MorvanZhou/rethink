@@ -17,8 +17,6 @@ async def get_user(
         max_space = const.USER_TYPE.id2config(au.u.type).max_store_space
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
-        code=const.Code.OK.value,
-        message=const.get_msg_by_code(const.Code.OK, au.language),
         user=schemas.user.UserInfoResponse.User(
             email=_email,
             nickname=au.u.nickname,
@@ -62,8 +60,6 @@ async def patch_user(
     u_settings = u["settings"]
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
-        code=code.value,
-        message=const.get_msg_by_code(code, u["settings"]["language"]),
         user=schemas.user.UserInfoResponse.User(
             email=u["email"],
             nickname=u["nickname"],
@@ -91,7 +87,7 @@ async def patch_user(
 async def update_password(
         au: AuthedUser,
         req: schemas.user.UpdatePasswordRequest
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     if regex.VALID_PASSWORD.match(req.newPassword) is None:
         return maybe_raise_json_exception(au=au, code=const.Code.INVALID_PASSWORD)
 
@@ -103,8 +99,6 @@ async def update_password(
     code = await reset_password(au=au, hashed=hashed)
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.base.AcknowledgeResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
+    return schemas.RequestIdResponse(
         requestId=au.request_id,
     )

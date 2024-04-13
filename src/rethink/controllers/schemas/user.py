@@ -30,8 +30,6 @@ class UserInfoResponse(BaseModel):
         lastState: LastState
         settings: Settings
 
-    code: NonNegativeInt
-    message: str
     requestId: str
     user: User = None
 

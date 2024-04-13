@@ -84,7 +84,6 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
         self.assertNotEqual("", rj["token"])
         self.assertEqual("xxx", rj["requestId"])
 
@@ -105,7 +104,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             })
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
         self.assertEqual(811, len(rj["token"]))
         self.default_headers = {
             "Authorization": rj["token"],
@@ -133,7 +131,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     def check_ok_response(self, resp: Response, status_code: int = 200, rid="xxx") -> dict:
         self.assertEqual(status_code, resp.status_code)
         rj = resp.json()
-        self.assertEqual(0, rj["code"], msg=rj)
         self.assertEqual(rid, rj["requestId"])
         return rj
 
@@ -224,7 +221,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
-        self.assertEqual(0, rj["code"])
         self.assertEqual("rethink", rj["user"]["nickname"])
         self.assertGreater(
             datetime.datetime.strptime(
@@ -358,7 +354,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 200)
         n = rj["node"]
-        self.assertEqual(0, rj["code"])
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual("node2", n["title"])
         self.assertEqual("node2\ntext", n["md"])
@@ -419,7 +414,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(0, rj["code"])
 
         resp = self.client.delete(
             "/api/trash/ssa",
@@ -688,7 +682,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             files={"file[]": f1},
             headers=self.default_headers
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(200, resp.status_code, msg=resp.json())
         rj = resp.json()
         self.assertEqual(const.Code.INVALID_FILE_TYPE.value, rj["code"])
         self.assertEqual({'errFiles': ['test.qw'], 'succMap': {}}, rj["data"])
@@ -754,7 +748,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         for n in rj["version"]:
             self.assertTrue(isinstance(n, int))
-        self.assertEqual("OK", rj["message"])
 
     @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
     @patch("rethink.core.node.backup.__remove_md_from_cos")

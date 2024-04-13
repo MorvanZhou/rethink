@@ -47,14 +47,14 @@ async def update_user(
 @router.put(
     path="/password",
     status_code=200,
-    response_model=schemas.base.AcknowledgeResponse,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def update_user_password(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.user.UpdatePasswordRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.base.AcknowledgeResponse:
+) -> schemas.RequestIdResponse:
     return await user.update_password(
         au=au,
         req=req,

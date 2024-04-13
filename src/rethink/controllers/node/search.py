@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from rethink import const, core
+from rethink import core
 from rethink.controllers import schemas
 from rethink.models.tps import AuthedUser
 
@@ -22,10 +22,7 @@ async def user_nodes(
         limit=limit,
         exclude_nids=[],
     )
-    code = const.Code.OK
     return schemas.node.NodesSearchResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(
             nodes=nodes,
@@ -48,10 +45,7 @@ async def node_at_query(
         page=p,
         limit=limit,
     )
-    code = const.Code.OK
     return schemas.node.NodesSearchResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(
             nodes=nodes,
@@ -72,10 +66,7 @@ async def recommend_nodes(
         max_return=max_return,
         exclude_nids=[nid],
     )
-    code = const.Code.OK
     return schemas.node.RecommendNodesResponse(
-        code=code.value,
-        message=const.get_msg_by_code(code, au.language),
         requestId=au.request_id,
         nodes=nodes
     )

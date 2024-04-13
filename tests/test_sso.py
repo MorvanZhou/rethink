@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch
 
-from rethink import const
 from rethink.controllers import oauth
 from rethink.depend.sso import github
 from tests import utils
@@ -59,6 +58,4 @@ class SSOTest(unittest.IsolatedAsyncioTestCase):
     async def test_login_github(self, mock_get_login_url):
         mock_get_login_url.return_value = "https://github.com/"
         res = await oauth.login_github()
-        self.assertEqual(const.Code.OK.value, res.code)
-        self.assertEqual(const.CODE_MESSAGES[const.Code.OK].en, res.message)
         self.assertEqual("https://github.com/", res.uri.unicode_string())

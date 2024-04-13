@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import Field, BaseModel, NonNegativeInt
+from pydantic import Field, BaseModel
 
 from rethink import const
 
@@ -12,7 +12,5 @@ class AddToRecentSearchHistRequest(BaseModel):
 
 
 class GetRecentSearchResponse(BaseModel):
-    code: NonNegativeInt
-    message: str
     requestId: str
     queries: List[str]
