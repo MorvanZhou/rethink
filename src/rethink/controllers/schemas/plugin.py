@@ -11,6 +11,7 @@ class PluginsResponse(BaseModel):
         name: str
         version: str
         description: str
+        author: str
         iconSrc: str
 
     requestId: str

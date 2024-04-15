@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from rethink.controllers import plugin as plugin_ops
 from rethink.controllers import schemas
+from rethink.plugins.register import register_official_plugins
 from rethink.routes import utils
 
 router = APIRouter(
@@ -9,6 +10,11 @@ router = APIRouter(
     tags=["user"],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.on_event("startup")
+async def startup_event():
+    register_official_plugins()
 
 
 @router.get(
@@ -23,6 +29,19 @@ async def get_plugin_home(
     return await plugin_ops.get_all_plugins(au=au)
 
 
+# must before /{pid}, otherwise /editor-side will be treated as /{pid} as a string
+@router.get(
+    path="/editor-side",
+    status_code=200,
+    response_model=schemas.plugin.PluginsResponse,
+)
+@utils.measure_time_spend
+async def get_plugin_with_editor_side(
+        au: utils.ANNOTATED_AUTHED_USER,
+) -> schemas.plugin.PluginsResponse:
+    return await plugin_ops.get_plugins_with_render_editor_side(au=au)
+
+
 @router.get(
     path="/{pid}",
     status_code=200,
@@ -34,18 +53,6 @@ async def render_plugin_home(
         pid: str = utils.ANNOTATED_PID,
 ) -> schemas.plugin.RenderPluginResponse:
     return await plugin_ops.render_plugin_home(au=au, pid=pid)
-
-
-@router.get(
-    path="/editor-side",
-    status_code=200,
-    response_model=schemas.plugin.PluginsResponse,
-)
-@utils.measure_time_spend
-async def get_plugin_with_editor_side(
-        au: utils.ANNOTATED_AUTHED_USER,
-) -> schemas.plugin.PluginsResponse:
-    return await plugin_ops.get_plugins_with_render_editor_side(au=au)
 
 
 @router.get(

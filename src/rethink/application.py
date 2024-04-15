@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from rethink import const, config, safety, utils
 from rethink.logger import logger, add_rotating_file_handler
-from rethink.plugins.register import register_official_plugins
 from .models.client import client
 from .routes import (
     user,
@@ -66,8 +65,6 @@ async def startup_event():
     logger.debug(f'startup_event VUE_APP_LANGUAGE: {os.environ.get("VUE_APP_LANGUAGE")}')
     await client.init()
     logger.debug("db initialized")
-
-    register_official_plugins()
 
     # local finish up
     utils.local_finish_up()

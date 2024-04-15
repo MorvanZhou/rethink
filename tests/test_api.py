@@ -18,6 +18,7 @@ from rethink.application import app
 from rethink.core import account
 from rethink.models.client import client
 from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
+from rethink.plugins.register import register_official_plugins
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -816,3 +817,86 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("title1\ntext", rj["md"])
 
         config.get_settings().MD_BACKUP_INTERVAL = bi
+
+    @patch("rethink.plugins.base.Plugin.handle_api_call")
+    def test_plugin(self, mock_handle_api_call):
+        def check_one_plugin(ps):
+            self.assertGreater(len(ps), 1)
+            p = ps[0]
+            self.assertIn("id", p)
+            self.assertIn("name", p)
+            self.assertIn("version", p)
+            self.assertIn("description", p)
+            self.assertIn("author", p)
+            self.assertIn("iconSrc", p)
+
+        config.get_settings().PLUGINS = True
+        register_official_plugins()
+        resp = self.client.get(
+            "/api/plugins",
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        check_one_plugin(rj["plugins"])
+
+        resp = self.client.get(
+            "/api/plugins/editor-side",
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        check_one_plugin(rj["plugins"])
+        pid = rj["plugins"][0]["id"]
+
+        resp = self.client.get(
+            f"/api/plugins/{pid}",
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertNotEqual("", rj["html"])
+
+        resp = self.client.get(
+            "/api/nodes",
+            params={
+                "q": "",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5,
+            },
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        nid = rj["data"]["nodes"][0]["id"]
+
+        resp = self.client.get(
+            f"/api/plugins/{pid}/editor-side/{nid}",
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertNotEqual("", rj["html"])
+
+        resp = self.client.post(
+            "/api/plugins/call",
+            json={
+                "pluginId": "xasdqw",
+                "method": "test",
+                "data": "test",
+            },
+            headers=self.default_headers
+        )
+        self.error_check(resp, 404, const.Code.PLUGIN_NOT_FOUND)
+
+        mock_handle_api_call.return_value = "test"
+        resp = self.client.post(
+            "/api/plugins/call",
+            json={
+                "pluginId": pid,
+                "method": "method",
+                "data": "test",
+            },
+            headers=self.default_headers
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual("method", rj["method"])
+        self.assertEqual("test", rj["data"])
+        config.get_settings().PLUGINS = False

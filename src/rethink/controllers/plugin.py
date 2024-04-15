@@ -47,7 +47,7 @@ async def get_plugins_with_render_editor_side(
     )
 
 
-def __render(
+async def __render(
         au: AuthedUser,
         pid: str,
         nid: str = "",
@@ -63,7 +63,7 @@ def __render(
 
     try:
         if nid != "":
-            n, code = node.get(au=au, nid=nid)
+            n, code = await node.get(au=au, nid=nid)
             maybe_raise_json_exception(au=au, code=code)
 
             html = plugin.render_editor_side(
@@ -84,7 +84,7 @@ async def render_plugin_home(
         au: AuthedUser,
         pid: str,
 ) -> schemas.plugin.RenderPluginResponse:
-    return __render(au=au, pid=pid)
+    return await __render(au=au, pid=pid)
 
 
 async def render_editor_side(
@@ -92,7 +92,7 @@ async def render_editor_side(
         pid: str,
         nid: str,
 ) -> schemas.plugin.RenderPluginResponse:
-    return __render(au=au, pid=pid, nid=nid)
+    return await __render(au=au, pid=pid, nid=nid)
 
 
 async def plugin_call(
