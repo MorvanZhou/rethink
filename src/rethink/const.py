@@ -59,6 +59,7 @@ class Code(Enum):
     USER_SPACE_NOT_ENOUGH = 25
     INVALID_EMAIL = 26
     URL_TOO_LONG = 27
+    OAUTH_PROVIDER_NOT_FOUND = 28
 
 
 INT_CODE_MAP: Dict[int, Code] = {
@@ -103,6 +104,7 @@ CODE_MESSAGES: Dict[Code, CodeMessage] = {
     Code.USER_SPACE_NOT_ENOUGH: CodeMessage(zh="用户空间不足", en="User space not enough"),
     Code.INVALID_EMAIL: CodeMessage(zh="邮箱格式错误", en="Email format error"),
     Code.URL_TOO_LONG: CodeMessage(zh="URL字符太长", en="URL too long"),
+    Code.OAUTH_PROVIDER_NOT_FOUND: CodeMessage(zh="未找到 OAuth 提供商", en="OAuth provider not found"),
 }
 
 CODE2STATUS_CODE: Dict[Code, int] = {
@@ -134,6 +136,7 @@ CODE2STATUS_CODE: Dict[Code, int] = {
     Code.USER_SPACE_NOT_ENOUGH: 403,
     Code.INVALID_EMAIL: 400,
     Code.URL_TOO_LONG: 406,
+    Code.OAUTH_PROVIDER_NOT_FOUND: 404,
 }
 
 DEFAULT_USER = {

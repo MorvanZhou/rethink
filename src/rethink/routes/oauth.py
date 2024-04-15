@@ -1,4 +1,5 @@
 from fastapi import Request, APIRouter
+from fastapi.params import Annotated, Path
 
 from rethink.controllers import oauth as co
 from rethink.controllers.schemas.account import TokenResponse
@@ -11,32 +12,31 @@ router = APIRouter(
 )
 
 
+@router.on_event("startup")
+async def startup_event():
+    co.init_provider_map()
+
+
 @router.get(
-    path="/login/github",
+    path="/login/{provider}",
     status_code=200,
     response_model=co.OAuthResponse,
 )
 @utils.measure_time_spend
-async def login_github() -> co.OAuthResponse:
-    return await co.login_github()
+async def login_github(
+        provider: str = Annotated[str, Path(title="The provider name", max_length=40)],
+) -> co.OAuthResponse:
+    return await co.login_provider(provider_name=provider)
 
 
 @router.get(
-    path="/callback/github",
+    path="/callback/{provider}",
     status_code=200,
     response_model=TokenResponse,
 )
 @utils.measure_time_spend
-async def callback_github(request: Request) -> TokenResponse:
-    return await co.callback_github(req=request)
-
-# @router.get(path="/login/facebook", response_model=co.OAuthResponse)
-# @utils.measure_time_spend
-# async def login_facebook() -> co.OAuthResponse:
-#     return await co.login_facebook()
-#
-#
-# @router.get(path="/callback/facebook", response_model=cu.UserLoginResponse)
-# @utils.measure_time_spend
-# async def callback_facebook(request: Request) -> cu.UserLoginResponse:
-#     return await co.callback_facebook(req=request)
+async def callback_github(
+        request: Request,
+        provider: str = Annotated[str, Path(title="The provider name", max_length=40)],
+) -> TokenResponse:
+    return await co.provider_callback(provider_name=provider, req=request)
