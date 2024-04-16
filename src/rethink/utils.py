@@ -410,7 +410,7 @@ def get_node_dict(
 
 
 async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
-    url = f'https://pypi.org/pypi/rethink-note/json'
+    url = 'https://pypi.org/pypi/rethink-note/json'
     default_version = (0, 0, 0)
     async with httpx.AsyncClient() as ac:
         try:

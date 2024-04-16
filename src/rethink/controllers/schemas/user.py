@@ -59,5 +59,3 @@ class PatchUserRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     oldPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-
-

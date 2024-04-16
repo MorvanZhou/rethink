@@ -13,7 +13,7 @@ from rethink.models import tps
 from rethink.models.client import client
 
 
-async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:
+async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C901
     nid = node["id"]
     md = node["md"]
     hist = node.get("history", [])

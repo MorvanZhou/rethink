@@ -69,7 +69,7 @@ async def add(
     return data, const.Code.OK
 
 
-async def patch(
+async def patch(  # noqa: C901
         au: tps.AuthedUser,
         req: PatchUserRequest,
 ) -> Tuple[Optional[tps.UserMeta], const.Code]:
