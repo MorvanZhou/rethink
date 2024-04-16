@@ -31,7 +31,7 @@ async def user_nodes(
     )
 
 
-async def node_at_query(
+async def node_at_search(
         au: AuthedUser,
         nid: str,
         q: Optional[str],
@@ -58,7 +58,7 @@ async def recommend_nodes(
         au: AuthedUser,
         nid: str,
         content: str,
-) -> schemas.node.RecommendNodesResponse:
+) -> schemas.node.NodesSearchResponse:
     max_return = 5
     nodes = await core.node.search.recommend(
         au=au,
@@ -66,7 +66,10 @@ async def recommend_nodes(
         max_return=max_return,
         exclude_nids=[nid],
     )
-    return schemas.node.RecommendNodesResponse(
+    return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
-        nodes=nodes
+        data=schemas.node.NodesSearchResponse.Data(
+            nodes=nodes,
+            total=len(nodes),
+        )
     )

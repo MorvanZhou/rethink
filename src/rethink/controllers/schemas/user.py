@@ -10,14 +10,14 @@ class UserInfoResponse(BaseModel):
     class User(BaseModel):
         class LastState(BaseModel):
             nodeDisplayMethod: NonNegativeInt
-            nodeDisplaySortKey: str
+            nodeDisplaySortKey: Literal["modifiedAt", "createdAt", "title", "similarity"]
 
         class Settings(BaseModel):
             language: Literal["en", "zh"]
             theme: Literal["light", "dark"]
             editorMode: Literal["ir", "wysiwyg"]
             editorFontSize: NonNegativeInt
-            editorCodeTheme: str
+            editorCodeTheme: CODE_THEME_TYPES
             editorSepRightWidth: float
             editorSideCurrentToolId: str
 

@@ -44,7 +44,7 @@ def __get_node_data(n: Node) -> schemas.node.NodeData:
 async def post_node(
         au: AuthedUser,
         req: schemas.node.CreateRequest,
-) -> schemas.node.CreateResponse:
+) -> schemas.node.NodeResponse:
     n, code = await core.node.post(
         au=au,
         md=req.md,
@@ -53,7 +53,7 @@ async def post_node(
     )
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.node.CreateResponse(
+    return schemas.node.NodeResponse(
         requestId=au.request_id,
         node=__get_node_data(n),
     )
@@ -62,7 +62,7 @@ async def post_node(
 async def post_quick_node(
         au: AuthedUser,
         req: schemas.node.CreateRequest,
-) -> schemas.node.CreateResponse:
+) -> schemas.node.NodeResponse:
     if contain_only_http_link(req.md) != "":
         title, description = await get_title_description_from_link(
             url=req.md,
@@ -88,11 +88,11 @@ async def post_quick_node(
 async def get_node(
         au: AuthedUser,
         nid: str,
-) -> schemas.node.GetResponse:
+) -> schemas.node.NodeResponse:
     n, code = await core.node.get(au=au, nid=nid)
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.node.GetResponse(
+    return schemas.node.NodeResponse(
         requestId=au.request_id,
         node=__get_node_data(n),
     )
@@ -102,7 +102,7 @@ async def update_md(
         au: AuthedUser,
         req: schemas.node.PatchMdRequest,
         nid: str,
-) -> schemas.node.GetResponse:
+) -> schemas.node.NodeResponse:
     n, old_n, code = await core.node.update_md(
         au=au,
         nid=nid,
@@ -110,7 +110,7 @@ async def update_md(
     )
     maybe_raise_json_exception(au=au, code=code)
 
-    return schemas.node.GetResponse(
+    return schemas.node.NodeResponse(
         requestId=au.request_id,
         node=__get_node_data(n),
     )
@@ -120,13 +120,13 @@ async def get_core_nodes(
         au: AuthedUser,
         p: int,
         limit: int,
-) -> schemas.node.CoreNodesResponse:
+) -> schemas.node.GetFromTrashResponse:
     nodes, total = await core.node.core_nodes(
         au=au,
         page=p,
         limit=limit,
     )
-    return schemas.node.CoreNodesResponse(
+    return schemas.node.GetFromTrashResponse(
         requestId=au.request_id,
         data=_get_node_search_response_data(nodes=nodes, total=total),
     )

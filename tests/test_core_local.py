@@ -387,7 +387,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         doc, code = await update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
-        doc = await core.files.get_upload_process("xxx")
+        doc, code = await core.files.get_upload_process("xxx1213")
+        self.assertEqual(const.Code.TASK_NOT_FOUND, code)
+
+        doc, code = await core.files.get_upload_process("xxx")
+        self.assertEqual(const.Code.OK, code)
         self.assertEqual(10, doc["process"])
         self.assertEqual("obsidian", doc["type"])
         self.assertEqual(now, doc["startAt"])

@@ -100,11 +100,11 @@ async def upload_text(au: AuthedUser, files: List[UploadFile]) -> const.Code:
     return const.Code.OK
 
 
-async def get_upload_process(uid: str) -> Optional[dict]:
+async def get_upload_process(uid: str) -> Tuple[Optional[dict], const.Code]:
     timeout_minus = 5
     doc = await client.coll.import_data.find_one({"uid": uid})
     if doc is None:
-        return None
+        return None, const.Code.TASK_NOT_FOUND
     now = datetime.datetime.now(tz=utc)
 
     # upload timeout
@@ -120,7 +120,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
                 "msg": f"Timeout, upload not finish in {timeout_minus} mins",
             }},
         )
-    return doc
+    return doc, const.Code.OK
 
 
 async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:

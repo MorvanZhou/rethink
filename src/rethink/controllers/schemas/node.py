@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
@@ -35,14 +35,9 @@ class CreateRequest(BaseModel):
     fromNid: str = Field(default="", max_length=const.NID_MAX_LENGTH)
 
 
-class CreateResponse(BaseModel):
+class NodeResponse(BaseModel):
     requestId: str
-    node: Optional[NodeData]
-
-
-class GetResponse(BaseModel):
-    requestId: str
-    node: Optional[NodeData]
+    node: NodeData
 
 
 class PatchMdRequest(BaseModel):
@@ -78,11 +73,6 @@ class BatchNodeIdsRequest(BaseModel):
     nids: List[str] = Field(default_factory=list, min_length=1, max_length=1000)
 
 
-class CoreNodesResponse(BaseModel):
-    data: NodesSearchResponse.Data
-    requestId: str = Field(default="", max_length=const.REQUEST_ID_MAX_LENGTH)
-
-
 class HistEditionsResponse(BaseModel):
     requestId: str
     versions: List[str] = Field(default_factory=list)
@@ -91,8 +81,3 @@ class HistEditionsResponse(BaseModel):
 class HistEditionMdResponse(BaseModel):
     requestId: str
     md: str
-
-
-class RecommendNodesResponse(BaseModel):
-    requestId: str
-    nodes: List[NodesSearchResponse.Data.Node] = Field(default_factory=list)

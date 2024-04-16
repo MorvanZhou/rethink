@@ -19,14 +19,14 @@ router = APIRouter(
 @router.post(
     path="/",
     status_code=201,
-    response_model=schemas.node.CreateResponse,
+    response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
 async def post_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.CreateResponse:
+) -> schemas.node.NodeResponse:
     return await node_ops.post_node(
         au=au,
         req=req,
@@ -36,14 +36,14 @@ async def post_node(
 @router.post(
     path="/quick",
     status_code=201,
-    response_model=schemas.node.CreateResponse,
+    response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
 async def post_quick_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.CreateResponse:
+) -> schemas.node.NodeResponse:
     return await node_ops.post_quick_node(
         au=au,
         req=req,
@@ -81,7 +81,7 @@ async def get_search_nodes(
 @router.get(
     path="/core",
     status_code=200,
-    response_model=schemas.node.CoreNodesResponse,
+    response_model=schemas.node.GetFromTrashResponse,
 )
 @utils.measure_time_spend
 async def get_core_nodes(
@@ -89,7 +89,7 @@ async def get_core_nodes(
         p: int = Query(default=0, ge=0, description="page number"),
         limit: int = Query(default=10, ge=0, le=const.SEARCH_LIMIT_MAX),
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.CoreNodesResponse:
+) -> schemas.node.GetFromTrashResponse:
     return await node_ops.get_core_nodes(
         au=au,
         p=p,
@@ -100,14 +100,14 @@ async def get_core_nodes(
 @router.get(
     path="/{nid}",
     status_code=200,
-    response_model=schemas.node.GetResponse,
+    response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
 async def get_node(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.GetResponse:
+) -> schemas.node.NodeResponse:
     return await node_ops.get_node(
         au=au,
         nid=nid,
@@ -120,7 +120,7 @@ async def get_node(
     response_model=schemas.node.NodesSearchResponse,
 )
 @utils.measure_time_spend
-async def get_at_query(
+async def get_at_search(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
         q: Optional[str] = Query(default="", max_length=const.SEARCH_QUERY_MAX_LENGTH),
@@ -128,7 +128,7 @@ async def get_at_query(
         limit: Optional[int] = Query(default=20, ge=0, le=const.SEARCH_LIMIT_MAX),
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.NodesSearchResponse:
-    return await search.node_at_query(
+    return await search.node_at_search(
         au=au,
         nid=nid,
         q=q,
@@ -140,7 +140,7 @@ async def get_at_query(
 @router.get(
     path="/{nid}/recommend",
     status_code=200,
-    response_model=schemas.node.RecommendNodesResponse,
+    response_model=schemas.node.NodesSearchResponse,
 )
 @utils.measure_time_spend
 async def get_recommend_nodes(
@@ -151,7 +151,7 @@ async def get_recommend_nodes(
             description="recommend based on this content"
         ),
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.RecommendNodesResponse:
+) -> schemas.node.NodesSearchResponse:
     return await search.recommend_nodes(
         au=au,
         nid=nid,
@@ -198,7 +198,7 @@ async def get_hist_md(
 @router.put(
     path="/{nid}/md",
     status_code=200,
-    response_model=schemas.node.GetResponse,
+    response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
 async def put_node_md(
@@ -206,7 +206,7 @@ async def put_node_md(
         req: schemas.node.PatchMdRequest,
         nid: str = utils.ANNOTATED_NID,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.node.GetResponse:
+) -> schemas.node.NodeResponse:
     return await node_ops.update_md(
         au=au,
         req=req,

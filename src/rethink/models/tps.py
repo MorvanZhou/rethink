@@ -6,7 +6,7 @@ from bson import ObjectId
 from typing_extensions import TypedDict
 
 CODE_THEME_TYPES = Literal[
-    "dracula", "github", "emacs", "tango", "",
+    "dracula", "github", "emacs", "tango",
 ]
 
 

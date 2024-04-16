@@ -39,26 +39,26 @@ async def upload_text_files(
 async def get_upload_process(
         au: AuthedUser,
 ) -> schemas.files.FileUploadProcessResponse:
-    doc = await core.files.get_upload_process(uid=au.u.id)
+    doc, code = await core.files.get_upload_process(uid=au.u.id)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
+            code=code.value,
+            msg=const.get_msg_by_code(code, au.language),
             requestId=au.request_id,
             process=0.,
             type="",
             startAt="",
             running=False,
-            msg="",
         )
-    code = const.INT_CODE_MAP[doc["code"]]
-    maybe_raise_json_exception(au=au, code=code)
 
     return schemas.files.FileUploadProcessResponse(
+        code=doc["code"],
+        msg=doc["msg"],
         requestId=au.request_id,
         process=doc["process"],
         type=doc["type"],
         startAt=datetime2str(doc["startAt"]),
         running=doc["running"],
-        msg=doc["msg"],
     )
 
 

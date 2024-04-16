@@ -5,11 +5,12 @@ from pydantic import BaseModel, NonNegativeInt
 
 class FileUploadProcessResponse(BaseModel):
     requestId: str
+    code: NonNegativeInt
+    msg: str
     process: int
     type: str
     startAt: str
     running: bool
-    msg: str
 
 
 class VditorFilesResponse(BaseModel):

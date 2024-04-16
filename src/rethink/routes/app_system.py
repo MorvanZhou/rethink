@@ -7,14 +7,14 @@ from rethink.controllers.app_system import get_latest_version
 from rethink.routes import utils
 
 router = APIRouter(
-    prefix="/api",
+    prefix="/api/system",
     tags=["system"],
     responses={404: {"description": "Not found"}},
 )
 
 
 @router.get(
-    "/system/latest-version",
+    "/latest-version",
     status_code=200,
     response_model=schemas.app_system.LatestVersionResponse,
 )

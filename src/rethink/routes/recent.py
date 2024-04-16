@@ -18,7 +18,7 @@ router = APIRouter(
 @utils.measure_time_spend
 async def add_recent_at_node(
         au: utils.ANNOTATED_AUTHED_USER,
-        req: schemas.recent.AddToRecentSearchHistRequest,
+        req: schemas.recent.AtNodeRequest,
 ) -> schemas.RequestIdResponse:
     return await recent.add_recent_at_node(
         au=au,

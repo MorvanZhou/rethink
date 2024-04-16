@@ -18,7 +18,7 @@ from rethink.application import app
 from rethink.core import account
 from rethink.models.client import client
 from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
-from rethink.plugins.register import register_official_plugins
+from rethink.plugins.register import register_official_plugins, unregister_official_plugins
 from rethink.utils import jwt_decode
 from . import utils
 
@@ -401,8 +401,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
-        self.assertEqual(1, len(rj["nodes"]))
-        self.assertEqual("Welcome to Rethink", rj["nodes"][0]["title"])
+        self.assertEqual(1, len(rj["data"]["nodes"]))
+        self.assertEqual(1, rj["data"]["total"])
+        self.assertEqual("Welcome to Rethink", rj["data"]["nodes"][0]["title"])
 
         self.client.put(
             f'/api/trash/{node["id"]}',
@@ -899,4 +900,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("method", rj["method"])
         self.assertEqual("test", rj["data"])
+
+        unregister_official_plugins()
         config.get_settings().PLUGINS = False

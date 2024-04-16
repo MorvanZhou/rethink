@@ -6,7 +6,7 @@ from rethink.models.tps import AuthedUser
 
 async def add_recent_at_node(
         au: AuthedUser,
-        req: schemas.recent.AddToRecentSearchHistRequest
+        req: schemas.recent.AtNodeRequest
 ) -> schemas.RequestIdResponse:
     code = await core.recent.added_at_node(au=au, nid=req.nid, to_nid=req.toNid)
     maybe_raise_json_exception(au=au, code=code)
