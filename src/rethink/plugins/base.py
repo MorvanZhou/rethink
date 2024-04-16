@@ -174,7 +174,7 @@ _plugins: Dict[str, Plugin] = {}
 
 def add_plugin(plugin: Plugin):
     if plugin.id in _plugins:
-        raise ValueError(f"plugin {plugin.id} already exists")
+        raise ValueError(f"plugin '{plugin.id}' already exists")
     _plugins[plugin.id] = plugin
 
     for method_name, value in event_plugin_map.items():
