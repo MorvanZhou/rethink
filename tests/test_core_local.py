@@ -14,13 +14,13 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from rethink import const, core, config
-from rethink.controllers.schemas.user import PatchUserRequest
-from rethink.core.files.importing.async_tasks.utils import update_process
-from rethink.models import db_ops
-from rethink.models.client import client
-from rethink.models.tps import ImportData, AuthedUser, convert_user_dict_to_authed_user
-from rethink.utils import short_uuid
+from retk import const, core, config
+from retk.controllers.schemas.user import PatchUserRequest
+from retk.core.files.importing.async_tasks.utils import update_process
+from retk.models import db_ops
+from retk.models.client import client
+from retk.models.tps import ImportData, AuthedUser, convert_user_dict_to_authed_user
+from retk.utils import short_uuid
 from . import utils
 
 
@@ -442,7 +442,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(used_space + size, u["usedSpace"])
 
     @patch(
-        "rethink.core.files.upload.httpx.AsyncClient.get",
+        "retk.core.files.upload.httpx.AsyncClient.get",
     )
     async def test_fetch_image_vditor(self, mock_get):
         f = open(Path(__file__).parent / "tmp" / "fake.png", "rb")

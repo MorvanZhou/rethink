@@ -6,8 +6,8 @@ import unittest
 import urllib.request
 from pathlib import Path
 
-import rethink
-from rethink import config
+import retk
+from retk import config
 
 
 class TestRun(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestRun(unittest.TestCase):
     def test_run(self, password=None):
         port = 8001
 
-        p = multiprocessing.Process(target=rethink.run, kwargs={
+        p = multiprocessing.Process(target=retk.run, kwargs={
             "path": self.path, "port": port, "language": "zh", "headless": True,
             "debug": False, "password": password,
         })
@@ -70,13 +70,13 @@ class TestRun(unittest.TestCase):
 
     # def test_plugin(self):
     #
-    #     class TestPlugin(rethink.Plugin):
+    #     class TestPlugin(retk.Plugin):
     #         name = "TestPlugin"
     #         version = "0.1.0"
     #         description = "A demo test plugin."
     #         author = "morvanzhou"
     #         template = "<h1>{h}</h1>\n<p>{p}</p>"
-    #         schedule_timing = rethink.schedule.every_minute_at(second=0)
+    #         schedule_timing = retk.schedule.every_minute_at(second=0)
     #
     #         def __init__(self):
     #             super().__init__()
@@ -87,5 +87,5 @@ class TestRun(unittest.TestCase):
     #             self.count += 1
     #
     #     plugin = TestPlugin()
-    #     rethink.add_plugin(plugin)
-    #     rethink.run()
+    #     retk.add_plugin(plugin)
+    #     retk.run()

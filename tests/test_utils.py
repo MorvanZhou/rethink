@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import httpx
 
-from rethink import const, config, utils
+from retk import const, config, utils
 
 
 class UtilsTest(unittest.TestCase):
@@ -117,8 +117,8 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
         config.get_settings.cache_clear()
 
     # @unittest.skip("skip outer connection test")
-    @patch("rethink.utils.httpx.AsyncClient.get")
-    @patch("rethink.config.get_settings")
+    @patch("retk.utils.httpx.AsyncClient.get")
+    @patch("retk.config.get_settings")
     async def test_get_title_description_from_link(self, mock_get_settings, mock_get, ):
         s = config.Settings
         s.COS_BUCKET_NAME = "rethink-dev-1258395282"
@@ -218,7 +218,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(res, utils.mask_email(email))
 
     @patch(
-        "rethink.config.get_settings",
+        "retk.config.get_settings",
     )
     def test_ssrf(self, mock_get_settings):
         for pre, url in [

@@ -13,13 +13,13 @@ from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from rethink import const, config
-from rethink.application import app
-from rethink.core import account
-from rethink.models.client import client
-from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
-from rethink.plugins.register import register_official_plugins, unregister_official_plugins
-from rethink.utils import jwt_decode
+from retk import const, config
+from retk.application import app
+from retk.core import account
+from retk.models.client import client
+from retk.models.tps import convert_user_dict_to_authed_user
+from retk.plugins.register import register_official_plugins, unregister_official_plugins
+from retk.utils import jwt_decode
 from . import utils
 
 
@@ -66,7 +66,7 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("xxx", rj["detail"]["requestId"])
 
     @patch(
-        "rethink.core.account.email.EmailServer._send"
+        "retk.core.account.email.EmailServer._send"
     )
     def test_email_verification(self, mock_send):
         mock_send.return_value = const.Code.OK
@@ -204,12 +204,12 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         _ = self.check_ok_response(resp, 200)
         u = await client.coll.users.find_one({"email": email})
-        au = AuthedUser(
-            u=convert_user_dict_to_authed_user(u),
-            language=lang,
-            request_id="xxx"
-        )
-        self.assertTrue(await account.manager.is_right_password(au, "abc222"))
+        au = convert_user_dict_to_authed_user(u)
+        self.assertTrue(await account.manager.is_right_password(
+            email=au.email,
+            hashed=au.hashed,
+            password="abc222"
+        ))
 
         uid = (await client.coll.users.find_one({"email": email}))["id"]
         await client.coll.users.delete_one({"id": uid})
@@ -711,7 +711,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.error_check(resp, 400, const.Code.FILE_OPEN_ERROR)
 
     @patch(
-        "rethink.utils.httpx.AsyncClient.get",
+        "retk.utils.httpx.AsyncClient.get",
         return_value=Response(200, content="<title>百度一下</title>".encode("utf-8"))
     )
     def test_put_quick_node(self, mocker):
@@ -748,13 +748,15 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers=self.default_headers
         )
         rj = self.check_ok_response(resp, 200)
-        for n in rj["version"]:
+        for n in rj["remote"]:
+            self.assertTrue(isinstance(n, int))
+        for n in rj["local"]:
             self.assertTrue(isinstance(n, int))
 
-    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
-    @patch("rethink.core.node.backup.__remove_md_from_cos")
-    @patch("rethink.core.node.backup.__get_md_from_cos")
-    @patch("rethink.core.node.backup.__save_md_to_cos")
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
     def test_md_history(
             self,
             mock_save_md_to_cos,
@@ -819,7 +821,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         config.get_settings().MD_BACKUP_INTERVAL = bi
 
-    @patch("rethink.plugins.base.Plugin.handle_api_call")
+    @patch("retk.plugins.base.Plugin.handle_api_call")
     def test_plugin(self, mock_handle_api_call):
         def check_one_plugin(ps):
             self.assertGreater(len(ps), 1)

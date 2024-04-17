@@ -3,7 +3,7 @@ import shutil
 import unittest
 from pathlib import Path
 
-from rethink import const, version_manager, __version__
+from retk import const, version_manager, __version__
 
 
 class RecoverTest(unittest.TestCase):
@@ -14,6 +14,11 @@ class RecoverTest(unittest.TestCase):
     def tearDown(self) -> None:
         # remove all files and dirs
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_package_version(self):
+        vs = __version__.split(".")
+        vs_int = list(map(int, vs))
+        self.assertEqual(3, len(vs_int))
 
     def test_dump_load(self):
         version_manager.recover.dump_dot_rethink(self.tmp_dir / ".rethink.json")

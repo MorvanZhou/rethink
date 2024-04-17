@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 
-from rethink.controllers import oauth
-from rethink.depend.sso import github
+from retk.controllers import oauth
+from retk.depend.sso import github
 from tests import utils
 
 
@@ -55,7 +55,7 @@ class SSOTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("avatar_url", open_id.picture)
         self.assertEqual("email", open_id.email)
 
-    @patch("rethink.depend.sso.base.SSOBase.get_login_url")
+    @patch("retk.depend.sso.base.SSOBase.get_login_url")
     async def test_login_github(
             self,
             mock_get_login_url,

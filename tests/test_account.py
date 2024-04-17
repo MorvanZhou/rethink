@@ -3,11 +3,11 @@ from io import BytesIO
 
 import bcrypt
 
-from rethink import const, regex
-from rethink.core import account
-from rethink.models.client import client
-from rethink.models.tps import convert_user_dict_to_authed_user
-from rethink.utils import jwt_decode
+from retk import const, regex
+from retk.core import account
+from retk.models.client import client
+from retk.models.tps import convert_user_dict_to_authed_user
+from retk.utils import jwt_decode
 from . import utils
 
 
@@ -53,7 +53,11 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, err)
         self.assertIsNotNone(u)
         au = convert_user_dict_to_authed_user(u)
-        ok = await account.manager.is_right_password(au, "rethink")
+        ok = await account.manager.is_right_password(
+            email=au.email,
+            hashed=au.hashed,
+            password="rethink"
+        )
         self.assertTrue(ok)
 
     def test_valid_password(self):

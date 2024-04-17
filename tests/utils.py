@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-from rethink import config
+from retk import config
 
 
 def set_env(file=".env.test.local"):

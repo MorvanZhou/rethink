@@ -61,5 +61,5 @@ if [ $mode == "local" ]; then
   export RETHINK_SERVER_HEADLESS=1
 fi
 echo "Running in $mode mode with reload=$reload on $host:$port"
-# set working directory to rethink
-uvicorn rethink.application:app $reload --host $host --port $port --env-file .env.$mode
+# set working directory to retk
+uvicorn retk.application:app $reload --host $host --port $port --env-file .env.$mode

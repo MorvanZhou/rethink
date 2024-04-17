@@ -24,4 +24,4 @@
 
 
 /temp
-/src/rethink/plugins/official_plugins/**/*.json
+/src/retk/plugins/official_plugins/**/*.json

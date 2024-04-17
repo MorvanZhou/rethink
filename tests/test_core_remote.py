@@ -7,13 +7,13 @@ import elastic_transport
 import pymongo.errors
 from bson import ObjectId
 
-from rethink import const, config, core
-from rethink.controllers.schemas.user import PatchUserRequest
-from rethink.core.account.manager import signup
-from rethink.models import db_ops
-from rethink.models.client import client
-from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
-from rethink.utils import jwt_encode
+from retk import const, config, core
+from retk.controllers.schemas.user import PatchUserRequest
+from retk.core.account.manager import signup
+from retk.models import db_ops
+from retk.models.client import client
+from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
+from retk.utils import jwt_encode
 from . import utils
 
 
@@ -174,10 +174,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
 
     @utils.skip_no_connect
-    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
-    @patch("rethink.core.node.backup.__remove_md_from_cos")
-    @patch("rethink.core.node.backup.__get_md_from_cos")
-    @patch("rethink.core.node.backup.__save_md_to_cos")
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_node(
             self,
             mock_save_md_to_cos,
@@ -250,10 +250,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, total)
 
     @utils.skip_no_connect
-    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
-    @patch("rethink.core.node.backup.__remove_md_from_cos")
-    @patch("rethink.core.node.backup.__get_md_from_cos")
-    @patch("rethink.core.node.backup.__save_md_to_cos")
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_parse_at(
             self,
             mock_save_md_to_cos,
@@ -367,10 +367,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(4, total)
 
     @utils.skip_no_connect
-    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
-    @patch("rethink.core.node.backup.__remove_md_from_cos")
-    @patch("rethink.core.node.backup.__get_md_from_cos")
-    @patch("rethink.core.node.backup.__save_md_to_cos")
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_batch(
             self,
             mock_save_md_to_cos,
@@ -441,10 +441,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             self.assertAlmostEqual(value, now, msg=f"delta: {delta}, value: {value}")
 
     @utils.skip_no_connect
-    @patch("rethink.core.node.backup.__remove_md_all_versions_from_cos")
-    @patch("rethink.core.node.backup.__remove_md_from_cos")
-    @patch("rethink.core.node.backup.__get_md_from_cos")
-    @patch("rethink.core.node.backup.__save_md_to_cos")
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_md_history(
             self,
             mock_save_md_to_cos,

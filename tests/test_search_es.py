@@ -4,9 +4,9 @@ import unittest
 import elastic_transport
 from bson import ObjectId
 
-from rethink import const, config
-from rethink.models.search_engine.engine_es import ESSearcher, SearchDoc
-from rethink.models.tps import AuthedUser
+from retk import const, config
+from retk.models.search_engine.engine_es import ESSearcher, SearchDoc
+from retk.models.tps import AuthedUser
 from . import utils
 
 

@@ -14,7 +14,7 @@ parser.add_argument("--headless", action="store_true", help="Run the server in h
 parser.add_argument("--debug", action="store_true", help="Run the server in debug mode.")
 parser.add_argument("--password", type=str, required=False, help="The password for the server.")
 
-args = parser.parse_args(["--mode", "local", "--headless", "--password", "123456"])
+args = parser.parse_args()
 
 if __name__ == "__main__":
     os.environ["VUE_APP_API_PORT"] = str(args.port)
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     if args.password is not None:
         os.environ["RETHINK_SERVER_PASSWORD"] = args.password
     uvicorn.run(
-        "rethink.application:app",
+        "retk.application:app",
         host=args.host,
         port=args.port,
         reload=args.reload,

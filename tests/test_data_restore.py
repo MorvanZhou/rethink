@@ -1,8 +1,8 @@
 import unittest
 
-from rethink import const, core
-from rethink.models.client import client
-from rethink.models.tps import AuthedUser, convert_user_dict_to_authed_user
+from retk import const, core
+from retk.models.client import client
+from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from . import utils
 
 

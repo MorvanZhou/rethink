@@ -4,9 +4,9 @@ import unittest
 
 from bson import ObjectId
 
-from rethink import const
-from rethink.models.search_engine.engine_local import LocalSearcher, SearchDoc
-from rethink.models.tps import AuthedUser
+from retk import const
+from retk.models.search_engine.engine_local import LocalSearcher, SearchDoc
+from retk.models.tps import AuthedUser
 from . import utils
 
 

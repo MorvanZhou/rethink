@@ -6,10 +6,10 @@ from zipfile import ZipFile, BadZipFile
 
 from bson import ObjectId
 
-from rethink import core, const
-from rethink.core.files import saver
-from rethink.core.files.importing.async_tasks.obsidian import ops
-from rethink.models.client import client
+from retk import core, const
+from retk.core.files import saver
+from retk.core.files.importing.async_tasks.obsidian import ops
+from retk.models.client import client
 from . import utils
 
 

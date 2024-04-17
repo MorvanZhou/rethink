@@ -2,11 +2,11 @@
 
 [![Unittest](https://github.com/MorvanZhou/rethink/actions/workflows/python-app.yml/badge.svg)](https://github.com/MorvanZhou/rethink/actions/workflows/python-app.yml)
 [![License](https://img.shields.io/github/license/MorvanZhou/rethink)](https://github.com/MorvanZhou/rethink/blob/master/LICENSE)
-<a href="https://pypi.org/project/rethink-note" target="_blank">
-<img src="https://img.shields.io/pypi/v/rethink-note?color=%2334D058&label=pypi%20package" alt="Package version">
+<a href="https://pypi.org/project/retk" target="_blank">
+<img src="https://img.shields.io/pypi/v/retk?color=%2334D058&label=pypi%20package" alt="Package version">
 </a>
-<a href="https://pypi.org/project/rethink-note" target="_blank">
-<img src="https://img.shields.io/pypi/pyversions/rethink-note.svg?color=%2334D058" alt="Supported Python versions">
+<a href="https://pypi.org/project/retk" target="_blank">
+<img src="https://img.shields.io/pypi/pyversions/retk.svg?color=%2334D058" alt="Supported Python versions">
 </a>
 
 <p align="center">
@@ -50,36 +50,36 @@ note-taking app includes:
 First install:
 
 ```shell
-pip install rethink-note
+pip install retk
 ```
 
 To update:
 
 ```shell
-pip install -U rethink-note
+pip install -U retk
 ```
 
 ## Usage
 
-Quickly start the note web service with `rethink.run()`, and save your note data locally,
+Quickly start the note web service with `retk.run()`, and save your note data locally,
 The default save path is the `.data` folder under the path of this script:
 
 ```python
-import rethink
+import retk
 
-rethink.run()
+retk.run()
 ```
 
-If you need to customize settings, you can set the parameters in `rethink.run()`:
+If you need to customize settings, you can set the parameters in `retk.run()`:
 
 ```python
-import rethink
+import retk
 
-rethink.run(
-    path='.',  # path to store notes, default is current directory
-    host="127.0.0.1",  # host ip, default is localhost
-    port=8080,  # port number, default is 8080
-    language="zh"  # language, default is English, optional: zh, en
+retk.run(
+   path='.',  # path to store notes, default is current directory
+   host="127.0.0.1",  # host ip, default is localhost
+   port=8080,  # port number, default is 8080
+   language="zh"  # language, default is English, optional: zh, en
 )
 ```
 

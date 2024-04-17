@@ -3,15 +3,15 @@ import unittest
 from pathlib import Path
 from typing import Dict
 
-import rethink
-from rethink import core, const
-from rethink.models.client import client
-from rethink.models.tps import convert_user_dict_to_authed_user, AuthedUser
-from rethink.plugins.base import event_plugin_map
+import retk
+from retk import core, const
+from retk.models.client import client
+from retk.models.tps import convert_user_dict_to_authed_user, AuthedUser
+from retk.plugins.base import event_plugin_map
 from . import utils
 
 
-class TestPlugin(rethink.Plugin):
+class TestPlugin(retk.Plugin):
     id = "testPlugin"
     name = "TestPlugin"
     version = "0.1.0"
@@ -22,7 +22,7 @@ class TestPlugin(rethink.Plugin):
 
     def __init__(self):
         super().__init__()
-        self.cache: Dict[str, rethink.tps.Node] = {}
+        self.cache: Dict[str, retk.tps.Node] = {}
         self.bmd = ""
         self.h = ""
         self.p = ""
@@ -30,13 +30,13 @@ class TestPlugin(rethink.Plugin):
     def render(self):
         return self.template.format(h=self.h, p=self.p)
 
-    def on_node_added(self, node: rethink.tps.Node):
+    def on_node_added(self, node: retk.tps.Node):
         self.cache[node["id"]] = node
 
     def before_node_updated(self, uid: str, nid: str, data: Dict[str, str]):
         self.bmd = "before_node_updated:" + data["md"]
 
-    def on_node_updated(self, node: rethink.tps.Node, old_node: rethink.tps.Node):
+    def on_node_updated(self, node: retk.tps.Node, old_node: retk.tps.Node):
         self.cache[node["id"]] = node
 
 
@@ -65,7 +65,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self) -> None:
         self.p = TestPlugin()
-        rethink.add_plugin(self.p)
+        retk.add_plugin(self.p)
 
         await client.init()
         u, _ = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
@@ -76,7 +76,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         )
 
     async def asyncTearDown(self) -> None:
-        rethink.remove_plugin(self.p)
+        retk.remove_plugin(self.p)
         await client.drop()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
@@ -111,7 +111,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         node, code = await core.node.post(
             au=self.au, md="a", type_=const.NodeType.MARKDOWN.value
         )
-        self.assertEqual(rethink.const.Code.OK, code)
+        self.assertEqual(retk.const.Code.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])
         self.assertEqual("a", self.p.cache[node["id"]]["md"])
 
@@ -119,14 +119,14 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         node, _, code = await core.node.update_md(
             au=self.au, nid=node["id"], md="b"
         )
-        self.assertEqual(rethink.const.Code.OK, code)
+        self.assertEqual(retk.const.Code.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])
         self.assertEqual("b", self.p.cache[node["id"]]["md"])
         self.assertEqual("before_node_updated:b", self.p.bmd)
 
     def test_timing(self):
         with self.assertRaises(ValueError):
-            rethink.schedule.every_minute_at(second=-1)
-        t = rethink.schedule.every_minute_at(second=1)
+            retk.schedule.every_minute_at(second=-1)
+        t = retk.schedule.every_minute_at(second=1)
         self.assertEqual(1, t.at_second)
         self.assertEqual(0, t.at_minute)
