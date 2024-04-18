@@ -7,19 +7,27 @@ def task(
         recipients: list,
         subject: str,
 ) -> str:
-    server = smtplib.SMTP('smtp.office365.com', 587)
+    server = None
+    for i in range(3):
+        try:
+            server = smtplib.SMTP('smtp.office365.com', 587)
+        except smtplib.SMTPServerDisconnected as e:
+            pass
+    if server is None:
+        return f"try send email task 3 times, but failed, SMTPServerDisconnected"
+
     server.ehlo()
     server.starttls()
     settings = config.get_settings()
     try:
         server.login(settings.RETHINK_EMAIL, password=settings.RETHINK_EMAIL_PASSWORD)
-    except smtplib.SMTPAuthenticationError:
+    except smtplib.SMTPAuthenticationError as e:
         server.quit()
-        return "SMTPAuthenticationError"
+        return f"SMTPAuthenticationError: {e}"
     try:
         server.sendmail(settings.RETHINK_EMAIL, recipients, subject)
-    except smtplib.SMTPRecipientsRefused:
+    except smtplib.SMTPRecipientsRefused as e:
         server.quit()
-        return "SMTPRecipientsRefused"
+        return f"SMTPRecipientsRefused: {e}"
     server.quit()
     return "done"

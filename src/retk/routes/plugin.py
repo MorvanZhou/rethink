@@ -76,7 +76,6 @@ async def render_editor_side(
 )
 @utils.measure_time_spend
 async def plugin_call(
-        au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.plugin.PluginCallRequest,
 ) -> schemas.plugin.PluginCallResponse:
-    return await plugin_ops.plugin_call(au=au, req=req)
+    return await plugin_ops.plugin_call(req=req)

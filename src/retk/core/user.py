@@ -133,16 +133,16 @@ async def patch(  # noqa: C901
     return await get(uid=au.u.id)
 
 
-async def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get_by_email(email: str, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.Code]:
     if config.get_settings().ONE_USER:
         source = const.UserSource.LOCAL.value
     else:
         source = const.UserSource.EMAIL.value
-    return await get_account(account=email, source=source)
+    return await get_account(account=email, source=source, disabled=disabled)
 
 
-async def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    u = await client.coll.users.find_one({"source": source, "account": account, "disabled": False})
+async def get_account(account: str, source: int, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.Code]:
+    u = await client.coll.users.find_one({"source": source, "account": account, "disabled": disabled})
     if u is None:
         return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
     return u, const.Code.OK

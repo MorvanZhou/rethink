@@ -51,7 +51,7 @@ async def enable_account_by_email(
         au: AuthedUser,
         email: str,
 ) -> schemas.RequestIdResponse:
-    u, code = await user.get_by_email(email=email)
+    u, code = await user.get_by_email(email=email, disabled=True)
     maybe_raise_json_exception(au=au, code=code)
 
     return await enable_account_by_id(au=au, uid=u["id"])
@@ -61,7 +61,9 @@ async def delete_account_by_email(
         au: AuthedUser,
         email: str,
 ) -> schemas.RequestIdResponse:
-    u, code = await user.get_by_email(email=email)
+    u, code = await user.get_by_email(email=email, disabled=True)
+    if u is None:
+        u, code = await user.get_by_email(email=email, disabled=False)
     maybe_raise_json_exception(au=au, code=code)
 
     return await delete_account_by_id(au=au, uid=u["id"])

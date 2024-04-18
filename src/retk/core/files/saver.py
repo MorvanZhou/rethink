@@ -84,7 +84,7 @@ class Saver:
 
         if path.exists():
             # skip the same image
-            return ""
+            return f"/files/{file.hashed_filename}"
 
         try:
             if file.type == FileTypes.IMAGE:

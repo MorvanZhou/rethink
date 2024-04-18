@@ -53,18 +53,34 @@ class Favorites(retk.Plugin):
             call_url=self.api_call_url,
         )
 
-    def handle_api_call(self, method: str, data: Any) -> Any:
+    def handle_api_call(self, method: str, data: Any) -> retk.PluginAPICallReturn:
         if method == "add":
             if data["nid"] in self.data:
-                return {"msg": f"nid='{data['nid']}' already in favorites", "done": False}
+                return retk.PluginAPICallReturn(
+                    success=False,
+                    message=f"nid='{data['nid']}' already in favorites",
+                    data=None
+                )
             self.update_file(add=data)
         elif method == "remove":
             if data["nid"] not in self.data:
-                return {"msg": f"nid='{data['nid']}' not in favorites", "done": False}
+                return retk.PluginAPICallReturn(
+                    success=False,
+                    message=f"nid='{data['nid']}' not in favorites",
+                    data=None
+                )
             self.update_file(remove_nid=data["nid"])
         else:
-            return {"msg": f"method='{method}' is not allowed", "done": False}
-        return {"msg": "success", "done": True}
+            return retk.PluginAPICallReturn(
+                success=False,
+                message=f"method='{method}' is not allowed",
+                data=None
+            )
+        return retk.PluginAPICallReturn(
+            success=True,
+            message="success",
+            data=None
+        )
 
     def update_file(self, add: dict = None, remove_nid: str = None):
         if add is not None:

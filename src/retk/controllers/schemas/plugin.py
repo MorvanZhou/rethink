@@ -24,12 +24,15 @@ class RenderPluginResponse(BaseModel):
 
 
 class PluginCallRequest(BaseModel):
+    requestId: str = Field(description="request id", max_length=const.REQUEST_ID_MAX_LENGTH, default="")
     pluginId: str = Field(max_length=const.PLUGIN_ID_MAX_LENGTH)
     method: str
     data: Any
 
 
 class PluginCallResponse(BaseModel):
+    success: bool
+    message: str
     requestId: str
     pluginId: str
     method: str

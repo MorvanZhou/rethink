@@ -166,12 +166,6 @@ async def email_send_code(
 
     if not req.userExistOk:
         u, code = await user.get_by_email(email=req.email)
-        if code != const.Code.OK:
-            raise json_exception(
-                request_id=au.request_id,
-                code=code,
-                language=req.language,
-            )
         if u is not None:
             raise json_exception(
                 request_id=au.request_id,

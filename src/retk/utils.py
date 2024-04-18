@@ -66,12 +66,15 @@ def jwt_encode(exp_delta: datetime.timedelta, data: dict) -> str:
         algorithm=HEADERS["alg"],
         headers=HEADERS,
     )
-    return token
+    return f"Bearer {token}"
 
 
 def jwt_decode(token: str) -> dict:
+    t = token.split("Bearer ", maxsplit=1)
+    if len(t) != 2:
+        raise jwt.InvalidTokenError("Invalid token")
     return jwt.decode(
-        token,
+        t[1],
         key=config.get_settings().JWT_KEY_PUB,
         algorithms=[HEADERS["alg"]],
         options={"verify_exp": True}

@@ -227,9 +227,9 @@ NEW_USER_DEFAULT_NODES = {
         
         # My task list
         
-        - [x] task 1
+        - [ ] task 1
         - [ ] task 2
-        - [ ] task 3
+        - [x] task 3
         
         """),
     ],

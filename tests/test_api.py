@@ -13,7 +13,7 @@ from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from retk import const, config
+from retk import const, config, PluginAPICallReturn
 from retk.application import app
 from retk.core import account
 from retk.models.client import client
@@ -106,7 +106,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             })
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(811, len(rj["token"]))
+        self.assertEqual(818, len(rj["token"]))
+        self.assertTrue(rj["token"].startswith("Bearer "))
         self.default_headers = {
             "Authorization": rj["token"],
             "RequestId": "xxx",
@@ -882,15 +883,21 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/plugins/call",
             json={
+                "requestId": "xxx",
                 "pluginId": "xasdqw",
                 "method": "test",
                 "data": "test",
             },
             headers=self.default_headers
         )
-        self.error_check(resp, 404, const.Code.PLUGIN_NOT_FOUND)
+        rj = resp.json()
+        self.assertEqual(False, rj["success"])
 
-        mock_handle_api_call.return_value = "test"
+        mock_handle_api_call.return_value = PluginAPICallReturn(
+            success=True,
+            message="",
+            data="test"
+        )
         resp = self.client.post(
             "/api/plugins/call",
             json={
@@ -900,7 +907,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        rj = self.check_ok_response(resp, 200)
+        rj = resp.json()
         self.assertEqual("method", rj["method"])
         self.assertEqual("test", rj["data"])
 
@@ -984,9 +991,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.error_check(resp, 403, const.Code.USER_DISABLED)
 
         resp = self.client.put(
-            "/api/admin/users/enable",
+            "/api/admin/users/enable/email",
             json={
-                "uid": uid,
+                "email": email,
             },
             headers=self.default_headers
         )

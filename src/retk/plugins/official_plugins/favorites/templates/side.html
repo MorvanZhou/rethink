@@ -62,8 +62,8 @@
 
 <script>
   var pathname = window.location.pathname;
-  var url = `${pathname.substring(0, pathname.lastIndexOf('/'))}`;
-  var nodeUrl = `${url}/n/{{ nid }}`;
+  var url = pathname.substring(0, pathname.lastIndexOf('/'));
+  var nodeUrl = `${url}/{{ nid }}`;
 
   async function addFavorite() {
     try {
@@ -73,6 +73,7 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          requestId: Math.random().toString(36).substring(7),
           pluginId: '{{ plugin_id }}',
           method: 'add',
           data: {
@@ -80,7 +81,6 @@
             nid: '{{ nid }}',
             title: '{{ title }}',
           },
-          requestId: Math.random().toString(36).substring(7),
         }),
       });
       if (resp.status !== 200) {
@@ -88,7 +88,7 @@
         return;
       }
       const rj = await resp.json();
-      if (rj.data.done) {
+      if (rj.success) {
         document.getElementById('favorite-list').innerHTML +=
           `<li>
               <span onclick="remove('{{ nid }}')">✘</span>
@@ -110,12 +110,12 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          requestId: Math.random().toString(36).substring(7),
           pluginId: '{{ plugin_id }}',
           method: 'remove',
           data: {
             nid: nid,
           },
-          requestId: Math.random().toString(36).substring(7),
         }),
       });
       if (resp.status !== 200) {
@@ -123,9 +123,9 @@
         return;
       }
       const rj = await resp.json();
-      if (rj.data.done) {
+      if (rj.success) {
         const ul = document.getElementById('favorite-list');
-        const li = ul.querySelector(`a[href='${url}/n/${nid}']`).parentNode;
+        const li = ul.querySelector(`a[href='${url}/${nid}']`).parentNode;
         ul.removeChild(li);
       }
     } catch (e) {

@@ -1,6 +1,6 @@
-from retk import const
+from retk import const, config
 from retk.controllers import schemas
-from retk.controllers.utils import maybe_raise_json_exception
+from retk.controllers.utils import maybe_raise_json_exception, json_exception
 from retk.core import node
 from retk.models.tps import AuthedUser
 from retk.plugins.base import get_plugins, event_plugin_map
@@ -96,19 +96,34 @@ async def render_editor_side(
 
 
 async def plugin_call(
-        au: AuthedUser,
         req: schemas.plugin.PluginCallRequest,
 ) -> schemas.plugin.PluginCallResponse:
+    if not config.is_local_db():
+        raise json_exception(
+            request_id=req.requestId,
+            code=const.Code.NOT_PERMITTED,
+            language=const.Language.EN.value,
+            log_msg="plugin call is not allowed in production",
+        )
     plugins = get_plugins()
     try:
         plugin = plugins[req.pluginId]
     except KeyError:
-        return maybe_raise_json_exception(au=au, code=const.Code.PLUGIN_NOT_FOUND)
+        return schemas.plugin.PluginCallResponse(
+            success=False,
+            message="plugin not found",
+            requestId=req.requestId,
+            pluginId=req.pluginId,
+            method=req.method,
+            data=None,
+        )
 
-    data = plugin.handle_api_call(req.method, req.data)
+    res = plugin.handle_api_call(req.method, req.data)
     return schemas.plugin.PluginCallResponse(
-        requestId=au.request_id,
+        success=res.success,
+        message=res.message,
+        requestId=req.requestId,
         pluginId=req.pluginId,
         method=req.method,
-        data=data,
+        data=res.data,
     )

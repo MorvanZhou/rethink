@@ -59,7 +59,7 @@ async def delete_account(
 @utils.measure_time_spend
 async def disable_account_by_email(
         au: ADMIN_AUTH,
-        req: schemas.RequestIdResponse,
+        req: schemas.admin.EmailRequest,
 ) -> schemas.RequestIdResponse:
     return await admin.disable_account_by_email(au=au, email=req.email)
 
@@ -72,7 +72,7 @@ async def disable_account_by_email(
 @utils.measure_time_spend
 async def enable_account_by_email(
         au: ADMIN_AUTH,
-        req: schemas.RequestIdResponse,
+        req: schemas.admin.EmailRequest,
 ) -> schemas.RequestIdResponse:
     return await admin.enable_account_by_email(au=au, email=req.email)
 
@@ -85,6 +85,6 @@ async def enable_account_by_email(
 @utils.measure_time_spend
 async def delete_account_by_email(
         au: ADMIN_AUTH,
-        req: schemas.RequestIdResponse,
+        req: schemas.admin.EmailRequest,
 ) -> schemas.RequestIdResponse:
     return await admin.delete_account_by_email(au=au, email=req.email)

@@ -29,7 +29,7 @@ class TestRun(unittest.TestCase):
 
         p = multiprocessing.Process(target=retk.run, kwargs={
             "path": self.path, "port": port, "language": "zh", "headless": True,
-            "debug": False, "password": password,
+            "debug": True, "password": password,
         })
         p.start()
         # p.join()

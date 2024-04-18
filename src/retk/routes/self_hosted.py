@@ -1,7 +1,7 @@
 import os
 
 from fastapi import APIRouter, HTTPException, FastAPI
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from retk import const, config
@@ -24,7 +24,6 @@ async def shutdown_event():
     logger.debug("db closed")
 
 
-@router.get("/", response_class=HTMLResponse)
 @router.get("/sauth", response_class=HTMLResponse)
 @router.get("/docs", response_class=HTMLResponse)
 @router.get("/login", response_class=HTMLResponse)
@@ -33,7 +32,7 @@ async def shutdown_event():
 @router.get("/r/{path}", response_class=HTMLResponse)
 @router.get("/r/plugin/{pid}", response_class=HTMLResponse)
 @router.get("/n/{nid}", response_class=HTMLResponse)
-async def index() -> HTMLResponse:
+async def app_page() -> HTMLResponse:
     content = (const.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
     if os.getenv("RETHINK_SERVER_PASSWORD", None) is not None:
         req_password = "window.VUE_APP_ONE_USER_REQUIRE_AUTH=1;"
@@ -45,6 +44,11 @@ async def index() -> HTMLResponse:
         content=content,
         status_code=200,
     )
+
+
+@router.get("/", response_class=RedirectResponse)
+async def index() -> RedirectResponse:
+    return RedirectResponse(url="/r")
 
 
 @router.get(

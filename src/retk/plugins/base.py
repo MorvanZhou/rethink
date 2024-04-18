@@ -41,11 +41,19 @@ Usage:
 import base64
 import inspect
 import os
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
 from retk import const
 from retk.models import tps
 from .schedule.timing import Timing
+
+
+@dataclass
+class PluginAPICallReturn:
+    success: bool
+    message: str
+    data: Any
 
 
 class Plugin:
@@ -110,7 +118,7 @@ class Plugin:
     def on_schedule(self) -> None:
         raise NotImplementedError
 
-    def handle_api_call(self, method: str, data: Any) -> Any:
+    def handle_api_call(self, method: str, data: Any) -> PluginAPICallReturn:
         """
         api call from your plugin rendered page. etc. plugin home page, editor side bar.
 
@@ -125,7 +133,7 @@ class Plugin:
             "requestId": "unique request id string"
         }
         Response: {
-            "code": int code,
+            "success": boolean,
             "message": "message",
             "requestId": "unique request id string",
             "pluginId: "your plugin id",
@@ -157,7 +165,7 @@ class Plugin:
             host = os.environ['RETHINK_SERVER_HOSTNAME']
         except KeyError:
             raise ValueError("the host or port number is not set in the environment.")
-        return f"http://{host}:{port}/api/plugin/call"
+        return f"http://{host}:{port}/api/plugins/call"
 
 
 event_plugin_map: Dict[str, List[Plugin]] = {
