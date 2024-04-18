@@ -9,6 +9,7 @@ from retk import config, const, regex
 from retk.core import user, node
 from retk.logger import logger
 from retk.models import tps
+from retk.models.client import client
 
 
 async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
@@ -80,20 +81,27 @@ async def signup(
     return u, code
 
 
-async def reset_password(
-        email: str,
-        password: str,
-) -> Tuple[Optional[tps.UserMeta], const.Code]:
-    code = login_by_email_pwd(email=email, password=password)
-    if code != const.Code.OK:
-        return None, code
-    u, code = await user.get_by_email(email=email)
-    if code != const.Code.OK:
-        return None, code
-    if u is None:
-        return None, const.Code.INVALID_AUTH
-    code = await user.reset_password(
-        uid=u["id"],
-        hashed=hash_password(password=password, email=email)
+async def delete(uid: str):
+    res = await client.coll.users.delete_one({"id": uid})
+    if res.deleted_count != 1:
+        return
+    await client.coll.nodes.delete_many({"uid": uid})
+    await client.coll.user_file.delete_many({"uid": uid})
+    await client.coll.import_data.delete_many({"uid": uid})
+    await client.search.force_delete_all(uid=uid)
+
+
+async def disable(uid: str) -> const.Code:
+    res = await client.coll.users.update_one(
+        {"id": uid},
+        {"$set": {"disabled": True}}
     )
-    return u, code
+    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED
+
+
+async def enable(uid: str) -> const.Code:
+    res = await client.coll.users.update_one(
+        {"id": uid},
+        {"$set": {"disabled": False}}
+    )
+    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED

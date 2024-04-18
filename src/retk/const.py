@@ -10,6 +10,7 @@ RETHINK_DIR = Path(__file__).parent
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
 MD_MAX_LENGTH = 100_000
 REQUEST_ID_MAX_LENGTH = 50
+UID_MAX_LENGTH = 30
 NID_MAX_LENGTH = 30
 FID_MAX_LENGTH = 30
 SEARCH_QUERY_MAX_LENGTH = 100
@@ -61,6 +62,9 @@ class Code(Enum):
     URL_TOO_LONG = 27
     OAUTH_PROVIDER_NOT_FOUND = 28
     TASK_NOT_FOUND = 29
+    ACCOUNT_EXIST_TRY_FORGET_PASSWORD = 30
+    USER_DISABLED = 31
+    NOT_PERMITTED = 32
 
 
 INT_CODE_MAP: Dict[int, Code] = {
@@ -107,6 +111,12 @@ CODE_MESSAGES: Dict[Code, CodeMessage] = {
     Code.URL_TOO_LONG: CodeMessage(zh="URL字符太长", en="URL too long"),
     Code.OAUTH_PROVIDER_NOT_FOUND: CodeMessage(zh="未找到 OAuth 提供商", en="OAuth provider not found"),
     Code.TASK_NOT_FOUND: CodeMessage(zh="任务未找到", en="Task not found"),
+    Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD: CodeMessage(
+        zh="账户已存在，请尝试通过忘记密码找回",
+        en="Account exists, try forget password to recover",
+    ),
+    Code.USER_DISABLED: CodeMessage(zh="用户已被禁用", en="User has been disabled"),
+    Code.NOT_PERMITTED: CodeMessage(zh="无权限", en="Not permitted"),
 }
 
 CODE2STATUS_CODE: Dict[Code, int] = {
@@ -140,6 +150,9 @@ CODE2STATUS_CODE: Dict[Code, int] = {
     Code.URL_TOO_LONG: 406,
     Code.OAUTH_PROVIDER_NOT_FOUND: 404,
     Code.TASK_NOT_FOUND: 404,
+    Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD: 422,
+    Code.USER_DISABLED: 403,
+    Code.NOT_PERMITTED: 403,
 }
 
 DEFAULT_USER = {

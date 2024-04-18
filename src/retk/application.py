@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from retk import const, config, safety, utils
+from retk.core import async_task
 from retk.logger import logger, add_rotating_file_handler
 from .models.client import client
 from .routes import (
@@ -18,6 +19,7 @@ from .routes import (
     self_hosted,
     app_system,
     account,
+    admin,
 )
 
 app = FastAPI(
@@ -47,6 +49,7 @@ app.include_router(plugin.router)
 app.include_router(self_hosted.router)
 app.include_router(app_system.router)
 app.include_router(account.router)
+app.include_router(admin.router)
 
 self_hosted.mount_static(app=app)
 
@@ -68,3 +71,6 @@ async def startup_event():
 
     # local finish up
     utils.local_finish_up()
+
+    # async threading task
+    async_task.init()

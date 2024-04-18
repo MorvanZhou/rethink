@@ -158,20 +158,19 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])
 
-        code = await core.user.disable(uid=_id)
+        code = await core.account.manager.disable(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
         u, code = await core.user.get(uid=_id)
-        self.assertEqual(const.Code.ACCOUNT_OR_PASSWORD_ERROR, code)
+        self.assertEqual(const.Code.USER_DISABLED, code)
 
-        code = await core.user.enable(uid=_id)
+        code = await core.account.manager.enable(uid=_id)
         self.assertEqual(const.Code.OK, code)
 
-        code = await core.user.disable(uid="ssaa")
-        self.assertEqual(const.Code.OPERATION_FAILED, code)
-
-        code = await core.user.delete(uid=_id)
+        code = await core.account.manager.disable(uid="ssaa")
         self.assertEqual(const.Code.OK, code)
+
+        await core.account.manager.delete(uid=_id)
 
     @utils.skip_no_connect
     @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")

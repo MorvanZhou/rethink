@@ -99,6 +99,10 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
+    async def force_delete_all(self, uid: str) -> const.Code:
+        ...
+
+    @abstractmethod
     async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         ...
 

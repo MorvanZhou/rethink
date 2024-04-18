@@ -433,6 +433,30 @@ class ESSearcher(BaseEngine):
             return const.Code.OPERATION_FAILED
         return const.Code.OK
 
+    async def force_delete_all(self, uid: str) -> const.Code:
+        resp = await self.es.delete_by_query(
+            index=self.index,
+            body={
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "term": {
+                                    "uid": uid
+                                }
+                            },
+
+                        ]
+                    }
+                }
+            },
+            refresh=True,
+        )
+        if resp.meta.status != 200:
+            logger.error(f"force delete all failed, resp: {resp}")
+            return const.Code.OPERATION_FAILED
+        return const.Code.OK
+
     async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         actions = []
         now = datetime.datetime.now(tz=utc)

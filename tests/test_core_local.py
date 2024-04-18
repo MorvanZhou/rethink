@@ -92,21 +92,20 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("3", u["avatar"])
         self.assertEqual(const.NodeDisplayMethod.LIST.value, u["lastState"]["nodeDisplayMethod"])
 
-        code = await core.user.disable(uid=_uid)
+        code = await core.account.manager.disable(uid=_uid)
         self.assertEqual(const.Code.OK, code)
 
         u, code = await core.user.get(uid=_uid)
-        self.assertEqual(const.Code.ACCOUNT_OR_PASSWORD_ERROR, code)
+        self.assertEqual(const.Code.USER_DISABLED, code)
         self.assertIsNone(u)
 
-        code = await core.user.enable(uid=_uid)
+        code = await core.account.manager.enable(uid=_uid)
         self.assertEqual(const.Code.OK, code)
 
-        code = await core.user.disable(uid="sdwqdqw")
-        self.assertEqual(const.Code.OPERATION_FAILED, code)
-
-        code = await core.user.delete(uid=_uid)
+        code = await core.account.manager.disable(uid="sdwqdqw")
         self.assertEqual(const.Code.OK, code)
+
+        await core.account.manager.delete(uid=_uid)
 
     async def test_node(self):
         node, code = await core.node.post(
@@ -387,11 +386,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         doc, code = await update_process("xxx", "obsidian", 10)
         self.assertEqual(const.Code.OK, code)
 
-        doc, code = await core.files.get_upload_process("xxx1213")
-        self.assertEqual(const.Code.TASK_NOT_FOUND, code)
+        doc = await core.files.get_upload_process("xxx1213")
+        self.assertIsNone(doc)
 
-        doc, code = await core.files.get_upload_process("xxx")
-        self.assertEqual(const.Code.OK, code)
+        doc = await core.files.get_upload_process("xxx")
         self.assertEqual(10, doc["process"])
         self.assertEqual("obsidian", doc["type"])
         self.assertEqual(now, doc["startAt"])

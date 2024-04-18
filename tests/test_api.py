@@ -77,6 +77,7 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/account/email/send-code",
             json={
                 "email": "a@c.com",
+                "userExistOk": True,
                 "captchaToken": token,
                 "captchaCode": data["code"],
                 "language": "zh",
@@ -905,3 +906,122 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         unregister_official_plugins()
         config.get_settings().PLUGINS = False
+
+    async def test_admin(self):
+        resp = self.client.put(
+            "/api/admin/users/disable",
+            json={
+                "uid": "xxx",
+            },
+            headers=self.default_headers
+        )
+        self.error_check(resp, 403, const.Code.NOT_PERMITTED)
+
+        u = await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})
+        admin_uid = u["id"]
+        doc = await client.coll.users.update_one(
+            {"id": admin_uid},
+            {"$set": {"type": const.USER_TYPE.ADMIN.id}}
+        )
+        self.assertEqual(1, doc.modified_count)
+
+        resp = self.client.put(
+            "/api/admin/users/disable",
+            json={
+                "uid": "xxx",
+            },
+            headers=self.default_headers
+        )
+        self.check_ok_response(resp, 200)
+
+        config.get_settings().ONE_USER = False
+        config.get_settings().DB_SALT = "test"
+        token, code = account.app_captcha.generate()
+        data = jwt_decode(token)
+        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
+        lang = "zh"
+        email = "a@b.cd"
+        resp = self.client.post(
+            "/api/account",
+            json={
+                "email": email,
+                "password": "abc111",
+                "captchaToken": token,
+                "captchaCode": code,
+                "language": lang,
+            },
+            headers={"RequestId": "xxx"}
+        )
+        rj = self.check_ok_response(resp, 201)
+        u_token = rj["token"]
+        uid = (await client.coll.users.find_one({"email": email}))["id"]
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.put(
+            "/api/admin/users/disable",
+            json={
+                "uid": uid,
+            },
+            headers=self.default_headers
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 403, const.Code.USER_DISABLED)
+
+        resp = self.client.put(
+            "/api/admin/users/enable",
+            json={
+                "uid": uid,
+            },
+            headers=self.default_headers
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.put(
+            "/api/admin/users/delete",
+            json={
+                "uid": uid,
+            },
+            headers=self.default_headers
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": u_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 403, const.Code.USER_DISABLED)
+
+        doc = await client.coll.users.update_one(
+            {"id": admin_uid},
+            {"$set": {"type": const.USER_TYPE.NORMAL.id}}
+        )
+        self.assertEqual(1, doc.modified_count)
+        config.get_settings().ONE_USER = True

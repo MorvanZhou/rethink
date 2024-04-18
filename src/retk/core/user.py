@@ -133,27 +133,6 @@ async def patch(  # noqa: C901
     return await get(uid=au.u.id)
 
 
-async def delete(uid: str) -> const.Code:
-    res = await client.coll.users.delete_one({"id": uid})
-    return const.Code.OK if res.deleted_count == 1 else const.Code.OPERATION_FAILED
-
-
-async def disable(uid: str) -> const.Code:
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"disabled": True}}
-    )
-    return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
-
-
-async def enable(uid: str) -> const.Code:
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"disabled": False}}
-    )
-    return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
-
-
 async def get_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     if config.get_settings().ONE_USER:
         source = const.UserSource.LOCAL.value
@@ -172,7 +151,7 @@ async def get_account(account: str, source: int) -> Tuple[Optional[tps.UserMeta]
 async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
     u = await client.coll.users.find_one({"id": uid, "disabled": False})
     if u is None:
-        return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
+        return None, const.Code.USER_DISABLED
     if u["usedSpace"] < 0:
         # reset usedSpace to 0
         await client.coll.users.update_one(
@@ -200,9 +179,9 @@ async def user_space_not_enough(au: tps.AuthedUser) -> bool:
     return au.u.used_space > const.USER_TYPE.id2config(au.u.type).max_store_space
 
 
-async def reset_password(au: tps.AuthedUser, hashed: str) -> const.Code:
+async def reset_password(uid: str, hashed: str) -> const.Code:
     res = await client.coll.users.update_one(
-        {"id": au.u.id},
+        {"id": uid},
         {"$set": {"hashed": hashed}}
     )
     return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED

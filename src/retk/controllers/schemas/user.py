@@ -24,6 +24,7 @@ class UserInfoResponse(BaseModel):
         email: str
         nickname: str
         avatar: str
+        source: int
         createdAt: str
         usedSpace: NonNegativeInt = 0
         maxSpace: NonNegativeInt = 0

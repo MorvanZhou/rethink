@@ -9,6 +9,7 @@ from . import (
     files,
     plugin,
     app_system,
+    admin,
 )
 
 

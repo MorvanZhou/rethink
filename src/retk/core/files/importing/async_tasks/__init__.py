@@ -10,7 +10,7 @@ ctx = multiprocessing.get_context('spawn')
 QUEUE = ctx.Queue()
 
 
-def async_task(queue: multiprocessing.Queue):
+def __async_task(queue: multiprocessing.Queue):
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -36,7 +36,7 @@ def async_task(queue: multiprocessing.Queue):
 
 def init():
     p = ctx.Process(
-        target=async_task,
+        target=__async_task,
         args=(QUEUE,),
         daemon=True,
     )

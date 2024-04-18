@@ -7,7 +7,7 @@ from retk import config
 from retk import const
 from retk.controllers import schemas
 from retk.controllers.utils import json_exception
-from retk.core import account
+from retk.core import account, user
 from retk.models.tps import AuthedUser
 from retk.utils import jwt_encode
 
@@ -92,11 +92,26 @@ async def forget(
         raise json_exception(
             request_id=au.request_id,
             code=code,
-            language=const.Language.EN.value,
+            language=req.language,
         )
-    u, code = await account.manager.reset_password(
-        email=req.email,
-        password=req.newPassword,
+    u, code = await user.get_by_email(email=req.email)
+    if code != const.Code.OK:
+        raise json_exception(
+            request_id=au.request_id,
+            code=code,
+            language=req.language,
+        )
+
+    if u is None:
+        raise json_exception(
+            request_id=au.request_id,
+            code=const.Code.INVALID_AUTH,
+            language=req.language,
+        )
+
+    code = await user.reset_password(
+        uid=u["id"],
+        hashed=account.manager.hash_password(password=req.newPassword, email=req.email)
     )
     if code != const.Code.OK:
         raise json_exception(
@@ -142,12 +157,28 @@ def __check_and_send_email(
     return numbers, expired_min, code
 
 
-def email_send_code(
+async def email_send_code(
         au: AuthedUser,
         req: schemas.account.EmailVerificationRequest
 ) -> schemas.account.TokenResponse:
     if req.language not in [lang.value for lang in const.Language.__members__.values()]:
         req.language = const.Language.EN.value
+
+    if not req.userExistOk:
+        u, code = await user.get_by_email(email=req.email)
+        if code != const.Code.OK:
+            raise json_exception(
+                request_id=au.request_id,
+                code=code,
+                language=req.language,
+            )
+        if u is not None:
+            raise json_exception(
+                request_id=au.request_id,
+                code=const.Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD,
+                language=req.language,
+            )
+
     numbers, expired_min, code = __check_and_send_email(
         email=req.email,
         token=req.captchaToken,

@@ -21,6 +21,7 @@ async def get_user(
             email=_email,
             nickname=au.u.nickname,
             avatar=au.u.avatar,
+            source=au.u.source,
             createdAt=datetime2str(au.u._id.generation_time),
             usedSpace=au.u.used_space,
             maxSpace=max_space,
@@ -64,6 +65,7 @@ async def patch_user(
             email=u["email"],
             nickname=u["nickname"],
             avatar=u["avatar"],
+            source=u["source"],
             createdAt=datetime2str(u["_id"].generation_time),
             usedSpace=u["usedSpace"],
             maxSpace=max_space,
@@ -100,7 +102,7 @@ async def update_password(
         return maybe_raise_json_exception(au=au, code=const.Code.OLD_PASSWORD_ERROR)
 
     hashed = account.manager.hash_password(password=req.newPassword, email=au.u.email)
-    code = await reset_password(au=au, hashed=hashed)
+    code = await reset_password(uid=au.u.id, hashed=hashed)
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.RequestIdResponse(

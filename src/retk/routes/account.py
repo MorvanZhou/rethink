@@ -65,4 +65,4 @@ async def email_verification(
         req: schemas.account.EmailVerificationRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
-    return account.email_send_code(au=au, req=req)
+    return await account.email_send_code(au=au, req=req)

@@ -150,6 +150,13 @@ class LocalSearcher(BaseEngine):
         writer.commit()
         return const.Code.OK
 
+    async def force_delete_all(self, uid: str) -> const.Code:
+        writer = self.ix.writer()
+        q = Term("uid", uid)
+        writer.delete_by_query(q=q)
+        writer.commit()
+        return const.Code.OK
+
     async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
         writer = self.ix.writer()
         for doc in docs:

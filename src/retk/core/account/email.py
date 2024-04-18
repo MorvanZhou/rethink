@@ -1,5 +1,4 @@
 import email.header
-import smtplib
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -9,6 +8,7 @@ from typing import List, Tuple
 import jwt
 
 from retk import const, config, regex, utils
+from retk.core import async_task
 
 
 class EmailServer:
@@ -87,12 +87,11 @@ class EmailServer:
         html_body = MIMEText(html_message, 'html', 'utf-8')
         msg.attach(html_body)
 
-        server = smtplib.SMTP('smtp.office365.com', 587)
-        server.ehlo()
-        server.starttls()
-        server.login(conf.RETHINK_EMAIL, password=conf.RETHINK_EMAIL_PASSWORD)
-        server.sendmail(conf.RETHINK_EMAIL, recipients, msg.as_string())
-        server.quit()
+        async_task.put_task(
+            task_name=async_task.TaskName.SEND_EMAIL,
+            recipients=recipients,
+            subject=msg.as_string()
+        )
         return const.Code.OK
 
 

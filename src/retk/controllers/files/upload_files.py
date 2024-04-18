@@ -39,11 +39,11 @@ async def upload_text_files(
 async def get_upload_process(
         au: AuthedUser,
 ) -> schemas.files.FileUploadProcessResponse:
-    doc, code = await core.files.get_upload_process(uid=au.u.id)
+    doc = await core.files.get_upload_process(uid=au.u.id)
     if doc is None:
         return schemas.files.FileUploadProcessResponse(
-            code=code.value,
-            msg=const.get_msg_by_code(code, au.language),
+            code=const.Code.OK.value,
+            msg=const.get_msg_by_code(const.Code.OK, au.language),
             requestId=au.request_id,
             process=0.,
             type="",
