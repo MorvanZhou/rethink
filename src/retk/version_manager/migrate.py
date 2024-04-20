@@ -20,13 +20,13 @@ def __version_less_than(dot_rethink: Dict, version) -> bool:
     return __current_version < version_tuple(version)
 
 
-def __migrate_older_to_0_2_4(dot_rethink: Dict, data_path: Path):
-    """Migrate the database to version 0.2.4.
+def __migrate_older_to_0_2_7(dot_rethink: Dict, data_path: Path):
+    """Migrate the database to version 0.2.7.
 
     Args:
         data_path (str): the path to the database folder.
     """
-    v = "0.2.4"
+    v = "0.2.7"
     dot_rethink["version"] = v
     __renew_dot_rethink(dot_rethink, data_path)
     logger.debug(f"Migrate the database to version {v}")
@@ -73,6 +73,6 @@ def to_latest_version(data_path: Union[str, Path] = "."):
         logger.debug(".rethink.json is not found. The database is empty.")
         return
 
-    if __version_less_than(dot_rethink, version="0.2.4"):
-        __migrate_older_to_0_2_4(dot_rethink, data_path)
+    if __version_less_than(dot_rethink, version="0.2.7"):
+        __migrate_older_to_0_2_7(dot_rethink, data_path)
         return

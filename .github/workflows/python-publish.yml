@@ -39,7 +39,23 @@ jobs:
           python -m pip install dist/*.whl
       - name: Test server
         run: |
-          python -c "from retk.run import _test_run; _test_run()"
+          # start rethink in background and store the process id
+          python -c "import retk; retk.run(headless=True)" & echo $! > rethink.pid
+          
+          # wait
+          sleep 4
+          
+          # check if this process is running
+          if [ $? -eq 0 ]; then
+            echo "rethink is running"
+            # kill it
+            kill -9 $(cat rethink.pid)
+            exit 0
+          else
+            echo "rethink is not running"
+            # raise error
+            exit 1
+          fi
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
