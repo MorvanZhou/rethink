@@ -228,6 +228,7 @@ class Client:
 
     async def _local_restore(self):
         # restore user
+        version_manager.migrate.to_latest_version(config.get_settings().RETHINK_LOCAL_STORAGE_PATH)
         _v = version_manager.recover.load_dot_rethink(
             path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
         )

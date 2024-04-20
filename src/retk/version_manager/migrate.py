@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Union, Dict, Optional
 
+from retk import const
 from retk._version import __version__
 from retk.logger import logger
 
@@ -17,7 +18,7 @@ def __version_less_than(dot_rethink: Dict, version) -> bool:
     dot_version = dot_rethink.get("version")
     if dot_version is None:
         return True
-    return __current_version < version_tuple(version)
+    return version_tuple(dot_version) < version_tuple(version)
 
 
 def __migrate_older_to_0_2_7(dot_rethink: Dict, data_path: Path):
@@ -28,6 +29,16 @@ def __migrate_older_to_0_2_7(dot_rethink: Dict, data_path: Path):
     """
     v = "0.2.7"
     dot_rethink["version"] = v
+    if "settings" not in dot_rethink:
+        dot_rethink["settings"] = {
+            "language": const.Language.EN.value,
+            "theme": const.AppTheme.LIGHT.value,
+            "editorMode": const.EditorMode.WYSIWYG.value,
+            "editorFontSize": 15,
+            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+            "editorSepRightWidth": 200,
+            "editorSideCurrentToolId": "",
+        }
     __renew_dot_rethink(dot_rethink, data_path)
     logger.debug(f"Migrate the database to version {v}")
 

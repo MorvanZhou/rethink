@@ -48,7 +48,7 @@ class MigrateTest(unittest.TestCase):
         # remove all files and dirs
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def test_less_than_0_2_4(self):
+    def test_merge_to_0_2_7(self):
         dot_rethink = {
             "_id": "65658d61dc7f58455d9b38b6",
             "id": "a" * 22,
@@ -69,3 +69,4 @@ class MigrateTest(unittest.TestCase):
         v = version_manager.recover.load_dot_rethink(self.tmp_dir / ".data" / ".rethink.json")
         # self.assertEqual(__version__, v["version"])
         self.assertGreater(len(v["version"]), 0)
+        self.assertIn("settings", v)
