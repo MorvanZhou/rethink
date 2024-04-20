@@ -79,7 +79,10 @@ retk.run(
    path='.',  # path to store notes, default is current directory
    host="127.0.0.1",  # host ip, default is localhost
    port=8080,  # port number, default is 8080
-   language="zh"  # language, default is English, optional: zh, en
+   language="zh",  # language, default is English, optional: zh, en
+   password="12345678",  # authorization password, default is None
+   headless=False,  # set True to not auto open browser, default is False
+   debug=False,  # set True to print debug info, default is False
 )
 ```
 

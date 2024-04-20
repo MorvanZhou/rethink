@@ -68,10 +68,13 @@ retk.run()
 import retk
 
 retk.run(
-    path='.',  # 存储笔记的路径，默认为当前目录
-    host="127.0.0.1",  # 主机 IP，默认为 localhost
-    port=8080,  # 端口号，默认为 8080
-    language="zh"  # 语言，默认为英语。可选值：zh, en
+   path='.',  # 存储笔记的路径，默认为当前目录
+   host="127.0.0.1",  # 主机 IP，默认为 localhost
+   port=8080,  # 端口号，默认为 8080
+   language="zh",  # 语言，默认为英语。可选值：zh, en
+   password="12345678",  # 鉴权密码，默认为 None
+   headless=False,  # 设置为 True 时不自动打开浏览器，默认为 False
+   debug=False,  # 设置为 True 时打印调试信息，默认为 False
 )
 ```
 
