@@ -2,7 +2,7 @@ import os
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-if os.getenv("VUE_APP_MODE", "local") not in ["development", "local"]:
+if os.getenv("VUE_APP_MODE", "local") not in ["dev", "local"]:
     allow_origins = [
         "https://rethink.run",
         "https://www.rethink.run",

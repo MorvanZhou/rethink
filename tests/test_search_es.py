@@ -13,12 +13,12 @@ from . import utils
 class ESTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        utils.set_env(".env.test.development")
+        utils.set_env(".env.test.dev")
         cls.searcher = ESSearcher()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        utils.drop_env(".env.test.development")
+        utils.drop_env(".env.test.dev")
 
     async def asyncSetUp(self) -> None:
         if utils.skip_no_connect.skip:

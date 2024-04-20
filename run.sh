@@ -6,7 +6,7 @@ help="Usage: run.sh [options]
 Options:
   -h, --host      Set host, default to 127.0.0.1
   -p, --port      Set port, default to 8000
-  -m, --mode      Set mode to local or production, personal use is restricted to local mode
+  -m, --mode      Set mode to local, dev or prod, personal use is restricted to local mode
   -r, --reload    Reload server on code change
   -h, --help      Show this help message and exit
 "

@@ -8,8 +8,8 @@
 **/__pycache__
 
 # local env files
-/.env.development
-/.env.production
+/.env.dev
+/.env.prod
 /.env.local
 
 # Editor directories and files
