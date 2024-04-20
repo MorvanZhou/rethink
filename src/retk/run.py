@@ -122,3 +122,59 @@ def run(
         env_file=os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env.local"),
     )
     td.join()
+
+
+def _test_run():
+    import multiprocessing
+    import socket
+    import time
+    import shutil
+    import urllib.request
+
+    from retk import config
+
+    config.get_settings.cache_clear()
+    port = 8001
+    path = Path(__file__).parent / "tmp"
+    path.mkdir(exist_ok=True)
+    p = multiprocessing.Process(target=run, kwargs={
+        "path": path, "port": port, "language": "zh", "headless": True,
+        "debug": True, "password": "123456",
+    })
+    p.start()
+    # p.join()
+    while True:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex(('127.0.0.1', port))
+        sock.close()
+        if result == 0:
+            break
+        time.sleep(0.1)
+
+    for url in [
+        "",
+        "/login",
+        "/about",
+        "/sauth",
+        "/r",
+        "/r/settings",
+        "/r/user",
+        "/r/import",
+        "/n/123",
+    ]:
+        resp = urllib.request.urlopen(f"http://127.0.0.1:{port}{url}")
+        assert 200 == resp.status, f"failed to get {url}"
+        assert "text/html; charset=utf-8" == resp.headers["content-type"]
+        assert "Rethink" in resp.read().decode()
+
+    p.kill()
+    p.join()
+    assert path.exists(), "path should exists"
+    assert path.is_dir(), "path should be a directory"
+    assert (path / ".data").exists(), "data folder should exists"
+    assert 2 == len(list((path / ".data" / "md").glob("*.md"))), "should have 2 md files"
+
+    # clean up
+    shutil.rmtree(str(path), ignore_errors=True)
+    config.get_settings.cache_clear()
