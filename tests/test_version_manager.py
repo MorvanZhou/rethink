@@ -21,7 +21,7 @@ class RecoverTest(unittest.TestCase):
         self.assertEqual(3, len(vs_int))
 
     def test_dump_load(self):
-        version_manager.recover.dump_dot_rethink(self.tmp_dir / ".rethink.json")
+        version_manager.recover.dump_default_dot_rethink(self.tmp_dir / ".rethink.json")
 
         v = version_manager.recover.load_dot_rethink(self.tmp_dir / ".rethink.json")
         self.assertIsNotNone(v)

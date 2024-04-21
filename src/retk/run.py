@@ -97,7 +97,7 @@ def run(
         raise NotADirectoryError(f"Path is not a directory: {path}")
     os.environ["VUE_APP_API_PORT"] = str(port)
     os.environ["VUE_APP_MODE"] = "local"
-    os.environ["VUE_APP_LANGUAGE"] = language
+    os.environ["RETHINK_DEFAULT_LANGUAGE"] = language
     os.environ["RETHINK_LOCAL_STORAGE_PATH"] = str(path)
     os.environ["RETHINK_SERVER_HEADLESS"] = "1" if headless else "0"
     os.environ["RETHINK_SERVER_HOSTNAME"] = host

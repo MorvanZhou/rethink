@@ -45,7 +45,6 @@ class TestRun(unittest.TestCase):
         for url in [
             "",
             "/login",
-            "/about",
             "/sauth",
             "/r",
             "/r/settings",

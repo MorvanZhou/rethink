@@ -36,6 +36,14 @@ class Client:
         if config.is_local_db():
             await self.local_try_create_or_restore()
 
+            # set default language
+            default_language = os.getenv("RETHINK_DEFAULT_LANGUAGE", None)
+            if default_language is not None:
+                await self.coll.users.update_one(
+                    {"account": const.DEFAULT_USER["email"], "source": const.UserSource.LOCAL.value},
+                    {"$set": {"settings.language": default_language}},
+                )
+
         else:
             # self.mongo.get_io_loop = asyncio.get_running_loop
             await remote_try_build_index(self.coll)
@@ -87,7 +95,7 @@ class Client:
             await self.mongo.drop_database(config.get_settings().DB_NAME)
 
     async def local_try_add_default_user(self):
-        _v = version_manager.recover.dump_dot_rethink(
+        _v = version_manager.recover.dump_default_dot_rethink(
             path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
         )
 
@@ -204,7 +212,7 @@ class Client:
                 await self._local_restore()
                 return
 
-        # try fix TypeError: can't compare offset-naive and offset-aware datetimes
+        # try fix TypeError: can't compare offset-naive and offset-aware datetime
         docs = self.coll.nodes.find()
         for doc in await docs.to_list(length=None):
             await self.coll.nodes.update_one(
@@ -254,7 +262,7 @@ class Client:
             last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
             last_state_node_display_sort_key="modifiedAt",
 
-            settings_language=v_settings.get("language", os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value)),
+            settings_language=v_settings.get("language", const.Language.EN.value),
             settings_theme=v_settings.get("theme", const.AppTheme.LIGHT.value),
             settings_editor_mode=v_settings.get("editorMode", const.EditorMode.WYSIWYG.value),
             settings_editor_font_size=v_settings.get("editorFontSize", 15),

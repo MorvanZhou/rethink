@@ -25,23 +25,23 @@ async def shutdown_event():
 
 
 @router.get("/sauth", response_class=HTMLResponse)
-@router.get("/docs", response_class=HTMLResponse)
 @router.get("/login", response_class=HTMLResponse)
-@router.get("/about", response_class=HTMLResponse)
 @router.get("/r", response_class=HTMLResponse)
 @router.get("/r/{path}", response_class=HTMLResponse)
 @router.get("/r/plugin/{pid}", response_class=HTMLResponse)
 @router.get("/n/{nid}", response_class=HTMLResponse)
 async def app_page() -> HTMLResponse:
     content = (const.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    script = f"window.VUE_APP_API_PORT={os.getenv('VUE_APP_API_PORT')};"
+    language = os.getenv("RETHINK_DEFAULT_LANGUAGE")
+    if language is not None:
+        script += f"window.VUE_APP_LANGUAGE='{language}';"
     if os.getenv("RETHINK_SERVER_PASSWORD", None) is not None:
-        req_password = "window.VUE_APP_ONE_USER_REQUIRE_AUTH=1;"
-    else:
-        req_password = ""
-    content += f"<script>window.VUE_APP_API_PORT={os.getenv('VUE_APP_API_PORT')};" \
-               f"{req_password}</script>"
+        script += "window.VUE_APP_ONE_USER_REQUIRE_AUTH=1;"
+    script = f"<script>{script}</script>"
+
     return HTMLResponse(
-        content=content,
+        content=content + script,
         status_code=200,
     )
 

@@ -9,7 +9,7 @@ from retk import const, utils
 from retk._version import __version__
 
 
-def dump_dot_rethink(path: Union[os.PathLike, Path]) -> Dict:
+def dump_default_dot_rethink(path: Union[os.PathLike, Path]) -> Dict:
     version = {
         "version": __version__,
         "_id": ObjectId(),
@@ -19,7 +19,7 @@ def dump_dot_rethink(path: Union[os.PathLike, Path]) -> Dict:
         "avatar": const.DEFAULT_USER["avatar"],
         "account": const.DEFAULT_USER["email"],
         "settings": {
-            "language": os.getenv("VUE_APP_LANGUAGE", const.Language.EN.value),
+            "language": os.getenv("RETHINK_DEFAULT_LANGUAGE", const.Language.EN.value),
             "theme": const.AppTheme.LIGHT.value,
             "editorMode": const.EditorMode.WYSIWYG.value,
             "editorFontSize": 15,
