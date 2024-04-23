@@ -118,10 +118,15 @@ def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.Code
             Bucket=settings.COS_BUCKET_NAME,
             Key=key,
         )
-        md = res["Body"].read().decode("utf-8")
+        md_body = res["Body"].read()
     except CosServiceError as e:
         logger.error(f"failed to get file from cos: {e}")
         return "", const.Code.COS_ERROR
+    try:
+        md = md_body.decode("utf-8")
+    except UnicodeDecodeError as e:
+        logger.error(f"failed to decode md: {e}. md: {md_body}")
+        return "", const.Code.OPERATION_FAILED
     return md, const.Code.OK
 
 
@@ -133,7 +138,7 @@ def __save_md_to_cos(uid: str, nid: str, version: str, md: str) -> const.Code:
     try:
         _ = cos_client.put_object(
             Bucket=settings.COS_BUCKET_NAME,
-            Body=md,
+            Body=md.encode("utf-8"),
             Key=key,
             StorageClass='STANDARD',  # 'STANDARD'|'STANDARD_IA'|'ARCHIVE',
             EnableMD5=False,
