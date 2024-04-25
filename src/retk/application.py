@@ -46,11 +46,14 @@ app.include_router(trash.router)
 app.include_router(app_captcha.router)
 app.include_router(files.router)
 app.include_router(plugin.router)
-app.include_router(self_hosted.router)
 app.include_router(app_system.router)
 app.include_router(account.router)
 app.include_router(admin.router)
 
+# self hosted
+app.include_router(self_hosted.r_router)
+app.include_router(self_hosted.node_file_router)
+app.include_router(self_hosted.home_router)
 self_hosted.mount_static(app=app)
 
 

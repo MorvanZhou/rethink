@@ -48,7 +48,24 @@ body,
   position: relative;
   margin: 10px 5px 5px 0;
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  height: 50px;
+}
+
+.header-component-sm {
+  margin: 0 5px;
+}
+
+.header-component .item {
+  display: flex;
+  align-items: center;
+}
+
+.left-nav-collapse-menu-btn {
+  width: 25px;
+  margin: 0 7px 0 0;
+  padding: 0 5px;
 }
 
 .node-link {
@@ -111,9 +128,9 @@ body,
 
 .right-app-section {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 0.5em;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -414,6 +431,18 @@ em.match {
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/left/LeftNavCollapseButton.vue?vue&type=style&index=0&id=3847297d&scoped=true&lang=css ***!
   \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
+.flex-header[data-v-3847297d] {
+  display: flex;
+  align-items: center;
+}
+.no-collapsed-header-bar[data-v-3847297d] {
+  justify-content: end;
+  margin: 15px 10px 15px 15px;
+}
+.collapsed-header-bar[data-v-3847297d] {
+  justify-content: center;
+  margin: 15px auto;
+}
 .show-left-icon[data-v-3847297d] {
   width: 20px;
   height: 20px;
@@ -466,56 +495,6 @@ em.match {
   justify-content: left;
 }
 
-/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/left/UserMenu.vue?vue&type=style&index=0&id=85dbde90&scoped=true&lang=css ***!
-  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.user-img[data-v-85dbde90] {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.user-img[data-v-85dbde90]:hover {
-  opacity: 0.5;
-}
-.user-menu[data-v-85dbde90] {
-  position: absolute;
-  top: 0.5em;
-  left: 0.5em;
-  width: 200px;
-  background-color: white;
-  border-radius: 5px;
-  box-shadow: 0 0 5px #ccc;
-  z-index: 1;
-}
-.user-info[data-v-85dbde90] {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #e7e5e5;
-  height: 3em;
-}
-.user-info-img[data-v-85dbde90] {
-  height: 100%;
-  border-radius: 50%;
-}
-.user-info-nickname[data-v-85dbde90] {
-  margin-left: 5px;
-  font-size: 1em;
-  font-weight: 400;
-}
-.menu-item[data-v-85dbde90] {
-  padding: 10px;
-  border-bottom: 1px solid #e7e5e5;
-  cursor: pointer;
-}
-.menu-item-text[data-v-85dbde90] {
-  font-size: 0.9em;
-  color: #5d5c5c;
-}
-
-
 /*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/left/AppLeftNavSM.vue?vue&type=style&index=0&id=573bae43&scoped=true&lang=css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -536,18 +515,7 @@ em.match {
 .collapsed[data-v-573bae43] {
   transform: translateX(-100%);
 }
-.no-collapsed-header-bar[data-v-573bae43] {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 15px 10px 10px 15px;
-}
-.collapsed-header-bar[data-v-573bae43] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 15px auto;
-}
+
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/left/AppLeftNavNonSM.vue?vue&type=style&index=0&id=4c3820ee&scoped=true&lang=css ***!
@@ -567,18 +535,8 @@ em.match {
 .collapsed[data-v-4c3820ee] {
   width: 50px;
 }
-.no-collapsed-header-bar[data-v-4c3820ee] {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 15px 10px 10px 15px;
-}
-.collapsed-header-bar[data-v-4c3820ee] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 15px auto;
-}
+
+
 
 /*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingSectionH2.vue?vue&type=style&index=0&id=6a626ebc&scoped=true&lang=css ***!
@@ -718,8 +676,6 @@ img[data-v-3b6abb4d] {
   align-items: center;
 }
 .highlight-title[data-v-3b6abb4d] {
-  color: #000000;
-  border-bottom: 2px solid #000000;
   font-weight: 700;
 }
 .item[data-v-3b6abb4d]:hover {
@@ -3697,7 +3653,7 @@ img[data-v-4f42ee16] {
   border: none;
   border-radius: 12px;
   background: #dfdfdf;
-  padding: 0 30px;
+  padding: 0 20px;
 }
 .search-icon[data-v-dc336a26] {
   height: 1em;
@@ -3705,11 +3661,11 @@ img[data-v-4f42ee16] {
 }
 
 
-/*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/CreateNodeButton.vue?vue&type=style&index=0&id=0c69ff34&scoped=true&lang=css ***!
-  \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/items/CreateNodeButton.vue?vue&type=style&index=0&id=b4512dba&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.create-node[data-v-0c69ff34] {
+.create-node[data-v-b4512dba] {
   background: #fa5235;
   cursor: pointer;
   border: none;
@@ -3722,18 +3678,20 @@ img[data-v-4f42ee16] {
   padding: 0 30px;
   height: 30px;
 }
-.sm[data-v-0c69ff34] {
+.sm[data-v-b4512dba] {
   justify-content: center;
   width: 20px;
+  margin: 0 15px;
+  padding: 0 20px;
 }
-.create-node[data-v-0c69ff34]:hover {
+.create-node[data-v-b4512dba]:hover {
   background: #f64324;
 }
-.create-node-img[data-v-0c69ff34] {
+.create-node-img[data-v-b4512dba] {
   height: 60%;
   background: transparent;
 }
-.create-node span[data-v-0c69ff34] {
+.create-node span[data-v-b4512dba] {
   margin-left: 5px;
   display: block;
   white-space: nowrap;
@@ -3806,35 +3764,92 @@ img[data-v-4f42ee16] {
   color: #666;
 }
 
-/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/EditorStatus.vue?vue&type=style&index=0&id=6e2de383&scoped=true&lang=css ***!
-  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/items/EditorStatus.vue?vue&type=style&index=0&id=45039cf2&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.status[data-v-6e2de383] {
+.status[data-v-45039cf2] {
   margin: 5px 0 5px 20px;
   font-size: 12px;
   display: flex;
   align-items: center;
 }
-.status img[data-v-6e2de383] {
+.status img[data-v-45039cf2] {
   width: 15px;
   height: 15px;
   margin-right: 5px;
 }
-.status span[data-v-6e2de383] {
+.status span[data-v-45039cf2] {
   color: #818181;
   font-weight: 200;
   overflow-x: hidden;
-  white-space: nowrap;
+  white-space: break-spaces;
+  width: 80px;
 }
-.status-sm[data-v-6e2de383] {
-  margin: 0 0 0 10px;
+.status-sm[data-v-45039cf2] {
+  margin: 0;
   font-size: 0.8em;
 }
-.status-sm img[data-v-6e2de383] {
+.status-sm img[data-v-45039cf2] {
   width: 13px;
   height: 13px;
   margin-right: 5px;
+}
+
+
+
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/items/userMenu/UserMenuItem.vue?vue&type=style&index=0&id=0f42fe3f&scoped=true&lang=css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.menu-item[data-v-0f42fe3f] {
+  padding: 10px;
+  border-bottom: 1px solid #e7e5e5;
+  cursor: pointer;
+}
+.menu-item-text[data-v-0f42fe3f] {
+  font-size: 0.9em;
+  color: #5d5c5c;
+}
+
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/items/userMenu/UserMenu.vue?vue&type=style&index=0&id=12edfa8c&scoped=true&lang=css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.user-img[data-v-12edfa8c] {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.user-img[data-v-12edfa8c]:hover {
+  opacity: 0.5;
+}
+.user-menu[data-v-12edfa8c] {
+  position: absolute;
+  top: 3em;
+  right: 0;
+  width: 200px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #ccc;
+  z-index: 10;
+}
+.user-info[data-v-12edfa8c] {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #e7e5e5;
+  height: 3em;
+}
+.user-info-img[data-v-12edfa8c] {
+  height: 100%;
+  border-radius: 50%;
+}
+.user-info-nickname[data-v-12edfa8c] {
+  margin-left: 5px;
+  font-size: 1em;
+  font-weight: 400;
 }
 
 
@@ -3842,9 +3857,8 @@ img[data-v-4f42ee16] {
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/EditorHeader.vue?vue&type=style&index=0&id=55779ec4&scoped=true&lang=css ***!
   \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.menu[data-v-55779ec4] {
-  margin: 0 10px 0 5px;
-  padding: 0 5px;
+.sm-right-margin[data-v-55779ec4] {
+  margin-right: 5px;
 }
 
 
@@ -4413,10 +4427,10 @@ table.view {
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/AppHeader.vue?vue&type=style&index=0&id=2f83367a&scoped=true&lang=css ***!
   \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.menu[data-v-2f83367a] {
-  margin: 0 20px 0 5px;
-  padding: 0 5px;
+.sm-right-margin[data-v-2f83367a] {
+  margin-right: 5px;
 }
+
 
 
 /*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -5123,17 +5137,15 @@ h1[data-v-61cb665a] {
 
 .flash-popup-box {
   position: fixed;
-  top: 2em;
-  left: 0;
-  width: 100%;
+  bottom: 4em;
+  left: 0.5em;
+  max-width: 300px;
+  min-width: 250px;
   height: 0;
   z-index: 100;
 }
 .flash-popup-box-content {
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 5px 10px;
+  padding: 10px;
   border-radius: 5px;
   background-color: #ffffff;
   border: 3px solid #84e3b0;
@@ -5141,7 +5153,7 @@ h1[data-v-61cb665a] {
 }
 .flash-popup-box-content-body {
   font-size: 1em;
-  text-align: center;
+  text-align: left;
 }
 
 

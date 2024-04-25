@@ -6,7 +6,7 @@ from retk.controllers.schemas.account import TokenResponse
 from retk.routes import utils
 
 router = APIRouter(
-    prefix="/oauth",
+    prefix="/api/oauth",
     tags=["oauth"],
     responses={404: {"description": "Not found"}},
 )

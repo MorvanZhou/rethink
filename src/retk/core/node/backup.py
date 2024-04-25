@@ -118,7 +118,12 @@ def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.Code
             Bucket=settings.COS_BUCKET_NAME,
             Key=key,
         )
-        md_body = res["Body"].read()
+        md_body = b""
+        while 1:
+            chunk = res["Body"].read()
+            if not chunk:
+                break
+            md_body += chunk
     except CosServiceError as e:
         logger.error(f"failed to get file from cos: {e}")
         return "", const.Code.COS_ERROR
@@ -133,6 +138,9 @@ def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.Code
 def __save_md_to_cos(uid: str, nid: str, version: str, md: str) -> const.Code:
     settings = config.get_settings()
     cos_client, key, code = __cos_connect(settings, uid, nid, version)
+
+    if code != const.Code.OK:
+        return code
 
     # can raise error
     try:
