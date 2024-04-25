@@ -92,12 +92,12 @@ class ImportData(TypedDict):
     obsidian: Dict[str, str]  # filename: nid
 
 
-class NoticeSystem(TypedDict):
+class SystemNotice(TypedDict):
     _id: ObjectId
     adminId: str
     title: str
     content: str
-    userType: int  # send to which user type
+    userType: int  # send to which user type, 0: all, 1: batch, 2: admin
     delivered: bool  # has been sent to user
 
 

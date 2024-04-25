@@ -180,7 +180,7 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
             size=len(content)
         )
 
-    if not file.content_type.startswith(const.ValidUploadedFilePrefix.IMAGE.value):
+    if not file.content_type.startswith(const.app.ValidUploadedFilePrefix.IMAGE.value):
         return "", const.Code.INVALID_FILE_TYPE
 
     res = await sync_tasks.save_editor_upload_files(

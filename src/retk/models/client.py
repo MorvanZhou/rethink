@@ -161,10 +161,10 @@ class Client:
             last_state_node_display_sort_key="modifiedAt",
 
             settings_language=_v["settings"]["language"],
-            settings_theme=_v["settings"].get("theme", const.AppTheme.LIGHT.value),
-            settings_editor_mode=_v["settings"].get("editorMode", const.EditorMode.WYSIWYG.value),
+            settings_theme=_v["settings"].get("theme", const.app.AppTheme.LIGHT.value),
+            settings_editor_mode=_v["settings"].get("editorMode", const.app.EditorMode.WYSIWYG.value),
             settings_editor_font_size=_v["settings"].get("editorFontSize", 15),
-            settings_editor_code_theme=_v["settings"].get("editorCodeTheme", const.EditorCodeTheme.GITHUB.value),
+            settings_editor_code_theme=_v["settings"].get("editorCodeTheme", const.app.EditorCodeTheme.GITHUB.value),
             settings_editor_sep_right_width=_v["settings"].get("editorSepRightWidth", 200),
             settings_editor_side_current_tool_id=_v["settings"].get("editorSideCurrentToolId", ""),
         )
@@ -263,10 +263,10 @@ class Client:
             last_state_node_display_sort_key="modifiedAt",
 
             settings_language=v_settings.get("language", const.Language.EN.value),
-            settings_theme=v_settings.get("theme", const.AppTheme.LIGHT.value),
-            settings_editor_mode=v_settings.get("editorMode", const.EditorMode.WYSIWYG.value),
+            settings_theme=v_settings.get("theme", const.app.AppTheme.LIGHT.value),
+            settings_editor_mode=v_settings.get("editorMode", const.app.EditorMode.WYSIWYG.value),
             settings_editor_font_size=v_settings.get("editorFontSize", 15),
-            settings_editor_code_theme=v_settings.get("editorCodeTheme", const.EditorCodeTheme.GITHUB.value),
+            settings_editor_code_theme=v_settings.get("editorCodeTheme", const.app.EditorCodeTheme.GITHUB.value),
             settings_editor_sep_right_width=v_settings.get("editorSepRightWidth", 200),
             settings_editor_side_current_tool_id=v_settings.get("editorSideCurrentToolId", ""),
         )

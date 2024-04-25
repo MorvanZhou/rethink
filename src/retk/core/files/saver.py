@@ -8,7 +8,8 @@ from bson import ObjectId
 from qcloud_cos import CosConfig, CosServiceError, CosS3Client
 
 from retk.config import get_settings, is_local_db
-from retk.const import IMG_RESIZE_THRESHOLD, FileTypes
+from retk.const.app import FileTypes
+from retk.const.settings import IMG_RESIZE_THRESHOLD
 from retk.core.user import update_used_space
 from retk.logger import logger
 from retk.models.client import client

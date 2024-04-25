@@ -79,7 +79,7 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
 
     def test_salt(self):
         npw = "12345"
-        self.assertLessEqual(len(npw), const.PASSWORD_MAX_LENGTH)
+        self.assertLessEqual(len(npw), const.settings.PASSWORD_MAX_LENGTH)
         bpw = account.manager._base_password(password=npw, email="rethink@rethink.run")
         salt = bcrypt.gensalt()
         hpw = bcrypt.hashpw(bpw, salt).decode("utf-8")
@@ -94,7 +94,7 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("sound", data)
 
     def test_verify_img(self):
-        token, data = account.app_captcha.generate()
+        token, _ = account.app_captcha.generate()
         decoded = jwt_decode(token)
         code = account.app_captcha.verify_captcha(token=token, code_str=decoded["code"])
         self.assertEqual(const.Code.OK, code)

@@ -18,7 +18,7 @@ async def save_editor_upload_files(
     for file in files:
         filename = file.filename
         # validate MIME image type
-        if not const.ValidUploadedFilePrefix.is_valid(file.content_type):
+        if not const.app.ValidUploadedFilePrefix.is_valid(file.content_type):
             res["errFiles"].append(filename)
             res["code"] = const.Code.INVALID_FILE_TYPE
             continue
@@ -26,13 +26,13 @@ async def save_editor_upload_files(
         # validate file type
         sep = filename.rsplit(".", 1)
         ext = f".{sep[-1]}" if len(sep) > 1 else ""
-        if const.FileTypes.get_type(ext) == const.FileTypes.UNKNOWN:
+        if const.app.FileTypes.get_type(ext) == const.app.FileTypes.UNKNOWN:
             res["errFiles"].append(filename)
             res["code"] = const.Code.INVALID_FILE_TYPE
             continue
 
         # validate file size
-        if file.size > const.MAX_UPLOAD_FILE_SIZE:
+        if file.size > const.settings.MAX_UPLOAD_FILE_SIZE:
             res["errFiles"].append(filename)
             res["code"] = const.Code.TOO_LARGE_FILE
             continue

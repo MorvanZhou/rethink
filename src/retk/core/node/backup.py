@@ -50,8 +50,8 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
         if code != const.Code.OK:
             return code
 
-    if len(hist) > const.MAX_MD_BACKUP_VERSIONS:
-        drop = hist[-const.MAX_MD_BACKUP_VERSIONS:]
+    if len(hist) > const.settings.MAX_MD_BACKUP_VERSIONS:
+        drop = hist[-const.settings.MAX_MD_BACKUP_VERSIONS:]
         for h in drop:
             if config.is_local_db():
                 md_dir = __get_md_hist_dir(nid)
@@ -59,7 +59,7 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
                 (md_dir / f"{filename}.md").unlink()
             else:
                 __remove_md_from_cos(node["uid"], nid, h)
-        hist = hist[:-const.MAX_MD_BACKUP_VERSIONS]
+        hist = hist[:-const.settings.MAX_MD_BACKUP_VERSIONS]
 
     res = await client.coll.nodes.update_one(
         {"id": nid},

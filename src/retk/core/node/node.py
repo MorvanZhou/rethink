@@ -23,7 +23,7 @@ async def post(  # noqa: C901
         from_nid: str = "",
 ) -> Tuple[Optional[tps.Node], const.Code]:
     md = md.strip()
-    if len(md) > const.MD_MAX_LENGTH:
+    if len(md) > const.settings.MD_MAX_LENGTH:
         return None, const.Code.NOTE_EXCEED_MAX_LENGTH
 
     new_size = len(md.encode("utf-8"))
@@ -147,7 +147,7 @@ async def update_md(  # noqa: C901
     if regex.NID.match(nid) is None:
         return None, None, const.Code.NODE_NOT_EXIST
     md = md.strip()
-    if len(md) > const.MD_MAX_LENGTH:
+    if len(md) > const.settings.MD_MAX_LENGTH:
         return None, None, const.Code.NOTE_EXCEED_MAX_LENGTH
     if await user.user_space_not_enough(au=au):
         return None, None, const.Code.USER_SPACE_NOT_ENOUGH
@@ -284,11 +284,7 @@ async def restore_from_trash(au: tps.AuthedUser, nid: str) -> const.Code:
 
 
 async def restore_batch_from_trash(au: tps.AuthedUser, nids: List[str]) -> const.Code:
-    ns, code = await get_batch(au=au, nids=nids, with_disabled=False, in_trash=True)
-    if code != const.Code.OK:
-        return code
-
-    # remove nodes
+    # restore nodes
     res = await client.coll.nodes.update_many({"id": {"$in": nids}}, {"$set": {
         "inTrash": False,
         "inTrashAt": None,

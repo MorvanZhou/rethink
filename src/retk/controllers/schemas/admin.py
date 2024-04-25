@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
 
-from retk import const
+from retk.const import settings
 
 
 class UidRequest(BaseModel):
-    uid: str = Field(max_length=const.UID_MAX_LENGTH)
+    uid: str = Field(max_length=settings.UID_MAX_LENGTH)
 
 
 class EmailRequest(BaseModel):
-    email: str = Field(max_length=const.EMAIL_MAX_LENGTH)
+    email: str = Field(max_length=settings.EMAIL_MAX_LENGTH)

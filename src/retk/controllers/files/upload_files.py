@@ -41,9 +41,10 @@ async def get_upload_process(
 ) -> schemas.files.FileUploadProcessResponse:
     doc = await core.files.get_upload_process(uid=au.u.id)
     if doc is None:
+        code = const.Code.OK
         return schemas.files.FileUploadProcessResponse(
-            code=const.Code.OK.value,
-            msg=const.get_msg_by_code(const.Code.OK, au.language),
+            code=code.value,
+            msg=const.get_msg_by_code(code, au.language),
             requestId=au.request_id,
             process=0.,
             type="",

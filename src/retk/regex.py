@@ -14,7 +14,7 @@ OBS_INTERNAL_FILE = re.compile(r"!\[\[(.*?)]]")
 MD_IMG = re.compile(r"!\[(.*?)]\((?!http)(.*?)\)")
 
 MD_AT_LINK = re.compile(r"\[@.+?]\(([\w/]+?)\)", re.MULTILINE)
-NID = re.compile(fr"^[A-Za-z0-9]{{20,{const.NID_MAX_LENGTH}}}$")
+NID = re.compile(fr"^[A-Za-z0-9]{{20,{const.settings.NID_MAX_LENGTH}}}$")
 
 ONLY_HTTP_URL = re.compile(r"^https?://\S*$")
 

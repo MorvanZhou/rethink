@@ -2,7 +2,7 @@ from typing import List, Any
 
 from pydantic import BaseModel, Field
 
-from retk import const
+from retk.const import settings
 
 
 class PluginsResponse(BaseModel):
@@ -24,8 +24,8 @@ class RenderPluginResponse(BaseModel):
 
 
 class PluginCallRequest(BaseModel):
-    requestId: str = Field(description="request id", max_length=const.REQUEST_ID_MAX_LENGTH, default="")
-    pluginId: str = Field(max_length=const.PLUGIN_ID_MAX_LENGTH)
+    requestId: str = Field(description="request id", max_length=settings.REQUEST_ID_MAX_LENGTH, default="")
+    pluginId: str = Field(max_length=settings.PLUGIN_ID_MAX_LENGTH)
     method: str
     data: Any
 

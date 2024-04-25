@@ -32,10 +32,10 @@ def __migrate_older_to_0_2_7(dot_rethink: Dict, data_path: Path):
     if "settings" not in dot_rethink:
         dot_rethink["settings"] = {
             "language": const.Language.EN.value,
-            "theme": const.AppTheme.LIGHT.value,
-            "editorMode": const.EditorMode.WYSIWYG.value,
+            "theme": const.app.AppTheme.LIGHT.value,
+            "editorMode": const.app.EditorMode.WYSIWYG.value,
             "editorFontSize": 15,
-            "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+            "editorCodeTheme": const.app.EditorCodeTheme.GITHUB.value,
             "editorSepRightWidth": 200,
             "editorSideCurrentToolId": "",
         }

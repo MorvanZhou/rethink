@@ -47,10 +47,10 @@ async def add(
         last_state_node_display_sort_key="modifiedAt",
 
         settings_language=language,
-        settings_theme=const.AppTheme.LIGHT.value,
-        settings_editor_mode=const.EditorMode.WYSIWYG.value,
+        settings_theme=const.app.AppTheme.LIGHT.value,
+        settings_editor_mode=const.app.EditorMode.WYSIWYG.value,
         settings_editor_font_size=15,
-        settings_editor_code_theme=const.EditorCodeTheme.GITHUB.value,
+        settings_editor_code_theme=const.app.EditorCodeTheme.GITHUB.value,
         settings_editor_sep_right_width=200,
         settings_editor_side_current_tool_id="",
     )
@@ -106,7 +106,7 @@ async def patch(  # noqa: C901
             new_data["settings.editorMode"] = req.settings.editorMode
 
         if req.settings.editorFontSize is not None:
-            if not const.EditorFontSize.is_valid(req.settings.editorFontSize):
+            if not const.app.EditorFontSize.is_valid(req.settings.editorFontSize):
                 return None, const.Code.INVALID_SETTING
             new_data["settings.editorFontSize"] = req.settings.editorFontSize
 

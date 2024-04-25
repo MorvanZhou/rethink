@@ -82,8 +82,8 @@ class Plugin:
                 raise ValueError(f"attribute '{attr}' is required")
         if len(self.id) == 0:
             raise ValueError("id is required")
-        if len(self.id) > const.PLUGIN_ID_MAX_LENGTH:
-            raise ValueError(f"id length should be less than {const.PLUGIN_ID_MAX_LENGTH}")
+        if len(self.id) > const.settings.PLUGIN_ID_MAX_LENGTH:
+            raise ValueError(f"id length should be less than {const.settings.PLUGIN_ID_MAX_LENGTH}")
 
         # get icon and convert to base64
         if os.path.isfile(self.icon):

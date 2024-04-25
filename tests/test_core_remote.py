@@ -6,6 +6,7 @@ from unittest.mock import patch
 import elastic_transport
 import pymongo.errors
 from bson import ObjectId
+
 from retk import const, config, core
 from retk.controllers.schemas.user import PatchUserRequest
 from retk.core.account.manager import signup
@@ -13,7 +14,6 @@ from retk.models import db_ops
 from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from retk.utils import get_token
-
 from . import utils
 
 
@@ -107,10 +107,10 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 },
                 "settings": {
                     "language": "en",
-                    "editorMode": const.EditorMode.WYSIWYG.value,
-                    "editorTheme": const.AppTheme.LIGHT.value,
+                    "editorMode": const.app.EditorMode.WYSIWYG.value,
+                    "editorTheme": const.app.AppTheme.LIGHT.value,
                     "editorFontSize": 15,
-                    "editorCodeTheme": const.EditorCodeTheme.GITHUB.value,
+                    "editorCodeTheme": const.app.EditorCodeTheme.GITHUB.value,
                 }
             })
             us = await client.coll.users.find({"id": "same"}).to_list(length=2)

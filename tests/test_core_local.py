@@ -109,7 +109,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_node(self):
         node, code = await core.node.post(
-            au=self.au, md="a" * (const.MD_MAX_LENGTH + 1), type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="a" * (const.settings.MD_MAX_LENGTH + 1), type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.NOTE_EXCEED_MAX_LENGTH, code)
         self.assertIsNone(node)
@@ -301,7 +301,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.post(
+        _, code = await core.node.post(
             au=self.au, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -415,6 +415,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_upload_image_vditor(self):
         u, code = await core.user.get(self.au.u.id)
+        self.assertEqual(const.Code.OK, code)
         used_space = u["usedSpace"]
         p = Path(__file__).parent / "tmp" / "fake.png"
 
@@ -496,14 +497,14 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         time.sleep(1)
 
-        n, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody2")
+        _, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.Code.OK, code)
         hist_dir = Path(__file__).parent / "tmp" / ".data" / "md" / "hist" / node["id"]
         self.assertEqual(1, len(list(hist_dir.glob("*.md"))))
 
         time.sleep(1)
 
-        n, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody3")
+        _, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody3")
         self.assertEqual(const.Code.OK, code)
         self.assertEqual(2, len(list(hist_dir.glob("*.md"))))
 
@@ -516,13 +517,13 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         time.sleep(0.001)
 
-        n2, old_n, code = await core.node.update_md(
+        _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title2\ntext",
         )
         self.assertEqual(const.Code.OK, code)
         time.sleep(0.001)
 
-        n2, old_n, code = await core.node.update_md(
+        _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title3\ntext",
         )
         self.assertEqual(const.Code.OK, code)

@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
-from retk import const
+from retk.const import settings
 
 
 class NodeData(BaseModel):
@@ -30,9 +30,9 @@ class NodeData(BaseModel):
 
 
 class CreateRequest(BaseModel):
-    md: str = Field(max_length=const.MD_MAX_LENGTH)
+    md: str = Field(max_length=settings.MD_MAX_LENGTH)
     type: NonNegativeInt
-    fromNid: str = Field(default="", max_length=const.NID_MAX_LENGTH)
+    fromNid: str = Field(default="", max_length=settings.NID_MAX_LENGTH)
 
 
 class NodeResponse(BaseModel):
@@ -41,7 +41,7 @@ class NodeResponse(BaseModel):
 
 
 class PatchMdRequest(BaseModel):
-    md: str = Field(max_length=const.MD_MAX_LENGTH)
+    md: str = Field(max_length=settings.MD_MAX_LENGTH)
 
 
 class NodesSearchResponse(BaseModel):

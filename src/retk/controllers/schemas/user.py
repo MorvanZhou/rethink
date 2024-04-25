@@ -1,7 +1,8 @@
 from typing import Literal, Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
-from retk import const
+
+from retk.const import settings
 from retk.models.tps import CODE_THEME_TYPES
 
 
@@ -50,15 +51,15 @@ class PatchUserRequest(BaseModel):
         editorSepRightWidth: Optional[NonNegativeFloat] = Field(default=None)
         editorSideCurrentToolId: Optional[str] = Field(default=None)
 
-    nickname: Optional[str] = Field(default=None, max_length=const.NICKNAME_MAX_LENGTH)
+    nickname: Optional[str] = Field(default=None, max_length=settings.NICKNAME_MAX_LENGTH)
     avatar: Optional[str] = Field(default=None, max_length=2048)
     lastState: Optional[LastState] = Field(default=None)
     settings: Optional[Settings] = Field(default=None)
 
 
 class UpdatePasswordRequest(BaseModel):
-    oldPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
-    newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
+    oldPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
+    newPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
 
 
 class NotificationResponse(BaseModel):

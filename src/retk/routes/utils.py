@@ -15,7 +15,7 @@ from retk.logger import logger
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from retk.utils import jwt_decode
 
-REFERER_PREFIX = f"https://{const.DOMAIN}"
+REFERER_PREFIX = f"https://{const.settings.DOMAIN}"
 
 
 def measure_time_spend(func):
@@ -63,7 +63,7 @@ def verify_referer(referer: Optional[str] = Header(None)):
 async def process_normal_headers(
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
-            default="", alias="RequestId", max_length=const.REQUEST_ID_MAX_LENGTH
+            default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
     """if no requestId, default to empty string"""
@@ -107,7 +107,7 @@ async def process_normal_headers(
 async def process_admin_headers(
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
-            default="", alias="RequestId", max_length=const.REQUEST_ID_MAX_LENGTH
+            default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
     au = await process_normal_headers(token=token, request_id=request_id)
@@ -122,9 +122,9 @@ async def process_admin_headers(
 ANNOTATED_AUTHED_USER = Annotated[AuthedUser, Depends(process_normal_headers)]
 ANNOTATED_AUTHED_ADMIN = Annotated[AuthedUser, Depends(process_admin_headers)]
 
-ANNOTATED_UID = Annotated[str, Path(title="The ID of user", max_length=const.UID_MAX_LENGTH, min_length=8)]
-ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.NID_MAX_LENGTH, min_length=8)]
-ANNOTATED_PID = Annotated[str, Path(title="The ID of plugin", max_length=const.PLUGIN_ID_MAX_LENGTH)]
-ANNOTATED_FID = Annotated[str, Path(title="The ID of file", max_length=const.FID_MAX_LENGTH)]
+ANNOTATED_UID = Annotated[str, Path(title="The ID of user", max_length=const.settings.UID_MAX_LENGTH, min_length=8)]
+ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.settings.NID_MAX_LENGTH, min_length=8)]
+ANNOTATED_PID = Annotated[str, Path(title="The ID of plugin", max_length=const.settings.PLUGIN_ID_MAX_LENGTH)]
+ANNOTATED_FID = Annotated[str, Path(title="The ID of file", max_length=const.settings.FID_MAX_LENGTH)]
 
 DEPENDS_REFERER = Depends(verify_referer)

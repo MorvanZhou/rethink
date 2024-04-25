@@ -45,7 +45,7 @@ async def shutdown_event():
 async def app_page() -> HTMLResponse:
     if not config.is_local_db():
         raise HTTPException(status_code=404, detail="only support local storage")
-    content = (const.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    content = (const.settings.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
     script = f"window.VUE_APP_API_PORT={os.getenv('VUE_APP_API_PORT')};"
     language = os.getenv("RETHINK_DEFAULT_LANGUAGE")
     if language is not None:
@@ -87,7 +87,7 @@ def mount_static(app: FastAPI):
         for name in ["css", "js", "img", "dist"]:
             app.mount(
                 f"{r_prefix}/{name}",
-                StaticFiles(directory=const.FRONTEND_DIR / name),
+                StaticFiles(directory=const.settings.FRONTEND_DIR / name),
                 name=name,
             )
     except RuntimeError:

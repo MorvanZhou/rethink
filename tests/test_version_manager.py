@@ -31,10 +31,10 @@ class RecoverTest(unittest.TestCase):
         self.assertEqual(const.DEFAULT_USER["avatar"], v["avatar"])
         self.assertEqual(const.DEFAULT_USER["email"], v["account"])
         self.assertEqual(const.Language.EN.value, v["settings"]["language"])
-        self.assertEqual(const.AppTheme.LIGHT.value, v["settings"]["theme"])
-        self.assertEqual(const.EditorMode.WYSIWYG.value, v["settings"]["editorMode"])
+        self.assertEqual(const.app.AppTheme.LIGHT.value, v["settings"]["theme"])
+        self.assertEqual(const.app.EditorMode.WYSIWYG.value, v["settings"]["editorMode"])
         self.assertEqual(15, v["settings"]["editorFontSize"])
-        self.assertEqual(const.EditorCodeTheme.GITHUB.value, v["settings"]["editorCodeTheme"])
+        self.assertEqual(const.app.EditorCodeTheme.GITHUB.value, v["settings"]["editorCodeTheme"])
         self.assertEqual(200, v["settings"]["editorSepRightWidth"])
         self.assertEqual("", v["settings"]["editorSideCurrentToolId"])
 
