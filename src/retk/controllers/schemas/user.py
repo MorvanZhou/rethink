@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
@@ -70,4 +70,4 @@ class NotificationResponse(BaseModel):
         createdAt: str
 
     requestId: str
-    notifications: list[Notification]
+    notifications: List[Notification]
