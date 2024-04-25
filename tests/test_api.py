@@ -108,9 +108,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(818, len(rj["accessToken"]))
         self.assertTrue(rj["accessToken"].startswith("Bearer "))
+        self.access_token = rj["accessToken"]
         self.refresh_token = rj["refreshToken"]
         self.default_headers = {
-            "Authorization": rj["accessToken"],
+            "Authorization": self.access_token,
             "RequestId": "xxx",
         }
 
@@ -228,7 +229,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(818, len(rj["accessToken"]))
-        self.assertTrue(self.default_headers["Authorization"] != rj["accessToken"])
+        self.assertNotEqual(self.access_token, rj["accessToken"])
         self.assertTrue(rj["accessToken"].startswith("Bearer "))
         self.assertEqual("", rj["refreshToken"])
 
