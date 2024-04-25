@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter
+
 from retk.controllers import schemas, account
 from retk.routes import utils
 
@@ -77,4 +78,4 @@ async def refresh_token(
         au: utils.ANNOTATED_AUTHED_USER,  # check refresh token expiration
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
-    return await account.refresh_token(au=au)
+    return await account.get_new_access_token(au=au)

@@ -14,3 +14,4 @@ class Collections:
     import_data: Union[Collection, "AsyncIOMotorCollection"] = None
     user_file: Union[Collection, "AsyncIOMotorCollection"] = None
     # notice_system: Union[Collection, "AsyncIOMotorCollection"] = None
+    user_behavior: Union[Collection, "AsyncIOMotorCollection"] = None

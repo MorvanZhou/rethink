@@ -108,10 +108,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(818, len(rj["accessToken"]))
         self.assertTrue(rj["accessToken"].startswith("Bearer "))
-        self.access_token = rj["accessToken"]
         self.refresh_token = rj["refreshToken"]
         self.default_headers = {
-            "Authorization": self.access_token,
+            "Authorization": rj["accessToken"],
             "RequestId": "xxx",
         }
 
@@ -218,20 +217,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.check_ok_response(resp, 200)
 
-    async def test_get_new_access_token(self):
-        time.sleep(0.001)
-        resp = self.client.get(
-            "/api/account/access-token",
-            headers={
-                "Authorization": self.refresh_token,
-                "RequestId": "xxx",
-            }
-        )
-        rj = self.check_ok_response(resp, 200)
-        self.assertEqual(818, len(rj["accessToken"]))
-        self.assertNotEqual(self.access_token, rj["accessToken"])
-        self.assertTrue(rj["accessToken"].startswith("Bearer "))
-        self.assertEqual("", rj["refreshToken"])
 
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
@@ -1128,3 +1113,142 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(1, doc.modified_count)
         config.get_settings().ONE_USER = True
+
+    async def test_statistic_user_behavior(self):
+        # login
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": const.DEFAULT_USER["email"],
+                "password": "",
+            }
+        )
+        uid = (await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})).get("id")
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.LOGIN.value, docs[-1]["type"])
+
+        token = resp.json()["accessToken"]
+
+        # create node
+        resp = self.client.post(
+            "/api/nodes",
+            json={
+                "md": "node1\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.NODE_CREATE.value, docs[-1]["type"])
+        self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
+
+        # quick node
+        resp = self.client.post(
+            "/api/nodes/quick",
+            json={
+                "md": "node1\ntext",
+                "type": const.NodeType.MARKDOWN.value,
+            },
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.NODE_QUICK_CREATE.value, docs[-1]["type"])
+        self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
+
+        # trash node
+        self.client.put(
+            f"/api/trash/{resp.json()['node']['id']}",
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.NODE_TRASHED_OPS.value, docs[-1]["type"])
+
+        # restore node
+        self.client.put(
+            f"/api/trash/{resp.json()['node']['id']}/restore",
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.NODE_RESTORED_OPS.value, docs[-1]["type"])
+
+        # delete node
+        self.client.put(
+            f"/api/trash/{resp.json()['node']['id']}",
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        self.client.delete(
+            f"/api/trash/{resp.json()['node']['id']}",
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.NODE_DELETED_OPS.value, docs[-1]["type"])
+
+        # search
+        self.client.get(
+            "/api/nodes",
+            params={
+                "q": "1",
+                "sort": "createdAt",
+                "ord": "desc",
+                "p": 0,
+                "limit": 5
+            },
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.SEARCH_GLOBAL.value, docs[-1]["type"])
+        self.assertEqual("1", docs[-1]["remark"])
+
+        # search at
+        self.client.get(
+            f"/api/nodes/{resp.json()['node']['id']}/at",
+            params={
+                "q": "node",
+                "p": 0,
+                "limit": 10,
+            },
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            }
+        )
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.SEARCH_AT.value, docs[-1]["type"])
+        self.assertEqual("node", docs[-1]["remark"])

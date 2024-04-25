@@ -10,6 +10,7 @@ from . import (
     plugin,
     app_system,
     admin,
+    statistic,
 )
 
 

@@ -2,11 +2,12 @@ from random import randint
 from typing import Tuple
 
 from fastapi.responses import StreamingResponse
+
 from retk import config
 from retk import const
 from retk.controllers import schemas
 from retk.controllers.utils import json_exception
-from retk.core import account, user
+from retk.core import account, user, statistic
 from retk.models.tps import AuthedUser
 from retk.utils import get_token, jwt_encode
 
@@ -76,6 +77,11 @@ async def login(
     access_token, refresh_token = get_token(
         uid=u["id"],
         language=u["settings"]["language"],
+    )
+    await statistic.add_user_behavior(
+        uid=u["id"],
+        type_=const.UserBehaviorType.LOGIN,
+        remark="",
     )
     return schemas.account.TokenResponse(
         requestId=au.request_id,
@@ -195,7 +201,7 @@ async def email_send_code(
     )
 
 
-async def refresh_token(
+async def get_new_access_token(
         au: AuthedUser,
 ) -> schemas.account.TokenResponse:
     access_token = jwt_encode(

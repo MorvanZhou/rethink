@@ -5,4 +5,5 @@ from . import (
     recent,
     files,
     account,
+    statistic,
 )

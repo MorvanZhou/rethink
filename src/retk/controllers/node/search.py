@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from retk import core
+from retk import core, const
 from retk.controllers import schemas
 from retk.models.tps import AuthedUser
 
@@ -21,6 +21,12 @@ async def user_nodes(
         page=page,
         limit=limit,
         exclude_nids=[],
+    )
+
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorType.SEARCH_GLOBAL,
+        remark=q,
     )
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
@@ -44,6 +50,12 @@ async def node_at_search(
         query=q,
         page=p,
         limit=limit,
+    )
+
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorType.SEARCH_AT,
+        remark=q,
     )
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,

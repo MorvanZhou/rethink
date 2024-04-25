@@ -72,6 +72,7 @@ class Client:
         self.coll.nodes = db["nodes"]
         self.coll.import_data = db["importData"]
         self.coll.user_file = db["userFile"]
+        self.coll.user_behavior = db["userBehavior"]
 
     async def init_search(self):
         conf = config.get_settings()

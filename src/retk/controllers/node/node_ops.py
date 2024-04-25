@@ -44,6 +44,7 @@ def __get_node_data(n: Node) -> schemas.node.NodeData:
 async def post_node(
         au: AuthedUser,
         req: schemas.node.CreateRequest,
+        is_quick: bool = False,
 ) -> schemas.node.NodeResponse:
     n, code = await core.node.post(
         au=au,
@@ -52,7 +53,12 @@ async def post_node(
         from_nid=req.fromNid,
     )
     maybe_raise_json_exception(au=au, code=code)
-
+    b_type = const.UserBehaviorType.NODE_CREATE if not is_quick else const.UserBehaviorType.NODE_QUICK_CREATE
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=b_type,
+        remark=n['id'],
+    )
     return schemas.node.NodeResponse(
         requestId=au.request_id,
         node=__get_node_data(n),
@@ -82,6 +88,7 @@ async def post_quick_node(
     return await post_node(
         au=au,
         req=req,
+        is_quick=True,
     )
 
 
@@ -103,7 +110,7 @@ async def update_md(
         req: schemas.node.PatchMdRequest,
         nid: str,
 ) -> schemas.node.NodeResponse:
-    n, old_n, code = await core.node.update_md(
+    n, _, code = await core.node.update_md(
         au=au,
         nid=nid,
         md=req.md,
