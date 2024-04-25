@@ -1,12 +1,12 @@
 from typing import Dict
 
 from fastapi import Request
-
 from retk import config, const, core, utils
 from retk.controllers.utils import json_exception
 from retk.depend.sso.base import SSOLoginError, SSOBase
 from retk.depend.sso.facebook import FacebookSSO
 from retk.depend.sso.github import GithubSSO
+
 # from retk.depend.sso.qq import QQSSO
 from .schemas.account import TokenResponse
 from .schemas.oauth import OAuthResponse
@@ -76,12 +76,14 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
         )
     u, code = await core.user.get_account(account=user.id, source=user_source)
     if code == const.Code.OK:
+        access_token, refresh_token = utils.get_token(
+            uid=u["id"],
+            language=u["settings"]["language"],
+        )
         return TokenResponse(
             requestId="",
-            token=utils.jwt_encode(
-                exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-                data={"uid": u["id"], "language": u["settings"]["language"]},
-            ),
+            accessToken=access_token,
+            refreshToken=refresh_token,
         )
 
     # no user found, create one
@@ -102,17 +104,19 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
             code=code,
         )
 
-    token = utils.jwt_encode(
-        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": u["id"], "language": language},
-    )
     code = await core.node.new_user_add_default_nodes(language=language, uid=u["id"])
     if code != const.Code.OK:
         raise json_exception(
             request_id="",
             code=code,
         )
+
+    access_token, refresh_token = utils.get_token(
+        uid=u["id"],
+        language=language,
+    )
     return TokenResponse(
         requestId="",
-        token=token,
+        accessToken=access_token,
+        refreshToken=refresh_token,
     )

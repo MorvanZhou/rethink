@@ -4,7 +4,6 @@ from typing import Sequence
 from urllib.parse import urlparse
 
 from fastapi import HTTPException
-
 from retk import const
 from retk.logger import logger
 from retk.models.tps import AuthedUser
@@ -45,7 +44,11 @@ def json_exception(
     if log_msg is not None:
         # get parent function name
         one_line_log = log_msg.replace("\n", "\\n")
-        logger.error(f"reqId='{request_id}' | {get_parent_function_info()} | err='{one_line_log}'")
+        if code == const.Code.EXPIRED_AUTH:
+            ll = logger.info
+        else:
+            ll = logger.error
+        ll(f"reqId='{request_id}' | {get_parent_function_info()} | err='{one_line_log}'")
 
     status_code = const.CODE2STATUS_CODE[code]
     if status_code == 500:

@@ -6,14 +6,14 @@ from unittest.mock import patch
 import elastic_transport
 import pymongo.errors
 from bson import ObjectId
-
 from retk import const, config, core
 from retk.controllers.schemas.user import PatchUserRequest
 from retk.core.account.manager import signup
 from retk.models import db_ops
 from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
-from retk.utils import jwt_encode
+from retk.utils import get_token
+
 from . import utils
 
 
@@ -44,10 +44,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 password=self.default_pwd,
                 language=const.Language.EN.value)
             self.assertEqual(const.Code.OK, code)
-            self.token = jwt_encode(
-                exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-                data={"uid": u["id"], "language": const.Language.EN.value},
+            self.access_token, self.refresh_token = get_token(
+                uid=u["id"],
+                language=const.Language.EN.value,
             )
+
             self.au = AuthedUser(
                 u=convert_user_dict_to_authed_user(u),
                 request_id="xxx",
@@ -339,7 +340,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
-        n2, code = await core.node.post(
+        _, code = await core.node.post(
             au=self.au, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
         )
         self.assertEqual(const.Code.OK, code)
@@ -464,13 +465,13 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.Code.OK, code)
         time.sleep(0.001)
 
-        n2, old_n, code = await core.node.update_md(
+        _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title2\ntext",
         )
         self.assertEqual(const.Code.OK, code)
         time.sleep(0.001)
 
-        n2, old_n, code = await core.node.update_md(
+        _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title3\ntext",
         )
         self.assertEqual(const.Code.OK, code)

@@ -1,7 +1,6 @@
 from typing import Literal, Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
-
 from retk import const
 from retk.models.tps import CODE_THEME_TYPES
 
@@ -60,3 +59,14 @@ class PatchUserRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     oldPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
     newPassword: str = Field(max_length=const.PASSWORD_MAX_LENGTH)
+
+
+class NotificationResponse(BaseModel):
+    class Notification(BaseModel):
+        id: str
+        type: Literal["info", "warning", "error"]
+        message: str
+        createdAt: str
+
+    requestId: str
+    notifications: list[Notification]

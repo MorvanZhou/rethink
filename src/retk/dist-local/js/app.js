@@ -36,7 +36,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue_
   \***********************************************************************************************************************************************************************************************************************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ \"./node_modules/vue/dist/vue.runtime.esm-bundler.js\");\n/* harmony import */ var _utils_multiLang__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/multiLang */ \"./src/utils/multiLang.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! vue-router */ \"./node_modules/vue-router/dist/vue-router.mjs\");\n/* harmony import */ var _utils_tools_mq__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/tools/mq */ \"./src/utils/tools/mq.ts\");\n/* harmony import */ var _assets_images_logo_rethink_png__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/assets/images/logo/rethink.png */ \"./src/assets/images/logo/rethink.png\");\n/* harmony import */ var _utils_const__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/utils/const */ \"./src/utils/const.ts\");\n\n\n\n\n\n\n\n\n/* harmony default export */ __webpack_exports__[\"default\"] = (/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({\n  __name: 'NavigationPublic',\n  setup(__props, {\n    expose: __expose\n  }) {\n    __expose();\n    const hasToken = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);\n    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onBeforeMount)(() => {\n      hasToken.value = (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.getToken)() !== \"\";\n    });\n    const name = (0,vue_router__WEBPACK_IMPORTED_MODULE_6__.useRoute)().name;\n    const mq = (0,_utils_tools_mq__WEBPACK_IMPORTED_MODULE_3__.useMQ)();\n    const __returned__ = {\n      hasToken,\n      name,\n      mq,\n      get mLang() {\n        return _utils_multiLang__WEBPACK_IMPORTED_MODULE_1__[\"default\"];\n      },\n      get RethinkIcon() {\n        return _assets_images_logo_rethink_png__WEBPACK_IMPORTED_MODULE_4__;\n      },\n      get CONST() {\n        return _utils_const__WEBPACK_IMPORTED_MODULE_5__[\"default\"];\n      }\n    };\n    Object.defineProperty(__returned__, '__isScriptSetup', {\n      enumerable: false,\n      value: true\n    });\n    return __returned__;\n  }\n}));\n\n//# sourceURL=webpack://rethink/./src/components/NavigationPublic.vue?./node_modules/babel-loader/lib/index.js!./node_modules/ts-loader/index.js??clonedRuleSet-41.use%5B1%5D!./node_modules/vue-loader/dist/index.js??ruleSet%5B0%5D.use%5B0%5D");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ \"./node_modules/vue/dist/vue.runtime.esm-bundler.js\");\n/* harmony import */ var _utils_multiLang__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/multiLang */ \"./src/utils/multiLang.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! vue-router */ \"./node_modules/vue-router/dist/vue-router.mjs\");\n/* harmony import */ var _utils_tools_mq__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/tools/mq */ \"./src/utils/tools/mq.ts\");\n/* harmony import */ var _assets_images_logo_rethink_png__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/assets/images/logo/rethink.png */ \"./src/assets/images/logo/rethink.png\");\n/* harmony import */ var _utils_const__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/utils/const */ \"./src/utils/const.ts\");\n\n\n\n\n\n\n\n\n/* harmony default export */ __webpack_exports__[\"default\"] = (/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({\n  __name: 'NavigationPublic',\n  setup(__props, {\n    expose: __expose\n  }) {\n    __expose();\n    const hasToken = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);\n    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onBeforeMount)(() => {\n      hasToken.value = (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.getAccessToken)() !== \"\";\n    });\n    const name = (0,vue_router__WEBPACK_IMPORTED_MODULE_6__.useRoute)().name;\n    const mq = (0,_utils_tools_mq__WEBPACK_IMPORTED_MODULE_3__.useMQ)();\n    const __returned__ = {\n      hasToken,\n      name,\n      mq,\n      get mLang() {\n        return _utils_multiLang__WEBPACK_IMPORTED_MODULE_1__[\"default\"];\n      },\n      get RethinkIcon() {\n        return _assets_images_logo_rethink_png__WEBPACK_IMPORTED_MODULE_4__;\n      },\n      get CONST() {\n        return _utils_const__WEBPACK_IMPORTED_MODULE_5__[\"default\"];\n      }\n    };\n    Object.defineProperty(__returned__, '__isScriptSetup', {\n      enumerable: false,\n      value: true\n    });\n    return __returned__;\n  }\n}));\n\n//# sourceURL=webpack://rethink/./src/components/NavigationPublic.vue?./node_modules/babel-loader/lib/index.js!./node_modules/ts-loader/index.js??clonedRuleSet-41.use%5B1%5D!./node_modules/vue-loader/dist/index.js??ruleSet%5B0%5D.use%5B0%5D");
 
 /***/ }),
 
@@ -1746,7 +1746,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue_
   \*****************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! vue-router */ \"./node_modules/vue-router/dist/vue-router.mjs\");\n/* harmony import */ var _views_app_UserProfileView_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/views/app/UserProfileView.vue */ \"./src/views/app/UserProfileView.vue\");\n/* harmony import */ var _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/views/LoginView.vue */ \"./src/views/LoginView.vue\");\n/* harmony import */ var _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/views/NotFoundView.vue */ \"./src/views/NotFoundView.vue\");\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _views_OAuthView_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/views/OAuthView.vue */ \"./src/views/OAuthView.vue\");\n/* harmony import */ var _views_app_SettingsView_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/views/app/SettingsView.vue */ \"./src/views/app/SettingsView.vue\");\n/* harmony import */ var _views_app_EditorView_vue__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @/views/app/EditorView.vue */ \"./src/views/app/EditorView.vue\");\n/* harmony import */ var _views_app_AppView_vue__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @/views/app/AppView.vue */ \"./src/views/app/AppView.vue\");\n/* harmony import */ var _views_app_TrashView_vue__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @/views/app/TrashView.vue */ \"./src/views/app/TrashView.vue\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* harmony import */ var _views_app_MobileSearchView_vue__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/views/app/MobileSearchView.vue */ \"./src/views/app/MobileSearchView.vue\");\n/* harmony import */ var _views_app_ImportDataView_vue__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/views/app/ImportDataView.vue */ \"./src/views/app/ImportDataView.vue\");\n/* harmony import */ var _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/utils/multiLang */ \"./src/utils/multiLang.ts\");\n/* harmony import */ var _utils_tools_meta__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @/utils/tools/meta */ \"./src/utils/tools/meta.ts\");\n/* harmony import */ var _views_app_PluginsView_vue__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @/views/app/PluginsView.vue */ \"./src/views/app/PluginsView.vue\");\n/* harmony import */ var _views_app_PluginView_vue__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @/views/app/PluginView.vue */ \"./src/views/app/PluginView.vue\");\n/* harmony import */ var _views_SelfHostedAuthView_vue__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @/views/SelfHostedAuthView.vue */ \"./src/views/SelfHostedAuthView.vue\");\n/* harmony import */ var _utils_account_login__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! @/utils/account/login */ \"./src/utils/account/login.ts\");\n/* harmony import */ var _utils_const__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @/utils/const */ \"./src/utils/const.ts\");\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nconst authBeforeEnter = () => {\n  if ((0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_9__.getToken)() === \"\") {\n    return {\n      name: \"login\"\n    };\n  }\n};\nfunction setSingleModeLang() {\n  if (\"VUE_APP_LANGUAGE\" in window) {\n    // eslint-disable-next-line\n    _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].setGlobalLang(window.VUE_APP_LANGUAGE);\n  }\n}\nasync function checkSingleMode() {\n  if (_utils_configs__WEBPACK_IMPORTED_MODULE_3__[\"default\"].oneUser) {\n    setSingleModeLang();\n    let name = \"rethink\";\n    if (_utils_configs__WEBPACK_IMPORTED_MODULE_3__[\"default\"].oneUserRequireAuth && (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_9__.getToken)() === \"\") {\n      name = \"self-hosted-auth\";\n    } else {\n      await (0,_utils_account_login__WEBPACK_IMPORTED_MODULE_17__.tryLogin)(\"rethink@rethink.run\", \"no-password\");\n    }\n    return {\n      name: name\n    };\n  }\n}\nconst routes = [{\n  path: '/login',\n  name: 'login',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__[\"default\"],\n  beforeEnter: checkSingleMode\n}, {\n  path: '/zh/login',\n  name: 'login-zh',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__[\"default\"],\n  beforeEnter: async () => {\n    await checkSingleMode();\n    _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].setGlobalLang(\"zh\");\n  }\n}, {\n  path: '/sauth',\n  name: 'self-hosted-auth',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_SelfHostedAuthView_vue__WEBPACK_IMPORTED_MODULE_16__[\"default\"],\n  beforeEnter: setSingleModeLang\n}, {\n  path: '/oauth/callback/:provider',\n  name: 'oauth-callback',\n  component: _views_OAuthView_vue__WEBPACK_IMPORTED_MODULE_4__[\"default\"],\n  beforeEnter: checkSingleMode,\n  props: route => ({\n    provider: route.params.provider,\n    code: route.query.code\n  })\n}, {\n  path: '/404',\n  name: '404',\n  meta: {\n    titleZH: \"404\",\n    titleEN: \"404\",\n    description: \"404\"\n  },\n  component: _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__[\"default\"]\n}, {\n  path: '/n/:id',\n  name: 'node',\n  meta: {\n    titleZH: \"想法\",\n    titleEN: \"Thought\",\n    description: \"想法\"\n  },\n  component: _views_app_EditorView_vue__WEBPACK_IMPORTED_MODULE_6__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    nid: route.params.id\n  })\n}, {\n  path: '/trash',\n  name: 'trash',\n  meta: {\n    titleZH: \"回收站\",\n    titleEN: \"Trash\",\n    description: \"回收站\"\n  },\n  component: _views_app_TrashView_vue__WEBPACK_IMPORTED_MODULE_8__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/search',\n  name: 'search',\n  meta: {\n    titleZH: \"搜索\",\n    titleEN: \"Search\",\n    description: \"搜索想法\"\n  },\n  component: _views_app_MobileSearchView_vue__WEBPACK_IMPORTED_MODULE_10__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    q: 'q' in route.query ? route.query.q : ''\n  })\n}, {\n  path: '/',\n  name: 'rethink',\n  meta: {\n    titleZH: \"想法\",\n    titleEN: \"Thoughts\",\n    description: \"想法\"\n  },\n  component: _views_app_AppView_vue__WEBPACK_IMPORTED_MODULE_7__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/user',\n  name: 'user',\n  meta: {\n    titleZH: \"用户设置\",\n    titleEN: \"User Profile\",\n    description: \"用户设置\"\n  },\n  component: _views_app_UserProfileView_vue__WEBPACK_IMPORTED_MODULE_0__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/settings',\n  name: 'settings',\n  meta: {\n    titleZH: \"应用设置\",\n    titleEN: \"Settings\"\n  },\n  component: _views_app_SettingsView_vue__WEBPACK_IMPORTED_MODULE_5__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/import',\n  name: 'import',\n  meta: {\n    titleZH: \"导入数据\",\n    titleEN: \"Import Data\",\n    description: \"导入数据到 Rethink\"\n  },\n  component: _views_app_ImportDataView_vue__WEBPACK_IMPORTED_MODULE_11__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/plugins',\n  name: 'plugins',\n  meta: {\n    titleZH: \"插件\",\n    titleEN: \"Plugins\",\n    description: \"插件\"\n  },\n  component: _views_app_PluginsView_vue__WEBPACK_IMPORTED_MODULE_14__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/plugin/:id',\n  name: 'plugin',\n  meta: {\n    titleZH: \"插件\",\n    titleEN: \"Plugin\",\n    description: \"插件\"\n  },\n  component: _views_app_PluginView_vue__WEBPACK_IMPORTED_MODULE_15__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    pid: route.params.id\n  })\n}, {\n  path: '/:catchAll(.*)',\n  name: 'not-found',\n  meta: {\n    titleZH: \"404\",\n    titleEN: \"404\",\n    description: \"404\"\n  },\n  component: _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__[\"default\"]\n}];\nconst router = (0,vue_router__WEBPACK_IMPORTED_MODULE_19__.createRouter)({\n  history: (0,vue_router__WEBPACK_IMPORTED_MODULE_19__.createWebHistory)(\"/r/\"),\n  routes\n});\nrouter.beforeEach(to => {\n  let t = \"Rethink\";\n  if (_utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].getGlobalLang() === \"zh\") {\n    if (!(\"titleZH\" in to.meta)) return;\n    t = to.meta.titleZH;\n  } else if (_utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].getGlobalLang() === \"en\") {\n    if (!(\"titleEN\" in to.meta)) return;\n    t = to.meta.titleEN;\n  }\n  const metaTitle = t;\n  t += \" - Rethink\";\n  const desc = \"description\" in to.meta ? to.meta.description : _utils_const__WEBPACK_IMPORTED_MODULE_18__[\"default\"].rethinkDomain;\n  (0,_utils_tools_meta__WEBPACK_IMPORTED_MODULE_13__[\"default\"])(t, metaTitle, desc);\n});\n/* harmony default export */ __webpack_exports__[\"default\"] = (router);\n\n//# sourceURL=webpack://rethink/./src/router/index.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! vue-router */ \"./node_modules/vue-router/dist/vue-router.mjs\");\n/* harmony import */ var _views_app_UserProfileView_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/views/app/UserProfileView.vue */ \"./src/views/app/UserProfileView.vue\");\n/* harmony import */ var _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/views/LoginView.vue */ \"./src/views/LoginView.vue\");\n/* harmony import */ var _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/views/NotFoundView.vue */ \"./src/views/NotFoundView.vue\");\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _views_OAuthView_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/views/OAuthView.vue */ \"./src/views/OAuthView.vue\");\n/* harmony import */ var _views_app_SettingsView_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/views/app/SettingsView.vue */ \"./src/views/app/SettingsView.vue\");\n/* harmony import */ var _views_app_EditorView_vue__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @/views/app/EditorView.vue */ \"./src/views/app/EditorView.vue\");\n/* harmony import */ var _views_app_AppView_vue__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @/views/app/AppView.vue */ \"./src/views/app/AppView.vue\");\n/* harmony import */ var _views_app_TrashView_vue__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @/views/app/TrashView.vue */ \"./src/views/app/TrashView.vue\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* harmony import */ var _views_app_MobileSearchView_vue__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/views/app/MobileSearchView.vue */ \"./src/views/app/MobileSearchView.vue\");\n/* harmony import */ var _views_app_ImportDataView_vue__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/views/app/ImportDataView.vue */ \"./src/views/app/ImportDataView.vue\");\n/* harmony import */ var _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/utils/multiLang */ \"./src/utils/multiLang.ts\");\n/* harmony import */ var _utils_tools_meta__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @/utils/tools/meta */ \"./src/utils/tools/meta.ts\");\n/* harmony import */ var _views_app_PluginsView_vue__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @/views/app/PluginsView.vue */ \"./src/views/app/PluginsView.vue\");\n/* harmony import */ var _views_app_PluginView_vue__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @/views/app/PluginView.vue */ \"./src/views/app/PluginView.vue\");\n/* harmony import */ var _views_SelfHostedAuthView_vue__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @/views/SelfHostedAuthView.vue */ \"./src/views/SelfHostedAuthView.vue\");\n/* harmony import */ var _utils_account_login__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! @/utils/account/login */ \"./src/utils/account/login.ts\");\n/* harmony import */ var _utils_const__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @/utils/const */ \"./src/utils/const.ts\");\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nconst authBeforeEnter = () => {\n  if ((0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_9__.getAccessToken)() === \"\") {\n    return {\n      name: \"login\"\n    };\n  }\n};\nfunction setSingleModeLang() {\n  if (\"VUE_APP_LANGUAGE\" in window) {\n    // eslint-disable-next-line\n    _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].setGlobalLang(window.VUE_APP_LANGUAGE);\n  }\n}\nasync function checkSingleMode() {\n  if (_utils_configs__WEBPACK_IMPORTED_MODULE_3__[\"default\"].oneUser) {\n    setSingleModeLang();\n    let name = \"rethink\";\n    if (_utils_configs__WEBPACK_IMPORTED_MODULE_3__[\"default\"].oneUserRequireAuth && (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_9__.getAccessToken)() === \"\") {\n      name = \"self-hosted-auth\";\n    } else {\n      await (0,_utils_account_login__WEBPACK_IMPORTED_MODULE_17__.tryLogin)(\"rethink@rethink.run\", \"no-password\");\n    }\n    return {\n      name: name\n    };\n  }\n}\nconst routes = [{\n  path: '/login',\n  name: 'login',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__[\"default\"],\n  beforeEnter: checkSingleMode\n}, {\n  path: '/zh/login',\n  name: 'login-zh',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_LoginView_vue__WEBPACK_IMPORTED_MODULE_1__[\"default\"],\n  beforeEnter: async () => {\n    await checkSingleMode();\n    _utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].setGlobalLang(\"zh\");\n  }\n}, {\n  path: '/sauth',\n  name: 'self-hosted-auth',\n  meta: {\n    titleZH: \"登录\",\n    titleEN: \"Login\",\n    description: \"登录\"\n  },\n  component: _views_SelfHostedAuthView_vue__WEBPACK_IMPORTED_MODULE_16__[\"default\"],\n  beforeEnter: setSingleModeLang\n}, {\n  path: '/oauth/callback/:provider',\n  name: 'oauth-callback',\n  component: _views_OAuthView_vue__WEBPACK_IMPORTED_MODULE_4__[\"default\"],\n  beforeEnter: checkSingleMode,\n  props: route => ({\n    provider: route.params.provider,\n    code: route.query.code\n  })\n}, {\n  path: '/404',\n  name: '404',\n  meta: {\n    titleZH: \"404\",\n    titleEN: \"404\",\n    description: \"404\"\n  },\n  component: _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__[\"default\"]\n}, {\n  path: '/n/:id',\n  name: 'node',\n  meta: {\n    titleZH: \"想法\",\n    titleEN: \"Thought\",\n    description: \"想法\"\n  },\n  component: _views_app_EditorView_vue__WEBPACK_IMPORTED_MODULE_6__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    nid: route.params.id\n  })\n}, {\n  path: '/trash',\n  name: 'trash',\n  meta: {\n    titleZH: \"回收站\",\n    titleEN: \"Trash\",\n    description: \"回收站\"\n  },\n  component: _views_app_TrashView_vue__WEBPACK_IMPORTED_MODULE_8__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/search',\n  name: 'search',\n  meta: {\n    titleZH: \"搜索\",\n    titleEN: \"Search\",\n    description: \"搜索想法\"\n  },\n  component: _views_app_MobileSearchView_vue__WEBPACK_IMPORTED_MODULE_10__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    q: 'q' in route.query ? route.query.q : ''\n  })\n}, {\n  path: '/',\n  name: 'rethink',\n  meta: {\n    titleZH: \"想法\",\n    titleEN: \"Thoughts\",\n    description: \"想法\"\n  },\n  component: _views_app_AppView_vue__WEBPACK_IMPORTED_MODULE_7__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/user',\n  name: 'user',\n  meta: {\n    titleZH: \"用户设置\",\n    titleEN: \"User Profile\",\n    description: \"用户设置\"\n  },\n  component: _views_app_UserProfileView_vue__WEBPACK_IMPORTED_MODULE_0__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/settings',\n  name: 'settings',\n  meta: {\n    titleZH: \"应用设置\",\n    titleEN: \"Settings\"\n  },\n  component: _views_app_SettingsView_vue__WEBPACK_IMPORTED_MODULE_5__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/import',\n  name: 'import',\n  meta: {\n    titleZH: \"导入数据\",\n    titleEN: \"Import Data\",\n    description: \"导入数据到 Rethink\"\n  },\n  component: _views_app_ImportDataView_vue__WEBPACK_IMPORTED_MODULE_11__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/plugins',\n  name: 'plugins',\n  meta: {\n    titleZH: \"插件\",\n    titleEN: \"Plugins\",\n    description: \"插件\"\n  },\n  component: _views_app_PluginsView_vue__WEBPACK_IMPORTED_MODULE_14__[\"default\"],\n  beforeEnter: authBeforeEnter\n}, {\n  path: '/plugin/:id',\n  name: 'plugin',\n  meta: {\n    titleZH: \"插件\",\n    titleEN: \"Plugin\",\n    description: \"插件\"\n  },\n  component: _views_app_PluginView_vue__WEBPACK_IMPORTED_MODULE_15__[\"default\"],\n  beforeEnter: authBeforeEnter,\n  props: route => ({\n    pid: route.params.id\n  })\n}, {\n  path: '/:catchAll(.*)',\n  name: 'not-found',\n  meta: {\n    titleZH: \"404\",\n    titleEN: \"404\",\n    description: \"404\"\n  },\n  component: _views_NotFoundView_vue__WEBPACK_IMPORTED_MODULE_2__[\"default\"]\n}];\nconst router = (0,vue_router__WEBPACK_IMPORTED_MODULE_19__.createRouter)({\n  history: (0,vue_router__WEBPACK_IMPORTED_MODULE_19__.createWebHistory)(\"/r/\"),\n  routes\n});\nrouter.beforeEach(to => {\n  let t = \"Rethink\";\n  if (_utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].getGlobalLang() === \"zh\") {\n    if (!(\"titleZH\" in to.meta)) return;\n    t = to.meta.titleZH;\n  } else if (_utils_multiLang__WEBPACK_IMPORTED_MODULE_12__[\"default\"].getGlobalLang() === \"en\") {\n    if (!(\"titleEN\" in to.meta)) return;\n    t = to.meta.titleEN;\n  }\n  const metaTitle = t;\n  t += \" - Rethink\";\n  const desc = \"description\" in to.meta ? to.meta.description : _utils_const__WEBPACK_IMPORTED_MODULE_18__[\"default\"].rethinkDomain;\n  (0,_utils_tools_meta__WEBPACK_IMPORTED_MODULE_13__[\"default\"])(t, metaTitle, desc);\n});\n/* harmony default export */ __webpack_exports__[\"default\"] = (router);\n\n//# sourceURL=webpack://rethink/./src/router/index.ts?");
 
 /***/ }),
 
@@ -2126,7 +2126,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \******************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\nlet apiUrl, vidtorCDN;\nif ( true && \"VUE_APP_API_PORT\" in window) {\n  // eslint-disable-next-line\n  apiUrl = `${\"http://127.0.0.1\"}:${window.VUE_APP_API_PORT}`;\n  vidtorCDN = `${apiUrl}${\"/r/\"}`;\n} else {\n  apiUrl = ({\"VUE_APP_ONE_USER\":\"true\",\"VUE_APP_API_HOST\":\"http://127.0.0.1\",\"VUE_APP_MD_CACHE_ID\":\"rethinkMdCacheId\",\"VUE_APP_TOKEN_KEY\":\"rethinkToken\",\"NODE_ENV\":\"development\",\"BASE_URL\":\"/r/\"}).VUE_APP_API_URL || \"http://localhost:8000\";\n  vidtorCDN = \"/r/\" || 0;\n}\n// remove the last slash\nvidtorCDN = vidtorCDN.replace(/\\/$/, \"\");\nconst configs = {\n  oneUser: \"true\" === 'true',\n  oneUserRequireAuth: \"VUE_APP_ONE_USER_REQUIRE_AUTH\" in window,\n  apiUrl: apiUrl,\n  mdCacheId: \"rethinkMdCacheId\" || 0,\n  tokenKey: \"rethinkToken\" || 0,\n  gTagId: ({\"VUE_APP_ONE_USER\":\"true\",\"VUE_APP_API_HOST\":\"http://127.0.0.1\",\"VUE_APP_MD_CACHE_ID\":\"rethinkMdCacheId\",\"VUE_APP_TOKEN_KEY\":\"rethinkToken\",\"NODE_ENV\":\"development\",\"BASE_URL\":\"/r/\"}).VUE_APP_GTAG_ID || \"\",\n  vditorCDN: vidtorCDN\n};\n/* harmony default export */ __webpack_exports__[\"default\"] = (configs);\n\n//# sourceURL=webpack://rethink/./src/utils/configs.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\nlet apiUrl, vidtorCDN;\nif ( true && \"VUE_APP_API_PORT\" in window) {\n  // eslint-disable-next-line\n  apiUrl = `${\"http://127.0.0.1\"}:${window.VUE_APP_API_PORT}`;\n  vidtorCDN = `${apiUrl}${\"/r/\"}`;\n} else {\n  apiUrl = ({\"VUE_APP_ONE_USER\":\"true\",\"VUE_APP_API_HOST\":\"http://127.0.0.1\",\"VUE_APP_MD_CACHE_ID\":\"rethinkMdCacheId\",\"VUE_APP_ACCESS_TOKEN_KEY\":\"rethinkAccessToken\",\"VUE_APP_REFRESH_TOKEN_KEY\":\"rethinkRefreshToken\",\"NODE_ENV\":\"development\",\"BASE_URL\":\"/r/\"}).VUE_APP_API_URL || \"http://localhost:8000\";\n  vidtorCDN = \"/r/\" || 0;\n}\n// remove the last slash\nvidtorCDN = vidtorCDN.replace(/\\/$/, \"\");\nconst configs = {\n  oneUser: \"true\" === 'true',\n  oneUserRequireAuth: \"VUE_APP_ONE_USER_REQUIRE_AUTH\" in window,\n  apiUrl: apiUrl,\n  mdCacheId: \"rethinkMdCacheId\" || 0,\n  accessTokenKey: \"rethinkAccessToken\" || 0,\n  refreshTokenKey: \"rethinkRefreshToken\" || 0,\n  gTagId: ({\"VUE_APP_ONE_USER\":\"true\",\"VUE_APP_API_HOST\":\"http://127.0.0.1\",\"VUE_APP_MD_CACHE_ID\":\"rethinkMdCacheId\",\"VUE_APP_ACCESS_TOKEN_KEY\":\"rethinkAccessToken\",\"VUE_APP_REFRESH_TOKEN_KEY\":\"rethinkRefreshToken\",\"NODE_ENV\":\"development\",\"BASE_URL\":\"/r/\"}).VUE_APP_GTAG_ID || \"\",\n  vditorCDN: vidtorCDN\n};\n/* harmony default export */ __webpack_exports__[\"default\"] = (configs);\n\n//# sourceURL=webpack://rethink/./src/utils/configs.ts?");
 
 /***/ }),
 
@@ -2156,7 +2156,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \********************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@babel/runtime/helpers/esm/defineProperty.js */ \"./node_modules/@babel/runtime/helpers/esm/defineProperty.js\");\n/* harmony import */ var _utils_msgBox__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/msgBox */ \"./src/utils/msgBox.ts\");\n\n\nclass MultiLang {\n  constructor(data) {\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"langData\", void 0);\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"availableLangCodes\", [\"zh\", \"en\"]);\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"langCodeMap\", {\n      zh: \"中文\",\n      en: \"English\"\n    });\n    this.langData = data;\n  }\n  get(key) {\n    const l = this.langData[key];\n    if (!l) {\n      (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_1__.showErrorMsgBox)(`Lang key ${key} not found`);\n      return \"\";\n    }\n    return this.getGlobalLang() === \"zh\" ? l.zh : l.en;\n  }\n  setGlobalLang(lang) {\n    localStorage.setItem(\"rethinkLang\", lang);\n  }\n  getGlobalLang() {\n    return localStorage.getItem(\"rethinkLang\") || \"en\";\n  }\n}\nconst mLang = new MultiLang({\n  navbarHome: {\n    zh: \"首页\",\n    en: \"Home\"\n  },\n  navbarAbout: {\n    zh: \"关于\",\n    en: \"About\"\n  },\n  navbarLogin: {\n    zh: \"登录\",\n    en: \"Login\"\n  },\n  navbarStart: {\n    zh: \"开始\",\n    en: \"Start\"\n  },\n  goBackIcon: {\n    zh: \"返回\",\n    en: \"Back\"\n  },\n  sideBarHome: {\n    zh: \"想法\",\n    en: \"Thoughts\"\n  },\n  importDataH1: {\n    zh: \"导入数据\",\n    en: \"Import Data\"\n  },\n  sideBarTrash: {\n    zh: \"回收站\",\n    en: \"Trash\"\n  },\n  sideBarImport: {\n    zh: \"导入数据\",\n    en: \"Import Data\"\n  },\n  sideBarPlugins: {\n    zh: \"插件\",\n    en: \"Plugins\"\n  },\n  arrangeNodeList: {\n    zh: \"列表\",\n    en: \"List\"\n  },\n  arrangeNodeGrid: {\n    zh: \"网格\",\n    en: \"Grid\"\n  },\n  sortNodeByTime: {\n    zh: \"时间\",\n    en: \"Time\"\n  },\n  sortNodeByCreatedAt: {\n    zh: \"最新\",\n    en: \"Create\"\n  },\n  sortNodeByModifiedAt: {\n    zh: \"最后修改\",\n    en: \"Update\"\n  },\n  sortNodeByTitle: {\n    zh: \"名称\",\n    en: \"Title\"\n  },\n  node2Trash: {\n    zh: \"移至回收桶\",\n    en: \"Move To Trash\"\n  },\n  nodeDelete: {\n    zh: \"删除\",\n    en: \"Delete\"\n  },\n  nodeDeleteConfirmation: {\n    zh: \"确认删除\",\n    en: \"Delete this thought\"\n  },\n  nodeRestoreFromTrash: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  searchBarPlaceholder: {\n    zh: \"搜想法...\",\n    en: \"Search...\"\n  },\n  searchWindowSMSubmit: {\n    zh: \"搜索\",\n    en: \"Search\"\n  },\n  searchWindowSMCollapse: {\n    zh: \"收起\",\n    en: \"Collapse\"\n  },\n  noSearchResult: {\n    zh: \"没有搜索结果\",\n    en: \"No search result\"\n  },\n  search: {\n    zh: \"搜索\",\n    en: \"Search\"\n  },\n  headerBarNewThink: {\n    zh: \"新想法\",\n    en: \"New Thought\"\n  },\n  nodeTimeJustNow: {\n    zh: \"刚刚\",\n    en: \"Just now\"\n  },\n  nodeTimeYesterdayPrefix: {\n    zh: \"昨天\",\n    en: \"Yesterday\"\n  },\n  nodeTimeTodayPrefix: {\n    zh: \"今天\",\n    en: \"Today\"\n  },\n  nodeViewHeaderTitle: {\n    zh: \"标题\",\n    en: \"Title\"\n  },\n  nodeViewHeaderSnippet: {\n    zh: \"内容\",\n    en: \"Content\"\n  },\n  nodeViewHeaderTime: {\n    zh: \"时间\",\n    en: \"Time\"\n  },\n  sortNodeBySimilarity: {\n    zh: \"相似度\",\n    en: \"Similarity\"\n  },\n  cursorSearchDropdownSearchResult: {\n    zh: \"Rethink\",\n    en: \"Rethink\"\n  },\n  cursorSearchDropdownSearchRecent: {\n    zh: \"最近链接的想法\",\n    en: \"Recent linked thoughts\"\n  },\n  cursorSearchDropdownCreateNew: {\n    zh: \"新建\",\n    en: \"Create new\"\n  },\n  cursorSearchDropdownTitle: {\n    zh: \"选择连接的想法\",\n    en: \"Select a thought to link\"\n  },\n  emptyNodeTitle: {\n    zh: \"无标题\",\n    en: \"Untitled\"\n  },\n  settingsViewHeading: {\n    zh: \"设置\",\n    en: \"Settings\"\n  },\n  settingsViewGlobal: {\n    zh: \"全局设置\",\n    en: \"Global Settings\"\n  },\n  settingsLanguage: {\n    zh: \"语言\",\n    en: \"Language\"\n  },\n  settingsTheme: {\n    zh: \"主题\",\n    en: \"Theme\"\n  },\n  settingsViewEditor: {\n    zh: \"编辑器\",\n    en: \"Editor\"\n  },\n  settingsEditorMode: {\n    zh: \"模式\",\n    en: \"Mode\"\n  },\n  settingsEditorFontSize: {\n    zh: \"字体大小\",\n    en: \"Font Size\"\n  },\n  settingsEditorCodeTheme: {\n    zh: \"代码主题\",\n    en: \"Code Theme\"\n  },\n  settingsChangePwd: {\n    zh: \"修改密码\",\n    en: \"Change Password\"\n  },\n  settingsOldPwd: {\n    zh: \"旧密码\",\n    en: \"Old Password\"\n  },\n  settingsNewPwd: {\n    zh: \"新密码\",\n    en: \"New Password\"\n  },\n  settingsNewPwdConfirm: {\n    zh: \"确认新密码\",\n    en: \"Confirm New Password\"\n  },\n  settingsUpdatePwd: {\n    zh: \"更新密码\",\n    en: \"Update Password\"\n  },\n  settingsPwdNotMatch: {\n    zh: \"新密码与确认新密码不一致\",\n    en: \"New Password not match\"\n  },\n  settingsChangePwdHint: {\n    zh: \"修改密码\",\n    en: \"Change Password\"\n  },\n  settingsPwdUpdated: {\n    zh: \"密码已更新，请重新登陆\",\n    en: \"Password updated, please login again\"\n  },\n  settingsPwdSameAsOld: {\n    zh: \"新密码与旧密码相同\",\n    en: \"New password is the same as the old one\"\n  },\n  settingsIForgetMyPwd: {\n    zh: \"我忘记了我的密码\",\n    en: \"I forgot my password\"\n  },\n  userViewProfilePage: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  userProfileMeta: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  userViewName: {\n    zh: \"名字\",\n    en: \"Name\"\n  },\n  userViewEmail: {\n    zh: \"邮箱\",\n    en: \"Email\"\n  },\n  userViewAvatar: {\n    zh: \"头像\",\n    en: \"Picture\"\n  },\n  userProfileStats: {\n    zh: \"统计\",\n    en: \"Stats\"\n  },\n  userViewStorageUsage: {\n    zh: \"已使用:\",\n    en: \"Used Space:\"\n  },\n  loginViewHeading: {\n    zh: \"登录\",\n    en: \"Login\"\n  },\n  loginViewHeadingSignup: {\n    zh: \"新用户注册\",\n    en: \"New User Register\"\n  },\n  loginViewAccountLabel: {\n    zh: \"账号\",\n    en: \"Account\"\n  },\n  loginViewAccountPlaceholder: {\n    zh: \"邮箱\",\n    en: \"email\"\n  },\n  loginViewAccountInputTitle: {\n    zh: \"请输入正确的邮箱\",\n    en: \"Please input a valid email\"\n  },\n  loginViewPasswordLabel: {\n    zh: \"密码\",\n    en: \"Password\"\n  },\n  loginViewNoUserOrPassword: {\n    zh: \"账号或密码错误\",\n    en: \"Account or password error\"\n  },\n  loginViewAccountPasswordEmpty: {\n    zh: \"账号或密码不能为空\",\n    en: \"Account or password can not be empty\"\n  },\n  loginViewPasswordInputTitle: {\n    zh: \"必须至少包含 1 位数字和 1 位字母，且最少 6 个字符以上，最多 20 字符以下\",\n    en: \"Must contain at least one number and one letter, and more than 6 and less than 20 characters\"\n  },\n  loginViewConfirmPasswordLabel: {\n    zh: \"确认密码\",\n    en: \"Confirm password\"\n  },\n  loginViewConfirmPasswordNotMatch: {\n    zh: \"两次密码不一致\",\n    en: \"Confirm password not match\"\n  },\n  loginViewLoginButton: {\n    zh: \"登录\",\n    en: \"Log In\"\n  },\n  loginViewSignupButton: {\n    zh: \"注册\",\n    en: \"Create new account\"\n  },\n  loginViewSignupHasAccount: {\n    zh: \"已有账号？\",\n    en: \"Already have an account?\"\n  },\n  loginViewForgetPassword: {\n    zh: \"忘记密码\",\n    en: \"Forget password\"\n  },\n  loginViewWrongPasswordLength: {\n    zh: \"密码长度不正确，密码应在 6-20 字符之间\",\n    en: \"Password length is not correct, should be 6-20 characters\"\n  },\n  loginViewOAuthLogin: {\n    zh: \"其他方式登录\",\n    en: \"Other Login\"\n  },\n  notValidEmail: {\n    zh: \"邮箱格式不正确\",\n    en: \"Email format is not correct\"\n  },\n  registerCaptchaLabel: {\n    zh: \"验证码\",\n    en: \"Verification code\"\n  },\n  loginViewCaptchaEmpty: {\n    zh: \"验证码不能为空\",\n    en: \"Verification code can not be empty\"\n  },\n  forgetPasswordH1: {\n    zh: \"忘记密码\",\n    en: \"Forget password\"\n  },\n  forgetPasswordNewLabel: {\n    zh: \"新密码\",\n    en: \"New password\"\n  },\n  sendVerificationCode: {\n    zh: \"发送验证码\",\n    en: \"Send verification code\"\n  },\n  noCaptcha: {\n    zh: \"请先完成验证码\",\n    en: \"Please complete the verification code first\"\n  },\n  emailVerificationCode: {\n    zh: \"邮箱验证码\",\n    en: \"Email verification code\"\n  },\n  resendVerificationCode: {\n    zh: \"重新发送验证码\",\n    en: \"Resend code\"\n  },\n  verificationCodeLabel: {\n    zh: \"验证码\",\n    en: \"Verification code\"\n  },\n  resetPasswordFailed: {\n    zh: \"重置密码失败\",\n    en: \"Reset password failed\"\n  },\n  headerMenuLogout: {\n    zh: \"登出\",\n    en: \"Logout\"\n  },\n  headerMenuProfile: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  headerMenuSettings: {\n    zh: \"设置\",\n    en: \"Settings\"\n  },\n  headerDocSite: {\n    zh: \"文档\",\n    en: \"Docs\"\n  },\n  oauthPageHeading: {\n    zh: \"账号正在验证中...\",\n    en: \"Verifying your account...\"\n  },\n  msgBoxConfirmButton: {\n    zh: \"确定\",\n    en: \"OK\"\n  },\n  msgBoxCancelButton: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  modificationSuccessful: {\n    zh: \"修改成功\",\n    en: \"Modification successful\"\n  },\n  cancel: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  submit: {\n    zh: \"提交\",\n    en: \"Submit\"\n  },\n  next: {\n    zh: \"下一步\",\n    en: \"Next\"\n  },\n  recentSearchedTitle: {\n    zh: \"最近搜索\",\n    en: \"Recent Queries\"\n  },\n  editorContentPlaceholder: {\n    zh: \"记录我的新想法...\",\n    en: \"Record my new thought...\"\n  },\n  editorSyncStatusSaved: {\n    zh: \"已自动保存\",\n    en: \"Auto saved\"\n  },\n  editorSyncStatusLastSaved: {\n    zh: \"最近保存 \",\n    en: \"Last saved \"\n  },\n  editorHistMdRestoreConfirm: {\n    zh: \"确认恢复至该版本吗？\",\n    en: \"Confirm to restore this version?\"\n  },\n  editorExternalLinkConfirm: {\n    zh: \"点击确定将会去往外部链接：\",\n    en: \"Click OK to go to external link: \"\n  },\n  nodeHistEditionRestoreNoVersions: {\n    zh: \"没有历史版本\",\n    en: \"No history versions\"\n  },\n  nodeHistEditionRestoreHeading: {\n    zh: \"历史版本\",\n    en: \"History Versions\"\n  },\n  nodeHistEditionRestoreNotice: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  quickPostPanelPlaceholder: {\n    zh: \"速记想法 / 链接 ...\",\n    en: \"Quick thought / link ...\"\n  },\n  quickPostBtn: {\n    zh: \"记下\",\n    en: \"Send\"\n  },\n  quickPostTooLong: {\n    zh: \"用编辑器记长想法 >\",\n    en: \"Use editor for long thought >\"\n  },\n  quickPostEditInNodePage: {\n    zh: \"在新页面编辑\",\n    en: \"Edit in new page\"\n  },\n  quickPostBtnTitle: {\n    zh: \"快速记录\",\n    en: \"Quick post\"\n  },\n  tryRestoreFromTrash: {\n    zh: \"此想法被放在回收站中，是否要从回收站恢复？\",\n    en: \"This thought is in trash, do you want to restore it?\"\n  },\n  nodeIsDeleted: {\n    zh: \"此想法已被您删除\",\n    en: \"This thought is deleted\"\n  },\n  noLinkedNode: {\n    zh: \"还没有链接到任何想法，尝试 @ 一些吧\",\n    en: \"No linked thought yet, try @ some\"\n  },\n  batchFileOpsShare: {\n    zh: \"分享\",\n    en: \"Share\"\n  },\n  batchFileOpsDelete: {\n    zh: \"删除\",\n    en: \"Delete\"\n  },\n  batchFileOpsTrash: {\n    zh: \"回收\",\n    en: \"To Trash\"\n  },\n  batchFileOpsCancel: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  batchFileOpsDownload: {\n    zh: \"下载\",\n    en: \"Download\"\n  },\n  batchFileOpsRestore: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  batchDeleteConfirmPre: {\n    zh: \"确认删除\",\n    en: \"Confirm to delete\"\n  },\n  batchDeleteConfirmPost: {\n    zh: \"个想法？\",\n    en: \"thoughts?\"\n  },\n  nodeNeedRestoreToView: {\n    zh: \"需要恢复后才能查看，确认恢复并查看？\",\n    en: \"Need restore to be viewed, confirm restore?\"\n  },\n  uploadFilesLabel: {\n    zh: \"上传文件\",\n    en: \"Upload files\"\n  },\n  uploadFilesEmptyTask: {\n    zh: \"无任务\",\n    en: \"No Task\"\n  },\n  fileDropIsDragging: {\n    zh: \"放入文件\",\n    en: \"Release to drop files here.\"\n  },\n  fileDropNotDraggingPre: {\n    zh: \"拖拽文件到此处或\",\n    en: \"Drag and drop files here, or \"\n  },\n  fileDropNotDraggingClick: {\n    zh: \"点此\",\n    en: \"click here\"\n  },\n  fileDropNotDraggingPost: {\n    zh: \" 上传\",\n    en: \" to upload\"\n  },\n  fileDropInvalidFile: {\n    zh: \"文件格式错误\",\n    en: \"Invalid file format\"\n  },\n  fileDropTooLarge: {\n    zh: \"文件过大\",\n    en: \"File too large\"\n  },\n  fileDropTooManyPre: {\n    zh: \"文件个数超过上限: \",\n    en: \"File count exceeds limit: \"\n  },\n  fileDropTooManyPost: {\n    zh: \"，请分批上传\",\n    en: \", please upload in batches\"\n  },\n  filesSubmitBtn: {\n    zh: \"上传\",\n    en: \"Upload\"\n  },\n  fileDropPreviewFileCount: {\n    zh: \"已加载文件数：\",\n    en: \"Loaded file count: \"\n  },\n  uploadFilesTaskNotFinished: {\n    zh: \"任务未完成: \",\n    en: \"Task not finished: \"\n  },\n  newJobProgress: {\n    zh: \"最新任务进度\",\n    en: \"The latest job progress\"\n  },\n  autoRecommendation: {\n    zh: \"自动展示相关想法...\",\n    en: \"Auto show related thoughts...\"\n  },\n  pluginPanelDescription: {\n    zh: \"插件是一种括展能力，可以基于你的想法库，延伸不同的功能。当前仅可以在私有化部署的版本中，开发、体验自己的插件。\",\n    en: \"Plugin is an extension capability, which can extend different functions based on your own data. \" + \"Currently, you can only develop and view your own plugins in the self-hosted version.\"\n  },\n  pluginPageTitle: {\n    zh: \"插件页\",\n    en: \"Plugin page\"\n  }\n});\n/* harmony default export */ __webpack_exports__[\"default\"] = (mLang);\n\n//# sourceURL=webpack://rethink/./src/utils/multiLang.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@babel/runtime/helpers/esm/defineProperty.js */ \"./node_modules/@babel/runtime/helpers/esm/defineProperty.js\");\n/* harmony import */ var _utils_msgBox__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/msgBox */ \"./src/utils/msgBox.ts\");\n\n\nclass MultiLang {\n  constructor(data) {\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"langData\", void 0);\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"availableLangCodes\", [\"zh\", \"en\"]);\n    (0,_Users_morvanzhou_Documents_repo_rethink_frontend_node_modules_babel_runtime_helpers_esm_defineProperty_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(this, \"langCodeMap\", {\n      zh: \"中文\",\n      en: \"English\"\n    });\n    this.langData = data;\n  }\n  get(key) {\n    const l = this.langData[key];\n    if (!l) {\n      (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_1__.showErrorMsgBox)(`Lang key ${key} not found`);\n      return \"\";\n    }\n    return this.getGlobalLang() === \"zh\" ? l.zh : l.en;\n  }\n  setGlobalLang(lang) {\n    localStorage.setItem(\"rethinkLang\", lang);\n  }\n  getGlobalLang() {\n    return localStorage.getItem(\"rethinkLang\") || \"en\";\n  }\n}\nconst mLang = new MultiLang({\n  navbarHome: {\n    zh: \"首页\",\n    en: \"Home\"\n  },\n  navbarAbout: {\n    zh: \"关于\",\n    en: \"About\"\n  },\n  navbarLogin: {\n    zh: \"登录\",\n    en: \"Login\"\n  },\n  navbarStart: {\n    zh: \"开始\",\n    en: \"Start\"\n  },\n  goBackIcon: {\n    zh: \"返回\",\n    en: \"Back\"\n  },\n  sideBarHome: {\n    zh: \"想法\",\n    en: \"Thoughts\"\n  },\n  importDataH1: {\n    zh: \"导入数据\",\n    en: \"Import Data\"\n  },\n  sideBarTrash: {\n    zh: \"回收站\",\n    en: \"Trash\"\n  },\n  sideBarImport: {\n    zh: \"导入数据\",\n    en: \"Import Data\"\n  },\n  sideBarPlugins: {\n    zh: \"插件\",\n    en: \"Plugins\"\n  },\n  arrangeNodeList: {\n    zh: \"列表\",\n    en: \"List\"\n  },\n  arrangeNodeGrid: {\n    zh: \"网格\",\n    en: \"Grid\"\n  },\n  sortNodeByTime: {\n    zh: \"时间\",\n    en: \"Time\"\n  },\n  sortNodeByCreatedAt: {\n    zh: \"最新\",\n    en: \"Create\"\n  },\n  sortNodeByModifiedAt: {\n    zh: \"最后修改\",\n    en: \"Update\"\n  },\n  sortNodeByTitle: {\n    zh: \"名称\",\n    en: \"Title\"\n  },\n  node2Trash: {\n    zh: \"移至回收桶\",\n    en: \"Move To Trash\"\n  },\n  nodeDelete: {\n    zh: \"删除\",\n    en: \"Delete\"\n  },\n  nodeDeleteConfirmation: {\n    zh: \"确认删除\",\n    en: \"Delete this thought\"\n  },\n  nodeRestoreFromTrash: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  searchBarPlaceholder: {\n    zh: \"搜想法...\",\n    en: \"Search...\"\n  },\n  searchWindowSMSubmit: {\n    zh: \"搜索\",\n    en: \"Search\"\n  },\n  searchWindowSMCollapse: {\n    zh: \"收起\",\n    en: \"Collapse\"\n  },\n  noSearchResult: {\n    zh: \"没有搜索结果\",\n    en: \"No search result\"\n  },\n  search: {\n    zh: \"搜索\",\n    en: \"Search\"\n  },\n  headerBarNewThink: {\n    zh: \"新想法\",\n    en: \"New Thought\"\n  },\n  nodeTimeJustNow: {\n    zh: \"刚刚\",\n    en: \"Just now\"\n  },\n  nodeTimeYesterdayPrefix: {\n    zh: \"昨天\",\n    en: \"Yesterday\"\n  },\n  nodeTimeTodayPrefix: {\n    zh: \"今天\",\n    en: \"Today\"\n  },\n  nodeViewHeaderTitle: {\n    zh: \"标题\",\n    en: \"Title\"\n  },\n  nodeViewHeaderSnippet: {\n    zh: \"内容\",\n    en: \"Content\"\n  },\n  nodeViewHeaderTime: {\n    zh: \"时间\",\n    en: \"Time\"\n  },\n  sortNodeBySimilarity: {\n    zh: \"相似度\",\n    en: \"Similarity\"\n  },\n  cursorSearchDropdownSearchResult: {\n    zh: \"Rethink\",\n    en: \"Rethink\"\n  },\n  cursorSearchDropdownSearchRecent: {\n    zh: \"最近链接的想法\",\n    en: \"Recent linked thoughts\"\n  },\n  cursorSearchDropdownCreateNew: {\n    zh: \"新建\",\n    en: \"Create new\"\n  },\n  cursorSearchDropdownTitle: {\n    zh: \"选择连接的想法\",\n    en: \"Select a thought to link\"\n  },\n  emptyNodeTitle: {\n    zh: \"无标题\",\n    en: \"Untitled\"\n  },\n  settingsViewHeading: {\n    zh: \"设置\",\n    en: \"Settings\"\n  },\n  settingsViewGlobal: {\n    zh: \"全局设置\",\n    en: \"Global Settings\"\n  },\n  settingsLanguage: {\n    zh: \"语言\",\n    en: \"Language\"\n  },\n  settingsTheme: {\n    zh: \"主题\",\n    en: \"Theme\"\n  },\n  settingsViewEditor: {\n    zh: \"编辑器\",\n    en: \"Editor\"\n  },\n  settingsEditorMode: {\n    zh: \"模式\",\n    en: \"Mode\"\n  },\n  settingsEditorFontSize: {\n    zh: \"字体大小\",\n    en: \"Font Size\"\n  },\n  settingsEditorCodeTheme: {\n    zh: \"代码主题\",\n    en: \"Code Theme\"\n  },\n  settingsChangePwd: {\n    zh: \"修改密码\",\n    en: \"Change Password\"\n  },\n  settingsOldPwd: {\n    zh: \"旧密码\",\n    en: \"Old Password\"\n  },\n  settingsNewPwd: {\n    zh: \"新密码\",\n    en: \"New Password\"\n  },\n  settingsNewPwdConfirm: {\n    zh: \"确认新密码\",\n    en: \"Confirm New Password\"\n  },\n  settingsUpdatePwd: {\n    zh: \"更新密码\",\n    en: \"Update Password\"\n  },\n  settingsPwdNotMatch: {\n    zh: \"新密码与确认新密码不一致\",\n    en: \"New Password not match\"\n  },\n  settingsChangePwdHint: {\n    zh: \"修改密码\",\n    en: \"Change Password\"\n  },\n  settingsPwdUpdated: {\n    zh: \"密码已更新，请重新登陆\",\n    en: \"Password updated, please login again\"\n  },\n  settingsPwdSameAsOld: {\n    zh: \"新密码与旧密码相同\",\n    en: \"New password is the same as the old one\"\n  },\n  settingsIForgetMyPwd: {\n    zh: \"我忘记了我的密码\",\n    en: \"I forgot my password\"\n  },\n  userViewProfilePage: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  userProfileMeta: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  userViewName: {\n    zh: \"名字\",\n    en: \"Name\"\n  },\n  userViewEmail: {\n    zh: \"邮箱\",\n    en: \"Email\"\n  },\n  userViewAvatar: {\n    zh: \"头像\",\n    en: \"Picture\"\n  },\n  userProfileStats: {\n    zh: \"统计\",\n    en: \"Stats\"\n  },\n  userViewStorageUsage: {\n    zh: \"已使用:\",\n    en: \"Used Space:\"\n  },\n  loginViewHeading: {\n    zh: \"登录\",\n    en: \"Login\"\n  },\n  loginViewHeadingSignup: {\n    zh: \"新用户注册\",\n    en: \"New User Register\"\n  },\n  loginViewAccountLabel: {\n    zh: \"账号\",\n    en: \"Account\"\n  },\n  loginViewAccountPlaceholder: {\n    zh: \"邮箱\",\n    en: \"email\"\n  },\n  loginViewAccountInputTitle: {\n    zh: \"请输入正确的邮箱\",\n    en: \"Please input a valid email\"\n  },\n  loginViewPasswordLabel: {\n    zh: \"密码\",\n    en: \"Password\"\n  },\n  loginViewNoUserOrPassword: {\n    zh: \"账号或密码错误\",\n    en: \"Account or password error\"\n  },\n  loginViewAccountPasswordEmpty: {\n    zh: \"账号或密码不能为空\",\n    en: \"Account or password can not be empty\"\n  },\n  loginViewPasswordInputTitle: {\n    zh: \"必须至少包含 1 位数字和 1 位字母，且最少 6 个字符以上，最多 20 字符以下\",\n    en: \"Must contain at least one number and one letter, and more than 6 and less than 20 characters\"\n  },\n  loginViewConfirmPasswordLabel: {\n    zh: \"确认密码\",\n    en: \"Confirm password\"\n  },\n  loginViewConfirmPasswordNotMatch: {\n    zh: \"两次密码不一致\",\n    en: \"Confirm password not match\"\n  },\n  loginViewLoginButton: {\n    zh: \"登录\",\n    en: \"Log In\"\n  },\n  loginViewSignupButton: {\n    zh: \"注册\",\n    en: \"Create new account\"\n  },\n  loginViewSignupHasAccount: {\n    zh: \"已有账号？\",\n    en: \"Already have an account?\"\n  },\n  loginViewForgetPassword: {\n    zh: \"忘记密码\",\n    en: \"Forget password\"\n  },\n  loginViewWrongPasswordLength: {\n    zh: \"密码长度不正确，密码应在 6-20 字符之间\",\n    en: \"Password length is not correct, should be 6-20 characters\"\n  },\n  loginViewOAuthLogin: {\n    zh: \"其他方式登录\",\n    en: \"Other Login\"\n  },\n  notValidEmail: {\n    zh: \"邮箱格式不正确\",\n    en: \"Email format is not correct\"\n  },\n  registerCaptchaLabel: {\n    zh: \"验证码\",\n    en: \"Verification code\"\n  },\n  loginViewCaptchaEmpty: {\n    zh: \"验证码不能为空\",\n    en: \"Verification code can not be empty\"\n  },\n  forgetPasswordH1: {\n    zh: \"忘记密码\",\n    en: \"Forget password\"\n  },\n  forgetPasswordNewLabel: {\n    zh: \"新密码\",\n    en: \"New password\"\n  },\n  sendVerificationCode: {\n    zh: \"发送验证码\",\n    en: \"Send verification code\"\n  },\n  noCaptcha: {\n    zh: \"请先完成验证码\",\n    en: \"Please complete the verification code first\"\n  },\n  emailVerificationCode: {\n    zh: \"邮箱验证码\",\n    en: \"Email verification code\"\n  },\n  resendVerificationCode: {\n    zh: \"重新发送验证码\",\n    en: \"Resend code\"\n  },\n  verificationCodeLabel: {\n    zh: \"验证码\",\n    en: \"Verification code\"\n  },\n  resetPasswordFailed: {\n    zh: \"重置密码失败\",\n    en: \"Reset password failed\"\n  },\n  headerMenuLogout: {\n    zh: \"登出\",\n    en: \"Logout\"\n  },\n  headerMenuProfile: {\n    zh: \"个人信息\",\n    en: \"Profile\"\n  },\n  headerMenuSettings: {\n    zh: \"设置\",\n    en: \"Settings\"\n  },\n  headerDocSite: {\n    zh: \"文档\",\n    en: \"Docs\"\n  },\n  oauthPageHeading: {\n    zh: \"账号正在验证中...\",\n    en: \"Verifying your account...\"\n  },\n  msgBoxConfirmButton: {\n    zh: \"确定\",\n    en: \"OK\"\n  },\n  msgBoxCancelButton: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  modificationSuccessful: {\n    zh: \"修改成功\",\n    en: \"Modification successful\"\n  },\n  cancel: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  submit: {\n    zh: \"提交\",\n    en: \"Submit\"\n  },\n  next: {\n    zh: \"下一步\",\n    en: \"Next\"\n  },\n  recentSearchedTitle: {\n    zh: \"最近搜索\",\n    en: \"Recent Queries\"\n  },\n  editorContentPlaceholder: {\n    zh: \"记录我的新想法...\",\n    en: \"Record my new thought...\"\n  },\n  editorSyncStatusSaved: {\n    zh: \"已自动保存\",\n    en: \"Auto saved\"\n  },\n  editorSyncStatusLastSaved: {\n    zh: \"最近保存 \",\n    en: \"Last saved \"\n  },\n  editorHistMdRestoreConfirm: {\n    zh: \"确认恢复至该版本吗？\",\n    en: \"Confirm to restore this version?\"\n  },\n  editorExternalLinkConfirm: {\n    zh: \"点击确定将会去往外部链接：\",\n    en: \"Click OK to go to external link: \"\n  },\n  nodeHistEditionRestoreNoVersions: {\n    zh: \"没有历史版本\",\n    en: \"No history versions\"\n  },\n  nodeHistEditionRestoreHeading: {\n    zh: \"历史版本\",\n    en: \"History Versions\"\n  },\n  nodeHistEditionRestoreNotice: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  quickPostPanelPlaceholder: {\n    zh: \"速记想法 / 链接 ...\",\n    en: \"Quick thought / link ...\"\n  },\n  quickPostBtn: {\n    zh: \"记下\",\n    en: \"Send\"\n  },\n  quickPostTooLong: {\n    zh: \"用编辑器记长想法 >\",\n    en: \"Use editor for long thought >\"\n  },\n  quickPostEditInNodePage: {\n    zh: \"在新页面编辑\",\n    en: \"Edit in new page\"\n  },\n  quickPostBtnTitle: {\n    zh: \"快速记录\",\n    en: \"Quick post\"\n  },\n  tryRestoreFromTrash: {\n    zh: \"此想法被放在回收站中，是否要从回收站恢复？\",\n    en: \"This thought is in trash, do you want to restore it?\"\n  },\n  nodeIsDeleted: {\n    zh: \"此想法已被您删除\",\n    en: \"This thought is deleted\"\n  },\n  noLinkedNode: {\n    zh: \"还没有链接到任何想法，尝试 @ 一些吧\",\n    en: \"No linked thought yet, try @ some\"\n  },\n  batchFileOpsShare: {\n    zh: \"分享\",\n    en: \"Share\"\n  },\n  batchFileOpsDelete: {\n    zh: \"删除\",\n    en: \"Delete\"\n  },\n  batchFileOpsTrash: {\n    zh: \"回收\",\n    en: \"To Trash\"\n  },\n  batchFileOpsCancel: {\n    zh: \"取消\",\n    en: \"Cancel\"\n  },\n  batchFileOpsDownload: {\n    zh: \"下载\",\n    en: \"Download\"\n  },\n  batchFileOpsRestore: {\n    zh: \"恢复\",\n    en: \"Restore\"\n  },\n  batchDeleteConfirmPre: {\n    zh: \"确认删除\",\n    en: \"Confirm to delete\"\n  },\n  batchDeleteConfirmPost: {\n    zh: \"个想法？\",\n    en: \"thoughts?\"\n  },\n  nodeNeedRestoreToView: {\n    zh: \"需要恢复后才能查看，确认恢复并查看？\",\n    en: \"Need restore to be viewed, confirm restore?\"\n  },\n  uploadFilesLabel: {\n    zh: \"上传文件\",\n    en: \"Upload files\"\n  },\n  uploadFilesEmptyTask: {\n    zh: \"无任务\",\n    en: \"No Task\"\n  },\n  fileDropIsDragging: {\n    zh: \"放入文件\",\n    en: \"Release to drop files here.\"\n  },\n  fileDropNotDraggingPre: {\n    zh: \"拖拽文件到此处或\",\n    en: \"Drag and drop files here, or \"\n  },\n  fileDropNotDraggingClick: {\n    zh: \"点此\",\n    en: \"click here\"\n  },\n  fileDropNotDraggingPost: {\n    zh: \" 上传\",\n    en: \" to upload\"\n  },\n  fileDropInvalidFile: {\n    zh: \"文件格式错误\",\n    en: \"Invalid file format\"\n  },\n  fileDropTooLarge: {\n    zh: \"文件过大\",\n    en: \"File too large\"\n  },\n  fileDropTooManyPre: {\n    zh: \"文件个数超过上限: \",\n    en: \"File count exceeds limit: \"\n  },\n  fileDropTooManyPost: {\n    zh: \"，请分批上传\",\n    en: \", please upload in batches\"\n  },\n  filesSubmitBtn: {\n    zh: \"上传\",\n    en: \"Upload\"\n  },\n  fileDropPreviewFileCount: {\n    zh: \"已加载文件数：\",\n    en: \"Loaded file count: \"\n  },\n  uploadFilesTaskNotFinished: {\n    zh: \"任务未完成: \",\n    en: \"Task not finished: \"\n  },\n  newJobProgress: {\n    zh: \"最新任务进度\",\n    en: \"The latest job progress\"\n  },\n  autoRecommendation: {\n    zh: \"自动展示相关想法...\",\n    en: \"Auto show related thoughts...\"\n  },\n  pluginPanelDescription: {\n    zh: \"插件是一种括展能力，可以基于你的想法库，延伸不同的功能。当前仅可以在私有化部署的版本中，开发、体验自己的插件。\",\n    en: \"Plugin is an extension capability, which can extend different functions based on your own data. \" + \"Currently, you can only develop and view your own plugins in the self-hosted version.\"\n  },\n  pluginPageTitle: {\n    zh: \"插件页\",\n    en: \"Plugin page\"\n  },\n  authExpired: {\n    zh: \"登录状态已过期，请重新登录\",\n    en: \"Login status expired, please login again\"\n  }\n});\n/* harmony default export */ __webpack_exports__[\"default\"] = (mLang);\n\n//# sourceURL=webpack://rethink/./src/utils/multiLang.ts?");
 
 /***/ }),
 
@@ -2166,7 +2166,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _Use
   \***************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqPutEmailSendCode: function() { return /* binding */ reqPutEmailSendCode; },\n/* harmony export */   reqPutForgetPassword: function() { return /* binding */ reqPutForgetPassword; },\n/* harmony export */   reqPutLogin: function() { return /* binding */ reqPutLogin; },\n/* harmony export */   reqRegister: function() { return /* binding */ reqRegister; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/account`;\nasync function reqRegister(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.postRequest)(`${baseUrl}/`, req, true);\n  if (resp !== null) {\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setToken)(resp.token);\n    return true;\n  }\n  return false;\n}\nasync function reqPutLogin(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/login`, req, true);\n  if (resp !== null) {\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setToken)(resp.token);\n    return true;\n  }\n  (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.removeToken)();\n  return false;\n}\nasync function reqPutForgetPassword(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/password`, req, true);\n  return resp !== null;\n}\nasync function reqPutEmailSendCode(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/email/send-code`, req, true);\n  return resp === null ? \"\" : resp.token;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/account.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqPutEmailSendCode: function() { return /* binding */ reqPutEmailSendCode; },\n/* harmony export */   reqPutForgetPassword: function() { return /* binding */ reqPutForgetPassword; },\n/* harmony export */   reqPutLogin: function() { return /* binding */ reqPutLogin; },\n/* harmony export */   reqRegister: function() { return /* binding */ reqRegister; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/account`;\nasync function reqRegister(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.postRequest)(`${baseUrl}/`, req, true);\n  if (resp !== null) {\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setAccessToken)(resp.accessToken);\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setRefreshToken)(resp.refreshToken);\n    return true;\n  }\n  return false;\n}\nasync function reqPutLogin(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/login`, req, true);\n  if (resp !== null) {\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setAccessToken)(resp.accessToken);\n    (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setRefreshToken)(resp.refreshToken);\n    return true;\n  }\n  (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.removeToken)();\n  return false;\n}\nasync function reqPutForgetPassword(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/password`, req, true);\n  return resp !== null;\n}\nasync function reqPutEmailSendCode(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/email/send-code`, req, true);\n  return resp === null ? \"\" : resp.accessToken;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/account.ts?");
 
 /***/ }),
 
@@ -2196,7 +2196,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \*************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   delRequest: function() { return /* binding */ delRequest; },\n/* harmony export */   getAuthHeader: function() { return /* binding */ getAuthHeader; },\n/* harmony export */   getBlobRequest: function() { return /* binding */ getBlobRequest; },\n/* harmony export */   getRequest: function() { return /* binding */ getRequest; },\n/* harmony export */   patchRequest: function() { return /* binding */ patchRequest; },\n/* harmony export */   postFormData: function() { return /* binding */ postFormData; },\n/* harmony export */   postRequest: function() { return /* binding */ postRequest; },\n/* harmony export */   putRequest: function() { return /* binding */ putRequest; }\n/* harmony export */ });\n/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! axios */ \"./node_modules/axios/lib/axios.js\");\n/* harmony import */ var _utils_msgBox__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/msgBox */ \"./src/utils/msgBox.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* eslint-disable  @typescript-eslint/no-explicit-any */\n\n\n\nfunction dealErr(err, showErrBox) {\n  if (!err.response) {\n    console.error(err);\n    return null;\n  }\n  const e = err.response.data;\n  console.log(`statusCode:${err.response.status}\\nrequestId:${e.detail.requestId}\\ncode:${e.detail.code}\\nmsg:${e.detail.msg}`);\n  if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(e.detail.msg);\n  return null;\n}\nfunction getAuthHeader() {\n  return {\n    RequestId: new Date().getTime().toString(36) + Math.random().toString(36).slice(2),\n    Authorization: (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_1__.getToken)()\n  };\n}\nasync function baseRequest(method, url, data, params, showErrBox = false, contentType = \"application/json\") {\n  const h = getAuthHeader();\n  try {\n    const config = {\n      method,\n      url,\n      headers: {\n        ContentType: contentType,\n        RequestId: h.RequestId,\n        Authorization: h.Authorization\n      }\n    };\n    if (data) {\n      config.data = data;\n    }\n    if (params) {\n      config.params = params;\n    }\n    const resp = await (0,axios__WEBPACK_IMPORTED_MODULE_2__[\"default\"])(config);\n    if (resp.status < 200 || resp.status >= 300) {\n      console.error(resp.data.detail);\n      if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(resp.data.detail.msg);\n      return null;\n    }\n    return resp.data;\n  } catch (err) {\n    return dealErr(err, showErrBox);\n  }\n}\nasync function blobRequest(method, url, data, params, showErrBox = false) {\n  try {\n    const config = {\n      method,\n      url,\n      responseType: \"blob\",\n      headers: getAuthHeader()\n    };\n    if (data) {\n      config.data = data;\n    }\n    if (params) {\n      config.params = params;\n    }\n    const resp = await (0,axios__WEBPACK_IMPORTED_MODULE_2__[\"default\"])(config);\n    if (resp.status < 200 || resp.status >= 300) {\n      console.error(resp.data.detail);\n      if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(resp.data.detail.msg);\n      return null;\n    }\n    return {\n      data: resp.data,\n      headers: resp.headers\n    };\n  } catch (err) {\n    return dealErr(err, showErrBox);\n  }\n}\nasync function getRequest(url, params, showErrBox = false) {\n  return baseRequest(\"get\", url, null, params, showErrBox);\n}\nasync function putRequest(url, data, showErrBox = false) {\n  return baseRequest(\"put\", url, data, null, showErrBox);\n}\nasync function postRequest(url, data, showErrBox = false) {\n  return baseRequest('post', url, data, null, showErrBox);\n}\nasync function patchRequest(url, data, showErrBox = false) {\n  return baseRequest('patch', url, data, null, showErrBox);\n}\nasync function delRequest(url, showErrBox = false) {\n  return baseRequest('delete', url, null, null, showErrBox);\n}\nasync function postFormData(url, files, showErrBox = false) {\n  const formData = new FormData();\n  for (let i = 0; i < files.length; i++) {\n    formData.append(\"files\", files[i]);\n  }\n  return baseRequest('post', url, formData, null, showErrBox, \"multipart/form-data\");\n}\nasync function getBlobRequest(url, params, showErrBox = false) {\n  return blobRequest(\"get\", url, null, params, showErrBox);\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/index.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   delRequest: function() { return /* binding */ delRequest; },\n/* harmony export */   getAuthHeader: function() { return /* binding */ getAuthHeader; },\n/* harmony export */   getBlobRequest: function() { return /* binding */ getBlobRequest; },\n/* harmony export */   getRequest: function() { return /* binding */ getRequest; },\n/* harmony export */   patchRequest: function() { return /* binding */ patchRequest; },\n/* harmony export */   postFormData: function() { return /* binding */ postFormData; },\n/* harmony export */   postRequest: function() { return /* binding */ postRequest; },\n/* harmony export */   putRequest: function() { return /* binding */ putRequest; }\n/* harmony export */ });\n/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! axios */ \"./node_modules/axios/lib/axios.js\");\n/* harmony import */ var _utils_msgBox__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/msgBox */ \"./src/utils/msgBox.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_multiLang__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/multiLang */ \"./src/utils/multiLang.ts\");\n/* eslint-disable  @typescript-eslint/no-explicit-any */\n\n\n\n\n\nasync function refreshedToken(err, requestId, showErrBox) {\n  if (!err.response) {\n    console.error(err);\n    return false;\n  }\n  const errResp = err.response.data;\n  if (err.response.status === 401 && errResp.detail.code === 3) {\n    try {\n      const r = await axios__WEBPACK_IMPORTED_MODULE_4__[\"default\"].get(`${_utils_configs__WEBPACK_IMPORTED_MODULE_2__[\"default\"].apiUrl}/api/account/access-token`, {\n        headers: {\n          ContentType: \"application/json\",\n          RequestId: requestId,\n          Authorization: (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_1__.getRefreshToken)()\n        }\n      });\n      if (r.status !== 200) {\n        console.error(r.data.detail);\n        return false;\n      }\n      (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_1__.setAccessToken)(r.data.accessToken);\n    } catch (err) {\n      (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_1__.removeToken)();\n      (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(_utils_multiLang__WEBPACK_IMPORTED_MODULE_3__[\"default\"].get(\"authExpired\"));\n      return false;\n    }\n    return true;\n  }\n  console.log(`statusCode:${err.response.status}\\nrequestId:${errResp.detail.requestId}\\ncode:${errResp.detail.code}\\nmsg:${errResp.detail.msg}`);\n  if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(errResp.detail.msg);\n  return false;\n}\nfunction getAuthHeader() {\n  return {\n    RequestId: new Date().getTime().toString(36) + Math.random().toString(36).slice(2),\n    Authorization: (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_1__.getAccessToken)()\n  };\n}\nasync function baseRequest(method, url, data, params, showErrBox = false, contentType = \"application/json\") {\n  const h = getAuthHeader();\n  try {\n    const config = {\n      method,\n      url,\n      headers: {\n        ContentType: contentType,\n        RequestId: h.RequestId,\n        Authorization: h.Authorization\n      }\n    };\n    if (data) {\n      config.data = data;\n    }\n    if (params) {\n      config.params = params;\n    }\n    const resp = await (0,axios__WEBPACK_IMPORTED_MODULE_4__[\"default\"])(config);\n    if (resp.status < 200 || resp.status >= 300) {\n      console.error(resp.data.detail);\n      if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(resp.data.detail.msg);\n      return null;\n    }\n    return resp.data;\n  } catch (err) {\n    if (await refreshedToken(err, h.RequestId, showErrBox)) {\n      return await baseRequest(method, url, data, params, showErrBox, contentType);\n    }\n    return null;\n  }\n}\nasync function blobRequest(method, url, data, params, showErrBox = false) {\n  const h = getAuthHeader();\n  try {\n    const config = {\n      method,\n      url,\n      responseType: \"blob\",\n      headers: h\n    };\n    if (data) {\n      config.data = data;\n    }\n    if (params) {\n      config.params = params;\n    }\n    const resp = await (0,axios__WEBPACK_IMPORTED_MODULE_4__[\"default\"])(config);\n    if (resp.status < 200 || resp.status >= 300) {\n      console.error(resp.data.detail);\n      if (showErrBox) (0,_utils_msgBox__WEBPACK_IMPORTED_MODULE_0__.showErrorMsgBox)(resp.data.detail.msg);\n      return null;\n    }\n    return {\n      data: resp.data,\n      headers: resp.headers\n    };\n  } catch (err) {\n    if (await refreshedToken(err, h.RequestId, showErrBox)) {\n      return await blobRequest(method, url, data, params, showErrBox);\n    }\n    return null;\n  }\n}\nasync function getRequest(url, params, showErrBox = false) {\n  return baseRequest(\"get\", url, null, params, showErrBox);\n}\nasync function putRequest(url, data, showErrBox = false) {\n  return baseRequest(\"put\", url, data, null, showErrBox);\n}\nasync function postRequest(url, data, showErrBox = false) {\n  return baseRequest('post', url, data, null, showErrBox);\n}\nasync function patchRequest(url, data, showErrBox = false) {\n  return baseRequest('patch', url, data, null, showErrBox);\n}\nasync function delRequest(url, showErrBox = false) {\n  return baseRequest('delete', url, null, null, showErrBox);\n}\nasync function postFormData(url, files, showErrBox = false) {\n  const formData = new FormData();\n  for (let i = 0; i < files.length; i++) {\n    formData.append(\"files\", files[i]);\n  }\n  return baseRequest('post', url, formData, null, showErrBox, \"multipart/form-data\");\n}\nasync function getBlobRequest(url, params, showErrBox = false) {\n  return blobRequest(\"get\", url, null, params, showErrBox);\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/index.ts?");
 
 /***/ }),
 
@@ -2216,7 +2216,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \*************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqOauthCallback: function() { return /* binding */ reqOauthCallback; },\n/* harmony export */   reqOauthLogin: function() { return /* binding */ reqOauthLogin; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/oauth`;\nasync function reqOauthLogin(provider) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/login/${provider}`, null, true);\n  if (resp === null) {\n    return;\n  }\n  window.location.replace(resp.uri);\n}\nasync function reqOauthCallback(code, provider) {\n  if (!code) {\n    console.log(\"oauth callback code is empty\");\n    return false;\n  }\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/callback/${provider}`, {\n    code: code\n  }, true);\n  if (resp === null) {\n    return false;\n  }\n  (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setToken)(resp.token);\n  return true;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/oauth.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqOauthCallback: function() { return /* binding */ reqOauthCallback; },\n/* harmony export */   reqOauthLogin: function() { return /* binding */ reqOauthLogin; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/oauth`;\nasync function reqOauthLogin(provider) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/login/${provider}`, null, true);\n  if (resp === null) {\n    return;\n  }\n  window.location.replace(resp.uri);\n}\nasync function reqOauthCallback(code, provider) {\n  if (!code) {\n    console.log(\"oauth callback code is empty\");\n    return false;\n  }\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/callback/${provider}`, {\n    code: code\n  }, true);\n  if (resp === null) {\n    return false;\n  }\n  (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setAccessToken)(resp.accessToken);\n  (0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_2__.setRefreshToken)(resp.refreshToken);\n  return true;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/oauth.ts?");
 
 /***/ }),
 
@@ -2246,7 +2246,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \*************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   getToken: function() { return /* binding */ getToken; },\n/* harmony export */   removeToken: function() { return /* binding */ removeToken; },\n/* harmony export */   setToken: function() { return /* binding */ setToken; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n\nfunction setToken(token) {\n  localStorage.setItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].tokenKey, token);\n}\nfunction getToken() {\n  return localStorage.getItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].tokenKey) || \"\";\n}\nfunction removeToken() {\n  localStorage.removeItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].tokenKey);\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/token.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   getAccessToken: function() { return /* binding */ getAccessToken; },\n/* harmony export */   getRefreshToken: function() { return /* binding */ getRefreshToken; },\n/* harmony export */   removeToken: function() { return /* binding */ removeToken; },\n/* harmony export */   setAccessToken: function() { return /* binding */ setAccessToken; },\n/* harmony export */   setRefreshToken: function() { return /* binding */ setRefreshToken; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n\nfunction setAccessToken(token) {\n  localStorage.setItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].accessTokenKey, token);\n}\nfunction setRefreshToken(token) {\n  localStorage.setItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].refreshTokenKey, token);\n}\nfunction getAccessToken() {\n  return localStorage.getItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].accessTokenKey) || \"\";\n}\nfunction getRefreshToken() {\n  return localStorage.getItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].refreshTokenKey) || \"\";\n}\nfunction removeToken() {\n  localStorage.removeItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].accessTokenKey);\n  localStorage.removeItem(_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].refreshTokenKey);\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/token.ts?");
 
 /***/ }),
 
@@ -2266,7 +2266,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqGetUser: function() { return /* binding */ reqGetUser; },\n/* harmony export */   reqPatchUser: function() { return /* binding */ reqPatchUser; },\n/* harmony export */   reqPutPassword: function() { return /* binding */ reqPutPassword; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_app_user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/app/user */ \"./src/utils/app/user.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/users`;\nasync function reqGetUser() {\n  if ((0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_3__.getToken)() === \"\") return false;\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/`, null, true);\n  if (!resp) {\n    return false;\n  }\n  _utils_app_user__WEBPACK_IMPORTED_MODULE_2__.user.value = resp.user;\n  return true;\n}\nasync function reqPatchUser(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.patchRequest)(`${baseUrl}/`, req, true);\n  if (!resp) {\n    return false;\n  }\n  _utils_app_user__WEBPACK_IMPORTED_MODULE_2__.user.value = resp.user;\n  return true;\n}\nasync function reqPutPassword(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/password`, req, true);\n  return resp !== null;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/user.ts?");
+      eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   reqGetUser: function() { return /* binding */ reqGetUser; },\n/* harmony export */   reqPatchUser: function() { return /* binding */ reqPatchUser; },\n/* harmony export */   reqPutPassword: function() { return /* binding */ reqPutPassword; }\n/* harmony export */ });\n/* harmony import */ var _utils_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/utils/configs */ \"./src/utils/configs.ts\");\n/* harmony import */ var _utils_requests_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/utils/requests/index */ \"./src/utils/requests/index.ts\");\n/* harmony import */ var _utils_app_user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/utils/app/user */ \"./src/utils/app/user.ts\");\n/* harmony import */ var _utils_requests_token__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/utils/requests/token */ \"./src/utils/requests/token.ts\");\n\n\n\n\nconst baseUrl = `${_utils_configs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].apiUrl}/api/users`;\nasync function reqGetUser() {\n  if ((0,_utils_requests_token__WEBPACK_IMPORTED_MODULE_3__.getAccessToken)() === \"\") return false;\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.getRequest)(`${baseUrl}/`, null, true);\n  if (!resp) {\n    return false;\n  }\n  _utils_app_user__WEBPACK_IMPORTED_MODULE_2__.user.value = resp.user;\n  return true;\n}\nasync function reqPatchUser(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.patchRequest)(`${baseUrl}/`, req, true);\n  if (!resp) {\n    return false;\n  }\n  _utils_app_user__WEBPACK_IMPORTED_MODULE_2__.user.value = resp.user;\n  return true;\n}\nasync function reqPutPassword(req) {\n  const resp = await (0,_utils_requests_index__WEBPACK_IMPORTED_MODULE_1__.putRequest)(`${baseUrl}/password`, req, true);\n  return resp !== null;\n}\n\n\n//# sourceURL=webpack://rethink/./src/utils/requests/user.ts?");
 
 /***/ }),
 
@@ -6734,52 +6734,76 @@ eval("module.exports = __webpack_require__.p + \"img/loading.0d152035.gif\";\n\n
 /*!********************************************!*\
   !*** ./src/assets/images/logo/rethink.png ***!
   \********************************************/
-/***/ (function(module) {
+    /***/ (function (module) {
 
-eval("module.exports = \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAA8CAMAAAAJ1/l9AAACB1BMVEUAAAAA////gICAv///QEBmzP+A1f/mZk2AyO3fYFBx1fGA4//jVUeA2fLeZE7gXEd70OyA0e3lYUZ80fDhYkviX0l30O11z+/kYEp10fB21fF50u131e7jXEh3z+7hWUZ2zu3kW0bhXEfiWkbiXEjmW0h30fHkXEd50u150+140u7hXEjFfnfjXEfjW0l40O3iXUjiXUd30e3jXUd30u/lXkjjXUl40u920e7kXUjlXUnjXEh30e130e130e3jXEl30O520O7jXEh2z+130O130O130e930fDkW0l40u3kXEl40e530e7iXEh20e530e930e930O/jXEfjXUh30O3kXEd30e130e7iXUjjXUi9h4N40u530u7jXUh30u/kXUh30e/jXUjjXEh30e+bqrZ40O7kXUh40e7jXUh30O7jXEh40e3jXEh30e7jXEiAxt6Nus7iXEnjXEmRtseWrr+Xrr2YrLqYrbyaq7iaq7mbqLabqricqLScqbWcqbafp7PiXEjiXEniXUmgpa+hpK+hpa6io62ipK2joqujo6ujo6ymnaannKSnnaSnnaWom6OonKSpm6KsmJyul5ziXEniXEriXUriXUriXUviXkvBgX7CgHzKeG7LeG7MdmzhXkvhXkzNdGnhXkvhXkzdYlHeYk/eYlDfYE3fYU7gXkzgX0zgX03///+wPcoCAAAApHRSTlMAAQIEBAUGCg4QEhISFBcZGxwdISIjKzAwMjY5PEBLTVRUVlhZXF5eYWNmZ2lsbXFxc3R2fICBgoaGiYqLj5CQmJmZm5yeoaWorrK1vsDByc7Q0NHV1tnd3+Lj5ufn6enr7e7v8PHy8/X29vf3+Pj5+fn5+vr6+vr6+vr6+vr6+vr6+vv7+/v7+/v7+/v7+/v7+/v7+/v7/Pz8/f39/f39/f7+/rxfQnoAAAABYktHRKxXZfKLAAACLklEQVRIx6XXZ1fUQBQG4FEBFVFsVBU7WFBAmoiyKDZUxN5RsaAL5NJtgLKoqKiIBRcLgiyIXv6kyWySTXY3yZ3N+/05d84k58x7GdOTmH2o9qpXssi100e2LWOWWbr/ruQUb3VmdJxQeluipOlwYhS9+IREzcW0CL3igkTPzdVhesEpAd3ScSd35VyDnlNNx50/ZxAn4XJJss7X0fWDP6jED3AjR9Xx58i6a4pr/NcGAHuCfAtZPw7ODo4HKOb8JFU/0jUGFN64RtaLvETdHdKI7Yo/H8dYViwavyocNjKWR9NPpo0aRzmvYWw3ST81axzn/H4S20fRPX/NGic4h7WsQvzkIb6Dwp+Fz9Z5GYH3RszWuceZ90bOFuDPZ9AFfxFVU7mFJvKXFprGLTWJv7LUFD5grQl8YBZd8EE77chf22on/sZeO/C3DtqeDyG64O/RDSdoG/4O3fBhdMM/oBjfa9IfUZAXxaLVZ0LmW2PR6iMl84xYNH7ReMJ1TX+ma2zTOKtS9UMBrd6cwlep/DcKn13h7DjXrQJ6Egw8lXfhTwK838iDBeM7in41OeW8VlbKfEz43uQU8G4276Ak/RL84Xg2q9Vy170fRO03aEjRim3qFdrB+4z6bKhXb/KNBxxs4Fs/mFIQ4gvrAXwj/lGr+Ed8EJZL8w213gOi2WDcKZbUCepy806yvllIH4gL22kKBXBDfuQ+tr2BiJuPpkTbBtNrnOmtM8d2LtfAf3zV5C5BBMvPAAAAAElFTkSuQmCC\";\n\n//# sourceURL=webpack://rethink/./src/assets/images/logo/rethink.png?");
+      eval("module.exports = \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAA8CAMAAAAJ1/l9AAACB1BMVEUAAAAA////gICAv///QEBmzP+A1f/mZk2AyO3fYFBx1fGA4//jVUeA2fLeZE7gXEd70OyA0e3lYUZ80fDhYkviX0l30O11z+/kYEp10fB21fF50u131e7jXEh3z+7hWUZ2zu3kW0bhXEfiWkbiXEjmW0h30fHkXEd50u150+140u7hXEjFfnfjXEfjW0l40O3iXUjiXUd30e3jXUd30u/lXkjjXUl40u920e7kXUjlXUnjXEh30e130e130e3jXEl30O520O7jXEh2z+130O130O130e930fDkW0l40u3kXEl40e530e7iXEh20e530e930e930O/jXEfjXUh30O3kXEd30e130e7iXUjjXUi9h4N40u530u7jXUh30u/kXUh30e/jXUjjXEh30e+bqrZ40O7kXUh40e7jXUh30O7jXEh40e3jXEh30e7jXEiAxt6Nus7iXEnjXEmRtseWrr+Xrr2YrLqYrbyaq7iaq7mbqLabqricqLScqbWcqbafp7PiXEjiXEniXUmgpa+hpK+hpa6io62ipK2joqujo6ujo6ymnaannKSnnaSnnaWom6OonKSpm6KsmJyul5ziXEniXEriXUriXUriXUviXkvBgX7CgHzKeG7LeG7MdmzhXkvhXkzNdGnhXkvhXkzdYlHeYk/eYlDfYE3fYU7gXkzgX0zgX03///+wPcoCAAAApHRSTlMAAQIEBAUGCg4QEhISFBcZGxwdISIjKzAwMjY5PEBLTVRUVlhZXF5eYWNmZ2lsbXFxc3R2fICBgoaGiYqLj5CQmJmZm5yeoaWorrK1vsDByc7Q0NHV1tnd3+Lj5ufn6enr7e7v8PHy8/X29vf3+Pj5+fn5+vr6+vr6+vr6+vr6+vr6+vv7+/v7+/v7+/v7+/v7+/v7+/v7/Pz8/f39/f39/f7+/rxfQnoAAAABYktHRKxXZfKLAAACLklEQVRIx6XXZ1fUQBQG4FEBFVFsVBU7WFBAmoiyKDZUxN5RsaAL5NJtgLKoqKiIBRcLgiyIXv6kyWySTXY3yZ3N+/05d84k58x7GdOTmH2o9qpXssi100e2LWOWWbr/ruQUb3VmdJxQeluipOlwYhS9+IREzcW0CL3igkTPzdVhesEpAd3ScSd35VyDnlNNx50/ZxAn4XJJss7X0fWDP6jED3AjR9Xx58i6a4pr/NcGAHuCfAtZPw7ODo4HKOb8JFU/0jUGFN64RtaLvETdHdKI7Yo/H8dYViwavyocNjKWR9NPpo0aRzmvYWw3ST81axzn/H4S20fRPX/NGic4h7WsQvzkIb6Dwp+Fz9Z5GYH3RszWuceZ90bOFuDPZ9AFfxFVU7mFJvKXFprGLTWJv7LUFD5grQl8YBZd8EE77chf22on/sZeO/C3DtqeDyG64O/RDSdoG/4O3fBhdMM/oBjfa9IfUZAXxaLVZ0LmW2PR6iMl84xYNH7ReMJ1TX+ma2zTOKtS9UMBrd6cwlep/DcKn13h7DjXrQJ6Egw8lXfhTwK838iDBeM7in41OeW8VlbKfEz43uQU8G4276Ak/RL84Xg2q9Vy170fRO03aEjRim3qFdrB+4z6bKhXb/KNBxxs4Fs/mFIQ4gvrAXwj/lGr+Ed8EJZL8w213gOi2WDcKZbUCepy806yvllIH4gL22kKBXBDfuQ+tr2BiJuPpkTbBtNrnOmtM8d2LtfAf3zV5C5BBMvPAAAAAElFTkSuQmCC\";\n\n//# sourceURL=webpack://rethink/./src/assets/images/logo/rethink.png?");
 
-/***/ })
+      /***/
+    })
 
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = __webpack_modules__;
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/chunk loaded */
-/******/ 	!function() {
-/******/ 		var deferred = [];
-/******/ 		__webpack_require__.O = function(result, chunkIds, fn, priority) {
-/******/ 			if(chunkIds) {
-/******/ 				priority = priority || 0;
-/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
-/******/ 				deferred[i] = [chunkIds, fn, priority];
-/******/ 				return;
-/******/ 			}
+    /******/
+  });
+  /************************************************************************/
+  /******/ 	// The module cache
+  /******/
+  var __webpack_module_cache__ = {};
+  /******/
+  /******/ 	// The require function
+  /******/
+  function __webpack_require__(moduleId) {
+    /******/ 		// Check if module is in cache
+    /******/
+    var cachedModule = __webpack_module_cache__[moduleId];
+    /******/
+    if (cachedModule !== undefined) {
+      /******/
+      return cachedModule.exports;
+      /******/
+    }
+    /******/ 		// Create a new module (and put it into the cache)
+    /******/
+    var module = __webpack_module_cache__[moduleId] = {
+      /******/ 			// no module.id needed
+      /******/ 			// no module.loaded needed
+      /******/      exports: {}
+      /******/
+    };
+    /******/
+    /******/ 		// Execute the module function
+    /******/
+    __webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+    /******/
+    /******/ 		// Return the exports of the module
+    /******/
+    return module.exports;
+    /******/
+  }
+
+  /******/
+  /******/ 	// expose the modules object (__webpack_modules__)
+  /******/
+  __webpack_require__.m = __webpack_modules__;
+  /******/
+  /************************************************************************/
+  /******/ 	/* webpack/runtime/chunk loaded */
+  /******/
+  !function () {
+    /******/
+    var deferred = [];
+    /******/
+    __webpack_require__.O = function (result, chunkIds, fn, priority) {
+      /******/
+      if (chunkIds) {
+        /******/
+        priority = priority || 0;
+        /******/
+        for (var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
+        /******/
+        deferred[i] = [chunkIds, fn, priority];
+        /******/
+        return;
+        /******/
+      }
 /******/ 			var notFulfilled = Infinity;
 /******/ 			for (var i = 0; i < deferred.length; i++) {
 /******/ 				var chunkIds = deferred[i][0];
@@ -6793,136 +6817,227 @@ eval("module.exports = \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAA8C
 /******/ 						fulfilled = false;
 /******/ 						if(priority < notFulfilled) notFulfilled = priority;
 /******/ 					}
-/******/ 				}
-/******/ 				if(fulfilled) {
-/******/ 					deferred.splice(i--, 1)
-/******/ 					var r = fn();
-/******/ 					if (r !== undefined) result = r;
-/******/ 				}
-/******/ 			}
-/******/ 			return result;
-/******/ 		};
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	!function() {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = function(module) {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				function() { return module['default']; } :
-/******/ 				function() { return module; };
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	!function() {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = function(exports, definition) {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/global */
-/******/ 	!function() {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	!function() {
-/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	!function() {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = function(exports) {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/publicPath */
-/******/ 	!function() {
-/******/ 		__webpack_require__.p = "/r/";
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/jsonp chunk loading */
-/******/ 	!function() {
-/******/ 		// no baseURI
-/******/ 		
-/******/ 		// object to store loaded and loading chunks
-/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
-/******/ 		var installedChunks = {
-/******/ 			"app": 0
-/******/ 		};
-/******/ 		
-/******/ 		// no chunk on demand loading
-/******/ 		
-/******/ 		// no prefetching
-/******/ 		
-/******/ 		// no preloaded
-/******/ 		
-/******/ 		// no HMR
-/******/ 		
-/******/ 		// no HMR manifest
-/******/ 		
-/******/ 		__webpack_require__.O.j = function(chunkId) { return installedChunks[chunkId] === 0; };
-/******/ 		
-/******/ 		// install a JSONP callback for chunk loading
-/******/ 		var webpackJsonpCallback = function(parentChunkLoadingFunction, data) {
-/******/ 			var chunkIds = data[0];
-/******/ 			var moreModules = data[1];
-/******/ 			var runtime = data[2];
-/******/ 			// add "moreModules" to the modules object,
-/******/ 			// then flag all "chunkIds" as loaded and fire callback
-/******/ 			var moduleId, chunkId, i = 0;
-/******/ 			if(chunkIds.some(function(id) { return installedChunks[id] !== 0; })) {
-/******/ 				for(moduleId in moreModules) {
-/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+          /******/
+        }
+        /******/
+        if (fulfilled) {
+          /******/
+          deferred.splice(i--, 1)
+          /******/
+          var r = fn();
+          /******/
+          if (r !== undefined) result = r;
+          /******/
+        }
+        /******/
+      }
+      /******/
+      return result;
+      /******/
+    };
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/compat get default export */
+  /******/
+  !function () {
+    /******/ 		// getDefaultExport function for compatibility with non-harmony modules
+    /******/
+    __webpack_require__.n = function (module) {
+      /******/
+      var getter = module && module.__esModule ?
+        /******/        function () {
+          return module['default'];
+        } :
+        /******/        function () {
+          return module;
+        };
+      /******/
+      __webpack_require__.d(getter, {a: getter});
+      /******/
+      return getter;
+      /******/
+    };
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/define property getters */
+  /******/
+  !function () {
+    /******/ 		// define getter functions for harmony exports
+    /******/
+    __webpack_require__.d = function (exports, definition) {
+      /******/
+      for (var key in definition) {
+        /******/
+        if (__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+          /******/
+          Object.defineProperty(exports, key, {enumerable: true, get: definition[key]});
+          /******/
+        }
+        /******/
+      }
+      /******/
+    };
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/global */
+  /******/
+  !function () {
+    /******/
+    __webpack_require__.g = (function () {
+      /******/
+      if (typeof globalThis === 'object') return globalThis;
+      /******/
+      try {
+        /******/
+        return this || new Function('return this')();
+        /******/
+      } catch (e) {
+        /******/
+        if (typeof window === 'object') return window;
+        /******/
+      }
+      /******/
+    })();
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+  /******/
+  !function () {
+    /******/
+    __webpack_require__.o = function (obj, prop) {
+      return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/make namespace object */
+  /******/
+  !function () {
+    /******/ 		// define __esModule on exports
+    /******/
+    __webpack_require__.r = function (exports) {
+      /******/
+      if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+        /******/
+        Object.defineProperty(exports, Symbol.toStringTag, {value: 'Module'});
+        /******/
+      }
+      /******/
+      Object.defineProperty(exports, '__esModule', {value: true});
+      /******/
+    };
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/publicPath */
+  /******/
+  !function () {
+    /******/
+    __webpack_require__.p = "/r/";
+    /******/
+  }();
+  /******/
+  /******/ 	/* webpack/runtime/jsonp chunk loading */
+  /******/
+  !function () {
+    /******/ 		// no baseURI
+    /******/
+    /******/ 		// object to store loaded and loading chunks
+    /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+    /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+    /******/
+    var installedChunks = {
+      /******/      "app": 0
+      /******/
+    };
+    /******/
+    /******/ 		// no chunk on demand loading
+    /******/
+    /******/ 		// no prefetching
+    /******/
+    /******/ 		// no preloaded
+    /******/
+    /******/ 		// no HMR
+    /******/
+    /******/ 		// no HMR manifest
+    /******/
+    /******/
+    __webpack_require__.O.j = function (chunkId) {
+      return installedChunks[chunkId] === 0;
+    };
+    /******/
+    /******/ 		// install a JSONP callback for chunk loading
+    /******/
+    var webpackJsonpCallback = function (parentChunkLoadingFunction, data) {
+      /******/
+      var chunkIds = data[0];
+      /******/
+      var moreModules = data[1];
+      /******/
+      var runtime = data[2];
+      /******/ 			// add "moreModules" to the modules object,
+      /******/ 			// then flag all "chunkIds" as loaded and fire callback
+      /******/
+      var moduleId, chunkId, i = 0;
+      /******/
+      if (chunkIds.some(function (id) {
+        return installedChunks[id] !== 0;
+      })) {
+        /******/
+        for (moduleId in moreModules) {
+          /******/
+          if (__webpack_require__.o(moreModules, moduleId)) {
 /******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
 /******/ 					}
 /******/ 				}
 /******/ 				if(runtime) var result = runtime(__webpack_require__);
 /******/ 			}
-/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
-/******/ 			for(;i < chunkIds.length; i++) {
-/******/ 				chunkId = chunkIds[i];
-/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 					installedChunks[chunkId][0]();
-/******/ 				}
-/******/ 				installedChunks[chunkId] = 0;
-/******/ 			}
-/******/ 			return __webpack_require__.O(result);
-/******/ 		}
-/******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkrethink"] = self["webpackChunkrethink"] || [];
-/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
-/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
-/******/ 	}();
-/******/ 	
-/************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["chunk-vendors"], function() { return __webpack_require__("./src/main.ts"); })
-/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
-/******/ 	
-/******/ })()
+      /******/
+      if (parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+      /******/
+      for (; i < chunkIds.length; i++) {
+        /******/
+        chunkId = chunkIds[i];
+        /******/
+        if (__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+          /******/
+          installedChunks[chunkId][0]();
+          /******/
+        }
+        /******/
+        installedChunks[chunkId] = 0;
+        /******/
+      }
+      /******/
+      return __webpack_require__.O(result);
+      /******/
+    }
+    /******/
+    /******/
+    var chunkLoadingGlobal = self["webpackChunkrethink"] = self["webpackChunkrethink"] || [];
+    /******/
+    chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+    /******/
+    chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+    /******/
+  }();
+  /******/
+  /************************************************************************/
+  /******/
+  /******/ 	// startup
+  /******/ 	// Load entry module and return exports
+  /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
+  /******/
+  var __webpack_exports__ = __webpack_require__.O(undefined, ["chunk-vendors"], function () {
+    return __webpack_require__("./src/main.ts");
+  })
+  /******/
+  __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
+  /******/
+  /******/
+})()
 ;

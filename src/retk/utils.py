@@ -15,7 +15,6 @@ import httpx
 import jwt
 from bson import ObjectId
 from markdown import Markdown
-
 from retk import config, const, regex
 from retk.logger import logger
 from retk.models import tps
@@ -460,3 +459,21 @@ async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
         logger.debug(f"failed to get {url}: {v}")
         return default_version, const.Code.OPERATION_FAILED
     return vs, const.Code.OK
+
+
+def get_token(uid: str, language: str) -> Tuple[str, str]:
+    settings = config.get_settings()
+    data = {
+        "uid": uid,
+        "language": language,
+    }
+
+    access_token = jwt_encode(
+        exp_delta=settings.ACCESS_TOKEN_EXPIRE_DELTA,
+        data=data,
+    )
+    refresh_token = jwt_encode(
+        exp_delta=settings.REFRESH_TOKEN_EXPIRE_DELTA,
+        data=data,
+    )
+    return access_token, refresh_token

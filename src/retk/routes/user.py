@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import APIRouter
-
 from retk.controllers import schemas, user
 from retk.routes import utils
 
@@ -58,4 +57,19 @@ async def update_user_password(
     return await user.update_password(
         au=au,
         req=req,
+    )
+
+
+@router.get(
+    path="/notifications",
+    status_code=200,
+    response_model=schemas.user.NotificationResponse,
+)
+@utils.measure_time_spend
+async def get_notifications(
+        au: utils.ANNOTATED_AUTHED_USER,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.user.NotificationResponse:
+    return await user.get_notifications(
+        au=au,
     )

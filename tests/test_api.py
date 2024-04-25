@@ -12,7 +12,6 @@ from zipfile import ZipFile
 from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
-
 from retk import const, config, PluginAPICallReturn
 from retk.application import app
 from retk.core import account
@@ -20,6 +19,7 @@ from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
 from retk.utils import jwt_decode
+
 from . import utils
 
 
@@ -86,7 +86,7 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertNotEqual("", rj["token"])
+        self.assertNotEqual("", rj["accessToken"])
         self.assertEqual("xxx", rj["requestId"])
 
 
@@ -106,10 +106,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             })
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(818, len(rj["token"]))
-        self.assertTrue(rj["token"].startswith("Bearer "))
+        self.assertEqual(818, len(rj["accessToken"]))
+        self.assertTrue(rj["accessToken"].startswith("Bearer "))
+        self.refresh_token = rj["refreshToken"]
         self.default_headers = {
-            "Authorization": rj["token"],
+            "Authorization": rj["accessToken"],
             "RequestId": "xxx",
         }
 
@@ -136,6 +137,100 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(rid, rj["requestId"])
         return rj
+
+    async def test_access_token_expire(self):
+        aed = config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA
+        red = config.get_settings().REFRESH_TOKEN_EXPIRE_DELTA
+
+        config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(microseconds=1)
+        config.get_settings().REFRESH_TOKEN_EXPIRE_DELTA = datetime.timedelta(microseconds=2)
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": const.DEFAULT_USER["email"],
+                "password": "",
+            })
+        rj = resp.json()
+        access_token = rj["accessToken"]
+        refresh_token = rj["refreshToken"]
+        time.sleep(0.001)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": access_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+
+        resp = self.client.get(
+            "/api/account/access-token",
+            headers={
+                "Authorization": refresh_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+
+        config.get_settings().REFRESH_TOKEN_EXPIRE_DELTA = red
+
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": const.DEFAULT_USER["email"],
+                "password": "",
+            })
+        rj = resp.json()
+        access_token = rj["accessToken"]
+        refresh_token = rj["refreshToken"]
+        time.sleep(0.001)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": access_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+
+        config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA = aed
+        resp = self.client.get(
+            "/api/account/access-token",
+            headers={
+                "Authorization": refresh_token,
+                "RequestId": "xxx"
+            }
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertNotEqual(access_token, rj["accessToken"])
+        self.assertTrue(rj["accessToken"].startswith("Bearer "))
+        self.assertEqual("", rj["refreshToken"])
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": rj["accessToken"],
+                "RequestId": "xxx"
+            }
+        )
+        self.check_ok_response(resp, 200)
+
+    async def test_get_new_access_token(self):
+        time.sleep(0.001)
+        resp = self.client.get(
+            "/api/account/access-token",
+            headers={
+                "Authorization": self.refresh_token,
+                "RequestId": "xxx",
+            }
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(818, len(rj["accessToken"]))
+        self.assertNotEqual(self.default_headers["Authorization"], rj["accessToken"])
+        self.assertTrue(rj["accessToken"].startswith("Bearer "))
+        self.assertEqual("", rj["refreshToken"])
 
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
@@ -167,13 +262,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers={"RequestId": "xxx"}
         )
         rj = self.check_ok_response(resp, 201)
-        u_token = rj["token"]
+        u_token = rj["accessToken"]
         self.assertNotEqual("", u_token)
 
         resp = self.client.get(
             "/api/users",
             headers={
-                "Authorization": rj["token"],
+                "Authorization": rj["accessToken"],
                 "RequestId": "xxx"
             })
         rj = self.check_ok_response(resp, 200)
@@ -960,7 +1055,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers={"RequestId": "xxx"}
         )
         rj = self.check_ok_response(resp, 201)
-        u_token = rj["token"]
+        u_token = rj["accessToken"]
         uid = (await client.coll.users.find_one({"email": email}))["id"]
 
         resp = self.client.get(

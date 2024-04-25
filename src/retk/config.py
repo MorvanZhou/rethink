@@ -8,7 +8,6 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import Field, DirectoryPath
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 from retk.logger import logger
 
 
@@ -33,8 +32,10 @@ class Settings(BaseSettings):
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")
     JWT_KEY: bytes = Field(env='JWT_KEY', default=b"")
     JWT_KEY_PUB: bytes = Field(env='JWT_KEY_PUB', default=b"")
-    JWT_EXPIRED_DAYS: int = Field(default=1, env='JWT_EXPIRED_DAYS')
-    JWT_EXPIRED_DELTA: datetime.timedelta = Field(default=datetime.timedelta(days=1), env='JWT_EXPIRED_DELTA')
+    JWT_REFRESH_EXPIRED_DAYS: int = Field(default=1, env='JWT_REFRESH_EXPIRED_DAYS')
+    JWT_ACCESS_EXPIRED_MINS: int = Field(default=5, env='JWT_ACCESS_EXPIRED_MINS')
+    REFRESH_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(days=1))
+    ACCESS_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(minutes=15))
     OAUTH_REDIRECT_URL: str = Field(env='OAUTH_REDIRECT_URL', default="")
     OAUTH_CLIENT_ID_GITHUB: str = Field(env='OAUTH_CLIENT_ID_GITHUB', default="")
     OAUTH_CLIENT_SEC_GITHUB: str = Field(env='OAUTH_CLIENT_SEC_GITHUB', default="")
@@ -79,7 +80,9 @@ class Settings(BaseSettings):
                 crypto_serialization.Encoding.OpenSSH,
                 crypto_serialization.PublicFormat.OpenSSH
             )
-        self.JWT_EXPIRED_DELTA = datetime.timedelta(days=self.JWT_EXPIRED_DAYS)
+
+        self.REFRESH_TOKEN_EXPIRE_DELTA = datetime.timedelta(days=self.JWT_REFRESH_EXPIRED_DAYS)
+        self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(minutes=self.JWT_ACCESS_EXPIRED_MINS)
 
 
 @lru_cache()

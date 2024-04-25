@@ -2,14 +2,13 @@ from random import randint
 from typing import Tuple
 
 from fastapi.responses import StreamingResponse
-
 from retk import config
 from retk import const
 from retk.controllers import schemas
 from retk.controllers.utils import json_exception
 from retk.core import account, user
 from retk.models.tps import AuthedUser
-from retk.utils import jwt_encode
+from retk.utils import get_token, jwt_encode
 
 
 async def signup(
@@ -38,13 +37,14 @@ async def signup(
             language=req.language,
         )
 
-    token = jwt_encode(
-        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": new_user["id"], "language": req.language},
+    access_token, refresh_token = get_token(
+        uid=new_user["id"],
+        language=req.language,
     )
     return schemas.account.TokenResponse(
         requestId=au.request_id,
-        token=token,
+        accessToken=access_token,
+        refreshToken=refresh_token,
     )
 
 
@@ -73,13 +73,14 @@ async def login(
             code=code,
             language=req.language,
         )
-    token = jwt_encode(
-        exp_delta=config.get_settings().JWT_EXPIRED_DELTA,
-        data={"uid": u["id"], "language": u["settings"]["language"]},
+    access_token, refresh_token = get_token(
+        uid=u["id"],
+        language=u["settings"]["language"],
     )
     return schemas.account.TokenResponse(
         requestId=au.request_id,
-        token=token,
+        accessToken=access_token,
+        refreshToken=refresh_token,
     )
 
 
@@ -189,5 +190,23 @@ async def email_send_code(
     token = account.email.encode_number(number=numbers, expired_min=expired_min)
     return schemas.account.TokenResponse(
         requestId=au.request_id,
-        token=token,
+        accessToken=token,
+        refreshToken="",
+    )
+
+
+async def refresh_token(
+        au: AuthedUser,
+) -> schemas.account.TokenResponse:
+    access_token = jwt_encode(
+        exp_delta=config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA,
+        data={
+            "uid": au.u.id,
+            "language": au.language,
+        },
+    )
+    return schemas.account.TokenResponse(
+        requestId=au.request_id,
+        accessToken=access_token,
+        refreshToken="",
     )

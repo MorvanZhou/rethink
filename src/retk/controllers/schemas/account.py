@@ -1,13 +1,13 @@
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
-
 from retk import const
 
 
 class TokenResponse(BaseModel):
     requestId: str
-    token: str = ""
+    accessToken: str = ""
+    refreshToken: str = ""
 
 
 class SignupRequest(BaseModel):

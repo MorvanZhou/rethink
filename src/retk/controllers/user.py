@@ -108,3 +108,13 @@ async def update_password(
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
+
+
+async def get_notifications(
+        au: AuthedUser,
+) -> schemas.user.NotificationResponse:
+    notifications = await core.user.get_notifications(uid=au.u.id)
+    return schemas.user.NotificationResponse(
+        requestId=au.request_id,
+        notifications=notifications,
+    )

@@ -92,6 +92,15 @@ class ImportData(TypedDict):
     obsidian: Dict[str, str]  # filename: nid
 
 
+class NoticeSystem(TypedDict):
+    _id: ObjectId
+    adminId: str
+    title: str
+    content: str
+    userType: int  # send to which user type
+    delivered: bool  # has been sent to user
+
+
 @dataclass
 class AuthedUser:
     __slots__ = ("u", "language", "request_id")
