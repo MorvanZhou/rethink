@@ -12,6 +12,7 @@ from zipfile import ZipFile
 from PIL import Image
 from fastapi.testclient import TestClient
 from httpx import Response
+
 from retk import const, config, PluginAPICallReturn
 from retk.application import app
 from retk.core import account
@@ -19,7 +20,6 @@ from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
 from retk.utils import jwt_decode
-
 from . import utils
 
 
@@ -228,7 +228,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(818, len(rj["accessToken"]))
-        self.assertNotEqual(self.default_headers["Authorization"], rj["accessToken"])
+        self.assertTrue(self.default_headers["Authorization"] != rj["accessToken"])
         self.assertTrue(rj["accessToken"].startswith("Bearer "))
         self.assertEqual("", rj["refreshToken"])
 
