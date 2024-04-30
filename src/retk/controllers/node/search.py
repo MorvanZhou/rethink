@@ -23,11 +23,12 @@ async def user_nodes(
         exclude_nids=[],
     )
 
-    await core.statistic.add_user_behavior(
-        uid=au.u.id,
-        type_=const.UserBehaviorType.SEARCH_GLOBAL,
-        remark=q,
-    )
+    if q != "":
+        await core.statistic.add_user_behavior(
+            uid=au.u.id,
+            type_=const.UserBehaviorType.SEARCH_GLOBAL,
+            remark=q,
+        )
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(
@@ -51,12 +52,12 @@ async def node_at_search(
         page=p,
         limit=limit,
     )
-
-    await core.statistic.add_user_behavior(
-        uid=au.u.id,
-        type_=const.UserBehaviorType.SEARCH_AT,
-        remark=q,
-    )
+    if q != "":
+        await core.statistic.add_user_behavior(
+            uid=au.u.id,
+            type_=const.UserBehaviorType.SEARCH_AT,
+            remark=q,
+        )
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
         data=schemas.node.NodesSearchResponse.Data(

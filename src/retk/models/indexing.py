@@ -54,4 +54,4 @@ async def user_file_coll(coll: "AsyncIOMotorCollection"):
 async def user_behavior_coll(coll: "AsyncIOMotorCollection"):
     user_behavior_info = await coll.index_information()
     if "uid_1_type_1" not in user_behavior_info:
-        await coll.create_index([("uid", 1), ("type", 1)], unique=True)
+        await coll.create_index([("uid", 1), ("type", 1)], unique=False)

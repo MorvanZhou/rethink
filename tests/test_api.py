@@ -217,7 +217,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.check_ok_response(resp, 200)
 
-
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
