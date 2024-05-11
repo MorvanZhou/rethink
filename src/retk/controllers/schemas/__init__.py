@@ -11,6 +11,7 @@ from . import (
     app_system,
     admin,
     statistic,
+    notice,
 )
 
 

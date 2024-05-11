@@ -13,7 +13,7 @@ from retk.utils import get_token, jwt_encode
 
 
 async def signup(
-        au: AuthedUser,
+        req_id: str,
         req: schemas.account.SignupRequest,
 ) -> schemas.account.TokenResponse:
     if not const.Language.is_valid(req.language):
@@ -21,7 +21,7 @@ async def signup(
     code = account.app_captcha.verify_captcha(token=req.captchaToken, code_str=req.captchaCode)
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
@@ -33,7 +33,7 @@ async def signup(
     )
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
@@ -43,14 +43,14 @@ async def signup(
         language=req.language,
     )
     return schemas.account.TokenResponse(
-        requestId=au.request_id,
+        requestId=req_id,
         accessToken=access_token,
         refreshToken=refresh_token,
     )
 
 
 async def login(
-        au: AuthedUser,
+        req_id: str,
         req: schemas.account.LoginRequest,
 ) -> schemas.account.TokenResponse:
     # TODO: 后台应记录成功登录用户名和 IP、时间.
@@ -58,7 +58,7 @@ async def login(
     u, code = await account.manager.get_user_by_email(req.email)
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
@@ -70,7 +70,7 @@ async def login(
     ):
         code = const.Code.ACCOUNT_OR_PASSWORD_ERROR
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
@@ -84,34 +84,34 @@ async def login(
         remark="",
     )
     return schemas.account.TokenResponse(
-        requestId=au.request_id,
+        requestId=req_id,
         accessToken=access_token,
         refreshToken=refresh_token,
     )
 
 
 async def forget(
-        au: AuthedUser,
+        req_id: str,
         req: schemas.account.ForgetPasswordRequest
 ) -> schemas.RequestIdResponse:
     code = account.email.verify_number(token=req.verificationToken, number_str=req.verification)
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
     u, code = await user.get_by_email(email=req.email)
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
 
     if u is None:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=const.Code.INVALID_AUTH,
             language=req.language,
         )
@@ -122,12 +122,12 @@ async def forget(
     )
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=const.Language.EN.value,
         )
     return schemas.RequestIdResponse(
-        requestId=au.request_id,
+        requestId=req_id,
     )
 
 
@@ -165,7 +165,7 @@ def __check_and_send_email(
 
 
 async def email_send_code(
-        au: AuthedUser,
+        req_id: str,
         req: schemas.account.EmailVerificationRequest
 ) -> schemas.account.TokenResponse:
     if req.language not in [lang.value for lang in const.Language.__members__.values()]:
@@ -175,7 +175,7 @@ async def email_send_code(
         u, code = await user.get_by_email(email=req.email)
         if u is not None:
             raise json_exception(
-                request_id=au.request_id,
+                request_id=req_id,
                 code=const.Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD,
                 language=req.language,
             )
@@ -188,14 +188,14 @@ async def email_send_code(
     )
     if code != const.Code.OK:
         raise json_exception(
-            request_id=au.request_id,
+            request_id=req_id,
             code=code,
             language=req.language,
         )
 
     token = account.email.encode_number(number=numbers, expired_min=expired_min)
     return schemas.account.TokenResponse(
-        requestId=au.request_id,
+        requestId=req_id,
         accessToken=token,
         refreshToken="",
     )

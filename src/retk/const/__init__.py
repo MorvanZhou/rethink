@@ -1,6 +1,7 @@
 from . import (
     app,
     settings,
+    notice,
 )
 from .languages import Language
 from .new_user_default import NEW_USER_DEFAULT_NODES, DEFAULT_USER

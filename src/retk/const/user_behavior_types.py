@@ -23,6 +23,6 @@ class UserBehaviorType(Enum):
 
 
 USER_BEHAVIOR_TYPE_MAP = {
-    t.value: t.name
+    t.value: t
     for t in UserBehaviorType.__members__.values()
 }

@@ -13,5 +13,6 @@ class Collections:
     nodes: Union[Collection, "AsyncIOMotorCollection"] = None
     import_data: Union[Collection, "AsyncIOMotorCollection"] = None
     user_file: Union[Collection, "AsyncIOMotorCollection"] = None
-    # notice_system: Union[Collection, "AsyncIOMotorCollection"] = None
+    notice_manager_delivery: Union[Collection, "AsyncIOMotorCollection"] = None
+    notice_system: Union[Collection, "AsyncIOMotorCollection"] = None
     user_behavior: Union[Collection, "AsyncIOMotorCollection"] = None

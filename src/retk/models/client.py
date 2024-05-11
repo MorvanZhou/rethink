@@ -73,6 +73,8 @@ class Client:
         self.coll.import_data = db["importData"]
         self.coll.user_file = db["userFile"]
         self.coll.user_behavior = db["userBehavior"]
+        self.coll.notice_manager_delivery = db["noticeManagerDelivery"]
+        self.coll.notice_system = db["noticeSystem"]
 
     async def init_search(self):
         conf = config.get_settings()

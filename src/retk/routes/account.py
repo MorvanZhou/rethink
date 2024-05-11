@@ -19,11 +19,11 @@ router = APIRouter(
 )
 @utils.measure_time_spend
 async def signup(
-        au: utils.ANNOTATED_AUTHED_USER,
+        req_id: utils.ANNOTATED_REQUEST_ID,
         req: schemas.account.SignupRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
-    return await account.signup(au=au, req=req)
+    return await account.signup(req_id=req_id, req=req)
 
 
 @router.put(
@@ -33,11 +33,11 @@ async def signup(
 )
 @utils.measure_time_spend
 async def login(
-        au: utils.ANNOTATED_AUTHED_USER,
+        req_id: utils.ANNOTATED_REQUEST_ID,
         req: schemas.account.LoginRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
-    return await account.login(au=au, req=req)
+    return await account.login(req_id=req_id, req=req)
 
 
 @router.put(
@@ -47,11 +47,11 @@ async def login(
 )
 @utils.measure_time_spend
 async def forget_password(
-        au: utils.ANNOTATED_AUTHED_USER,
+        req_id: utils.ANNOTATED_REQUEST_ID,
         req: schemas.account.ForgetPasswordRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.RequestIdResponse:
-    return await account.forget(au=au, req=req)
+    return await account.forget(req_id=req_id, req=req)
 
 
 @router.put(
@@ -61,11 +61,11 @@ async def forget_password(
 )
 @utils.measure_time_spend
 async def email_verification(
-        au: utils.ANNOTATED_AUTHED_USER,
+        req_id: utils.ANNOTATED_REQUEST_ID,
         req: schemas.account.EmailVerificationRequest,
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
-    return await account.email_send_code(au=au, req=req)
+    return await account.email_send_code(req_id=req_id, req=req)
 
 
 @router.get(
@@ -75,7 +75,7 @@ async def email_verification(
 )
 @utils.measure_time_spend
 async def refresh_token(
-        au: utils.ANNOTATED_AUTHED_USER,  # check refresh token expiration
+        au: utils.ANNOTATED_REFRESH_TOKEN,  # check refresh token expiration
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.account.TokenResponse:
     return await account.get_new_access_token(au=au)

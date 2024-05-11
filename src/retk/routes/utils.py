@@ -60,21 +60,25 @@ def verify_referer(referer: Optional[str] = Header(None)):
     return referer
 
 
-async def process_normal_headers(
+async def __process_auth_headers(
+        is_refresh_token: bool,
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
-    """if no requestId, default to empty string"""
+    if token is None or token == "":
+        raise json_exception(
+            request_id=request_id,
+            code=const.Code.INVALID_AUTH,
+            log_msg="empty token",
+        )
     au = AuthedUser(
         u=None,
         request_id=request_id,
         language=const.Language.EN.value,
     )
     err = ""
-    if token is None or token == "":
-        return au
     u = None
     try:
         payload = jwt_decode(token=token)
@@ -82,7 +86,7 @@ async def process_normal_headers(
         if code != const.Code.OK:
             err = f"get user failed, code={code}"
     except jwt.exceptions.ExpiredSignatureError:
-        code = const.Code.EXPIRED_AUTH
+        code = const.Code.EXPIRED_AUTH if is_refresh_token else const.Code.EXPIRED_ACCESS_TOKEN
         err = "auth expired"
     except jwt.exceptions.DecodeError:
         code = const.Code.INVALID_AUTH
@@ -104,6 +108,32 @@ async def process_normal_headers(
     return au
 
 
+async def process_normal_headers(
+        token: str = Header(alias="Authorization", default=""),
+        request_id: str = Header(
+            default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
+        )
+) -> AuthedUser:
+    return await __process_auth_headers(is_refresh_token=False, token=token, request_id=request_id)
+
+
+async def process_refresh_token_headers(
+        token: str = Header(alias="Authorization", default=""),
+        request_id: str = Header(
+            default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
+        )
+) -> AuthedUser:
+    return await __process_auth_headers(is_refresh_token=True, token=token, request_id=request_id)
+
+
+async def process_no_auth_headers(
+        request_id: str = Header(
+            default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
+        )
+) -> str:
+    return request_id
+
+
 async def process_admin_headers(
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
@@ -119,8 +149,10 @@ async def process_admin_headers(
     return au
 
 
+ANNOTATED_REQUEST_ID = Annotated[str, Depends(process_no_auth_headers)]
 ANNOTATED_AUTHED_USER = Annotated[AuthedUser, Depends(process_normal_headers)]
 ANNOTATED_AUTHED_ADMIN = Annotated[AuthedUser, Depends(process_admin_headers)]
+ANNOTATED_REFRESH_TOKEN = Annotated[AuthedUser, Depends(process_refresh_token_headers)]
 
 ANNOTATED_UID = Annotated[str, Path(title="The ID of user", max_length=const.settings.UID_MAX_LENGTH, min_length=8)]
 ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.settings.NID_MAX_LENGTH, min_length=8)]

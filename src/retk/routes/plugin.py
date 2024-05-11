@@ -7,7 +7,7 @@ from retk.routes import utils
 
 router = APIRouter(
     prefix="/api/plugins",
-    tags=["user"],
+    tags=["plugins"],
     responses={404: {"description": "Not found"}},
 )
 

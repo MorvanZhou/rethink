@@ -162,7 +162,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        detail = rj["detail"]
+        self.assertEqual(const.Code.EXPIRED_ACCESS_TOKEN.value, detail["code"], msg=detail)
+        self.assertEqual("xxx", detail["requestId"], msg=detail)
 
         resp = self.client.get(
             "/api/account/access-token",
@@ -193,7 +197,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual(const.Code.EXPIRED_ACCESS_TOKEN.value, rj["detail"]["code"], msg=rj)
 
         config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA = aed
         resp = self.client.get(
@@ -1251,3 +1257,22 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         ).to_list(None)
         self.assertEqual(const.UserBehaviorType.SEARCH_AT.value, docs[-1]["type"])
         self.assertEqual("node", docs[-1]["remark"])
+
+        # logout
+        resp = self.client.post(
+            "/api/statistic/user-behavior",
+            headers={
+                "Authorization": token,
+                "RequestId": "xxx"
+            },
+            json={
+                "type": const.UserBehaviorType.LOGOUT.value,
+                "remark": "logout",
+            }
+        )
+        self.assertEqual(201, resp.status_code)
+        docs = await client.coll.user_behavior.find(
+            {"uid": uid}
+        ).to_list(None)
+        self.assertEqual(const.UserBehaviorType.LOGOUT.value, docs[-1]["type"])
+        self.assertEqual("logout", docs[-1]["remark"])

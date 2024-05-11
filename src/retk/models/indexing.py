@@ -17,6 +17,8 @@ async def remote_try_build_index(coll: Collections):
     await import_data_coll(coll.import_data)
     await user_file_coll(coll.user_file)
     await user_behavior_coll(coll.user_behavior)
+    await notice_manager_delivery_coll(coll.notice_manager_delivery)
+    await notice_system_coll(coll.notice_system)
 
 
 async def users_coll(coll: "AsyncIOMotorCollection"):
@@ -55,3 +57,19 @@ async def user_behavior_coll(coll: "AsyncIOMotorCollection"):
     user_behavior_info = await coll.index_information()
     if "uid_1_type_1" not in user_behavior_info:
         await coll.create_index([("uid", 1), ("type", 1)], unique=False)
+
+
+async def notice_manager_delivery_coll(coll: "AsyncIOMotorCollection"):
+    index_info = await coll.index_information()
+    if "scheduled_1" not in index_info:
+        await coll.create_index("scheduled", unique=False)
+
+
+async def notice_system_coll(coll: "AsyncIOMotorCollection"):
+    index_info = await coll.index_information()
+    if "recipientId_1" not in index_info:
+        await coll.create_index("recipientId", unique=False)
+    if "recipientId_1_read_1" not in index_info:
+        await coll.create_index("recipientId", unique=False)
+    if "senderId_1" not in index_info:
+        await coll.create_index("senderId", unique=False)

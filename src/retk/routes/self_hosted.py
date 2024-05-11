@@ -5,9 +5,11 @@ from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from retk import const, config
+from retk._version import __version__
 from retk.logger import logger
 from retk.models.client import client
 from retk.routes import utils
+from retk.utils import get_latest_version, parse_version
 
 r_prefix = "/r"
 r_router = APIRouter(
@@ -26,6 +28,28 @@ node_file_router = APIRouter(
     tags=["self_hosted_files"],
     responses={404: {"description": "Not found"}},
 )
+
+
+@r_router.on_event("startup")
+async def startup_event():
+    if not config.is_local_db():
+        return
+
+    has_new_version = False
+    remote, code = await get_latest_version()
+    if code != const.Code.OK:
+        logger.error("get latest version failed")
+    else:
+        local = parse_version(__version__)
+        if local is None:
+            logger.error("parse version failed")
+        else:
+            for vr, vl in zip(remote, local):
+                if vr > vl:
+                    has_new_version = True
+                    break
+    if has_new_version:
+        pass
 
 
 @r_router.on_event("shutdown")

@@ -40,6 +40,7 @@ class Code(Enum):
     ACCOUNT_EXIST_TRY_FORGET_PASSWORD = 30
     USER_DISABLED = 31
     NOT_PERMITTED = 32
+    EXPIRED_ACCESS_TOKEN = 33
 
 
 @dataclass
@@ -87,6 +88,7 @@ CODE_MESSAGES: Dict[Code, CodeMessage] = {
     ),
     Code.USER_DISABLED: CodeMessage(zh="用户已被禁用", en="User has been disabled"),
     Code.NOT_PERMITTED: CodeMessage(zh="无权限", en="Not permitted"),
+    Code.EXPIRED_ACCESS_TOKEN: CodeMessage(zh="访问令牌已过期", en="Access token has expired"),
 }
 
 CODE2STATUS_CODE: Dict[Code, int] = {
@@ -123,6 +125,7 @@ CODE2STATUS_CODE: Dict[Code, int] = {
     Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD: 422,
     Code.USER_DISABLED: 403,
     Code.NOT_PERMITTED: 403,
+    Code.EXPIRED_ACCESS_TOKEN: 200,
 }
 
 

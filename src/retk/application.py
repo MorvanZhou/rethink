@@ -20,6 +20,7 @@ from .routes import (
     app_system,
     account,
     admin,
+    statistic,
 )
 
 app = FastAPI(
@@ -38,19 +39,23 @@ app.add_middleware(
 app.add_middleware(safety.CSPMiddleware)
 app.add_middleware(safety.FrameOptionsMiddleware)
 
-app.include_router(node.router)
-app.include_router(user.router)
-app.include_router(oauth.router)
-app.include_router(recent.router)
-app.include_router(trash.router)
-app.include_router(app_captcha.router)
-app.include_router(files.router)
-app.include_router(plugin.router)
-app.include_router(app_system.router)
-app.include_router(account.router)
-app.include_router(admin.router)
+for r in [
+    user,
+    oauth,
+    node,
+    recent,
+    trash,
+    app_captcha,
+    files,
+    plugin,
+    app_system,
+    account,
+    admin,
+    statistic,
+]:
+    app.include_router(r.router)
 
-# self hosted
+# self-hosted
 app.include_router(self_hosted.r_router)
 app.include_router(self_hosted.node_file_router)
 app.include_router(self_hosted.home_router)
