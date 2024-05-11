@@ -61,7 +61,7 @@ def verify_referer(referer: Optional[str] = Header(None)):
 
 
 async def __process_auth_headers(
-        is_refresh_token: bool,
+        refresh_token_id: str,
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
@@ -82,11 +82,23 @@ async def __process_auth_headers(
     u = None
     try:
         payload = jwt_decode(token=token)
-        u, code = await core.user.get(uid=payload["uid"])
-        if code != const.Code.OK:
-            err = f"get user failed, code={code}"
+        is_access = payload.get("is_access")
+        if is_access is None:
+            code = const.Code.INVALID_AUTH
+            err = "invalid token"
+        elif (is_access and refresh_token_id != "") or (not is_access and refresh_token_id == ""):
+            code = const.Code.INVALID_AUTH
+            err = "invalid token"
+        elif refresh_token_id != "" and payload["uid"] != refresh_token_id:
+            code = const.Code.INVALID_AUTH
+            err = "invalid token"
+        else:
+            u, code = await core.user.get(uid=payload["uid"])
+            if code != const.Code.OK:
+                err = f"get user failed, code={code}"
+
     except jwt.exceptions.ExpiredSignatureError:
-        code = const.Code.EXPIRED_AUTH if is_refresh_token else const.Code.EXPIRED_ACCESS_TOKEN
+        code = const.Code.EXPIRED_AUTH if refresh_token_id != "" else const.Code.EXPIRED_ACCESS_TOKEN
         err = "auth expired"
     except jwt.exceptions.DecodeError:
         code = const.Code.INVALID_AUTH
@@ -114,16 +126,17 @@ async def process_normal_headers(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
-    return await __process_auth_headers(is_refresh_token=False, token=token, request_id=request_id)
+    return await __process_auth_headers(refresh_token_id="", token=token, request_id=request_id)
 
 
 async def process_refresh_token_headers(
         token: str = Header(alias="Authorization", default=""),
+        id_: str = Header(alias="ID", default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
-    return await __process_auth_headers(is_refresh_token=True, token=token, request_id=request_id)
+    return await __process_auth_headers(refresh_token_id=id_, token=token, request_id=request_id)
 
 
 async def process_no_auth_headers(

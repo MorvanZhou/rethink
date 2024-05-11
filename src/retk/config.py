@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import Field, DirectoryPath
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from retk.logger import logger
 
 
@@ -83,7 +84,6 @@ class Settings(BaseSettings):
 
         self.REFRESH_TOKEN_EXPIRE_DELTA = datetime.timedelta(days=self.JWT_REFRESH_EXPIRED_DAYS)
         self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(minutes=self.JWT_ACCESS_EXPIRED_MINS)
-
 
 @lru_cache()
 def get_settings() -> Settings:

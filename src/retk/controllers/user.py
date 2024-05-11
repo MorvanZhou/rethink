@@ -17,6 +17,7 @@ async def get_user(
         max_space = const.USER_TYPE.id2config(au.u.type).max_store_space
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
+        uid=au.u.id,
         user=schemas.user.UserInfoResponse.User(
             email=_email,
             nickname=au.u.nickname,
@@ -61,6 +62,7 @@ async def patch_user(
     u_settings = u["settings"]
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
+        uid=u["id"],
         user=schemas.user.UserInfoResponse.User(
             email=u["email"],
             nickname=u["nickname"],
@@ -113,7 +115,7 @@ async def update_password(
 async def get_notifications(
         au: AuthedUser,
 ) -> schemas.user.NotificationResponse:
-    notifications = await core.user.get_notifications(uid=au.u.id)
+    notifications = []
     return schemas.user.NotificationResponse(
         requestId=au.request_id,
         notifications=notifications,

@@ -207,6 +207,7 @@ async def get_new_access_token(
     access_token = jwt_encode(
         exp_delta=config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA,
         data={
+            "is_access": True,
             "uid": au.u.id,
             "language": au.language,
         },

@@ -32,6 +32,7 @@ class UserInfoResponse(BaseModel):
         settings: Settings
 
     requestId: str
+    uid: str
     user: User = None
 
 

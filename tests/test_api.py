@@ -106,13 +106,20 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             })
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(818, len(rj["accessToken"]))
+        self.assertEqual(840, len(rj["accessToken"]))
         self.assertTrue(rj["accessToken"].startswith("Bearer "))
         self.refresh_token = rj["refreshToken"]
         self.default_headers = {
             "Authorization": rj["accessToken"],
             "RequestId": "xxx",
         }
+        resp = self.client.get(
+            "/api/users",
+            headers=self.default_headers
+        )
+        self.assertEqual(200, resp.status_code, msg=resp.json())
+        rj = resp.json()
+        self.uid = rj["uid"]
 
     async def asyncTearDown(self) -> None:
         await client.drop()
@@ -137,6 +144,35 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual(rid, rj["requestId"])
         return rj
+
+    async def test_access_refresh_token(self):
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": const.DEFAULT_USER["email"],
+                "password": "",
+            })
+        rj = resp.json()
+        access_token = rj["accessToken"]
+        refresh_token = rj["refreshToken"]
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": access_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.assertEqual(200, resp.status_code)
+
+        resp = self.client.get(
+            "/api/users",
+            headers={
+                "Authorization": refresh_token,
+                "RequestId": "xxx"
+            }
+        )
+        self.error_check(resp, 401, const.Code.INVALID_AUTH)
 
     async def test_access_token_expire(self):
         aed = config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA
@@ -172,7 +208,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/account/access-token",
             headers={
                 "Authorization": refresh_token,
-                "RequestId": "xxx"
+                "RequestId": "xxx",
+                "ID": self.uid,
             }
         )
         self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
@@ -206,7 +243,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/account/access-token",
             headers={
                 "Authorization": refresh_token,
-                "RequestId": "xxx"
+                "RequestId": "xxx",
+                "ID": self.uid,
             }
         )
         rj = self.check_ok_response(resp, 200)
@@ -222,6 +260,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             }
         )
         self.check_ok_response(resp, 200)
+        self.assertEqual(self.uid, resp.json()["uid"])
 
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
