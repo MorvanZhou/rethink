@@ -6,4 +6,6 @@ from . import (
     files,
     account,
     statistic,
+    self_hosted,
+    notice,
 )

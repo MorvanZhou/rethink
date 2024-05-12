@@ -33,3 +33,9 @@ async def put_system_notice(
     if not res.acknowledged:
         return const.CodeEnum.OPERATION_FAILED
     return const.CodeEnum.OK
+
+
+async def get_unscheduled_system_notices() -> list[NoticeManagerDelivery]:
+    return await client.coll.notice_system.find({
+        "scheduled": False,
+    }).to_list(None)

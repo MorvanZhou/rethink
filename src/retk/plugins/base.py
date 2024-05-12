@@ -45,8 +45,8 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
 from retk import const
+from retk.core.scheduler.timing import Timing
 from retk.models import tps
-from .schedule.timing import Timing
 
 
 @dataclass

@@ -8,7 +8,7 @@ from typing import List, Tuple
 import jwt
 
 from retk import const, config, regex, utils
-from retk.core import async_task
+from retk.core import scheduler
 
 
 class EmailServer:
@@ -87,10 +87,9 @@ class EmailServer:
         html_body = MIMEText(html_message, 'html', 'utf-8')
         msg.attach(html_body)
 
-        async_task.put_task(
-            task_name=async_task.TaskName.SEND_EMAIL,
-            recipients=recipients,
-            subject=msg.as_string()
+        scheduler.run_once_now(
+            func=scheduler.tasks.email.send,
+            kwargs={"recipients": recipients, "subject": msg.as_string()},
         )
         return const.CodeEnum.OK
 

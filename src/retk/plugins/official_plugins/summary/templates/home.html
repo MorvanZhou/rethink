@@ -6,7 +6,6 @@
     <li>words: {{ data[0]["word"] }}</li>
   </ul>
   <div class="last">
-    <p>Last 6 days:</p>
     {% if data|length == 1 %}
       <p>No data</p>
     {% endif %}
@@ -31,6 +30,7 @@
   }
 
   h1 {
+    font-size: 14px;
     color: #333;
   }
 

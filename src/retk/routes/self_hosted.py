@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from retk import const, config
-from retk.controllers.self_hosted import notice_new_version
+from retk.controllers.self_hosted import notice_new_pkg_version
 from retk.logger import logger
 from retk.models.client import client
 from retk.routes import utils
@@ -33,7 +33,7 @@ node_file_router = APIRouter(
 async def startup_event():
     if not config.is_local_db():
         return
-    await notice_new_version()
+    await notice_new_pkg_version()
 
 
 @r_router.on_event("shutdown")

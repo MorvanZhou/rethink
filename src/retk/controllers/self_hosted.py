@@ -3,11 +3,11 @@ from datetime import datetime
 from bson import ObjectId
 
 from retk import const, __version__
+from retk.core import self_hosted
 from retk.core.notice import put_system_notice
 from retk.logger import logger
 from retk.models.client import client
 from retk.models.tps import AuthedUser
-from retk.utils import get_latest_version, parse_version
 
 _local_system_authed_user = AuthedUser(
     u=AuthedUser.User(
@@ -44,12 +44,12 @@ _local_system_authed_user = AuthedUser(
 )
 
 
-async def notice_new_version():
-    remote, code = await get_latest_version()
+async def notice_new_pkg_version():
+    remote, code = await self_hosted.get_latest_pkg_version()
     if code != const.CodeEnum.OK:
         logger.error("get latest version failed")
         return
-    local = parse_version(__version__)
+    local = self_hosted.parse_version(__version__)
     if local is None:
         logger.error("parse version failed")
         return

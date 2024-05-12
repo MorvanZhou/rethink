@@ -15,7 +15,7 @@ DEFAULT_CAPTCHA_EXPIRE_SECOND = 60
 img_captcha = ImageCaptcha(font_sizes=(35, 30, 32))
 audio_captcha = AudioCaptcha()
 
-alphabet = "347ACEFGJKLMNPRTXY"
+alphabet = "347ACEFGJLMNPRTY"
 alphabet_len = len(alphabet)
 code_idx_range = list(range(0, alphabet_len - 1))
 

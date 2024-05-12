@@ -3,15 +3,15 @@ import smtplib
 from retk import config
 
 
-def task(
+def send(
         recipients: list,
         subject: str,
 ) -> str:
     server = None
-    for i in range(3):
+    for _ in range(3):
         try:
             server = smtplib.SMTP('smtp.office365.com', 587)
-        except smtplib.SMTPServerDisconnected as e:
+        except smtplib.SMTPServerDisconnected:
             pass
     if server is None:
         return f"try send email task 3 times, but failed, SMTPServerDisconnected"

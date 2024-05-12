@@ -126,7 +126,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
 
     def test_timing(self):
         with self.assertRaises(ValueError):
-            retk.schedule.every_minute_at(second=-1)
-        t = retk.schedule.every_minute_at(second=1)
+            retk.scheduler.timing.every_minute_at(second=-1)
+        t = retk.scheduler.timing.every_minute_at(second=1)
         self.assertEqual(1, t.at_second)
         self.assertEqual(0, t.at_minute)

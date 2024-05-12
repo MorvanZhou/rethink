@@ -544,3 +544,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("title2\ntext", hist_md)
 
         config.get_settings().MD_BACKUP_INTERVAL = bi
+
+    async def test_get_version(self):
+        v, code = await core.self_hosted.get_latest_pkg_version()
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertEqual(3, len(v))
+        for num in v:
+            self.assertTrue(isinstance(num, int))

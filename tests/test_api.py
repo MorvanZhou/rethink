@@ -870,17 +870,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn("https://baidu.com", node["md"])
         self.assertIn("百度", node["md"])
 
-    def test_system_latest_version(self):
-        resp = self.client.get(
-            "/api/system/latest-version",
-            headers=self.default_headers
-        )
-        rj = self.check_ok_response(resp, 200)
-        for n in rj["remote"]:
-            self.assertTrue(isinstance(n, int))
-        for n in rj["local"]:
-            self.assertTrue(isinstance(n, int))
-
     @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
     @patch("retk.core.node.backup.__remove_md_from_cos")
     @patch("retk.core.node.backup.__get_md_from_cos")

@@ -15,7 +15,7 @@ class DailySummary(retk.Plugin):
     author = "morvanzhou"
     icon = Path("_static") / "image" / "logo.svg"
 
-    schedule_timing = retk.schedule.every_day_at(hour=0, minute=0)
+    schedule_timing = retk.scheduler.timing.every_day_at(hour=0, minute=0)
 
     def __init__(self):
         super().__init__()

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from retk import const, config, safety, utils
-from retk.core import async_task
+from retk.core import scheduler
 from retk.logger import logger, add_rotating_file_handler
 from .models.client import client
 from .routes import (
@@ -17,7 +17,6 @@ from .routes import (
     files,
     plugin,
     self_hosted,
-    app_system,
     account,
     admin,
     statistic,
@@ -48,7 +47,6 @@ for r in [
     app_captcha,
     files,
     plugin,
-    app_system,
     account,
     admin,
     statistic,
@@ -80,5 +78,5 @@ async def startup_event():
     # local finish up
     utils.local_finish_up()
 
-    # async threading task
-    async_task.init()
+    # schedule job
+    scheduler.start()
