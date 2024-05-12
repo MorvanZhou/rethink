@@ -498,7 +498,7 @@ def _update_idx_doc_with_new_documents(documents, idx_doc):
     """
     Update an idx_doc given documents which were just inserted / modified / etc
 
-    :param documents list[dict]:
+    :param documents List[dict]:
     :param idx_doc {key_str: str, direction: int idx: SortedDict, ...}:
     :rtype: None
     """
@@ -570,8 +570,8 @@ def _sort_docs(docs, sort_list):
 
     from https://docs.python.org/3/howto/sorting.html
 
-    :param docs list[dict]:
-    :param sort_list list[(key, direction)]
+    :param docs List[dict]:
+    :param sort_list List[(key, direction)]
     :rtype: None
     """
     for sort_key, direction in reversed(sort_list):
@@ -760,7 +760,7 @@ class Collection():
                 try:
                     self.__insert_one(doc)
                     success_docs.append(doc)
-                except Exception as ex:
+                except Exception as ex:  # pylint: disable=broad-except
                     if ordered:
                         self.__update_indicies(success_docs, metadata)
                         raise MongitaError("Ending insert_many because of error") from ex
@@ -1243,7 +1243,7 @@ class Collection():
         if not isinstance(index_or_name, str):
             raise MongitaError("Unsupported index_or_name parameter format. See the docs.")
         if re.match(r'^.*?_\-?1$', index_or_name):
-            key, direction = index_or_name.rsplit('_', 1)
+            _, direction = index_or_name.rsplit('_', 1)
             direction = int(direction)
         else:
             index_or_name = index_or_name + '_1'

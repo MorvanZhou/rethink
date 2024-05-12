@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from bson import ObjectId
 
@@ -12,7 +13,7 @@ async def put_system_notice(
         title: str,
         content: str,
         recipient_type: int,
-        batch_type_ids: list[str],
+        batch_type_ids: List[str],
         publish_at: datetime
 ) -> const.CodeEnum:
     if const.USER_TYPE.id2config(au.u.type) not in (const.USER_TYPE.ADMIN, const.USER_TYPE.MANAGER):
@@ -35,7 +36,7 @@ async def put_system_notice(
     return const.CodeEnum.OK
 
 
-async def get_unscheduled_system_notices() -> list[NoticeManagerDelivery]:
+async def get_unscheduled_system_notices() -> List[NoticeManagerDelivery]:
     return await client.coll.notice_system.find({
         "scheduled": False,
     }).to_list(None)
