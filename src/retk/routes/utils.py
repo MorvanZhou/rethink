@@ -70,13 +70,13 @@ async def __process_auth_headers(
     if token is None or token == "":
         raise json_exception(
             request_id=request_id,
-            code=const.Code.INVALID_AUTH,
+            code=const.CodeEnum.INVALID_AUTH,
             log_msg="empty token",
         )
     au = AuthedUser(
         u=None,
         request_id=request_id,
-        language=const.Language.EN.value,
+        language=const.LanguageEnum.EN.value,
     )
     err = ""
     u = None
@@ -84,32 +84,32 @@ async def __process_auth_headers(
         payload = jwt_decode(token=token)
         is_access = payload.get("is_access")
         if is_access is None:
-            code = const.Code.INVALID_AUTH
+            code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
         elif (is_access and refresh_token_id != "") or (not is_access and refresh_token_id == ""):
-            code = const.Code.INVALID_AUTH
+            code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
         elif refresh_token_id != "" and payload["uid"] != refresh_token_id:
-            code = const.Code.INVALID_AUTH
+            code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
         else:
             u, code = await core.user.get(uid=payload["uid"])
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 err = f"get user failed, code={code}"
 
     except jwt.exceptions.ExpiredSignatureError:
-        code = const.Code.EXPIRED_AUTH if refresh_token_id != "" else const.Code.EXPIRED_ACCESS_TOKEN
+        code = const.CodeEnum.EXPIRED_AUTH if refresh_token_id != "" else const.CodeEnum.EXPIRED_ACCESS_TOKEN
         err = "auth expired"
     except jwt.exceptions.DecodeError:
-        code = const.Code.INVALID_AUTH
+        code = const.CodeEnum.INVALID_AUTH
         err = "token decode error"
     except jwt.exceptions.InvalidTokenError:
-        code = const.Code.INVALID_AUTH
+        code = const.CodeEnum.INVALID_AUTH
         err = "invalid token"
     except Exception:  # pylint: disable=broad-except
-        code = const.Code.INVALID_AUTH
+        code = const.CodeEnum.INVALID_AUTH
         err = traceback.format_exc()
-    if code != const.Code.OK or u is None:
+    if code != const.CodeEnum.OK or u is None:
         raise json_exception(
             request_id=request_id,
             code=code,
@@ -157,7 +157,7 @@ async def process_admin_headers(
     if au.u is None or au.u.type != const.USER_TYPE.ADMIN.id:
         raise json_exception(
             request_id=au.request_id,
-            code=const.Code.NOT_PERMITTED,
+            code=const.CodeEnum.NOT_PERMITTED,
         )
     return au
 

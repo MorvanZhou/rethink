@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
@@ -22,3 +22,14 @@ class ManagerNoticeDeliveryRequest(BaseModel):
         description="list of user ID if the recipientType is batch"
     )
     publishAt: datetime = Field(..., description="发布时间")
+
+
+class NotificationResponse(BaseModel):
+    class Notification(BaseModel):
+        id: str
+        type: Literal["info", "warning", "error"]
+        message: str
+        createdAt: str
+
+    requestId: str
+    notifications: List[Notification]

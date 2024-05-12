@@ -4,6 +4,7 @@ from typing import Sequence
 from urllib.parse import urlparse
 
 from fastapi import HTTPException
+
 from retk import const
 from retk.logger import logger
 from retk.models.tps import AuthedUser
@@ -27,8 +28,8 @@ def is_allowed_mime_type(data_url, allowed_mime_types: Sequence[str]):
 
 def json_exception(
         request_id: str,
-        code: const.Code,
-        language: str = const.Language.EN.value,
+        code: const.CodeEnum,
+        language: str = const.LanguageEnum.EN.value,
         log_msg: str = None
 ) -> HTTPException:
     def get_parent_function_info() -> str:
@@ -44,7 +45,7 @@ def json_exception(
     if log_msg is not None:
         # get parent function name
         one_line_log = log_msg.replace("\n", "\\n")
-        if code == const.Code.EXPIRED_AUTH:
+        if code == const.CodeEnum.EXPIRED_AUTH:
             ll = logger.info
         else:
             ll = logger.error
@@ -67,9 +68,9 @@ def json_exception(
 
 def maybe_raise_json_exception(
         au: AuthedUser,
-        code: const.Code,
+        code: const.CodeEnum,
 ):
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=au.request_id,
             code=code,

@@ -1,8 +1,6 @@
-from typing import Literal
-
 from pydantic import BaseModel, EmailStr, Field
 
-from retk.const import settings, Language
+from retk.const import settings, LanguageEnum
 
 
 class TokenResponse(BaseModel):
@@ -14,15 +12,15 @@ class TokenResponse(BaseModel):
 class SignupRequest(BaseModel):
     email: EmailStr = Field(max_length=settings.EMAIL_MAX_LENGTH)
     password: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
-    captchaToken: str = Field(max_length=2000)
-    captchaCode: str = Field(max_length=10)
-    language: Literal["en", "zh"]
+    verificationToken: str = Field(max_length=2000)
+    verification: str = Field(max_length=10)
+    language: LanguageEnum
 
 
 class LoginRequest(BaseModel):
     email: EmailStr = Field(max_length=settings.EMAIL_MAX_LENGTH)
     password: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
-    language: Literal["en", "zh"] = Language.EN.value
+    language: LanguageEnum = LanguageEnum.EN
 
 
 class EmailVerificationRequest(BaseModel):
@@ -30,12 +28,12 @@ class EmailVerificationRequest(BaseModel):
     userExistOk: bool = Field(type=bool, default=False)
     captchaToken: str = Field(max_length=2000)
     captchaCode: str = Field(max_length=10)
-    language: Literal["en", "zh"] = Language.EN.value
+    language: LanguageEnum = LanguageEnum.EN
 
 
 class ForgetPasswordRequest(BaseModel):
     email: str = Field(max_length=settings.EMAIL_MAX_LENGTH)
     newPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
-    verification: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
+    verification: str = Field(max_length=10)
     verificationToken: str = Field(max_length=2000)
-    language: Literal["en", "zh"] = Language.EN.value
+    language: LanguageEnum = LanguageEnum.EN

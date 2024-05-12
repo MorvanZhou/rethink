@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from .languages import Language
+from .languages import LanguageEnum
 
 DEFAULT_USER = {
     "nickname": "rethink",
@@ -9,7 +9,7 @@ DEFAULT_USER = {
 }
 
 NEW_USER_DEFAULT_NODES = {
-    Language.EN.value: [
+    LanguageEnum.EN.value: [
         dedent("""\
         # How do I record
 
@@ -32,7 +32,7 @@ NEW_USER_DEFAULT_NODES = {
 
         """),
     ],
-    Language.ZH.value: [
+    LanguageEnum.ZH.value: [
         dedent("""\
         # 我如何记录
 

@@ -13,28 +13,28 @@ async def save_editor_upload_files(
     res = {
         "errFiles": [],
         "succMap": {},
-        "code": const.Code.OK,
+        "code": const.CodeEnum.OK,
     }
     for file in files:
         filename = file.filename
         # validate MIME image type
-        if not const.app.ValidUploadedFilePrefix.is_valid(file.content_type):
+        if not const.app.ValidUploadedFilePrefixEnum.is_valid(file.content_type):
             res["errFiles"].append(filename)
-            res["code"] = const.Code.INVALID_FILE_TYPE
+            res["code"] = const.CodeEnum.INVALID_FILE_TYPE
             continue
 
         # validate file type
         sep = filename.rsplit(".", 1)
         ext = f".{sep[-1]}" if len(sep) > 1 else ""
-        if const.app.FileTypes.get_type(ext) == const.app.FileTypes.UNKNOWN:
+        if const.app.FileTypesEnum.get_type(ext) == const.app.FileTypesEnum.UNKNOWN:
             res["errFiles"].append(filename)
-            res["code"] = const.Code.INVALID_FILE_TYPE
+            res["code"] = const.CodeEnum.INVALID_FILE_TYPE
             continue
 
         # validate file size
         if file.size > const.settings.MAX_UPLOAD_FILE_SIZE:
             res["errFiles"].append(filename)
-            res["code"] = const.Code.TOO_LARGE_FILE
+            res["code"] = const.CodeEnum.TOO_LARGE_FILE
             continue
         f = File(
             filename=filename,
@@ -42,7 +42,7 @@ async def save_editor_upload_files(
         )
         if f.is_unknown_type():
             res["errFiles"].append(filename)
-            res["code"] = const.Code.INVALID_FILE_TYPE
+            res["code"] = const.CodeEnum.INVALID_FILE_TYPE
             continue
 
         url = await saver.save(
@@ -51,7 +51,7 @@ async def save_editor_upload_files(
         )
         if url == "":
             res["errFiles"].append(filename)
-            res["code"] = const.Code.FILE_OPEN_ERROR
+            res["code"] = const.CodeEnum.FILE_OPEN_ERROR
             continue
         res["succMap"][filename] = url
     return res

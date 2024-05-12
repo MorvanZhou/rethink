@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import Enum, unique, IntEnum
 
 
 @unique
-class AppTheme(Enum):
+class AppThemeEnum(str, Enum):
     DARK = "dark"
     LIGHT = "light"
 
@@ -15,7 +15,7 @@ class AppTheme(Enum):
 
 
 @unique
-class EditorMode(Enum):
+class EditorModeEnum(str, Enum):
     WYSIWYG = "wysiwyg"
     IR = "ir"
 
@@ -28,7 +28,7 @@ class EditorMode(Enum):
 
 
 @unique
-class EditorCodeTheme(Enum):
+class EditorCodeThemeEnum(str, Enum):
     DRACULA = "dracula"
     GITHUB = "github"
     EMACS = "emacs"
@@ -43,7 +43,7 @@ class EditorCodeTheme(Enum):
 
 
 @unique
-class EditorFontSize(Enum):
+class EditorFontSizeEnum(IntEnum):
     MAX = 30
     MIN = 10
 
@@ -52,7 +52,7 @@ class EditorFontSize(Enum):
         return cls.MIN.value <= item <= cls.MAX.value
 
 
-class FileTypes(Enum):
+class FileTypesEnum(Enum):
     IMAGE = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
     DOC = {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"}
     PLAIN = {".txt", ".md", ".csv", ".json", ".xml", ".yaml", ".yml", ".toml"}
@@ -70,7 +70,7 @@ class FileTypes(Enum):
 
 
 @unique
-class ValidUploadedFilePrefix(Enum):
+class ValidUploadedFilePrefixEnum(Enum):
     # image/*,video/*,audio/*,application/pdf,text/plain,text/markdown
     IMAGE = "image/"
     VIDEO = "video/"

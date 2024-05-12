@@ -21,55 +21,110 @@ async def remote_try_build_index(coll: Collections):
     await notice_system_coll(coll.notice_system)
 
 
+async def not_in_and_create_index(coll: "AsyncIOMotorCollection", index_info, keys: list, unique: bool) -> str:
+    new_keys = []
+    for k in keys:
+        if isinstance(k, tuple):
+            new_keys.append(f"{k[0]}_{k[1]}")
+        elif isinstance(k, str):
+            new_keys.append(f"{k}_1")
+        else:
+            raise ValueError(f"Invalid key: {k}")
+    index = "_".join(new_keys)
+    if index not in index_info:
+        await coll.create_index(keys, unique=unique)
+    return index
+
+
 async def users_coll(coll: "AsyncIOMotorCollection"):
-    users_info = await coll.index_information()
-    if "id_1" not in users_info:
-        await coll.create_index("id", unique=True)
-    if "account_1_source_1" not in users_info:
-        await coll.create_index(["account", "source"], unique=True)
+    index_info = await coll.index_information()
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["id"],
+        unique=True
+    )
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["account", "source"],
+        unique=True
+    )
 
 
 async def nodes_coll(coll: "AsyncIOMotorCollection"):
-    nodes_info = await coll.index_information()
-    if "id_1" not in nodes_info:
-        await coll.create_index("id", unique=True)
-    if "uid_1_id_-1" not in nodes_info:
-        # created at
-        await coll.create_index(
-            [("uid", 1), ("id", -1)],
-            unique=True,
-        )
+    index_info = await coll.index_information()
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["id"],
+        unique=True
+    )
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=[("uid", 1), ("id", -1)],
+        unique=True
+    )
 
 
 async def import_data_coll(coll: "AsyncIOMotorCollection"):
     import_data_info = await coll.index_information()
-    if "uid_1" not in import_data_info:
-        await coll.create_index("uid", unique=True)
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=import_data_info,
+        keys=["uid"],
+        unique=True
+    )
 
 
 async def user_file_coll(coll: "AsyncIOMotorCollection"):
     user_file_info = await coll.index_information()
-    if "uid_1_fid_-1" not in user_file_info:
-        await coll.create_index([("uid", 1), ("fid", -1)], unique=True)
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=user_file_info,
+        keys=[("uid", 1), ("fid", -1)],
+        unique=True
+    )
 
 
 async def user_behavior_coll(coll: "AsyncIOMotorCollection"):
     user_behavior_info = await coll.index_information()
-    if "uid_1_type_1" not in user_behavior_info:
-        await coll.create_index([("uid", 1), ("type", 1)], unique=False)
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=user_behavior_info,
+        keys=["uid", "type"],
+        unique=False
+    )
 
 
 async def notice_manager_delivery_coll(coll: "AsyncIOMotorCollection"):
     index_info = await coll.index_information()
-    if "scheduled_1" not in index_info:
-        await coll.create_index("scheduled", unique=False)
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["senderId"],
+        unique=False
+    )
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["scheduled"],
+        unique=False
+    )
 
 
 async def notice_system_coll(coll: "AsyncIOMotorCollection"):
     index_info = await coll.index_information()
-    if "recipientId_1" not in index_info:
-        await coll.create_index("recipientId", unique=False)
-    if "recipientId_1_read_1" not in index_info:
-        await coll.create_index("recipientId", unique=False)
-    if "senderId_1" not in index_info:
-        await coll.create_index("senderId", unique=False)
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["recipientId", "read"],
+        unique=False
+    )
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["senderId"],
+        unique=False
+    )

@@ -18,20 +18,20 @@ from .importing import async_tasks, sync_tasks
 QUEUE_INITED = False
 
 
-async def upload_obsidian(au: AuthedUser, zipped_files: List[UploadFile]) -> const.Code:
+async def upload_obsidian(au: AuthedUser, zipped_files: List[UploadFile]) -> const.CodeEnum:
     max_file_count = 1
     max_file_size = 1024 * 1024 * 200  # 200 mb
 
     if len(zipped_files) > max_file_count:
-        return const.Code.TOO_MANY_FILES
+        return const.CodeEnum.TOO_MANY_FILES
 
     zipped_file = zipped_files[0]
     filename = zipped_file.filename
     if not filename.endswith(".zip"):
-        return const.Code.INVALID_FILE_TYPE
+        return const.CodeEnum.INVALID_FILE_TYPE
 
     if zipped_file.content_type not in ["application/zip", "application/octet-stream", "application/x-zip-compressed"]:
-        return const.Code.INVALID_FILE_TYPE
+        return const.CodeEnum.INVALID_FILE_TYPE
 
     bytes_data = zipped_file.file.read()
 
@@ -57,19 +57,19 @@ async def upload_obsidian(au: AuthedUser, zipped_files: List[UploadFile]) -> con
             "uid": au.u.id,
             "request_id": au.request_id,
         })
-    return const.Code.OK
+    return const.CodeEnum.OK
 
 
-async def upload_text(au: AuthedUser, files: List[UploadFile]) -> const.Code:
+async def upload_text(au: AuthedUser, files: List[UploadFile]) -> const.CodeEnum:
     max_file_count = 200
     max_file_size = 1024 * 512  # 512 kb
 
     doc = await client.coll.import_data.find_one({"uid": au.u.id})
     if doc is not None and doc["running"]:
-        return const.Code.IMPORT_PROCESS_NOT_FINISHED
+        return const.CodeEnum.IMPORT_PROCESS_NOT_FINISHED
 
     if len(files) > max_file_count:
-        return const.Code.TOO_MANY_FILES
+        return const.CodeEnum.TOO_MANY_FILES
 
     file_list = [{
         "filename": file.filename,
@@ -97,7 +97,7 @@ async def upload_text(au: AuthedUser, files: List[UploadFile]) -> const.Code:
             "uid": au.u.id,
             "request_id": au.request_id,
         })
-    return const.Code.OK
+    return const.CodeEnum.OK
 
 
 async def get_upload_process(uid: str) -> Optional[dict]:
@@ -116,7 +116,7 @@ async def get_upload_process(uid: str) -> Optional[dict]:
             {"uid": uid},
             {"$set": {
                 "running": False,
-                "code": const.Code.UPLOAD_TASK_TIMEOUT.value,
+                "code": const.CodeEnum.UPLOAD_TASK_TIMEOUT.value,
                 "msg": f"Timeout, upload not finish in {timeout_minus} mins",
             }},
         )
@@ -127,11 +127,11 @@ async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:
     res = {
         "errFiles": [],
         "succMap": {},
-        "code": const.Code.OK,
+        "code": const.CodeEnum.OK,
     }
     if await core.user.user_space_not_enough(au=au):
         res["errFiles"] = [file.filename for file in files]
-        res["code"] = const.Code.USER_SPACE_NOT_ENOUGH
+        res["code"] = const.CodeEnum.USER_SPACE_NOT_ENOUGH
         return res
 
     return await sync_tasks.save_editor_upload_files(
@@ -140,15 +140,15 @@ async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:
     )
 
 
-async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, const.Code]:
+async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, const.CodeEnum]:
     if count > 2:
         logger.debug(f"too many 30X code, failed to get {url}")
-        return "", const.Code.FILE_OPEN_ERROR
+        return "", const.CodeEnum.FILE_OPEN_ERROR
     if ssrf_check(url):
         logger.debug(f"ssrf check failed: {url}")
-        return "", const.Code.FILE_OPEN_ERROR
+        return "", const.CodeEnum.FILE_OPEN_ERROR
     if await core.user.user_space_not_enough(au=au):
-        return "", const.Code.USER_SPACE_NOT_ENOUGH
+        return "", const.CodeEnum.USER_SPACE_NOT_ENOUGH
     async with httpx.AsyncClient() as ac:
         try:
             response = await ac.get(
@@ -165,11 +165,11 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
                 httpx.HTTPError
         ) as e:
             logger.debug(f"failed to get {url}: {e}")
-            return "", const.Code.FILE_OPEN_ERROR
+            return "", const.CodeEnum.FILE_OPEN_ERROR
         if response.status_code in [301, 302]:
             return await fetch_image_vditor(au=au, url=response.headers["Location"], count=count + 1)
         elif response.status_code != 200:
-            return "", const.Code.FILE_OPEN_ERROR
+            return "", const.CodeEnum.FILE_OPEN_ERROR
 
         content = response.content
 
@@ -180,13 +180,13 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
             size=len(content)
         )
 
-    if not file.content_type.startswith(const.app.ValidUploadedFilePrefix.IMAGE.value):
-        return "", const.Code.INVALID_FILE_TYPE
+    if not file.content_type.startswith(const.app.ValidUploadedFilePrefixEnum.IMAGE.value):
+        return "", const.CodeEnum.INVALID_FILE_TYPE
 
     res = await sync_tasks.save_editor_upload_files(
         uid=au.u.id,
         files=[file],
     )
     if len(res["errFiles"]) > 0:
-        return "", const.Code.FILE_OPEN_ERROR
-    return res["succMap"][file.filename], const.Code.OK
+        return "", const.CodeEnum.FILE_OPEN_ERROR
+    return res["succMap"][file.filename], const.CodeEnum.OK

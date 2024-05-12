@@ -6,7 +6,7 @@ from retk.models.client import client
 
 async def add_user_behavior(
         uid: str,
-        type_: const.UserBehaviorType,
+        type_: const.UserBehaviorTypeEnum,
         remark: str,
 ):
     await client.coll.user_behavior.insert_one({

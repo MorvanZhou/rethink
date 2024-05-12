@@ -212,7 +212,7 @@ class ESSearcher(BaseEngine):
         await self.es.close()
         del self.es
 
-    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         now = get_utc_now()
         resp = await self.es.index(
             index=self.index,
@@ -229,10 +229,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 201:
             logger.error(f"add failed {au.u.id=} {doc.nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         now = get_utc_now()
         resp = await self.es.update(
             index=self.index,
@@ -248,10 +248,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"update failed {au.u.id=} {doc.nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -264,10 +264,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"to trash failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         resp = await helpers.async_bulk(
             client=self.es,
             actions=[
@@ -284,11 +284,11 @@ class ESSearcher(BaseEngine):
         )
         if resp[0] != len(nids):
             logger.error(f"to trash batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
         await self.refresh()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
-    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -301,10 +301,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"restore from trash failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def restore_batch_from_trash(self, au: AuthedUser, nids: str) -> const.Code:
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: str) -> const.CodeEnum:
         resp = await helpers.async_bulk(
             client=self.es,
             actions=[
@@ -321,11 +321,11 @@ class ESSearcher(BaseEngine):
         )
         if resp[0] != len(nids):
             logger.error(f"restore batch from trash failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
         await self.refresh()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
-    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def disable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -338,10 +338,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"disable failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def enable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         resp = await self.es.update(
             index=self.index,
             id=nid,
@@ -354,20 +354,20 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"enable failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
+    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         doc = await self.es.get(
             index=self.index,
             id=nid,
         )
         if doc["_source"]["uid"] != au.u.id:
             logger.error(f"node not belong to user {au.u.id=} {nid=}")
-            return const.Code.NODE_NOT_EXIST
+            return const.CodeEnum.NODE_NOT_EXIST
         if not doc["_source"]["inTrash"]:
             logger.error(f"doc not in trash, deletion failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
 
         resp = await self.es.delete(
             index=self.index,
@@ -376,10 +376,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 201:
             logger.error(f"delete failed {au.u.id=} {nid=}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         actions = []
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
@@ -400,7 +400,7 @@ class ESSearcher(BaseEngine):
             now = now + datetime.timedelta(seconds=0.001)
         return await self._batch_ops(actions, op_type="add", refresh=False)
 
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         resp = await self.es.delete_by_query(
             index=self.index,
             body={
@@ -427,13 +427,13 @@ class ESSearcher(BaseEngine):
 
         if resp.meta.status != 200:
             logger.error(f"delete batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
         if resp.body["deleted"] != len(nids):
             logger.error(f"delete batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def force_delete_all(self, uid: str) -> const.Code:
+    async def force_delete_all(self, uid: str) -> const.CodeEnum:
         resp = await self.es.delete_by_query(
             index=self.index,
             body={
@@ -454,10 +454,10 @@ class ESSearcher(BaseEngine):
         )
         if resp.meta.status != 200:
             logger.error(f"force delete all failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
-        return const.Code.OK
+            return const.CodeEnum.OPERATION_FAILED
+        return const.CodeEnum.OK
 
-    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         actions = []
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
@@ -474,7 +474,7 @@ class ESSearcher(BaseEngine):
             now = now + datetime.timedelta(seconds=0.001)
         return await self._batch_ops(actions, op_type="update", refresh=False)
 
-    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.CodeEnum:
         actions = []
         for doc in docs:
             d = doc.__dict__
@@ -660,18 +660,18 @@ class ESSearcher(BaseEngine):
     async def refresh(self):
         await self.es.indices.refresh(index=self.index)
 
-    async def _batch_ops(self, actions: List[dict], op_type: str, refresh: bool) -> const.Code:
+    async def _batch_ops(self, actions: List[dict], op_type: str, refresh: bool) -> const.CodeEnum:
         try:
             resp = await helpers.async_bulk(client=self.es, actions=actions)
         except helpers.BulkIndexError as e:
             logger.error(f"{op_type} batch failed, resp: {e.args[0]}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
         if resp[0] != len(actions):
             logger.error(f"{op_type} batch failed, resp: {resp}")
-            return const.Code.OPERATION_FAILED
+            return const.CodeEnum.OPERATION_FAILED
         if refresh:
             await self.refresh()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
     @staticmethod
     def get_hl(hit: dict, key: str, first: bool, default: str = ""):

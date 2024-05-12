@@ -63,55 +63,55 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def disable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def enable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
+    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def force_delete_all(self, uid: str) -> const.Code:
+    async def force_delete_all(self, uid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         ...
 
     @abstractmethod
-    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         ...
 
     @abstractmethod
@@ -162,5 +162,5 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.CodeEnum:
         ...

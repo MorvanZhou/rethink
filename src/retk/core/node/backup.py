@@ -13,7 +13,7 @@ from retk.models import tps
 from retk.models.client import client
 
 
-async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C901
+async def storage_md(node: tps.Node, keep_hist: bool) -> const.CodeEnum:  # noqa: C901
     nid = node["id"]
     md = node["md"]
     hist = node.get("history", [])
@@ -25,7 +25,7 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
         md_path.write_text(md, encoding="utf-8")
 
     if not keep_hist:
-        return const.Code.OK
+        return const.CodeEnum.OK
 
     # ignore if the time difference is less than n minutes
     if len(hist) != 0:
@@ -34,7 +34,7 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
         if (datetime.now(tz=utc).replace(tzinfo=None) - time) < timedelta(
                 seconds=config.get_settings().MD_BACKUP_INTERVAL
         ):
-            return const.Code.OK
+            return const.CodeEnum.OK
 
     this_hist = node["modifiedAt"].strftime(date_format)
     hist.insert(0, this_hist)
@@ -47,7 +47,7 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
             f.write(md)
     else:
         code = __save_md_to_cos(node["uid"], nid, this_hist, md)
-        if code != const.Code.OK:
+        if code != const.CodeEnum.OK:
             return code
 
     if len(hist) > const.settings.MAX_MD_BACKUP_VERSIONS:
@@ -67,8 +67,8 @@ async def storage_md(node: tps.Node, keep_hist: bool) -> const.Code:  # noqa: C9
     )
     if res.modified_count != 1:
         logger.error(f"failed to update node history: {nid}")
-        return const.Code.OPERATION_FAILED
-    return const.Code.OK
+        return const.CodeEnum.OPERATION_FAILED
+    return const.CodeEnum.OK
 
 
 def delete_node_md(uid: str, nids: List[str]):
@@ -85,7 +85,7 @@ def delete_node_md(uid: str, nids: List[str]):
             __remove_md_all_versions_from_cos(uid, nid)
 
 
-def get_md(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
+def get_md(uid: str, nid: str, version: str) -> Tuple[str, const.CodeEnum]:
     if config.is_local_db():
         md_dir = __get_md_hist_dir(nid)
         filename = __windows_safe_path(version)
@@ -93,9 +93,9 @@ def get_md(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
             md = f.read()
     else:
         md, code = __get_md_from_cos(uid, nid, version)
-        if code != const.Code.OK:
+        if code != const.CodeEnum.OK:
             return "", code
-    return md, const.Code.OK
+    return md, const.CodeEnum.OK
 
 
 def __windows_safe_path(filename: str) -> str:
@@ -109,7 +109,7 @@ def __get_md_hist_dir(nid: str = None) -> Path:
     return p
 
 
-def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.Code]:
+def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.CodeEnum]:
     settings = config.get_settings()
     cos_client, key = __get_client_and_key(settings, uid, nid, version)
 
@@ -126,20 +126,20 @@ def __get_md_from_cos(uid: str, nid: str, version: str) -> Tuple[str, const.Code
             md_body += chunk
     except CosServiceError as e:
         logger.error(f"failed to get file from cos: {e}")
-        return "", const.Code.COS_ERROR
+        return "", const.CodeEnum.COS_ERROR
     try:
         md = md_body.decode("utf-8")
     except UnicodeDecodeError as e:
         logger.error(f"failed to decode md: {e}. md: {md_body}")
-        return "", const.Code.OPERATION_FAILED
-    return md, const.Code.OK
+        return "", const.CodeEnum.OPERATION_FAILED
+    return md, const.CodeEnum.OK
 
 
-def __save_md_to_cos(uid: str, nid: str, version: str, md: str) -> const.Code:
+def __save_md_to_cos(uid: str, nid: str, version: str, md: str) -> const.CodeEnum:
     settings = config.get_settings()
     cos_client, key, code = __cos_connect(settings, uid, nid, version)
 
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         return code
 
     # can raise error
@@ -154,14 +154,14 @@ def __save_md_to_cos(uid: str, nid: str, version: str, md: str) -> const.Code:
         )
     except CosServiceError as e:
         logger.error(f"failed to save file to cos: {e}")
-        return const.Code.COS_ERROR
-    return const.Code.OK
+        return const.CodeEnum.COS_ERROR
+    return const.CodeEnum.OK
 
 
-def __remove_md_from_cos(uid: str, nid: str, version: str) -> const.Code:
+def __remove_md_from_cos(uid: str, nid: str, version: str) -> const.CodeEnum:
     settings = config.get_settings()
     cos_client, key, code = __cos_connect(settings, uid, nid, version, exist_ok=False)
-    if code == const.Code.NODE_EXIST:
+    if code == const.CodeEnum.NODE_EXIST:
         try:
             _ = cos_client.delete_object(
                 Bucket=settings.COS_BUCKET_NAME,
@@ -169,12 +169,12 @@ def __remove_md_from_cos(uid: str, nid: str, version: str) -> const.Code:
             )
         except CosServiceError as e:
             logger.error(f"failed to delete md from cos: {e}")
-            return const.Code.COS_ERROR
+            return const.CodeEnum.COS_ERROR
 
-    return const.Code.OK
+    return const.CodeEnum.OK
 
 
-def __remove_md_all_versions_from_cos(uid: str, nid: str) -> const.Code:
+def __remove_md_all_versions_from_cos(uid: str, nid: str) -> const.CodeEnum:
     settings = config.get_settings()
     cos_client, to_delete_dir = __get_client_and_key(settings, uid, nid)
 
@@ -185,9 +185,9 @@ def __remove_md_all_versions_from_cos(uid: str, nid: str) -> const.Code:
         )
     except CosServiceError as e:
         logger.error(f"failed to delete md from cos: {e}")
-        return const.Code.COS_ERROR
+        return const.CodeEnum.COS_ERROR
 
-    return const.Code.OK
+    return const.CodeEnum.OK
 
 
 def __cos_connect(
@@ -196,7 +196,7 @@ def __cos_connect(
         nid: str,
         version: str,
         exist_ok: bool = False,
-) -> Tuple[CosS3Client, str, const.Code]:
+) -> Tuple[CosS3Client, str, const.CodeEnum]:
     cos_client, key = __get_client_and_key(settings, uid, nid, version)
 
     if not exist_ok:
@@ -205,12 +205,12 @@ def __cos_connect(
                 Bucket=settings.COS_BUCKET_NAME,
                 Key=key
             )
-            return cos_client, key, const.Code.NODE_EXIST
+            return cos_client, key, const.CodeEnum.NODE_EXIST
         except CosServiceError as e:
             if e.get_status_code() != 404:
                 logger.error(f"failed to save md to cos: {e}")
-                return cos_client, key, const.Code.COS_ERROR
-    return cos_client, key, const.Code.OK
+                return cos_client, key, const.CodeEnum.COS_ERROR
+    return cos_client, key, const.CodeEnum.OK
 
 
 def __get_client_and_key(settings: BaseSettings, uid: str, nid: str, version: str = None) -> Tuple[CosS3Client, str]:

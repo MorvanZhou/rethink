@@ -20,13 +20,13 @@ async def add(
         nickname: str,
         avatar: str,
         language: str,
-) -> Tuple[Optional[tps.UserMeta], const.Code]:
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     if await client.coll.users.find_one({"account": account, "source": source}) is not None:
-        return None, const.Code.EMAIL_OCCUPIED
+        return None, const.CodeEnum.EMAIL_OCCUPIED
     oid = ObjectId()
     # assert language in const.Language
-    if not const.Language.is_valid(language):
-        language = const.Language.EN.value
+    if not const.LanguageEnum.is_valid(language):
+        language = const.LanguageEnum.EN.value
     data = utils.get_user_dict(
         _id=oid,
         uid=utils.short_uuid(),
@@ -43,14 +43,14 @@ async def add(
 
         last_state_recent_cursor_search_selected_nids=[],
         last_state_recent_search=[],
-        last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+        last_state_node_display_method=const.NodeDisplayMethodEnum.CARD.value,
         last_state_node_display_sort_key="modifiedAt",
 
         settings_language=language,
-        settings_theme=const.app.AppTheme.LIGHT.value,
-        settings_editor_mode=const.app.EditorMode.WYSIWYG.value,
+        settings_theme=const.app.AppThemeEnum.LIGHT.value,
+        settings_editor_mode=const.app.EditorModeEnum.WYSIWYG.value,
         settings_editor_font_size=15,
-        settings_editor_code_theme=const.app.EditorCodeTheme.GITHUB.value,
+        settings_editor_code_theme=const.app.EditorCodeThemeEnum.GITHUB.value,
         settings_editor_sep_right_width=200,
         settings_editor_side_current_tool_id="",
     )
@@ -60,19 +60,19 @@ async def add(
         try:
             res = await client.coll.users.insert_one(data)
             if not res.acknowledged:
-                return None, const.Code.OPERATION_FAILED
+                return None, const.CodeEnum.OPERATION_FAILED
             break
         except DuplicateKeyError:
             data["id"] = utils.short_uuid()
             continue
 
-    return data, const.Code.OK
+    return data, const.CodeEnum.OK
 
 
 async def patch(  # noqa: C901
         au: tps.AuthedUser,
         req: PatchUserRequest,
-) -> Tuple[Optional[tps.UserMeta], const.Code]:
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     new_data = {}
 
     if req.nickname is not None:
@@ -88,8 +88,9 @@ async def patch(  # noqa: C901
 
     if req.lastState is not None:
         if req.lastState.nodeDisplayMethod is not None:
-            if req.lastState.nodeDisplayMethod >= len(const.NodeDisplayMethod) or req.lastState.nodeDisplayMethod < 0:
-                return None, const.Code.INVALID_NODE_DISPLAY_METHOD
+            if req.lastState.nodeDisplayMethod >= len(
+                    const.NodeDisplayMethodEnum) or req.lastState.nodeDisplayMethod < 0:
+                return None, const.CodeEnum.INVALID_NODE_DISPLAY_METHOD
             new_data["lastState.nodeDisplayMethod"] = req.lastState.nodeDisplayMethod
 
         if req.lastState.nodeDisplaySortKey is not None:
@@ -106,8 +107,8 @@ async def patch(  # noqa: C901
             new_data["settings.editorMode"] = req.settings.editorMode
 
         if req.settings.editorFontSize is not None:
-            if not const.app.EditorFontSize.is_valid(req.settings.editorFontSize):
-                return None, const.Code.INVALID_SETTING
+            if not const.app.EditorFontSizeEnum.is_valid(req.settings.editorFontSize):
+                return None, const.CodeEnum.INVALID_SETTING
             new_data["settings.editorFontSize"] = req.settings.editorFontSize
 
         if req.settings.editorCodeTheme is not None:
@@ -128,30 +129,31 @@ async def patch(  # noqa: C901
             {"$set": new_data},
         )
         if res.modified_count != 1:
-            return None, const.Code.OPERATION_FAILED
+            return None, const.CodeEnum.OPERATION_FAILED
 
     return await get(uid=au.u.id)
 
 
-async def get_by_email(email: str, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get_by_email(email: str, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     if config.get_settings().ONE_USER:
-        source = const.UserSource.LOCAL.value
+        source = const.UserSourceEnum.LOCAL.value
     else:
-        source = const.UserSource.EMAIL.value
+        source = const.UserSourceEnum.EMAIL.value
     return await get_account(account=email, source=source, disabled=disabled)
 
 
-async def get_account(account: str, source: int, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get_account(account: str, source: int, disabled: bool = False) -> Tuple[
+    Optional[tps.UserMeta], const.CodeEnum]:
     u = await client.coll.users.find_one({"source": source, "account": account, "disabled": disabled})
     if u is None:
-        return None, const.Code.ACCOUNT_OR_PASSWORD_ERROR
-    return u, const.Code.OK
+        return None, const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
+    return u, const.CodeEnum.OK
 
 
-async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     u = await client.coll.users.find_one({"id": uid, "disabled": False})
     if u is None:
-        return None, const.Code.USER_DISABLED
+        return None, const.CodeEnum.USER_DISABLED
     if u["usedSpace"] < 0:
         # reset usedSpace to 0
         await client.coll.users.update_one(
@@ -160,17 +162,17 @@ async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
         )
         u["usedSpace"] = 0
 
-    return u, const.Code.OK
+    return u, const.CodeEnum.OK
 
 
-async def update_used_space(uid: str, delta: int) -> const.Code:
+async def update_used_space(uid: str, delta: int) -> const.CodeEnum:
     if delta == 0:
-        return const.Code.OK
+        return const.CodeEnum.OK
     res = await client.coll.users.update_one(
         {"id": uid},
         {"$inc": {"usedSpace": delta}}
     )
-    return const.Code.OK if res.modified_count == 1 else const.Code.OPERATION_FAILED
+    return const.CodeEnum.OK if res.modified_count == 1 else const.CodeEnum.OPERATION_FAILED
 
 
 async def user_space_not_enough(au: tps.AuthedUser) -> bool:
@@ -179,9 +181,9 @@ async def user_space_not_enough(au: tps.AuthedUser) -> bool:
     return au.u.used_space > const.USER_TYPE.id2config(au.u.type).max_store_space
 
 
-async def reset_password(uid: str, hashed: str) -> const.Code:
+async def reset_password(uid: str, hashed: str) -> const.CodeEnum:
     res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"hashed": hashed}}
     )
-    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED
+    return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED

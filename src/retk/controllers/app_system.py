@@ -13,7 +13,7 @@ async def get_latest_version(
 
     local = utils.parse_version(__version__)
     if local is None:
-        code = const.Code.OPERATION_FAILED
+        code = const.CodeEnum.OPERATION_FAILED
     maybe_raise_json_exception(au=au, code=code)
 
     has_new_version = False

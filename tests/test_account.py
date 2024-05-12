@@ -44,13 +44,13 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(match)
 
     async def test_one_user(self):
-        u, code = await account.manager.signup("a@q.com", "rethink", const.Language.EN.value)
-        self.assertEqual(const.Code.ONE_USER_MODE, code)
+        u, code = await account.manager.signup("a@q.com", "rethink", const.LanguageEnum.EN.value)
+        self.assertEqual(const.CodeEnum.ONE_USER_MODE, code)
         self.assertIsNone(u)
 
     async def test_verify_user(self):
         u, err = await account.manager.get_user_by_email("rethink@rethink.run")
-        self.assertEqual(const.Code.OK, err)
+        self.assertEqual(const.CodeEnum.OK, err)
         self.assertIsNotNone(u)
         au = convert_user_dict_to_authed_user(u)
         ok = await account.manager.is_right_password(
@@ -97,7 +97,7 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         token, _ = account.app_captcha.generate()
         decoded = jwt_decode(token)
         code = account.app_captcha.verify_captcha(token=token, code_str=decoded["code"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         code = account.app_captcha.verify_captcha(token=token, code_str="1234")
-        self.assertEqual(const.Code.CAPTCHA_ERROR, code)
+        self.assertEqual(const.CodeEnum.CAPTCHA_ERROR, code)

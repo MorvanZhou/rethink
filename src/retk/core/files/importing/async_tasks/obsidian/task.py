@@ -30,7 +30,7 @@ async def upload_obsidian_task(  # noqa: C901
     except zipfile.BadZipFile as e:
         await utils.set_running_false(
             uid,
-            const.Code.INVALID_FILE_TYPE,
+            const.CodeEnum.INVALID_FILE_TYPE,
             msg=f"unzip failed: {e}"
         )
         logger.error(f"invalid file type: {filename}, uid: {uid}")
@@ -43,7 +43,7 @@ async def upload_obsidian_task(  # noqa: C901
     if md_count == 0:
         await utils.set_running_false(
             uid,
-            const.Code.INVALID_FILE_TYPE,
+            const.CodeEnum.INVALID_FILE_TYPE,
             msg="no md file found",
         )
         logger.debug(f"no md file found, uid: {uid}")
@@ -51,7 +51,7 @@ async def upload_obsidian_task(  # noqa: C901
     elif md_count > 2000:
         await utils.set_running_false(
             uid,
-            const.Code.TOO_MANY_FILES,
+            const.CodeEnum.TOO_MANY_FILES,
             msg=f"md file count: {md_count} > 2000",
         )
         logger.debug(f"too many md files: {md_count}, uid: {uid}")
@@ -65,7 +65,7 @@ async def upload_obsidian_task(  # noqa: C901
             if meta.size > max_file_size:
                 await utils.set_running_false(
                     uid,
-                    const.Code.TOO_LARGE_FILE,
+                    const.CodeEnum.TOO_LARGE_FILE,
                     msg=f"file size > {max_file_size}: {full_path}",
                 )
                 logger.debug(f"too large file: {full_path}, uid: {uid}")
@@ -79,7 +79,7 @@ async def upload_obsidian_task(  # noqa: C901
     au = AuthedUser(
         u=convert_user_dict_to_authed_user(u),
         request_id=request_id,
-        language=u["settings"].get("language", const.Language.EN.value),
+        language=u["settings"].get("language", const.LanguageEnum.EN.value),
     )
     for i, (full_path, meta) in enumerate(unzipped_files.md_full.items()):
         meta: ops.UnzipObsidian.Meta
@@ -91,12 +91,12 @@ async def upload_obsidian_task(  # noqa: C901
             n, code = await core.node.post(
                 au=au,
                 md=meta.title,
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
             )
         except pymongo.errors.DuplicateKeyError:
             logger.error(f"duplicate key: {full_path}, uid: {uid}")
             continue
-        if code != const.Code.OK:
+        if code != const.CodeEnum.OK:
             await utils.set_running_false(
                 uid,
                 code,
@@ -111,7 +111,7 @@ async def upload_obsidian_task(  # noqa: C901
             existed_path2nid[meta.filename] = n["id"]
         if i % 20 == 0:
             doc, code = await utils.update_process(uid=uid, type_=type_, process=int(i / md_count * 10))
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 await utils.set_running_false(
                     uid,
                     code,
@@ -134,10 +134,10 @@ async def upload_obsidian_task(  # noqa: C901
             logger.error(f"error: {e}. filepath: {full_path}")
             await utils.set_running_false(
                 uid,
-                const.Code.FILE_OPEN_ERROR,
+                const.CodeEnum.FILE_OPEN_ERROR,
                 msg=f"file decode utf-8 failed, {e}: {full_path}",
             )
-            logger.error(f"error: {const.Code.FILE_OPEN_ERROR}, filepath: {full_path}, uid: {uid}")
+            logger.error(f"error: {const.CodeEnum.FILE_OPEN_ERROR}, filepath: {full_path}, uid: {uid}")
             return
 
         md = await ops.replace_inner_link_and_upload(
@@ -155,13 +155,13 @@ async def upload_obsidian_task(  # noqa: C901
             md=md,
             refresh_on_same_md=True,
         )
-        if code == const.Code.NODE_NOT_EXIST:
+        if code == const.CodeEnum.NODE_NOT_EXIST:
             n, code = await core.node.post(
                 au=au,
                 md=md,
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
             )
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 await utils.set_running_false(
                     uid,
                     code,
@@ -170,7 +170,7 @@ async def upload_obsidian_task(  # noqa: C901
                 logger.error(f"error: {code}, filepath: {full_path}, uid: {uid}")
                 return
             existed_path2nid[full_path] = n["id"]
-        elif code != const.Code.OK:
+        elif code != const.CodeEnum.OK:
             await utils.set_running_false(
                 uid,
                 code,
@@ -180,7 +180,7 @@ async def upload_obsidian_task(  # noqa: C901
             return
         if i % 20 == 0:
             doc, code = await utils.update_process(uid=uid, type_=type_, process=int(i / md_count * 80 + 10))
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 await utils.set_running_false(
                     uid,
                     code,
@@ -198,7 +198,7 @@ async def upload_obsidian_task(  # noqa: C901
     for base_name, nid in doc["obsidian"].items():
         if base_name not in existed_path2nid:
             n, code = await core.node.get(au=au, nid=nid)
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 continue
             n, _, code = await core.node.update_md(
                 au=au,
@@ -206,12 +206,12 @@ async def upload_obsidian_task(  # noqa: C901
                 md=n["md"],
                 refresh_on_same_md=True,
             )
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 continue
         if count % 20 == 0:
             doc, code = await utils.update_process(
                 uid=uid, type_=type_, process=int(count / len(doc["obsidian"]) * 10 + 90))
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 await utils.set_running_false(
                     uid,
                     code,

@@ -12,14 +12,14 @@ from retk.core import async_task
 
 
 class EmailServer:
-    default_language = const.Language.EN
+    default_language = const.LanguageEnum.EN
 
     lang_subject = {
-        const.Language.EN.value: "Rethink: Security Code",
-        const.Language.ZH.value: "Rethink: 安全密码",
+        const.LanguageEnum.EN.value: "Rethink: Security Code",
+        const.LanguageEnum.ZH.value: "Rethink: 安全密码",
     }
     lang_content = {
-        const.Language.EN.value: dedent("""\
+        const.LanguageEnum.EN.value: dedent("""\
         Please use the following security code for your Rethink account {email}:
         <br><br>
         Security Code: <br><br>
@@ -33,7 +33,7 @@ class EmailServer:
         Thank you!<br>
         Rethink Team
         """),
-        const.Language.ZH.value: dedent("""\
+        const.LanguageEnum.ZH.value: dedent("""\
         请使用以下用于 Rethink 账户 {email} 的安全代码：
         <br><br>
         安全代码：<br><br>
@@ -58,7 +58,7 @@ class EmailServer:
         content = content_temp.format(email=utils.mask_email(recipient), numbers=numbers, expire=expire)
         return subject, content
 
-    def send(self, recipient: str, numbers: str, expire: int, language: str) -> const.Code:
+    def send(self, recipient: str, numbers: str, expire: int, language: str) -> const.CodeEnum:
         subject, content = self.get_subject_content(
             recipient=recipient, numbers=numbers, expire=expire, language=language
         )
@@ -75,10 +75,10 @@ class EmailServer:
             return False
         return True
 
-    def _send(self, recipients: List[str], subject: str, html_message: str) -> const.Code:
+    def _send(self, recipients: List[str], subject: str, html_message: str) -> const.CodeEnum:
         for recipient in recipients:
             if not self.email_ok(recipient):
-                return const.Code.INVALID_EMAIL
+                return const.CodeEnum.INVALID_EMAIL
         conf = config.get_settings()
         msg = MIMEMultipart('alternative')
         msg['Subject'] = email.header.Header(subject, 'utf-8')
@@ -92,7 +92,7 @@ class EmailServer:
             recipients=recipients,
             subject=msg.as_string()
         )
-        return const.Code.OK
+        return const.CodeEnum.OK
 
 
 email_server = EmailServer()
@@ -106,14 +106,14 @@ def encode_number(number: str, expired_min: int) -> str:
     return token
 
 
-def verify_number(token: str, number_str: str) -> const.Code:
-    code = const.Code.CAPTCHA_ERROR
+def verify_number(token: str, number_str: str) -> const.CodeEnum:
+    code = const.CodeEnum.CAPTCHA_ERROR
     try:
         data = utils.jwt_decode(token)
         if data["code"] == number_str + config.get_settings().CAPTCHA_SALT:
-            code = const.Code.OK
+            code = const.CodeEnum.OK
     except jwt.ExpiredSignatureError:
-        code = const.Code.CAPTCHA_EXPIRED
-    except (jwt.DecodeError, Exception):
-        code = const.Code.INVALID_AUTH
+        code = const.CodeEnum.CAPTCHA_EXPIRED
+    except (jwt.DecodeError, Exception):  # pylint: disable=broad-except
+        code = const.CodeEnum.INVALID_AUTH
     return code

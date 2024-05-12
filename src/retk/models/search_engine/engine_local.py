@@ -32,14 +32,14 @@ class LocalSearcher(BaseEngine):
             nids: List[str],
             disable: bool = None,
             in_trash: bool = None
-    ) -> const.Code:
+    ) -> const.CodeEnum:
         writer = self.ix.writer()
         for nid in nids:
             with self.ix.searcher() as searcher:
                 resp = searcher.search(And([Term("uid", au.u.id), Term("nid", nid)]))
                 if len(resp) != 1:
                     logger.error(f"nid {nid} not found or more than one found")
-                    return const.Code.NODE_NOT_EXIST
+                    return const.CodeEnum.NODE_NOT_EXIST
                 res = resp[0]
                 new = {
                     "createdAt": res["createdAt"],
@@ -53,7 +53,7 @@ class LocalSearcher(BaseEngine):
 
             writer.update_document(uid=au.u.id, **new)
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
     @property
     def index_path(self):
@@ -93,28 +93,28 @@ class LocalSearcher(BaseEngine):
         # if self.index_path.exists():
         #     rmtree(self.index_path)
 
-    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def add(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         return await self.add_batch(au=au, docs=[doc])
 
-    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.Code:
+    async def update(self, au: AuthedUser, doc: SearchDoc) -> const.CodeEnum:
         return await self.update_batch(au=au, docs=[doc])
 
-    async def to_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def to_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self.batch_to_trash(au=au, nids=[nid])
 
-    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.Code:
+    async def restore_from_trash(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self.restore_batch_from_trash(au=au, nids=[nid])
 
-    async def disable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def disable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=[nid], disable=True)
 
-    async def enable(self, au: AuthedUser, nid: str) -> const.Code:
+    async def enable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=[nid], disable=False)
 
-    async def delete(self, au: AuthedUser, nid: str) -> const.Code:
+    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self.delete_batch(au=au, nids=[nid])
 
-    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         writer = self.ix.writer()
         now = datetime.datetime.now(tz=utc)
         for doc in docs:
@@ -131,40 +131,40 @@ class LocalSearcher(BaseEngine):
             now = now_
 
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
-    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def batch_to_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=nids, in_trash=True)
 
-    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=nids, in_trash=False)
 
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.Code:
+    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         writer = self.ix.writer()
         for nid in nids:
             q = And([Term("uid", au.u.id), Term("nid", nid), Term("inTrash", True)])
             count = writer.delete_by_query(q=q)
             if count != 1:
                 logger.error(f"nid {nid} not found or more than one found")
-                return const.Code.NODE_NOT_EXIST
+                return const.CodeEnum.NODE_NOT_EXIST
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
-    async def force_delete_all(self, uid: str) -> const.Code:
+    async def force_delete_all(self, uid: str) -> const.CodeEnum:
         writer = self.ix.writer()
         q = Term("uid", uid)
         writer.delete_by_query(q=q)
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
-    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.Code:
+    async def update_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         writer = self.ix.writer()
         for doc in docs:
             with self.ix.searcher() as searcher:
                 resp = searcher.search(And([Term("uid", au.u.id), Term("nid", doc.nid)]))
                 if len(resp) != 1:
                     logger.error(f"nid {doc.nid} not found or more than one found")
-                    return const.Code.NODE_NOT_EXIST
+                    return const.CodeEnum.NODE_NOT_EXIST
                 res = resp[0]
                 new = {
                     "createdAt": res["createdAt"],
@@ -177,7 +177,7 @@ class LocalSearcher(BaseEngine):
                 }
             writer.update_document(uid=au.u.id, **new)
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
     async def _search(
             self,
@@ -262,7 +262,7 @@ class LocalSearcher(BaseEngine):
             exclude_nids: Sequence[str] = None,
     ) -> List[SearchResult]:
         threshold = 5.
-        res, total = await self._search(
+        res, _ = await self._search(
             au=au,
             query=content,
             sort_key="similarity",
@@ -282,12 +282,12 @@ class LocalSearcher(BaseEngine):
             resp = searcher.search(Every("nid"))
             return len(resp)
 
-    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.Code:
+    async def batch_restore_docs(self, au: AuthedUser, docs: List[RestoreSearchDoc]) -> const.CodeEnum:
         writer = self.ix.writer()
         for doc in docs:
             writer.add_document(uid=au.u.id, **doc.__dict__)
         writer.commit()
-        return const.Code.OK
+        return const.CodeEnum.OK
 
     @staticmethod
     def get_hl(hl: Highlighter, hit: dict, key: str, return_list: bool, default: str = ""):

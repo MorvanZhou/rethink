@@ -14,9 +14,9 @@ async def put_system_notice(
         recipient_type: int,
         batch_type_ids: list[str],
         publish_at: datetime
-) -> const.Code:
+) -> const.CodeEnum:
     if const.USER_TYPE.id2config(au.u.type) not in (const.USER_TYPE.ADMIN, const.USER_TYPE.MANAGER):
-        return const.Code.NOT_PERMITTED
+        return const.CodeEnum.NOT_PERMITTED
     # add system notice
     notice: NoticeManagerDelivery = {
         "_id": ObjectId(),
@@ -31,5 +31,5 @@ async def put_system_notice(
     }
     res = await client.coll.notice_system.insert_one(notice)
     if not res.acknowledged:
-        return const.Code.OPERATION_FAILED
-    return const.Code.OK
+        return const.CodeEnum.OPERATION_FAILED
+    return const.CodeEnum.OK

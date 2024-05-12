@@ -40,7 +40,7 @@ class Client:
             default_language = os.getenv("RETHINK_DEFAULT_LANGUAGE", None)
             if default_language is not None:
                 await self.coll.users.update_one(
-                    {"account": const.DEFAULT_USER["email"], "source": const.UserSource.LOCAL.value},
+                    {"account": const.DEFAULT_USER["email"], "source": const.UserSourceEnum.LOCAL.value},
                     {"$set": {"settings.language": default_language}},
                 )
 
@@ -115,7 +115,7 @@ class Client:
                 md=md,
                 title=title_,
                 snippet=snippet_,
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
                 disabled=False,
                 in_trash=False,
                 modified_at=datetime.datetime.now(tz=utc),
@@ -147,7 +147,7 @@ class Client:
         u = utils.get_user_dict(
             _id=ObjectId(_v["_id"]),
             uid=_v["id"],
-            source=const.UserSource.LOCAL.value,
+            source=const.UserSourceEnum.LOCAL.value,
             account=_v["email"],
             nickname=_v["nickname"],
             email=_v["email"],
@@ -160,14 +160,15 @@ class Client:
 
             last_state_recent_cursor_search_selected_nids=[n0["id"], n1["id"]],
             last_state_recent_search=[],
-            last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+            last_state_node_display_method=const.NodeDisplayMethodEnum.CARD.value,
             last_state_node_display_sort_key="modifiedAt",
 
             settings_language=_v["settings"]["language"],
-            settings_theme=_v["settings"].get("theme", const.app.AppTheme.LIGHT.value),
-            settings_editor_mode=_v["settings"].get("editorMode", const.app.EditorMode.WYSIWYG.value),
+            settings_theme=_v["settings"].get("theme", const.app.AppThemeEnum.LIGHT.value),
+            settings_editor_mode=_v["settings"].get("editorMode", const.app.EditorModeEnum.WYSIWYG.value),
             settings_editor_font_size=_v["settings"].get("editorFontSize", 15),
-            settings_editor_code_theme=_v["settings"].get("editorCodeTheme", const.app.EditorCodeTheme.GITHUB.value),
+            settings_editor_code_theme=_v["settings"].get("editorCodeTheme",
+                                                          const.app.EditorCodeThemeEnum.GITHUB.value),
             settings_editor_sep_right_width=_v["settings"].get("editorSepRightWidth", 200),
             settings_editor_side_current_tool_id=_v["settings"].get("editorSideCurrentToolId", ""),
         )
@@ -230,7 +231,7 @@ class Client:
             )
 
         if await self.coll.users.find_one(
-                {"account": const.DEFAULT_USER["email"], "source": const.UserSource.LOCAL.value}
+                {"account": const.DEFAULT_USER["email"], "source": const.UserSourceEnum.LOCAL.value}
         ) is not None:
             return
 
@@ -249,7 +250,7 @@ class Client:
         u = utils.get_user_dict(
             _id=ObjectId(_v["_id"]),
             uid=_v["id"],
-            source=const.UserSource.LOCAL.value,
+            source=const.UserSourceEnum.LOCAL.value,
             account=_v["email"],
             nickname=_v["nickname"],
             email=_v["email"],
@@ -262,14 +263,14 @@ class Client:
 
             last_state_recent_cursor_search_selected_nids=[],
             last_state_recent_search=[],
-            last_state_node_display_method=const.NodeDisplayMethod.CARD.value,
+            last_state_node_display_method=const.NodeDisplayMethodEnum.CARD.value,
             last_state_node_display_sort_key="modifiedAt",
 
-            settings_language=v_settings.get("language", const.Language.EN.value),
-            settings_theme=v_settings.get("theme", const.app.AppTheme.LIGHT.value),
-            settings_editor_mode=v_settings.get("editorMode", const.app.EditorMode.WYSIWYG.value),
+            settings_language=v_settings.get("language", const.LanguageEnum.EN.value),
+            settings_theme=v_settings.get("theme", const.app.AppThemeEnum.LIGHT.value),
+            settings_editor_mode=v_settings.get("editorMode", const.app.EditorModeEnum.WYSIWYG.value),
             settings_editor_font_size=v_settings.get("editorFontSize", 15),
-            settings_editor_code_theme=v_settings.get("editorCodeTheme", const.app.EditorCodeTheme.GITHUB.value),
+            settings_editor_code_theme=v_settings.get("editorCodeTheme", const.app.EditorCodeThemeEnum.GITHUB.value),
             settings_editor_sep_right_width=v_settings.get("editorSepRightWidth", 200),
             settings_editor_side_current_tool_id=v_settings.get("editorSideCurrentToolId", ""),
         )
@@ -294,7 +295,7 @@ class Client:
                 md=md,
                 title=title_,
                 snippet=snippet_,
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
                 disabled=False,
                 in_trash=False,
                 modified_at=modified_time,
@@ -378,7 +379,7 @@ class Client:
                 ),
                 docs=docs,
             )
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 raise ValueError("cannot restore search index")
         logger.debug(f"restore search index count: {count_mongo}")
 

@@ -16,10 +16,10 @@ async def signup(
         req_id: str,
         req: schemas.account.SignupRequest,
 ) -> schemas.account.TokenResponse:
-    if not const.Language.is_valid(req.language):
-        req.language = const.Language.EN.value
-    code = account.app_captcha.verify_captcha(token=req.captchaToken, code_str=req.captchaCode)
-    if code != const.Code.OK:
+    if not const.LanguageEnum.is_valid(req.language):
+        req.language = const.LanguageEnum.EN.value
+    code = account.app_captcha.verify_captcha(token=req.verificationToken, code_str=req.verification)
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
@@ -31,7 +31,7 @@ async def signup(
         req.password,
         req.language,
     )
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
@@ -56,7 +56,7 @@ async def login(
     # TODO: 后台应记录成功登录用户名和 IP、时间.
     #  当尝试登录 IP 不在历史常登录 IP 地理位置时，应进行多因素二次验证用户身份，防止用户因密码泄漏被窃取账户
     u, code = await account.manager.get_user_by_email(req.email)
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
@@ -68,7 +68,7 @@ async def login(
             hashed=u["hashed"],
             password=req.password,
     ):
-        code = const.Code.ACCOUNT_OR_PASSWORD_ERROR
+        code = const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
         raise json_exception(
             request_id=req_id,
             code=code,
@@ -80,7 +80,7 @@ async def login(
     )
     await statistic.add_user_behavior(
         uid=u["id"],
-        type_=const.UserBehaviorType.LOGIN,
+        type_=const.UserBehaviorTypeEnum.LOGIN,
         remark="",
     )
     return schemas.account.TokenResponse(
@@ -95,14 +95,14 @@ async def forget(
         req: schemas.account.ForgetPasswordRequest
 ) -> schemas.RequestIdResponse:
     code = account.email.verify_number(token=req.verificationToken, number_str=req.verification)
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
             language=req.language,
         )
     u, code = await user.get_by_email(email=req.email)
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
@@ -112,7 +112,7 @@ async def forget(
     if u is None:
         raise json_exception(
             request_id=req_id,
-            code=const.Code.INVALID_AUTH,
+            code=const.CodeEnum.INVALID_AUTH,
             language=req.language,
         )
 
@@ -120,11 +120,11 @@ async def forget(
         uid=u["id"],
         hashed=account.manager.hash_password(password=req.newPassword, email=req.email)
     )
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
-            language=const.Language.EN.value,
+            language=const.LanguageEnum.EN.value,
         )
     return schemas.RequestIdResponse(
         requestId=req_id,
@@ -147,10 +147,11 @@ def __check_and_send_email(
         token: str,
         code_str: str,
         language: str,
-) -> Tuple[str, int, const.Code]:
+) -> Tuple[str, int, const.CodeEnum]:
+    # verify captcha code in image
     code = account.app_captcha.verify_captcha(token=token, code_str=code_str)
 
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         return "", 0, code
 
     numbers = "".join([str(randint(0, 9)) for _ in range(6)])
@@ -168,15 +169,15 @@ async def email_send_code(
         req_id: str,
         req: schemas.account.EmailVerificationRequest
 ) -> schemas.account.TokenResponse:
-    if req.language not in [lang.value for lang in const.Language.__members__.values()]:
-        req.language = const.Language.EN.value
+    if req.language not in [lang.value for lang in const.LanguageEnum.__members__.values()]:
+        req.language = const.LanguageEnum.EN.value
 
     if not req.userExistOk:
         u, code = await user.get_by_email(email=req.email)
         if u is not None:
             raise json_exception(
                 request_id=req_id,
-                code=const.Code.ACCOUNT_EXIST_TRY_FORGET_PASSWORD,
+                code=const.CodeEnum.ACCOUNT_EXIST_TRY_FORGET_PASSWORD,
                 language=req.language,
             )
 
@@ -186,7 +187,7 @@ async def email_send_code(
         code_str=req.captchaCode,
         language=req.language,
     )
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,

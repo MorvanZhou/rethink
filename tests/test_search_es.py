@@ -84,7 +84,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
             title=f"title{i}",
             body=f"this is {i} doc, 这是第 {i} 个文档",
         ) for i in range(20)])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await self.searcher.refresh()
         self.assertIn(config.get_settings().ES_INDEX_ALIAS, self.searcher.index)
         self.assertEqual("1", self.searcher.index.split("-")[-1])
@@ -114,7 +114,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
                 title=f"title{i}",
                 body=f"this is {i} doc, 这是第 {i} 个文档",
             ))
-            self.assertEqual(const.Code.OK, code)
+            self.assertEqual(const.CodeEnum.OK, code)
 
         await self.searcher.refresh()
         docs, total = await self.searcher.search(
@@ -163,7 +163,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
                 body=f"this is {i} doc, 这是第 {i} 个文档",
             ) for i in range(20)
         ])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await self.searcher.refresh()
         count = await self.searcher.count_all()
         self.assertEqual(20, count)
@@ -187,7 +187,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
                 body=f"this is {i} doc, 这是第 {i} 个文档",
             ) for i in range(20)
         ])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await self.searcher.refresh()
         self.assertEqual(20, await self.searcher.count_all())
 
@@ -204,7 +204,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid19", docs[0].nid)
 
         code = await self.searcher.disable(au=self.au, nid="nid18")
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
@@ -220,14 +220,14 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("nid17", docs[1].nid)
 
         code = await self.searcher.enable(au=self.au, nid="nid18")
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         code = await self.searcher.batch_to_trash(au=self.au, nids=[f"nid{i}" for i in range(10)])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
 
         code = await self.searcher.delete_batch(au=self.au, nids=[f"nid{i}" for i in range(10)])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(10, await self.searcher.count_all())
 
         docs, total = await self.searcher.search(
@@ -282,7 +282,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
                     body=f"this is {i} doc, 这是第 {i} 个文档",
                 ) for i in range(20)
             ])
-            self.assertEqual(const.Code.OK, code)
+            self.assertEqual(const.CodeEnum.OK, code)
 
         await self.searcher.refresh()
 

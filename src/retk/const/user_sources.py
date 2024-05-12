@@ -1,8 +1,8 @@
-from enum import Enum, auto, unique
+from enum import IntEnum, auto, unique
 
 
 @unique
-class UserSource(Enum):
+class UserSourceEnum(IntEnum):
     TEST = 0
     EMAIL = auto()  # 1
     PHONE = auto()  # 2

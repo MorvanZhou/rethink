@@ -1,23 +1,22 @@
-from typing import Literal, Optional, List
+from typing import Optional
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
-from retk.const import settings
-from retk.models.tps import CODE_THEME_TYPES
+from retk.const import settings, LanguageEnum, app, NodeDisplaySortKeyEnum
 
 
 class UserInfoResponse(BaseModel):
     class User(BaseModel):
         class LastState(BaseModel):
             nodeDisplayMethod: NonNegativeInt
-            nodeDisplaySortKey: Literal["modifiedAt", "createdAt", "title", "similarity"]
+            nodeDisplaySortKey: NodeDisplaySortKeyEnum
 
         class Settings(BaseModel):
-            language: Literal["en", "zh"]
-            theme: Literal["light", "dark"]
-            editorMode: Literal["ir", "wysiwyg"]
+            language: LanguageEnum
+            theme: app.AppThemeEnum
+            editorMode: app.EditorModeEnum
             editorFontSize: NonNegativeInt
-            editorCodeTheme: CODE_THEME_TYPES
+            editorCodeTheme: app.EditorCodeThemeEnum
             editorSepRightWidth: float
             editorSideCurrentToolId: str
 
@@ -39,16 +38,16 @@ class UserInfoResponse(BaseModel):
 class PatchUserRequest(BaseModel):
     class LastState(BaseModel):
         nodeDisplayMethod: Optional[NonNegativeInt] = Field(default=None, ge=-1, le=10)
-        nodeDisplaySortKey: Optional[Literal["modifiedAt", "createdAt", "title"]] = Field(
+        nodeDisplaySortKey: Optional[NodeDisplaySortKeyEnum] = Field(
             default=None, max_length=20
         )
 
     class Settings(BaseModel):
-        language: Optional[Literal["en", "zh"]] = Field(default=None)
-        theme: Optional[Literal["light", "dark"]] = Field(default=None)
-        editorMode: Optional[Literal["ir", "wysiwyg"]] = Field(default=None)
+        language: Optional[LanguageEnum] = Field(default=None)
+        theme: Optional[app.AppThemeEnum] = Field(default=None)
+        editorMode: Optional[app.EditorModeEnum] = Field(default=None)
         editorFontSize: Optional[NonNegativeInt] = Field(default=None)
-        editorCodeTheme: Optional[CODE_THEME_TYPES] = Field(default=None)
+        editorCodeTheme: Optional[app.EditorCodeThemeEnum] = Field(default=None)
         editorSepRightWidth: Optional[NonNegativeFloat] = Field(default=None)
         editorSideCurrentToolId: Optional[str] = Field(default=None)
 
@@ -61,14 +60,3 @@ class PatchUserRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     oldPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
     newPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
-
-
-class NotificationResponse(BaseModel):
-    class Notification(BaseModel):
-        id: str
-        type: Literal["info", "warning", "error"]
-        message: str
-        createdAt: str
-
-    requestId: str
-    notifications: List[Notification]

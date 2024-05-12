@@ -227,10 +227,10 @@ async def get_title_description_from_link(  # noqa: C901
         language: str,
         count=0
 ) -> Tuple[str, str]:
-    if language == const.Language.ZH.value:
+    if language == const.LanguageEnum.ZH.value:
         no_title = "网址没发现标题"
         no_description = "网址没发现描述"
-    elif language == const.Language.EN.value:
+    elif language == const.LanguageEnum.EN.value:
         no_title = "No title found"
         no_description = "No description found"
     else:
@@ -423,7 +423,7 @@ def parse_version(version: str) -> Optional[Tuple[int, int, int]]:
     return vs
 
 
-async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
+async def get_latest_version() -> Tuple[Tuple[int, int, int], const.CodeEnum]:
     url = 'https://pypi.org/pypi/retk/json'
     default_version = (0, 0, 0)
     async with httpx.AsyncClient() as ac:
@@ -442,11 +442,11 @@ async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
                 httpx.HTTPError
         ) as e:
             logger.debug(f"failed to get {url}: {e}")
-            return default_version, const.Code.OPERATION_FAILED
+            return default_version, const.CodeEnum.OPERATION_FAILED
 
     if response.status_code != 200:
         logger.debug(f"failed to get {url}: {response.status_code}, {response.text}")
-        return default_version, const.Code.OPERATION_FAILED
+        return default_version, const.CodeEnum.OPERATION_FAILED
 
     package_info = response.json()
 
@@ -454,12 +454,12 @@ async def get_latest_version() -> Tuple[Tuple[int, int, int], const.Code]:
         v = package_info['info']['version']
     except KeyError:
         logger.debug(f"failed to get {url}: {response.text}")
-        return default_version, const.Code.OPERATION_FAILED
+        return default_version, const.CodeEnum.OPERATION_FAILED
     vs = parse_version(v)
     if vs is None:
         logger.debug(f"failed to get {url}: {v}")
-        return default_version, const.Code.OPERATION_FAILED
-    return vs, const.Code.OK
+        return default_version, const.CodeEnum.OPERATION_FAILED
+    return vs, const.CodeEnum.OK
 
 
 def get_token(uid: str, language: str) -> Tuple[str, str]:

@@ -96,7 +96,7 @@ class ObsidianTest(unittest.IsolatedAsyncioTestCase):
                 filename="aa.md",
             )
             self.assertEqual(".md", file.ext)
-            self.assertEqual(const.app.FileTypes.PLAIN, file.type)
+            self.assertEqual(const.app.FileTypesEnum.PLAIN, file.type)
             self.assertEqual(h + ".md", file.hashed_filename)
 
     async def test_replace_inner_link(self):

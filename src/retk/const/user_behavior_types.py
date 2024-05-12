@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class UserBehaviorType(Enum):
+class UserBehaviorTypeEnum(IntEnum):
     LOGIN = 0  # backend
     LOGOUT = 1  # frontend
     # node ops, backend
@@ -24,5 +24,5 @@ class UserBehaviorType(Enum):
 
 USER_BEHAVIOR_TYPE_MAP = {
     t.value: t
-    for t in UserBehaviorType.__members__.values()
+    for t in UserBehaviorTypeEnum.__members__.values()
 }

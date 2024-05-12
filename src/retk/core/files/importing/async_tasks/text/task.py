@@ -25,14 +25,14 @@ async def update_text_task(  # noqa: C901
         if not file["filename"].endswith(".md") and not file["filename"].endswith(".txt"):
             await utils.set_running_false(
                 uid=uid,
-                code=const.Code.INVALID_FILE_TYPE,
+                code=const.CodeEnum.INVALID_FILE_TYPE,
                 msg=f"invalid file type: {file['filename']}",
             )
             return
         if file["size"] > max_file_size:
             await utils.set_running_false(
                 uid=uid,
-                code=const.Code.TOO_LARGE_FILE,
+                code=const.CodeEnum.TOO_LARGE_FILE,
                 msg=f"file size: {file['size']} > {max_file_size} (max file size): {file['filename']}",
             )
             return
@@ -41,7 +41,7 @@ async def update_text_task(  # noqa: C901
     au = AuthedUser(
         u=convert_user_dict_to_authed_user(u),
         request_id=request_id,
-        language=u["settings"].get("language", const.Language.EN.value),
+        language=u["settings"].get("language", const.LanguageEnum.EN.value),
     )
     for i, file in enumerate(files):
         try:
@@ -50,29 +50,29 @@ async def update_text_task(  # noqa: C901
             logger.error(f"error: {e}. filepath: {file['filename']}")
             await utils.set_running_false(
                 uid=uid,
-                code=const.Code.FILE_OPEN_ERROR,
+                code=const.CodeEnum.FILE_OPEN_ERROR,
                 msg=f"file decode utf-8 failed, {e}: {file['filename']}",
             )
             return
         title = file["filename"].rsplit(".", 1)[0]
         md = title + "\n\n" + md
         try:
-            n, code = await core.node.post(
+            _, code = await core.node.post(
                 au=au,
                 md=md,
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
             )
         except pymongo.errors.DuplicateKeyError:
             continue
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"error: {e}. filepath: {file['filename']}")
             await utils.set_running_false(
                 uid=uid,
-                code=const.Code.FILE_OPEN_ERROR,
+                code=const.CodeEnum.FILE_OPEN_ERROR,
                 msg=f"file decode utf-8 failed, {e}: {file['filename']}",
             )
             return
-        if code != const.Code.OK:
+        if code != const.CodeEnum.OK:
             await utils.set_running_false(
                 uid=uid,
                 code=code,
@@ -81,7 +81,7 @@ async def update_text_task(  # noqa: C901
             return
         if i % 20 == 0:
             doc, code = await utils.update_process(uid=uid, type_=type_, process=int(i / len(files) * 100))
-            if code != const.Code.OK:
+            if code != const.CodeEnum.OK:
                 await utils.set_running_false(
                     uid=uid,
                     code=code,

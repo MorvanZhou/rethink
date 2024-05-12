@@ -72,7 +72,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         self.au = AuthedUser(
             u=convert_user_dict_to_authed_user(u),
             request_id="test",
-            language=const.Language.EN.value,
+            language=const.LanguageEnum.EN.value,
         )
 
     async def asyncTearDown(self) -> None:
@@ -109,9 +109,9 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         self.assertIn(self.p, event_plugin_map["on_node_added"])
 
         node, code = await core.node.post(
-            au=self.au, md="a", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="a", type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(retk.const.Code.OK, code)
+        self.assertEqual(retk.const.CodeEnum.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])
         self.assertEqual("a", self.p.cache[node["id"]]["md"])
 
@@ -119,7 +119,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
         node, _, code = await core.node.update_md(
             au=self.au, nid=node["id"], md="b"
         )
-        self.assertEqual(retk.const.Code.OK, code)
+        self.assertEqual(retk.const.CodeEnum.OK, code)
         self.assertEqual(node, self.p.cache[node["id"]])
         self.assertEqual("b", self.p.cache[node["id"]]["md"])
         self.assertEqual("before_node_updated:b", self.p.bmd)

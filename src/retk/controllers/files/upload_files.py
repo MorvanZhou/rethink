@@ -41,7 +41,7 @@ async def get_upload_process(
 ) -> schemas.files.FileUploadProcessResponse:
     doc = await core.files.get_upload_process(uid=au.u.id)
     if doc is None:
-        code = const.Code.OK
+        code = const.CodeEnum.OK
         return schemas.files.FileUploadProcessResponse(
             code=code.value,
             msg=const.get_msg_by_code(code, au.language),
@@ -95,7 +95,7 @@ async def fetch_image_vditor(
     if len(req.url) > 2048:
         return maybe_raise_json_exception(
             au=au,
-            code=const.Code.REQUEST_INPUT_ERROR,
+            code=const.CodeEnum.REQUEST_INPUT_ERROR,
         )
 
     new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)

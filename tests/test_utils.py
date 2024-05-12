@@ -197,7 +197,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
                     content=content.encode("utf-8"),
                 )
             title, desc = await utils.get_title_description_from_link(
-                url, language=const.Language.EN.value)
+                url, language=const.LanguageEnum.EN.value)
             if res:
                 self.assertNotEqual("No title found", title, msg=f"{url} {title}")
                 self.assertNotEqual("No description found", desc, msg=f"{url} {desc}")
@@ -240,7 +240,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_version(self):
         v, code = await utils.get_latest_version()
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(3, len(v))
         for num in v:
             self.assertTrue(isinstance(num, int))

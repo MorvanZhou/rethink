@@ -13,7 +13,7 @@ async def add_user_behavior(
     except KeyError:
         raise json_exception(
             request_id=au.request_id,
-            code=const.Code.INVALID_PARAM,
+            code=const.CodeEnum.INVALID_PARAM,
             language=au.u.language,
         )
     await core.statistic.add_user_behavior(uid=au.u.id, type_=t, remark=req.remark)

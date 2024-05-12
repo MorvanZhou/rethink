@@ -53,23 +53,23 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": "a@c.com",
                 "password": "a",
-                "captchaToken": token,
-                "captchaCode": data["code"],
-                "language": const.Language.EN.value,
+                "verificationToken": token,
+                "verification": data["code"],
+                "language": const.LanguageEnum.EN.value,
                 "requestId": "xxx"
             },
             headers={"RequestId": "xxx"}
         )
         self.assertEqual(403, resp.status_code)
         rj = resp.json()
-        self.assertEqual(const.Code.ONE_USER_MODE.value, rj["detail"]["code"])
+        self.assertEqual(const.CodeEnum.ONE_USER_MODE.value, rj["detail"]["code"])
         self.assertEqual("xxx", rj["detail"]["requestId"])
 
     @patch(
         "retk.core.account.email.EmailServer._send"
     )
     def test_email_verification(self, mock_send):
-        mock_send.return_value = const.Code.OK
+        mock_send.return_value = const.CodeEnum.OK
         token, _ = account.app_captcha.generate()
         data = jwt_decode(token)
 
@@ -130,7 +130,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
 
-    def error_check(self, resp: Response, status_code: int, code: const.Code, rid="xxx", language="en"):
+    def error_check(self, resp: Response, status_code: int, code: const.CodeEnum, rid="xxx", language="en"):
         self.assertEqual(status_code, resp.status_code)
         rj = resp.json()
         self.assertIn("detail", rj, msg=rj)
@@ -172,7 +172,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 401, const.Code.INVALID_AUTH)
+        self.error_check(resp, 401, const.CodeEnum.INVALID_AUTH)
 
     async def test_access_token_expire(self):
         aed = config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA
@@ -185,6 +185,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": const.DEFAULT_USER["email"],
                 "password": "",
+                "language": "zh",
             })
         rj = resp.json()
         access_token = rj["accessToken"]
@@ -201,7 +202,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
         detail = rj["detail"]
-        self.assertEqual(const.Code.EXPIRED_ACCESS_TOKEN.value, detail["code"], msg=detail)
+        self.assertEqual(const.CodeEnum.EXPIRED_ACCESS_TOKEN.value, detail["code"], msg=detail)
         self.assertEqual("xxx", detail["requestId"], msg=detail)
 
         resp = self.client.get(
@@ -212,7 +213,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "ID": self.uid,
             }
         )
-        self.error_check(resp, 401, const.Code.EXPIRED_AUTH)
+        self.error_check(resp, 401, const.CodeEnum.EXPIRED_AUTH)
 
         config.get_settings().REFRESH_TOKEN_EXPIRE_DELTA = red
 
@@ -236,7 +237,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(const.Code.EXPIRED_ACCESS_TOKEN.value, rj["detail"]["code"], msg=rj)
+        self.assertEqual(const.CodeEnum.EXPIRED_ACCESS_TOKEN.value, rj["detail"]["code"], msg=rj)
 
         config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA = aed
         resp = self.client.get(
@@ -277,7 +278,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             })
         self.assertEqual(401, resp.status_code)
-        self.error_check(resp, 401, const.Code.INVALID_AUTH)
+        self.error_check(resp, 401, const.CodeEnum.INVALID_AUTH)
 
         lang = "zh"
         resp = self.client.post(
@@ -285,8 +286,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": email,
                 "password": "abc111",
-                "captchaToken": token,
-                "captchaCode": code,
+                "verificationToken": token,
+                "verification": code,
                 "language": lang,
             },
             headers={"RequestId": "xxx"}
@@ -316,7 +317,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 400, const.Code.OLD_PASSWORD_ERROR, language=lang)
+        self.error_check(resp, 400, const.CodeEnum.OLD_PASSWORD_ERROR, language=lang)
 
         resp = self.client.put(
             "/api/users/password", json={
@@ -363,7 +364,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "nickname": "new nickname",
                 "avatar": "http://new.avatar/aa.png",
                 "lastState": {
-                    "nodeDisplayMethod": const.NodeDisplayMethod.LIST.value,
+                    "nodeDisplayMethod": const.NodeDisplayMethodEnum.LIST.value,
                 }
             },
             headers=self.default_headers
@@ -377,13 +378,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("new nickname", rj["user"]["nickname"])
         self.assertEqual("http://new.avatar/aa.png", rj["user"]["avatar"])
-        self.assertEqual(const.NodeDisplayMethod.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
+        self.assertEqual(const.NodeDisplayMethodEnum.LIST.value, rj["user"]["lastState"]["nodeDisplayMethod"])
 
         resp = self.client.patch(
             "/api/users",
             json={
                 "settings": {
-                    "language": const.Language.ZH.value,
+                    "language": const.LanguageEnum.ZH.value,
                     "theme": "dark",
                     "editorMode": "ir",
                     "editorFontSize": 20,
@@ -450,7 +451,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/nodes",
             json={
                 "md": "node1\ntext",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers=self.default_headers
         )
@@ -465,7 +466,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         n = rj["node"]
         self.assertEqual("node1", n["title"], msg=rj)
         self.assertEqual("node1\ntext", n["md"])
-        self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
+        self.assertEqual(const.NodeTypeEnum.MARKDOWN.value, n["type"])
 
         resp = self.client.put(
             f'/api/nodes/{node["id"]}/md',
@@ -485,7 +486,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual("node2", n["title"])
         self.assertEqual("node2\ntext", n["md"])
-        self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
+        self.assertEqual(const.NodeTypeEnum.MARKDOWN.value, n["type"])
 
         resp = self.client.put(
             f'/api/trash/{node["id"]}',
@@ -548,13 +549,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/trash/ssa",
             headers=self.default_headers
         )
-        self.error_check(resp, 404, const.Code.NODE_NOT_EXIST)
+        self.error_check(resp, 404, const.CodeEnum.NODE_NOT_EXIST)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
             headers=self.default_headers
         )
-        self.error_check(resp, 404, const.Code.NODE_NOT_EXIST)
+        self.error_check(resp, 404, const.CodeEnum.NODE_NOT_EXIST)
 
         resp = self.client.get(
             "/api/nodes/core",
@@ -583,7 +584,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "/api/nodes",
                 json={
                     "md": f"node{i}\ntext",
-                    "type": const.NodeType.MARKDOWN.value,
+                    "type": const.NodeTypeEnum.MARKDOWN.value,
                 },
                 headers=self.default_headers
             )
@@ -813,7 +814,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code, msg=resp.json())
         rj = resp.json()
-        self.assertEqual(const.Code.INVALID_FILE_TYPE.value, rj["code"])
+        self.assertEqual(const.CodeEnum.INVALID_FILE_TYPE.value, rj["code"])
         self.assertEqual({'errFiles': ['test.qw'], 'succMap': {}}, rj["data"])
         f1.close()
         shutil.rmtree("temp", ignore_errors=True)
@@ -835,7 +836,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={"url": img},
             headers=self.default_headers
         )
-        self.error_check(resp, 400, const.Code.FILE_OPEN_ERROR)
+        self.error_check(resp, 400, const.CodeEnum.FILE_OPEN_ERROR)
 
     @patch(
         "retk.utils.httpx.AsyncClient.get",
@@ -846,7 +847,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/nodes/quick",
             json={
                 "md": "node1\ntext",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers=self.default_headers
         )
@@ -854,13 +855,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         node = rj["node"]
         self.assertEqual("node1", node["title"])
         self.assertEqual("node1\ntext", node["md"])
-        self.assertEqual(const.NodeType.MARKDOWN.value, node["type"])
+        self.assertEqual(const.NodeTypeEnum.MARKDOWN.value, node["type"])
 
         resp = self.client.post(
             "/api/nodes/quick",
             json={
                 "md": "https://baidu.com",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers=self.default_headers
         )
@@ -891,10 +892,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
     ):
-        mock_save_md_to_cos.return_value = const.Code.OK
-        mock_get_md_from_cos.return_value = ("title2\ntext", const.Code.OK)
-        mock_remove_md_from_cos.return_value = const.Code.OK
-        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("title2\ntext", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
 
         bi = config.get_settings().MD_BACKUP_INTERVAL
         config.get_settings().MD_BACKUP_INTERVAL = 0.0001
@@ -902,7 +903,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/nodes",
             json={
                 "md": "title\ntext",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers=self.default_headers
         )
@@ -1047,7 +1048,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers
         )
-        self.error_check(resp, 403, const.Code.NOT_PERMITTED)
+        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
 
         u = await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})
         admin_uid = u["id"]
@@ -1078,8 +1079,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": email,
                 "password": "abc111",
-                "captchaToken": token,
-                "captchaCode": code,
+                "verificationToken": token,
+                "verification": code,
                 "language": lang,
             },
             headers={"RequestId": "xxx"}
@@ -1113,7 +1114,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 403, const.Code.USER_DISABLED)
+        self.error_check(resp, 403, const.CodeEnum.USER_DISABLED)
 
         resp = self.client.put(
             "/api/admin/users/enable/email",
@@ -1149,7 +1150,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             }
         )
-        self.error_check(resp, 403, const.Code.USER_DISABLED)
+        self.error_check(resp, 403, const.CodeEnum.USER_DISABLED)
 
         doc = await client.coll.users.update_one(
             {"id": admin_uid},
@@ -1171,7 +1172,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.LOGIN.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.LOGIN.value, docs[-1]["type"])
 
         token = resp.json()["accessToken"]
 
@@ -1180,7 +1181,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/nodes",
             json={
                 "md": "node1\ntext",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers={
                 "Authorization": token,
@@ -1190,7 +1191,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.NODE_CREATE.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.NODE_CREATE.value, docs[-1]["type"])
         self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
 
         # quick node
@@ -1198,7 +1199,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             "/api/nodes/quick",
             json={
                 "md": "node1\ntext",
-                "type": const.NodeType.MARKDOWN.value,
+                "type": const.NodeTypeEnum.MARKDOWN.value,
             },
             headers={
                 "Authorization": token,
@@ -1208,7 +1209,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.NODE_QUICK_CREATE.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.NODE_QUICK_CREATE.value, docs[-1]["type"])
         self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
 
         # trash node
@@ -1222,7 +1223,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.NODE_TRASHED_OPS.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.NODE_TRASHED_OPS.value, docs[-1]["type"])
 
         # restore node
         self.client.put(
@@ -1235,7 +1236,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.NODE_RESTORED_OPS.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.NODE_RESTORED_OPS.value, docs[-1]["type"])
 
         # delete node
         self.client.put(
@@ -1255,7 +1256,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.NODE_DELETED_OPS.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.NODE_DELETED_OPS.value, docs[-1]["type"])
 
         # search
         self.client.get(
@@ -1275,7 +1276,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.SEARCH_GLOBAL.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.SEARCH_GLOBAL.value, docs[-1]["type"])
         self.assertEqual("1", docs[-1]["remark"])
 
         # search at
@@ -1294,7 +1295,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.SEARCH_AT.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.SEARCH_AT.value, docs[-1]["type"])
         self.assertEqual("node", docs[-1]["remark"])
 
         # logout
@@ -1305,7 +1306,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "RequestId": "xxx"
             },
             json={
-                "type": const.UserBehaviorType.LOGOUT.value,
+                "type": const.UserBehaviorTypeEnum.LOGOUT.value,
                 "remark": "logout",
             }
         )
@@ -1313,5 +1314,5 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
         ).to_list(None)
-        self.assertEqual(const.UserBehaviorType.LOGOUT.value, docs[-1]["type"])
+        self.assertEqual(const.UserBehaviorTypeEnum.LOGOUT.value, docs[-1]["type"])
         self.assertEqual("logout", docs[-1]["remark"])

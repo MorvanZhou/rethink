@@ -26,7 +26,7 @@ async def user_nodes(
     if q != "":
         await core.statistic.add_user_behavior(
             uid=au.u.id,
-            type_=const.UserBehaviorType.SEARCH_GLOBAL,
+            type_=const.UserBehaviorTypeEnum.SEARCH_GLOBAL,
             remark=q,
         )
     return schemas.node.NodesSearchResponse(
@@ -55,7 +55,7 @@ async def node_at_search(
     if q != "":
         await core.statistic.add_user_behavior(
             uid=au.u.id,
-            type_=const.UserBehaviorType.SEARCH_AT,
+            type_=const.UserBehaviorTypeEnum.SEARCH_AT,
             remark=q,
         )
     return schemas.node.NodesSearchResponse(

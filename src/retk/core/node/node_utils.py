@@ -5,7 +5,7 @@ from retk.models import tps, db_ops
 from retk.models.client import client
 
 
-def get_linked_nodes(new_md) -> Tuple[set, const.Code]:
+def get_linked_nodes(new_md) -> Tuple[set, const.CodeEnum]:
     # last first
     cache_current_to_nid: Set[str] = set()
 
@@ -16,16 +16,16 @@ def get_linked_nodes(new_md) -> Tuple[set, const.Code]:
             # check existed nodes
             to_nid = link[3:]
             cache_current_to_nid.add(to_nid)
-    return cache_current_to_nid, const.Code.OK
+    return cache_current_to_nid, const.CodeEnum.OK
 
 
 async def flush_to_node_ids(
         nid: str,
         orig_to_nid: List[str],
         new_md: str
-) -> Tuple[List[str], const.Code]:
+) -> Tuple[List[str], const.CodeEnum]:
     new_to_nid, code = get_linked_nodes(new_md=new_md)
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         return [], code
 
     # remove fromNodes for linked nodes
@@ -37,7 +37,7 @@ async def flush_to_node_ids(
     for to_nid in new_to_nid.difference(orig_to_nid):
         await db_ops.node_add_to_set(id_=to_nid, key="fromNodeIds", value=nid)
 
-    return list(new_to_nid), const.Code.OK
+    return list(new_to_nid), const.CodeEnum.OK
 
 
 async def set_linked_nodes(

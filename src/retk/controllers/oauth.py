@@ -1,12 +1,12 @@
 from typing import Dict
 
 from fastapi import Request
+
 from retk import config, const, core, utils
 from retk.controllers.utils import json_exception
 from retk.depend.sso.base import SSOLoginError, SSOBase
 from retk.depend.sso.facebook import FacebookSSO
 from retk.depend.sso.github import GithubSSO
-
 # from retk.depend.sso.qq import QQSSO
 from .schemas.account import TokenResponse
 from .schemas.oauth import OAuthResponse
@@ -33,8 +33,8 @@ def init_provider_map():
         ),
     })
     user_source_map.update({
-        "github": const.UserSource.GITHUB.value,
-        "facebook": const.UserSource.FACEBOOK.value,
+        "github": const.UserSourceEnum.GITHUB.value,
+        "facebook": const.UserSourceEnum.FACEBOOK.value,
     })
 
 
@@ -44,8 +44,8 @@ async def login_provider(provider_name: str) -> OAuthResponse:
     except KeyError:
         raise json_exception(
             request_id="",
-            code=const.Code.OAUTH_PROVIDER_NOT_FOUND,
-            language=const.Language.EN.value,
+            code=const.CodeEnum.OAUTH_PROVIDER_NOT_FOUND,
+            language=const.LanguageEnum.EN.value,
         )
     return OAuthResponse(
         uri=await p.get_login_url(),
@@ -59,23 +59,23 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
     except KeyError:
         raise json_exception(
             request_id="",
-            code=const.Code.OAUTH_PROVIDER_NOT_FOUND,
-            language=const.Language.EN.value,
+            code=const.CodeEnum.OAUTH_PROVIDER_NOT_FOUND,
+            language=const.LanguageEnum.EN.value,
         )
     try:
         user = await p.verify_and_process(req)
     except SSOLoginError:
         raise json_exception(
             request_id="",
-            code=const.Code.INVALID_AUTH,
+            code=const.CodeEnum.INVALID_AUTH,
         )
     if user is None:
         raise json_exception(
             request_id="",
-            code=const.Code.INVALID_AUTH,
+            code=const.CodeEnum.INVALID_AUTH,
         )
     u, code = await core.user.get_account(account=user.id, source=user_source)
-    if code == const.Code.OK:
+    if code == const.CodeEnum.OK:
         access_token, refresh_token = utils.get_token(
             uid=u["id"],
             language=u["settings"]["language"],
@@ -87,7 +87,7 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
         )
 
     # no user found, create one
-    language = const.Language.EN.value
+    language = const.LanguageEnum.EN.value
     u, code = await core.user.add(
         account=user.id,
         source=user_source,
@@ -98,14 +98,14 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
         language=language,
     )
 
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id="",
             code=code,
         )
 
     code = await core.node.new_user_add_default_nodes(language=language, uid=u["id"])
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         raise json_exception(
             request_id="",
             code=code,

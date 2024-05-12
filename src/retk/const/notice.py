@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import IntEnum
 
 
 # 0: batch, 1: all, 2: admin, 3: manager
-class RecipientType(Enum):
+class RecipientTypeEnum(IntEnum):
     BATCH = 0
     ALL = 1
     ADMIN = 2

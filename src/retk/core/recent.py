@@ -7,14 +7,14 @@ async def added_at_node(
         au: AuthedUser,
         nid: str,
         to_nid: str,
-) -> const.Code:
+) -> const.CodeEnum:
     # add selected node to recentCursorSearchSelectedNIds
     node_c = {"uid": au.u.id, "id": {"$in": [nid, to_nid]}}
 
     # try finding node
     ns = await client.coll.nodes.find(node_c).to_list(length=None)
     if len(ns) != 2:
-        return const.Code.NODE_NOT_EXIST
+        return const.CodeEnum.NODE_NOT_EXIST
 
     rns = au.u.last_state.recent_cursor_search_selected_nids
     if to_nid in rns:
@@ -29,12 +29,12 @@ async def added_at_node(
         {"$set": {"lastState.recentCursorSearchSelectedNIds": rns}}
     )
     if res.matched_count != 1:
-        return const.Code.OPERATION_FAILED
+        return const.CodeEnum.OPERATION_FAILED
 
-    return const.Code.OK
+    return const.CodeEnum.OK
 
 
-async def put_recent_search(au: AuthedUser, query: str) -> const.Code:
+async def put_recent_search(au: AuthedUser, query: str) -> const.CodeEnum:
     rns = au.u.last_state.recent_search
     try:
         rns.remove(query)
@@ -47,4 +47,4 @@ async def put_recent_search(au: AuthedUser, query: str) -> const.Code:
         {"id": au.u.id},
         {"$set": {"lastState.recentSearch": rns}}
     )
-    return const.Code.OK
+    return const.CodeEnum.OK

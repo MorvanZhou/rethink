@@ -14,7 +14,7 @@ async def check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Impor
     if doc and doc["running"]:
         await set_running_false(
             uid=uid,
-            code=const.Code.IMPORT_PROCESS_NOT_FINISHED,
+            code=const.CodeEnum.IMPORT_PROCESS_NOT_FINISHED,
             msg="last importData process not finished, please try again later",
         )
         return None, False
@@ -35,7 +35,7 @@ async def check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Impor
         if not res.acknowledged:
             await set_running_false(
                 uid,
-                const.Code.OPERATION_FAILED,
+                const.CodeEnum.OPERATION_FAILED,
                 msg="insert new importData process failed",
             )
             return doc, False
@@ -48,7 +48,7 @@ async def check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Impor
             running=True,
             code=0,
         )
-        if code != const.Code.OK:
+        if code != const.CodeEnum.OK:
             await set_running_false(
                 uid=uid,
                 code=code,
@@ -72,7 +72,7 @@ async def finish_task(uid: str, obsidian=None):
     if resp.modified_count != 1:
         await set_running_false(
             uid=uid,
-            code=const.Code.OPERATION_FAILED,
+            code=const.CodeEnum.OPERATION_FAILED,
             msg="uploading importData process failed",
         )
 
@@ -84,7 +84,7 @@ async def update_process(
         start_at: datetime.datetime = None,
         running: bool = None,
         code: int = None,
-) -> Tuple[Optional[ImportData], const.Code]:
+) -> Tuple[Optional[ImportData], const.CodeEnum]:
     data = {"type": type_, "process": process}
     if start_at is not None:
         data["startAt"] = start_at
@@ -102,8 +102,8 @@ async def update_process(
             {"$set": data}
         )
     if doc is None:
-        return doc, const.Code.OPERATION_FAILED
-    return doc, const.Code.OK
+        return doc, const.CodeEnum.OPERATION_FAILED
+    return doc, const.CodeEnum.OK
 
 
 async def import_set_modules():
@@ -113,7 +113,7 @@ async def import_set_modules():
 
 async def set_running_false(
         uid: str,
-        code: const.Code,
+        code: const.CodeEnum,
         msg: str = "",
 ) -> None:
     await client.coll.import_data.update_one({"uid": uid}, {"$set": {

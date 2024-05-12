@@ -12,7 +12,7 @@ from retk.models import tps
 from retk.models.client import client
 
 
-async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.Code]:
+async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     return await user.get_by_email(email=email)
 
 
@@ -42,39 +42,39 @@ def hash_password(password: str, email: str) -> str:
     return bcrypt.hashpw(bpw, salt=salt).decode("utf-8")
 
 
-def login_by_email_pwd(email: str, password: str) -> const.Code:
+def login_by_email_pwd(email: str, password: str) -> const.CodeEnum:
     if config.get_settings().ONE_USER:
         logger.warning("on ONE_USER mode, user registration will be skipped")
-        return const.Code.ONE_USER_MODE
+        return const.CodeEnum.ONE_USER_MODE
     if regex.EMAIL.match(email) is None:
-        return const.Code.INVALID_EMAIL
+        return const.CodeEnum.INVALID_EMAIL
     if regex.VALID_PASSWORD.match(password) is None:
-        return const.Code.INVALID_PASSWORD
-    return const.Code.OK
+        return const.CodeEnum.INVALID_PASSWORD
+    return const.CodeEnum.OK
 
 
 async def signup(
         email: str,
         password: str,
-        language: str = const.Language.EN.value,
-) -> Tuple[Optional[tps.UserMeta], const.Code]:
+        language: str = const.LanguageEnum.EN.value,
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     code = login_by_email_pwd(email=email, password=password)
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         return None, code
     u, code = await user.get_by_email(email=email)
-    if code == const.Code.OK or u is not None:
-        return None, const.Code.USER_EXIST
+    if code == const.CodeEnum.OK or u is not None:
+        return None, const.CodeEnum.USER_EXIST
 
     u, code = await user.add(
         account=email,
-        source=const.UserSource.EMAIL.value,
+        source=const.UserSourceEnum.EMAIL.value,
         email=email,
         hashed=hash_password(password=password, email=email),
         nickname=email.split("@")[0],
         avatar="",
         language=language,
     )
-    if code != const.Code.OK:
+    if code != const.CodeEnum.OK:
         return None, code
 
     code = await node.new_user_add_default_nodes(uid=u["id"], language=language)
@@ -91,17 +91,17 @@ async def delete(uid: str):
     await client.search.force_delete_all(uid=uid)
 
 
-async def disable(uid: str) -> const.Code:
+async def disable(uid: str) -> const.CodeEnum:
     res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"disabled": True}}
     )
-    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED
+    return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED
 
 
-async def enable(uid: str) -> const.Code:
+async def enable(uid: str) -> const.CodeEnum:
     res = await client.coll.users.update_one(
         {"id": uid},
         {"$set": {"disabled": False}}
     )
-    return const.Code.OK if res.acknowledged == 1 else const.Code.OPERATION_FAILED
+    return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED

@@ -93,7 +93,7 @@ async def update_password(
         req: schemas.user.UpdatePasswordRequest
 ) -> schemas.RequestIdResponse:
     if regex.VALID_PASSWORD.match(req.newPassword) is None:
-        return maybe_raise_json_exception(au=au, code=const.Code.INVALID_PASSWORD)
+        return maybe_raise_json_exception(au=au, code=const.CodeEnum.INVALID_PASSWORD)
 
     ok = await account.manager.is_right_password(
         email=au.u.email,
@@ -101,7 +101,7 @@ async def update_password(
         password=req.oldPassword,
     )
     if not ok:
-        return maybe_raise_json_exception(au=au, code=const.Code.OLD_PASSWORD_ERROR)
+        return maybe_raise_json_exception(au=au, code=const.CodeEnum.OLD_PASSWORD_ERROR)
 
     hashed = account.manager.hash_password(password=req.newPassword, email=au.u.email)
     code = await reset_password(uid=au.u.id, hashed=hashed)
@@ -114,9 +114,9 @@ async def update_password(
 
 async def get_notifications(
         au: AuthedUser,
-) -> schemas.user.NotificationResponse:
+) -> schemas.notice.NotificationResponse:
     notifications = []
-    return schemas.user.NotificationResponse(
+    return schemas.notice.NotificationResponse(
         requestId=au.request_id,
         notifications=notifications,
     )

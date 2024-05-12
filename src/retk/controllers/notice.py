@@ -8,4 +8,4 @@ async def put_system_notice(
         req: schemas.notice.ManagerNoticeDeliveryRequest,
 ) -> schemas.RequestIdResponse:
     if const.USER_TYPE.id2config(au.u.type) not in (const.USER_TYPE.ADMIN, const.USER_TYPE.MANAGER):
-        return const.Code.NOT_PERMITTED
+        return const.CodeEnum.NOT_PERMITTED

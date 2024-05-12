@@ -1,6 +1,6 @@
 from typing import Callable
 
-from retk.const import Code
+from retk.const import CodeEnum
 from retk.models.tps import AuthedUser
 from .base import event_plugin_map
 
@@ -8,7 +8,7 @@ from .base import event_plugin_map
 def on_node_added(func: Callable):
     async def wrapper(*args, **kwargs):
         data, code = await func(*args, **kwargs)
-        if code != Code.OK:
+        if code != CodeEnum.OK:
             return data, code
         for inst in event_plugin_map["on_node_added"]:
             # execute the class method
@@ -31,7 +31,7 @@ def on_node_updated(func: Callable):
             md=md,
             *args, **kwargs
         )
-        if code != Code.OK:
+        if code != CodeEnum.OK:
             return data, code
         for inst in event_plugin_map["on_node_updated"]:
             # execute the class method

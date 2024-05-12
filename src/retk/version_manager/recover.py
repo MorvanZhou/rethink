@@ -19,11 +19,11 @@ def dump_default_dot_rethink(path: Union[os.PathLike, Path]) -> Dict:
         "avatar": const.DEFAULT_USER["avatar"],
         "account": const.DEFAULT_USER["email"],
         "settings": {
-            "language": os.getenv("RETHINK_DEFAULT_LANGUAGE", const.Language.EN.value),
-            "theme": const.app.AppTheme.LIGHT.value,
-            "editorMode": const.app.EditorMode.WYSIWYG.value,
+            "language": os.getenv("RETHINK_DEFAULT_LANGUAGE", const.LanguageEnum.EN.value),
+            "theme": const.app.AppThemeEnum.LIGHT.value,
+            "editorMode": const.app.EditorModeEnum.WYSIWYG.value,
             "editorFontSize": 15,
-            "editorCodeTheme": const.app.EditorCodeTheme.GITHUB.value,
+            "editorCodeTheme": const.app.EditorCodeThemeEnum.GITHUB.value,
             "editorSepRightWidth": 200,
             "editorSideCurrentToolId": "",
         }

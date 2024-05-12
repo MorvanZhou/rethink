@@ -74,7 +74,7 @@ async def __file_ptn_replace_upload(
     )
 
     if url != "":
-        img_ptn = "!" if file.type == const.app.FileTypes.IMAGE else ""
+        img_ptn = "!" if file.type == const.app.FileTypesEnum.IMAGE else ""
         md = f"{md[: span[0]]}{img_ptn}[{filename}]({url}){md[span[1]:]}"
     return md
 

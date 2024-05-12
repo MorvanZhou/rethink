@@ -54,12 +54,12 @@ async def __render(
 ):
     plugins = get_plugins()
     if pid not in plugins:
-        return maybe_raise_json_exception(au=au, code=const.Code.PLUGIN_NOT_FOUND)
+        return maybe_raise_json_exception(au=au, code=const.CodeEnum.PLUGIN_NOT_FOUND)
 
     try:
         plugin = plugins[pid]
     except KeyError:
-        return maybe_raise_json_exception(au=au, code=const.Code.PLUGIN_NOT_FOUND)
+        return maybe_raise_json_exception(au=au, code=const.CodeEnum.PLUGIN_NOT_FOUND)
 
     try:
         if nid != "":
@@ -101,8 +101,8 @@ async def plugin_call(
     if not config.is_local_db():
         raise json_exception(
             request_id=req.requestId,
-            code=const.Code.NOT_PERMITTED,
-            language=const.Language.EN.value,
+            code=const.CodeEnum.NOT_PERMITTED,
+            language=const.LanguageEnum.EN.value,
             log_msg="plugin call is not allowed in production",
         )
     plugins = get_plugins()

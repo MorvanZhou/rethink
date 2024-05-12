@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class Language(Enum):
+class LanguageEnum(str, Enum):
     EN = "en"
     ZH = "zh"
 

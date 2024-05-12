@@ -8,7 +8,7 @@ from bson import ObjectId
 from qcloud_cos import CosConfig, CosServiceError, CosS3Client
 
 from retk.config import get_settings, is_local_db
-from retk.const.app import FileTypes
+from retk.const.app import FileTypesEnum
 from retk.const.settings import IMG_RESIZE_THRESHOLD
 from retk.core.user import update_used_space
 from retk.logger import logger
@@ -30,12 +30,12 @@ class File:
         self.hash = md5_hash.hexdigest()
         sep = self.filename.rsplit(".", 1)
         self.ext = f".{sep[-1]}" if len(sep) > 1 else ""
-        self.type = FileTypes.get_type(self.ext)
+        self.type = FileTypesEnum.get_type(self.ext)
         self.hashed_filename = f"{self.hash}{self.ext}"
         self._reset_size()
 
     def image_resize(self, resize_threshold: int):
-        if self.type != FileTypes.IMAGE:
+        if self.type != FileTypesEnum.IMAGE:
             return
         if self.size > resize_threshold:
             # reduce image size
@@ -51,7 +51,7 @@ class File:
         self.data.seek(0)
 
     def is_unknown_type(self):
-        return self.type == FileTypes.UNKNOWN
+        return self.type == FileTypesEnum.UNKNOWN
 
 
 async def add_to_db(
@@ -88,7 +88,7 @@ class Saver:
             return f"/files/{file.hashed_filename}"
 
         try:
-            if file.type == FileTypes.IMAGE:
+            if file.type == FileTypesEnum.IMAGE:
                 file.image_resize(resize_threshold=self.resize_threshold)
                 Image.open(file.data).save(path)
             else:
@@ -144,7 +144,7 @@ class Saver:
             if e.get_status_code() != 404:
                 return url
 
-        if file.type == FileTypes.IMAGE:
+        if file.type == FileTypesEnum.IMAGE:
             file.image_resize(resize_threshold=self.resize_threshold)
 
         # can raise error

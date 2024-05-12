@@ -53,7 +53,7 @@ async def post_node(
         from_nid=req.fromNid,
     )
     maybe_raise_json_exception(au=au, code=code)
-    b_type = const.UserBehaviorType.NODE_CREATE if not is_quick else const.UserBehaviorType.NODE_QUICK_CREATE
+    b_type = const.UserBehaviorTypeEnum.NODE_CREATE if not is_quick else const.UserBehaviorTypeEnum.NODE_QUICK_CREATE
     await core.statistic.add_user_behavior(
         uid=au.u.id,
         type_=b_type,
@@ -74,10 +74,10 @@ async def post_quick_node(
             url=req.md,
             language=au.language,
         )
-        if au.language == const.Language.ZH.value:
+        if au.language == const.LanguageEnum.ZH.value:
             desc_prefix = "**描述：**\n\n"
             link_prefix = "*链接：*"
-        elif au.language == const.Language.EN.value:
+        elif au.language == const.LanguageEnum.EN.value:
             desc_prefix = "**Description:**\n\n"
             link_prefix = "*Link:* "
         else:

@@ -26,7 +26,7 @@ async def move_batch_to_trash(
 
     await core.statistic.add_user_behavior(
         uid=au.u.id,
-        type_=const.UserBehaviorType.NODE_TRASHED_OPS,
+        type_=const.UserBehaviorTypeEnum.NODE_TRASHED_OPS,
         remark="",
     )
     return schemas.RequestIdResponse(
@@ -67,7 +67,7 @@ async def restore_batch_from_trash(
 
     await core.statistic.add_user_behavior(
         uid=au.u.id,
-        type_=const.UserBehaviorType.NODE_RESTORED_OPS,
+        type_=const.UserBehaviorTypeEnum.NODE_RESTORED_OPS,
         remark="",
     )
     return schemas.RequestIdResponse(
@@ -96,7 +96,7 @@ async def delete_batch_node(
 
     await core.statistic.add_user_behavior(
         uid=au.u.id,
-        type_=const.UserBehaviorType.NODE_DELETED_OPS,
+        type_=const.UserBehaviorTypeEnum.NODE_DELETED_OPS,
         remark="",
     )
     return schemas.RequestIdResponse(

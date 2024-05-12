@@ -42,11 +42,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             u, code = await signup(
                 email=const.DEFAULT_USER["email"],
                 password=self.default_pwd,
-                language=const.Language.EN.value)
-            self.assertEqual(const.Code.OK, code)
+                language=const.LanguageEnum.EN.value)
+            self.assertEqual(const.CodeEnum.OK, code)
             self.access_token, self.refresh_token = get_token(
                 uid=u["id"],
-                language=const.Language.EN.value,
+                language=const.LanguageEnum.EN.value,
             )
 
             self.au = AuthedUser(
@@ -102,15 +102,15 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 "lastState": {
                     "recentCursorSearchSelectedNIds": [],
                     "recentSearch": [],
-                    "nodeDisplayMethod": const.NodeDisplayMethod.CARD.value,
+                    "nodeDisplayMethod": const.NodeDisplayMethodEnum.CARD.value,
                     "nodeDisplaySortKey": "modifiedAt"
                 },
                 "settings": {
                     "language": "en",
-                    "editorMode": const.app.EditorMode.WYSIWYG.value,
-                    "editorTheme": const.app.AppTheme.LIGHT.value,
+                    "editorMode": const.app.EditorModeEnum.WYSIWYG.value,
+                    "editorTheme": const.app.AppThemeEnum.LIGHT.value,
                     "editorFontSize": 15,
-                    "editorCodeTheme": const.app.EditorCodeTheme.GITHUB.value,
+                    "editorCodeTheme": const.app.EditorCodeThemeEnum.GITHUB.value,
                 }
             })
             us = await client.coll.users.find({"id": "same"}).to_list(length=2)
@@ -125,51 +125,51 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @utils.skip_no_connect
     async def test_user(self):
         u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("rethink", u["nickname"])
         self.assertIsNotNone(u)
 
         u, code = await signup(email="aaa@rethink.run", password="bbb123")
         _id = u["id"]
         self.assertNotEqual("", _id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         u, code = await core.user.get(_id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("aaa", u["nickname"])
 
         u, code = await core.user.patch(
             au=AuthedUser(
                 u=convert_user_dict_to_authed_user(u),
                 request_id="xxx",
-                language=const.Language.EN.value,
+                language=const.LanguageEnum.EN.value,
             ),
             req=PatchUserRequest(
                 nickname="2",
                 avatar="3",
                 lastState=PatchUserRequest.LastState(
-                    nodeDisplayMethod=const.NodeDisplayMethod.LIST.value,
+                    nodeDisplayMethod=const.NodeDisplayMethodEnum.LIST.value,
                 )
             )
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         u, code = await core.user.get(_id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("2", u["nickname"])
         self.assertEqual("3", u["avatar"])
 
         code = await core.account.manager.disable(uid=_id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         u, code = await core.user.get(uid=_id)
-        self.assertEqual(const.Code.USER_DISABLED, code)
+        self.assertEqual(const.CodeEnum.USER_DISABLED, code)
 
         code = await core.account.manager.enable(uid=_id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         code = await core.account.manager.disable(uid="ssaa")
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         await core.account.manager.delete(uid=_id)
 
@@ -185,24 +185,24 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
     ):
-        mock_save_md_to_cos.return_value = const.Code.OK
-        mock_get_md_from_cos.return_value = ("", const.Code.OK)
-        mock_remove_md_from_cos.return_value = const.Code.OK
-        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
 
         u, code = await core.user.get(self.au.u.id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         used_space = u["usedSpace"]
         node, code = await core.node.post(
-            au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         u, code = await core.user.get(self.au.u.id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(used_space + len(node["md"].encode("utf-8")), u["usedSpace"])
 
         n, code = await core.node.get(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("title", n["title"])
 
         await client.search.refresh()
@@ -211,38 +211,38 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, total)
 
         u, code = await core.user.get(self.au.u.id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         used_space = u["usedSpace"]
         n, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="# title2\ntext2")
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("title2", n["title"])
         self.assertEqual("text2", n["snippet"])
-        self.assertEqual(const.NodeType.MARKDOWN.value, n["type"])
+        self.assertEqual(const.NodeTypeEnum.MARKDOWN.value, n["type"])
 
         u, code = await core.user.get(self.au.u.id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(used_space + (
                 len(n["md"].encode("utf-8")) -
                 len(node["md"].encode("utf-8"))
         ), u["usedSpace"])
 
         code = await core.node.disable(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await client.search.refresh()
         n, code = await core.node.get(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.NODE_NOT_EXIST, code)
+        self.assertEqual(const.CodeEnum.NODE_NOT_EXIST, code)
 
         code = await core.node.to_trash(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await client.search.refresh()
         code = await core.node.delete(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         n, code = await core.node.get(au=self.au, nid=node["id"])
         self.assertIsNone(n)
-        self.assertEqual(const.Code.NODE_NOT_EXIST, code)
+        self.assertEqual(const.CodeEnum.NODE_NOT_EXIST, code)
 
         u, code = await core.user.get(self.au.u.id)
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(used_space - len(node["md"].encode("utf-8")), u["usedSpace"])
 
         nodes, total = await core.node.core_nodes(au=self.au, page=0, limit=10)
@@ -261,16 +261,16 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
     ):
-        mock_save_md_to_cos.return_value = const.Code.OK
-        mock_get_md_from_cos.return_value = ("", const.Code.OK)
-        mock_remove_md_from_cos.return_value = const.Code.OK
-        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
 
         nid1, _ = await core.node.post(
-            au=self.au, md="c", type_=const.NodeType.MARKDOWN.value,
+            au=self.au, md="c", type_=const.NodeTypeEnum.MARKDOWN.value,
         )
         nid2, _ = await core.node.post(
-            au=self.au, md="我133", type_=const.NodeType.MARKDOWN.value,
+            au=self.au, md="我133", type_=const.NodeTypeEnum.MARKDOWN.value,
         )
         md = dedent(
             f"""title
@@ -280,9 +280,9 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             ffq
             """)
         node, code = await core.node.post(
-            au=self.au, md=md, type_=const.NodeType.MARKDOWN.value
+            au=self.au, md=md, type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         await client.search.refresh()
         nodes, total = await client.search.search(au=self.au)
         self.assertEqual(5, len(nodes))
@@ -300,53 +300,53 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(recommend))
 
         n, code = await core.node.get(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(2, len(n["toNodeIds"]))
 
         tmp_text = n["md"]
         n, _, code = await core.node.update_md(au=self.au, nid=node["id"], md=tmp_text + "xxxx")
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(tmp_text + "xxxx", n["md"])
 
         n, code = await core.node.get(au=self.au, nid=nid1['id'])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(1, len(n["fromNodeIds"]))
 
         n, _, code = await core.node.update_md(au=self.au, nid=node["id"], md=n["md"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(0, len(n["toNodeIds"]))
 
         n, code = await core.node.get(au=self.au, nid=nid1['id'])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(0, len(n["fromNodeIds"]))
 
     @utils.skip_no_connect
     async def test_add_set(self):
         node, code = await core.node.post(
-            au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
         self.assertEqual(0, len(node["toNodeIds"]))
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         res = await db_ops.node_add_to_set(node["id"], "toNodeIds", ObjectId())
         self.assertEqual(1, res.modified_count)
         node, code = await core.node.get(au=self.au, nid=node["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(1, len(node["toNodeIds"]))
 
     @utils.skip_no_connect
     async def test_to_trash(self):
         n1, code = await core.node.post(
-            au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         _, code = await core.node.post(
-            au=self.au, md="title2\ntext", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="title2\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         code = await core.node.to_trash(self.au, n1["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         ns, total = await core.node.get_nodes_in_trash(au=self.au, page=0, limit=10)
         self.assertEqual(1, len(ns))
@@ -359,7 +359,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, total)
 
         code = await core.node.restore_from_trash(self.au, n1["id"])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         await client.search.refresh()
         nodes, total = await client.search.search(self.au)
@@ -378,22 +378,22 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
     ):
-        mock_save_md_to_cos.return_value = const.Code.OK
-        mock_get_md_from_cos.return_value = ("", const.Code.OK)
-        mock_remove_md_from_cos.return_value = const.Code.OK
-        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
         ns = []
         for i in range(10):
             n, code = await core.node.post(
-                au=self.au, md=f"title{i}\ntext", type_=const.NodeType.MARKDOWN.value
+                au=self.au, md=f"title{i}\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
             )
-            self.assertEqual(const.Code.OK, code)
+            self.assertEqual(const.CodeEnum.OK, code)
             ns.append(n)
 
         base_count = 2
 
         code = await core.node.batch_to_trash(self.au, [n["id"] for n in ns[:4]])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         await client.search.refresh()
         nodes, total = await client.search.search(self.au)
@@ -405,7 +405,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(4, len(tns))
 
         code = await core.node.restore_batch_from_trash(self.au, [n["id"] for n in tns[:2]])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         await client.search.refresh()
         nodes, total = await client.search.search(self.au)
@@ -413,7 +413,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(8 + base_count, total)
 
         code = await core.node.batch_delete(self.au, [n["id"] for n in tns[2:4]])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         tns, total = await core.node.get_nodes_in_trash(au=self.au, page=0, limit=10)
         self.assertEqual(0, total)
@@ -431,9 +431,9 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             (20.1, 20.1),
         ]:
             code = await core.user.update_used_space(self.au.u.id, delta)
-            self.assertEqual(const.Code.OK, code, msg=f"delta: {delta}, value: {value}")
+            self.assertEqual(const.CodeEnum.OK, code, msg=f"delta: {delta}, value: {value}")
             u, code = await core.user.get(self.au.u.id)
-            self.assertEqual(const.Code.OK, code)
+            self.assertEqual(const.CodeEnum.OK, code)
             now = u["usedSpace"] - base_used_space
             if now < 0:
                 now = 0
@@ -452,35 +452,35 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
     ):
-        mock_save_md_to_cos.return_value = const.Code.OK
-        mock_get_md_from_cos.return_value = ("title2\ntext", const.Code.OK)
-        mock_remove_md_from_cos.return_value = const.Code.OK
-        mock_remove_md_all_versions_from_cos.return_value = const.Code.OK
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("title2\ntext", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
 
         bi = config.get_settings().MD_BACKUP_INTERVAL
         config.get_settings().MD_BACKUP_INTERVAL = 0.0001
         n1, code = await core.node.post(
-            au=self.au, md="title\ntext", type_=const.NodeType.MARKDOWN.value
+            au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         time.sleep(0.001)
 
         _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title2\ntext",
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         time.sleep(0.001)
 
         _, _, code = await core.node.update_md(
             au=self.au, nid=n1["id"], md="title3\ntext",
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
 
         hist, code = await core.node.get_hist_editions(
             au=self.au,
             nid=n1["id"],
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(2, len(hist))
 
         hist_md, code = await core.node.get_hist_edition_md(
@@ -488,7 +488,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             nid=n1["id"],
             version=hist[1],
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("title2\ntext", hist_md)
 
         config.get_settings().MD_BACKUP_INTERVAL = bi

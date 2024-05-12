@@ -26,7 +26,7 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
         self.au = AuthedUser(
             u=convert_user_dict_to_authed_user(u),
             request_id="test",
-            language=const.Language.EN.value,
+            language=const.LanguageEnum.EN.value,
         )
         base_count = 2
         nids = []
@@ -34,21 +34,21 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
             n, code = await core.node.post(
                 au=self.au,
                 md=f"title{i}\ntext{i}",
-                type_=const.NodeType.MARKDOWN.value,
+                type_=const.NodeTypeEnum.MARKDOWN.value,
             )
             nids.append(n["id"])
-            self.assertEqual(const.Code.OK, code)
+            self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(20 + base_count, await client.search.count_all())
 
         code = await core.node.batch_to_trash(au=self.au, nids=nids[:10])
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(20 + base_count, await client.search.count_all())
 
         code = await client.search.delete_batch(
             au=self.au,
             nids=nids[:10],
         )
-        self.assertEqual(const.Code.OK, code)
+        self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(10 + base_count, await client.search.count_all())
 
         await client.init()
