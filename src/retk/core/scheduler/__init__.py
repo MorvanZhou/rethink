@@ -1,6 +1,6 @@
 from . import tasks
 from . import timing
-from .base import (
+from .base import (  # noqa: F401
     start,
     stop,
     get_jobs,

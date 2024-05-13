@@ -8,13 +8,14 @@ def send(
         subject: str,
 ) -> str:
     server = None
-    for _ in range(3):
+    n = 3
+    for _ in range(n):
         try:
             server = smtplib.SMTP('smtp.office365.com', 587)
         except smtplib.SMTPServerDisconnected:
             pass
     if server is None:
-        return f"try send email task 3 times, but failed, SMTPServerDisconnected"
+        return f"try send email task {n} times, but failed, SMTPServerDisconnected"
 
     server.ehlo()
     server.starttls()

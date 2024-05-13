@@ -60,7 +60,7 @@ def verify_referer(referer: Optional[str] = Header(None)):
     return referer
 
 
-async def __process_auth_headers(
+async def __process_auth_headers(  # noqa: C901
         refresh_token_id: str,
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(

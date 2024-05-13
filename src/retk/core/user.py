@@ -142,8 +142,11 @@ async def get_by_email(email: str, disabled: bool = False) -> Tuple[Optional[tps
     return await get_account(account=email, source=source, disabled=disabled)
 
 
-async def get_account(account: str, source: int, disabled: bool = False) -> Tuple[
-    Optional[tps.UserMeta], const.CodeEnum]:
+async def get_account(
+        account: str,
+        source: int,
+        disabled: bool = False
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     u = await client.coll.users.find_one({"source": source, "account": account, "disabled": disabled})
     if u is None:
         return None, const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR

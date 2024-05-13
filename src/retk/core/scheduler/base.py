@@ -10,23 +10,23 @@ from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 """
 - BlockingScheduler:
  use when the scheduler is the only thing running in your process
- 
+
 - BackgroundScheduler:
  use when you’re not using any of the frameworks below, 
  and want the scheduler to run in the background inside your application
- 
+
 - AsyncIOScheduler:
  use if your application uses the asyncio module
- 
+
 - GeventScheduler:
  use if your application uses gevent
- 
+
 - TornadoScheduler:
  use if you’re building a Tornado application
- 
+
 - TwistedScheduler: 
  use if you’re building a Twisted application
- 
+
 - QtScheduler:
  use if you’re building a Qt application
 """
