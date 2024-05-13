@@ -53,7 +53,7 @@ class EditorFontSizeEnum(IntEnum):
 
 
 class FileTypesEnum(Enum):
-    IMAGE = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+    IMAGE = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
     DOC = {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"}
     PLAIN = {".txt", ".md", ".csv", ".json", ".xml", ".yaml", ".yml", ".toml"}
     PDF = {".pdf"}

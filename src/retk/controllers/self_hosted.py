@@ -4,7 +4,7 @@ from bson import ObjectId
 
 from retk import const, __version__
 from retk.core import self_hosted
-from retk.core.notice import put_system_notice
+from retk.core.notice import post_in_manager_delivery
 from retk.logger import logger
 from retk.models.client import client
 from retk.models.tps import AuthedUser
@@ -64,7 +64,7 @@ async def notice_new_pkg_version():
             "senderId": "system",
         }).to_list(None)
         if len(res) == 0:
-            await put_system_notice(
+            await post_in_manager_delivery(
                 au=_local_system_authed_user,
                 title="New version available",
                 content="New version available, please update your client",

@@ -18,8 +18,8 @@ class VditorFilesResponse(BaseModel):
         errFiles: List[str]
         succMap: Dict[str, str]
 
-    code: NonNegativeInt
     msg: str
+    code: NonNegativeInt
     requestId: str
     data: Data
 
@@ -33,5 +33,7 @@ class VditorImagesResponse(BaseModel):
         originalURL: str
         url: str
 
+    msg: str
+    code: NonNegativeInt
     requestId: str
     data: Data

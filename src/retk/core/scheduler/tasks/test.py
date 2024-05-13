@@ -1,2 +1,8 @@
 def print_test(txt: str):
-    print(f"test and print '{txt}'")
+    text = f"test and print '{txt}'"
+    print(text)
+    return text
+
+
+def fake_test(inp):
+    return inp

@@ -69,8 +69,8 @@ async def upload_file_vditor(
 ) -> schemas.files.VditorFilesResponse:
     res = await core.files.vditor_upload(au=au, files=[file])
     return schemas.files.VditorFilesResponse(
-        code=res["code"].value,
         msg=const.get_msg_by_code(res["code"], au.language),
+        code=res["code"].value,
         requestId=au.request_id,
         data=schemas.files.VditorFilesResponse.Data(
             errFiles=res["errFiles"],
@@ -84,7 +84,10 @@ async def fetch_image_vditor(
         req: schemas.files.ImageVditorFetchRequest,
 ) -> schemas.files.VditorImagesResponse:
     if is_allowed_mime_type(req.url, ["image/svg+xml", "image/png", "image/jpeg", "image/gif"]):
+        code = const.CodeEnum.OK
         return schemas.files.VditorImagesResponse(
+            msg=const.get_msg_by_code(code, au.language),
+            code=code.value,
             requestId=au.request_id,
             data=schemas.files.VditorImagesResponse.Data(
                 originalURL=req.url,
@@ -92,15 +95,14 @@ async def fetch_image_vditor(
             ),
         )
 
-    if len(req.url) > 2048:
-        return maybe_raise_json_exception(
-            au=au,
-            code=const.CodeEnum.REQUEST_INPUT_ERROR,
-        )
-
-    new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)
+    if len(req.url) <= 2048:
+        new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)
+    else:
+        new_url, code = "", const.CodeEnum.URL_TOO_LONG
     maybe_raise_json_exception(au=au, code=code)
     return schemas.files.VditorImagesResponse(
+        msg=const.get_msg_by_code(code, au.language),
+        code=code.value,
         requestId=au.request_id,
         data=schemas.files.VditorImagesResponse.Data(
             originalURL=req.url,

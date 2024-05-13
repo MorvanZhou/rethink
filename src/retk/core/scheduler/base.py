@@ -1,7 +1,11 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Callable, Optional, Tuple, Dict, Any
+from functools import wraps
+from typing import Callable, Optional, Tuple, Dict, Any, List
 
 from apscheduler.schedulers.background import BackgroundScheduler
+
+from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 
 """
 - BlockingScheduler:
@@ -27,16 +31,56 @@ from apscheduler.schedulers.background import BackgroundScheduler
  use if you’re building a Qt application
 """
 
+
+@dataclass
+class JobInfo:
+    type: str
+    args: Tuple
+    kwargs: Dict[str, Any]
+    execute_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    finished_return: Optional[str] = None
+    create_at: datetime = None
+
+    def __post_init__(self):
+        self.created_at = datetime.now()
+
+
 # a separate thread
-_scheduler = BackgroundScheduler()
+__scheduler = BackgroundScheduler()
+__jobs_info: List[JobInfo] = []
+
+
+def __wrap_func(func: Callable, job_info: JobInfo):
+    __jobs_info.insert(0, job_info)
+    if len(__jobs_info) > MAX_SCHEDULE_JOB_INFO_LEN:
+        # dequeue the oldest job
+        __jobs_info.pop()
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        job_info.execute_at = datetime.now()
+        res = func(*args, **kwargs)
+        job_info.finished_at = datetime.now()
+        job_info.finished_return = res
+
+    return wrapper
+
+
+def get_jobs() -> List[JobInfo]:
+    return __jobs_info
+
+
+def clear_jobs() -> None:
+    __jobs_info.clear()
 
 
 def start():
-    _scheduler.start()
+    __scheduler.start()
 
 
 def stop():
-    _scheduler.shutdown()
+    __scheduler.shutdown()
 
 
 def _get_default(args, kwargs):
@@ -54,8 +98,14 @@ def run_once_at(
         kwargs: Optional[Dict[str, Any]] = None,
 ):
     args, kwargs = _get_default(args, kwargs)
-    _scheduler.add_job(
-        func=func,
+    ji = JobInfo(
+        type="date",
+        args=args,
+        kwargs=kwargs,
+    )
+    _func = __wrap_func(func=func, job_info=ji)
+    __scheduler.add_job(
+        func=_func,
         trigger="date",
         run_date=time,
         args=args,
@@ -99,8 +149,14 @@ def run_every_at(
         kwargs: Optional[Dict[str, Any]] = None,
 ):
     args, kwargs = _get_default(args, kwargs)
-    _scheduler.add_job(
-        func=func,
+    ji = JobInfo(
+        type="cron",
+        args=args,
+        kwargs=kwargs,
+    )
+    _func = __wrap_func(func=func, job_info=ji)
+    __scheduler.add_job(
+        func=_func,
         trigger="cron",
         second=second,
         minute=minute,

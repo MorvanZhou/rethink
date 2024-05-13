@@ -6,6 +6,7 @@
 /dist
 /logs
 **/__pycache__
+/.run
 
 # local env files
 /.env.dev

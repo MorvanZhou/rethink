@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Literal
+from typing import List
 
 from pydantic import BaseModel, NonNegativeInt, Field
 
@@ -25,11 +25,16 @@ class ManagerNoticeDeliveryRequest(BaseModel):
 
 
 class NotificationResponse(BaseModel):
-    class Notification(BaseModel):
-        id: str
-        type: Literal["info", "warning", "error"]
-        message: str
-        createdAt: str
+    class Data(BaseModel):
+        class System(BaseModel):
+            id: str
+            title: str
+            content: str
+            publishAt: datetime
+            read: bool
+            readTime: datetime
+
+        system: List[System]
 
     requestId: str
-    notifications: List[Notification]
+    data: Data

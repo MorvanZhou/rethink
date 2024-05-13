@@ -22,9 +22,9 @@ class NoticeSystem(TypedDict):
     _id: ObjectId
     senderId: str  # sender's uid
     recipientId: str  # recipient's uid
-    noticeId: str  # notice _id
+    noticeId: ObjectId  # notice _id
     read: bool  # has been read
-    readTime: int  # read time
+    readTime: datetime  # read time
 
 # event notice
 # class EventRemind(TypedDict):

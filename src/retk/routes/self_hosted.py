@@ -38,6 +38,8 @@ async def startup_event():
 
 @r_router.on_event("shutdown")
 async def shutdown_event():
+    if not config.is_local_db():
+        return
     try:
         await client.search.es.close()
     except (AttributeError, ValueError):

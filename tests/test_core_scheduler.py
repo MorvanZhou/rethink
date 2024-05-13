@@ -2,18 +2,26 @@ import time
 import unittest
 from datetime import datetime, timedelta
 
+from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 from retk.core import scheduler
 from retk.logger import logger
 
 
 class TestCoreAsyncTask(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        scheduler.start()
+
     def setUp(self) -> None:
         self.log_level = logger.level
         logger.setLevel("DEBUG")
-        scheduler.start()
 
     def tearDown(self) -> None:
         logger.setLevel(self.log_level)
+        scheduler.clear_jobs()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
         scheduler.stop()
 
     def test_put_task(self):
@@ -45,4 +53,28 @@ class TestCoreAsyncTask(unittest.TestCase):
             second=now.second + 1 % 60,
             args=("5",),
         )
-        time.sleep(1.1)
+
+        self.assertEqual(5, len(scheduler.get_jobs()))
+        for i, job in enumerate(scheduler.get_jobs()):
+            if i == 0:
+                self.assertIsNone(job.finished_at)
+            else:
+                self.assertIsInstance(job.finished_at, datetime)
+                self.assertTrue(job.finished_return.startswith("test and print"))
+
+        time.sleep(1.01)
+
+        for i, job in enumerate(scheduler.get_jobs()):
+            self.assertIsInstance(job.finished_at, datetime)
+            self.assertTrue(job.finished_return.startswith("test and print"))
+
+    def test_max_len(self):
+        for i in range(MAX_SCHEDULE_JOB_INFO_LEN + 2):
+            scheduler.run_once_now(
+                func=scheduler.tasks.test.fake_test,
+                args=(i,),
+            )
+        self.assertEqual(MAX_SCHEDULE_JOB_INFO_LEN, len(scheduler.get_jobs()))
+        time.sleep(0.1)
+        for i, j in enumerate(scheduler.get_jobs()):
+            self.assertEqual(1001 - i, j.finished_return)
