@@ -75,6 +75,6 @@ class TestCoreAsyncTask(unittest.TestCase):
                 args=(i,),
             )
         self.assertEqual(MAX_SCHEDULE_JOB_INFO_LEN, len(scheduler.get_jobs()))
-        time.sleep(0.1)
+        time.sleep(0.2)
         for i, j in enumerate(scheduler.get_jobs()):
-            self.assertEqual(1001 - i, j.finished_return)
+            self.assertEqual(1001 - i, j.finished_return, msg=str(j))
