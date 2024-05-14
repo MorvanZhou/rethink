@@ -45,6 +45,11 @@ class JobInfo:
     def __post_init__(self):
         self.created_at = datetime.now()
 
+    def executing_time(self) -> timedelta:
+        if self.finished_at is None:
+            return datetime.now() - self.execute_at
+        return self.finished_at - self.execute_at
+
 
 # a separate thread
 __scheduler = BackgroundScheduler()
