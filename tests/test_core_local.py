@@ -92,20 +92,20 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("3", u["avatar"])
         self.assertEqual(const.NodeDisplayMethodEnum.LIST.value, u["lastState"]["nodeDisplayMethod"])
 
-        code = await core.account.manager.disable(uid=_uid)
+        code = await core.account.manager.disable_by_uid(uid=_uid)
         self.assertEqual(const.CodeEnum.OK, code)
 
         u, code = await core.user.get(uid=_uid)
         self.assertEqual(const.CodeEnum.USER_DISABLED, code)
         self.assertIsNone(u)
 
-        code = await core.account.manager.enable(uid=_uid)
+        code = await core.account.manager.enable_by_uid(uid=_uid)
         self.assertEqual(const.CodeEnum.OK, code)
 
-        code = await core.account.manager.disable(uid="sdwqdqw")
-        self.assertEqual(const.CodeEnum.OK, code)
+        code = await core.account.manager.disable_by_uid(uid="sdwqdqw")
+        self.assertEqual(const.CodeEnum.USER_NOT_EXIST, code)
 
-        await core.account.manager.delete(uid=_uid)
+        await core.account.manager.delete_by_uid(uid=_uid)
 
     async def test_node(self):
         node, code = await core.node.post(

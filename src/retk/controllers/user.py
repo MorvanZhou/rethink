@@ -54,38 +54,7 @@ async def patch_user(
     maybe_raise_json_exception(au=au, code=code)
 
     u["email"] = mask_email(u["email"])
-    if config.is_local_db():
-        max_space = 0
-    else:
-        max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
-    last_state = u["lastState"]
-    u_settings = u["settings"]
-    return schemas.user.UserInfoResponse(
-        requestId=au.request_id,
-        uid=u["id"],
-        user=schemas.user.UserInfoResponse.User(
-            email=u["email"],
-            nickname=u["nickname"],
-            avatar=u["avatar"],
-            source=u["source"],
-            createdAt=datetime2str(u["_id"].generation_time),
-            usedSpace=u["usedSpace"],
-            maxSpace=max_space,
-            lastState=schemas.user.UserInfoResponse.User.LastState(
-                nodeDisplayMethod=last_state["nodeDisplayMethod"],
-                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
-            ),
-            settings=schemas.user.UserInfoResponse.User.Settings(
-                language=u_settings["language"],
-                theme=u_settings["theme"],
-                editorMode=u_settings["editorMode"],
-                editorFontSize=u_settings["editorFontSize"],
-                editorCodeTheme=u_settings["editorCodeTheme"],
-                editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
-                editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
-            ),
-        ),
-    )
+    return schemas.user.get_user_info_response_from_u_dict(u=u, request_id=au.request_id)
 
 
 async def update_password(

@@ -55,7 +55,7 @@ async def login(
 ) -> schemas.account.TokenResponse:
     # TODO: 后台应记录成功登录用户名和 IP、时间.
     #  当尝试登录 IP 不在历史常登录 IP 地理位置时，应进行多因素二次验证用户身份，防止用户因密码泄漏被窃取账户
-    u, code = await account.manager.get_user_by_email(req.email)
+    u, code = await user.get_by_email(req.email, disabled=False, exclude_manager=False)
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,

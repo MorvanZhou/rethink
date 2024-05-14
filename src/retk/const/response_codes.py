@@ -41,6 +41,8 @@ class CodeEnum(IntEnum):
     USER_DISABLED = 31
     NOT_PERMITTED = 32
     EXPIRED_ACCESS_TOKEN = 33
+    USER_NOT_EXIST = 34
+    INVALID_PARAMS = 35
 
 
 @dataclass
@@ -90,6 +92,8 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
     CodeEnum.USER_DISABLED: CodeMessage(zh="用户已被禁用", en="User has been disabled"),
     CodeEnum.NOT_PERMITTED: CodeMessage(zh="无权限", en="Not permitted"),
     CodeEnum.EXPIRED_ACCESS_TOKEN: CodeMessage(zh="访问令牌已过期", en="Access token has expired"),
+    CodeEnum.USER_NOT_EXIST: CodeMessage(zh="用户不存在", en="User does not exist"),
+    CodeEnum.INVALID_PARAMS: CodeMessage(zh="无效参数", en="Invalid parameter"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -127,6 +131,8 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.USER_DISABLED: 403,
     CodeEnum.NOT_PERMITTED: 403,
     CodeEnum.EXPIRED_ACCESS_TOKEN: 200,
+    CodeEnum.USER_NOT_EXIST: 404,
+    CodeEnum.INVALID_PARAMS: 400,
 }
 
 

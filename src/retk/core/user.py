@@ -134,27 +134,45 @@ async def patch(  # noqa: C901
     return await get(uid=au.u.id)
 
 
-async def get_by_email(email: str, disabled: bool = False) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
+def __get_user_condition(condition: dict, exclude_manager: bool) -> dict:
+    if exclude_manager:
+        condition["type"] = {"$nin": [
+            const.user_types.USER_TYPE.ADMIN.id,
+            const.user_types.USER_TYPE.MANAGER.id,
+        ]}
+    return condition
+
+
+async def get_by_email(
+        email: str,
+        disabled: bool = False,
+        exclude_manager: bool = False,
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     if config.get_settings().ONE_USER:
         source = const.UserSourceEnum.LOCAL.value
     else:
         source = const.UserSourceEnum.EMAIL.value
-    return await get_account(account=email, source=source, disabled=disabled)
+    return await get_account(account=email, source=source, disabled=disabled, exclude_manager=exclude_manager)
 
 
 async def get_account(
         account: str,
         source: int,
-        disabled: bool = False
+        disabled: bool = False,
+        exclude_manager: bool = False,
 ) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
-    u = await client.coll.users.find_one({"source": source, "account": account, "disabled": disabled})
+    c = {"source": source, "account": account, "disabled": disabled}
+    c = __get_user_condition(condition=c, exclude_manager=exclude_manager)
+    u = await client.coll.users.find_one(c)
     if u is None:
         return None, const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
     return u, const.CodeEnum.OK
 
 
-async def get(uid: str) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
-    u = await client.coll.users.find_one({"id": uid, "disabled": False})
+async def get(uid: str, exclude_manager: bool = False) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
+    c = {"id": uid, "disabled": False}
+    c = __get_user_condition(condition=c, exclude_manager=exclude_manager)
+    u = await client.coll.users.find_one(c)
     if u is None:
         return None, const.CodeEnum.USER_DISABLED
     if u["usedSpace"] < 0:

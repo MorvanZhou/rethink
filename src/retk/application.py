@@ -18,7 +18,7 @@ from .routes import (
     plugin,
     self_hosted,
     account,
-    admin,
+    manager,
     statistic,
 )
 
@@ -48,7 +48,7 @@ for r in [
     files,
     plugin,
     account,
-    admin,
+    manager,
     statistic,
 ]:
     app.include_router(r.router)

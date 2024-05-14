@@ -12,10 +12,6 @@ from retk.models import tps
 from retk.models.client import client
 
 
-async def get_user_by_email(email: str) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
-    return await user.get_by_email(email=email)
-
-
 async def is_right_password(email: str, hashed: str, password: str) -> bool:
     if config.get_settings().ONE_USER:
         pw = os.getenv("RETHINK_SERVER_PASSWORD", None)
@@ -81,27 +77,46 @@ async def signup(
     return u, code
 
 
-async def delete(uid: str):
-    res = await client.coll.users.delete_one({"id": uid})
-    if res.deleted_count != 1:
-        return
+async def __delete_post_process(uid: str):
     await client.coll.nodes.delete_many({"uid": uid})
     await client.coll.user_file.delete_many({"uid": uid})
     await client.coll.import_data.delete_many({"uid": uid})
     await client.search.force_delete_all(uid=uid)
 
 
-async def disable(uid: str) -> const.CodeEnum:
-    res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"disabled": True}}
-    )
-    return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED
+async def delete_by_uid(uid: str):
+    res = await client.coll.users.delete_one({"id": uid})
+    if res.deleted_count != 1:
+        return
+    await __delete_post_process(uid=uid)
 
 
-async def enable(uid: str) -> const.CodeEnum:
+async def delete_by_email(email: str):
+    u, code = await user.get_by_email(email=email, exclude_manager=True)
+    if code != const.CodeEnum.OK or u is None:
+        return
+    return await delete_by_uid(uid=u["id"])
+
+
+async def __disable_enable(condition: dict, disable: bool) -> const.CodeEnum:
     res = await client.coll.users.update_one(
-        {"id": uid},
-        {"$set": {"disabled": False}}
+        condition,
+        {"$set": {"disabled": disable}}
     )
-    return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED
+    return const.CodeEnum.OK if res.matched_count == 1 else const.CodeEnum.USER_NOT_EXIST
+
+
+async def disable_by_uid(uid: str) -> const.CodeEnum:
+    return await __disable_enable({"id": uid}, disable=True)
+
+
+async def disable_by_email(email: str) -> const.CodeEnum:
+    return await __disable_enable({"source": const.UserSourceEnum.EMAIL.value, "account": email}, disable=True)
+
+
+async def enable_by_uid(uid: str) -> const.CodeEnum:
+    return await __disable_enable({"id": uid}, disable=False)
+
+
+async def enable_by_email(email: str) -> const.CodeEnum:
+    return await __disable_enable({"source": const.UserSourceEnum.EMAIL.value, "account": email}, disable=False)

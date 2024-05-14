@@ -4,7 +4,7 @@ from io import BytesIO
 import bcrypt
 
 from retk import const, regex
-from retk.core import account
+from retk.core import account, user
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.utils import jwt_decode
@@ -49,7 +49,7 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(u)
 
     async def test_verify_user(self):
-        u, err = await account.manager.get_user_by_email("rethink@rethink.run")
+        u, err = await user.get_by_email("rethink@rethink.run")
         self.assertEqual(const.CodeEnum.OK, err)
         self.assertIsNotNone(u)
         au = convert_user_dict_to_authed_user(u)

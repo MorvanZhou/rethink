@@ -1029,9 +1029,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         unregister_official_plugins()
         config.get_settings().PLUGINS = False
 
-    async def test_admin(self):
+    async def test_manager(self):
         resp = self.client.put(
-            "/api/admin/users/disable",
+            "/api/managers/users/disable",
             json={
                 "uid": "xxx",
             },
@@ -1048,13 +1048,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, doc.modified_count)
 
         resp = self.client.put(
-            "/api/admin/users/disable",
+            "/api/managers/users/disable",
             json={
                 "uid": "xxx",
             },
             headers=self.default_headers
         )
-        self.check_ok_response(resp, 200)
+        self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
 
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
@@ -1078,17 +1078,33 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         u_token = rj["accessToken"]
         uid = (await client.coll.users.find_one({"email": email}))["id"]
 
-        resp = self.client.get(
-            "/api/users",
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx"
-            }
+        resp = self.client.put(
+            "/api/managers/users",
+            json={
+                "uid": uid,
+            },
+            headers=self.default_headers
         )
         self.check_ok_response(resp, 200)
 
         resp = self.client.put(
-            "/api/admin/users/disable",
+            "/api/managers/users",
+            json={
+                "email": email,
+            },
+            headers=self.default_headers
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.put(
+            "/api/managers/users",
+            json={},
+            headers=self.default_headers
+        )
+        self.error_check(resp, 400, const.CodeEnum.INVALID_PARAMS)
+
+        resp = self.client.put(
+            "/api/managers/users/disable",
             json={
                 "uid": uid,
             },
@@ -1106,7 +1122,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.error_check(resp, 403, const.CodeEnum.USER_DISABLED)
 
         resp = self.client.put(
-            "/api/admin/users/enable/email",
+            "/api/managers/users/enable",
             json={
                 "email": email,
             },
@@ -1124,7 +1140,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.check_ok_response(resp, 200)
 
         resp = self.client.put(
-            "/api/admin/users/delete",
+            "/api/managers/users/delete",
             json={
                 "uid": uid,
             },
