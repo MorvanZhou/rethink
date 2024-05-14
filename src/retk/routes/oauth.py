@@ -1,8 +1,8 @@
 from fastapi import Request, APIRouter
 from fastapi.params import Annotated, Path
+from fastapi.responses import JSONResponse
 
 from retk.controllers import oauth as co
-from retk.controllers.schemas.account import TokenResponse
 from retk.routes import utils
 
 router = APIRouter(
@@ -32,11 +32,10 @@ async def login_github(
 @router.get(
     path="/callback/{provider}",
     status_code=200,
-    response_model=TokenResponse,
 )
 @utils.measure_time_spend
 async def callback_github(
         request: Request,
         provider: str = Annotated[str, Path(title="The provider name", max_length=40)],
-) -> TokenResponse:
+) -> JSONResponse:
     return await co.provider_callback(provider_name=provider, req=request)

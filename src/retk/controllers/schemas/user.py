@@ -34,7 +34,6 @@ class UserInfoResponse(BaseModel):
         settings: Settings
 
     requestId: str
-    uid: str
     user: User = None
 
 
@@ -77,7 +76,6 @@ def get_user_info_response_from_u_dict(
     u_settings = u["settings"]
     return UserInfoResponse(
         requestId=request_id,
-        uid=u["id"],
         user=UserInfoResponse.User(
             email=u["email"],
             nickname=u["nickname"],

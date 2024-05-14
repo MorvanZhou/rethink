@@ -17,7 +17,6 @@ async def get_user(
         max_space = const.USER_TYPE.id2config(au.u.type).max_store_space
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
-        uid=au.u.id,
         user=schemas.user.UserInfoResponse.User(
             email=_email,
             nickname=au.u.nickname,

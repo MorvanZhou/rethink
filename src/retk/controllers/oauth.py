@@ -1,14 +1,15 @@
 from typing import Dict
 
 from fastapi import Request
+from fastapi.responses import JSONResponse
 
 from retk import config, const, core, utils
+from retk.controllers.account import set_cookie_response
 from retk.controllers.utils import json_exception
 from retk.depend.sso.base import SSOLoginError, SSOBase
 from retk.depend.sso.facebook import FacebookSSO
 from retk.depend.sso.github import GithubSSO
 # from retk.depend.sso.qq import QQSSO
-from .schemas.account import TokenResponse
 from .schemas.oauth import OAuthResponse
 
 sso_map: Dict[str, SSOBase] = {}
@@ -52,7 +53,7 @@ async def login_provider(provider_name: str) -> OAuthResponse:
     )
 
 
-async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
+async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
     try:
         p = sso_map[provider_name]
         user_source = user_source_map[provider_name]
@@ -80,10 +81,13 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
             uid=u["id"],
             language=u["settings"]["language"],
         )
-        return TokenResponse(
-            requestId="",
-            accessToken=access_token,
-            refreshToken=refresh_token,
+
+        return set_cookie_response(
+            uid=u["id"],
+            req_id="",
+            status_code=200,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
     # no user found, create one
@@ -115,8 +119,10 @@ async def provider_callback(provider_name: str, req: Request) -> TokenResponse:
         uid=u["id"],
         language=language,
     )
-    return TokenResponse(
-        requestId="",
-        accessToken=access_token,
-        refreshToken=refresh_token,
+    return set_cookie_response(
+        uid=u["id"],
+        req_id="",
+        status_code=201,
+        access_token=access_token,
+        refresh_token=refresh_token,
     )

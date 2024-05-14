@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Optional
 
 import jwt
-from fastapi import HTTPException, Header, Depends
+from fastapi import HTTPException, Header, Cookie, Depends
 from fastapi.params import Path
 from starlette.status import HTTP_403_FORBIDDEN
 from typing_extensions import Annotated
@@ -121,7 +121,7 @@ async def __process_auth_headers(  # noqa: C901
 
 
 async def process_normal_headers(
-        token: str = Header(alias="Authorization", default=""),
+        token: str = Cookie(alias=const.settings.COOKIE_ACCESS_TOKEN, default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
@@ -130,8 +130,8 @@ async def process_normal_headers(
 
 
 async def process_refresh_token_headers(
-        token: str = Header(alias="Authorization", default=""),
-        id_: str = Header(alias="ID", default=""),
+        token: str = Cookie(alias=const.settings.COOKIE_REFRESH_TOKEN, default=""),
+        id_: str = Cookie(alias=const.settings.COOKIE_REFRESH_TOKEN_ID, default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
@@ -148,7 +148,7 @@ async def process_no_auth_headers(
 
 
 async def process_admin_headers(
-        token: str = Header(alias="Authorization", default=""),
+        token: str = Cookie(alias=const.settings.COOKIE_ACCESS_TOKEN, default=""),
         request_id: str = Header(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )

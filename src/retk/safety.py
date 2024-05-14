@@ -2,17 +2,28 @@ import os
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-if os.getenv("VUE_APP_MODE", "local") not in ["dev", "local"]:
+vue_app_mode = os.getenv("VUE_APP_MODE", "local")
+
+if vue_app_mode not in ["dev", "local"]:
     allow_origins = [
         "https://rethink.run",
         "https://www.rethink.run",
     ]
     csp_local = ""
+    cookie_domain = "rethink.run"
+    cookie_secure = True
 else:
     allow_origins = [
         "*",
     ]
     csp_local = " http://localhost:* http://127.0.0.1:* "
+    cookie_domain = None
+    cookie_secure = False
+
+if vue_app_mode == "dev":
+    cookie_samesite = "strict"
+else:
+    cookie_samesite = "strict"
 
 
 class CSPMiddleware(BaseHTTPMiddleware):

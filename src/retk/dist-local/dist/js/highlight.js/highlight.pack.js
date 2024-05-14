@@ -90,6 +90,17 @@ var hljs = function () {
       return this.rootNode
     }
 
+    static _walk(e, t) {
+      return "string" == typeof t ? e.addText(t) : t.children && (e.openNode(t),
+        t.children.forEach((t => this._walk(e, t))), e.closeNode(t)), e
+    }
+
+    static _collapse(e) {
+      "string" != typeof e && e.children && (e.children.every((e => "string" == typeof e)) ? e.children = [e.children.join("")] : e.children.forEach((e => {
+        o._collapse(e)
+      })))
+    }
+
     add(e) {
       this.top.children.push(e)
     }
@@ -113,17 +124,6 @@ var hljs = function () {
 
     walk(e) {
       return this.constructor._walk(e, this.rootNode)
-    }
-
-    static _walk(e, t) {
-      return "string" == typeof t ? e.addText(t) : t.children && (e.openNode(t),
-        t.children.forEach((t => this._walk(e, t))), e.closeNode(t)), e
-    }
-
-    static _collapse(e) {
-      "string" != typeof e && e.children && (e.children.every((e => "string" == typeof e)) ? e.children = [e.children.join("")] : e.children.forEach((e => {
-        o._collapse(e)
-      })))
     }
   }
 

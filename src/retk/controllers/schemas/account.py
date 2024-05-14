@@ -5,8 +5,7 @@ from retk.const import settings, LanguageEnum
 
 class TokenResponse(BaseModel):
     requestId: str
-    accessToken: str = ""
-    refreshToken: str = ""
+    token: str = ""
 
 
 class SignupRequest(BaseModel):

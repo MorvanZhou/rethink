@@ -4,7 +4,7 @@ from enum import IntEnum, unique
 @unique
 class UserBehaviorTypeEnum(IntEnum):
     LOGIN = 0  # backend
-    LOGOUT = 1  # frontend
+    LOGOUT = 1  # backend
     # node ops, backend
     NODE_CREATE = 2
     NODE_QUICK_CREATE = 3
