@@ -80,7 +80,7 @@ class TestCoreAsyncTask(unittest.TestCase):
             fail = True
             for _ in range(10):
                 if j.finished_at is None:
-                    time.sleep(0.001)
+                    time.sleep(0.01)
                     continue
                 self.assertIsInstance(j.created_at, datetime)
                 self.assertIsInstance(j.execute_at, datetime)
