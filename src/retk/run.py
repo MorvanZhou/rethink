@@ -8,11 +8,8 @@ from retk.core import scheduler
 from retk.plugins.base import event_plugin_map
 
 
-def _start_on_schedule_plugins():
-    ps = event_plugin_map["on_schedule"]
-    if len(ps) == 0:
-        return
-    for plugin in ps:
+def _plugins_start_on_schedule():
+    for plugin in event_plugin_map["on_schedule"]:
         if plugin.schedule_timing is None or not plugin.activated:
             continue
         kw = {}
@@ -89,8 +86,7 @@ def run(
             print("Password is too short. The password is highly recommended to be at least 8 characters!")
         os.environ["RETHINK_SERVER_PASSWORD"] = password
 
-    td = _start_on_schedule_plugins()
-
+    _plugins_start_on_schedule()
     uvicorn.run(
         "retk.application:app",
         host=host,
@@ -100,4 +96,3 @@ def run(
         log_level="error",
         env_file=os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env.local"),
     )
-    td.join()

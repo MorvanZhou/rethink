@@ -58,9 +58,16 @@ class TestCoreAsyncTask(unittest.TestCase):
         for i, job in enumerate(scheduler.get_jobs()):
             if i == 0:
                 self.assertIsNone(job.finished_at)
-            else:
+                continue
+            fail = True
+            for _ in range(10):
+                if job.finished_at is None:
+                    time.sleep(0.01)
+                    continue
                 self.assertIsInstance(job.finished_at, datetime)
                 self.assertTrue(job.finished_return.startswith("test and print"))
+                fail = False
+            self.assertFalse(fail)
 
         time.sleep(1.01)
 
