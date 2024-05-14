@@ -89,5 +89,6 @@ class TestCoreAsyncTask(unittest.TestCase):
                 self.assertGreaterEqual(j.execute_at, j.created_at)
                 self.assertEqual(count, j.finished_return, msg=str(j))
                 fail = False
+                break
             self.assertFalse(fail)
             count += 1
