@@ -146,6 +146,7 @@ def run_every_at(
         minute: Optional[int] = None,
         hour: Optional[int] = None,
         day: Optional[int] = None,
+        week: Optional[int] = None,
         month: Optional[int] = None,
         day_of_week: Optional[int] = None,
         start_date: Optional[datetime] = None,
@@ -153,6 +154,35 @@ def run_every_at(
         args: Optional[Tuple] = None,
         kwargs: Optional[Dict[str, Any]] = None,
 ):
+    if second is not None:
+        second = int(second)
+        if second > 59 or second < 0:
+            raise ValueError("second must be in range 0-59")
+    if minute is not None:
+        minute = int(minute)
+        if minute > 59 or minute < 0:
+            raise ValueError("minute must be in range 0-59")
+    if hour is not None:
+        hour = int(hour)
+        if hour > 23 or hour < 0:
+            raise ValueError("hour must be in range 0-23")
+    if day is not None:
+        day = int(day)
+        if day > 31 or day < 1:
+            raise ValueError("day must be in range 1-31")
+    if week is not None:
+        week = int(week)
+        if week > 53 or week < 1:
+            raise ValueError("week must be in range 1-53")
+    if month is not None:
+        month = int(month)
+        if month > 12 or month < 1:
+            raise ValueError("month must be in range 1-12")
+    if day_of_week is not None:
+        day_of_week = int(day_of_week)
+        if day_of_week > 6 or day_of_week < 0:
+            raise ValueError("day_of_week must be in range 0-6")
+
     args, kwargs = _get_default(args, kwargs)
     ji = JobInfo(
         type="cron",

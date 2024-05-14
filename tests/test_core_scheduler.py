@@ -50,7 +50,7 @@ class TestCoreAsyncTask(unittest.TestCase):
         now = datetime.now()
         scheduler.run_every_at(
             func=scheduler.tasks.test.print_test,
-            second=now.second + 1 % 60,
+            second=(now.second + 1) % 60,
             args=("5",),
         )
 
