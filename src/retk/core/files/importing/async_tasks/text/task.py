@@ -37,7 +37,7 @@ async def update_text_task(  # noqa: C901
             )
             return
 
-    u, code = await core.user.get(uid=uid)
+    u, code = await core.user.get(uid=uid, disabled=False)
     au = AuthedUser(
         u=convert_user_dict_to_authed_user(u),
         request_id=request_id,

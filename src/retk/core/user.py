@@ -131,7 +131,7 @@ async def patch(  # noqa: C901
         if res.modified_count != 1:
             return None, const.CodeEnum.OPERATION_FAILED
 
-    return await get(uid=au.u.id)
+    return await get(uid=au.u.id, disabled=None)
 
 
 def __get_user_condition(condition: dict, exclude_manager: bool) -> dict:
@@ -145,7 +145,7 @@ def __get_user_condition(condition: dict, exclude_manager: bool) -> dict:
 
 async def get_by_email(
         email: str,
-        disabled: bool = False,
+        disabled: Optional[bool] = False,
         exclude_manager: bool = False,
 ) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
     if config.get_settings().ONE_USER:
@@ -158,10 +158,12 @@ async def get_by_email(
 async def get_account(
         account: str,
         source: int,
-        disabled: bool = False,
+        disabled: Optional[bool] = False,
         exclude_manager: bool = False,
 ) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
-    c = {"source": source, "account": account, "disabled": disabled}
+    c = {"source": source, "account": account}
+    if disabled is not None:
+        c["disabled"] = disabled
     c = __get_user_condition(condition=c, exclude_manager=exclude_manager)
     u = await client.coll.users.find_one(c)
     if u is None:
@@ -169,12 +171,15 @@ async def get_account(
     return u, const.CodeEnum.OK
 
 
-async def get(uid: str, exclude_manager: bool = False) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
-    c = {"id": uid, "disabled": False}
+async def get(uid: str, disabled: Optional[bool] = False, exclude_manager: bool = False) -> Tuple[
+    Optional[tps.UserMeta], const.CodeEnum]:
+    c = {"id": uid}
+    if disabled is not None:
+        c["disabled"] = disabled
     c = __get_user_condition(condition=c, exclude_manager=exclude_manager)
     u = await client.coll.users.find_one(c)
     if u is None:
-        return None, const.CodeEnum.USER_DISABLED
+        return None, const.CodeEnum.USER_NOT_EXIST
     if u["usedSpace"] < 0:
         # reset usedSpace to 0
         await client.coll.users.update_one(

@@ -20,10 +20,7 @@ else:
     cookie_domain = None
     cookie_secure = False
 
-if vue_app_mode == "dev":
-    cookie_samesite = "strict"
-else:
-    cookie_samesite = "strict"
+cookie_samesite = "strict"
 
 
 class CSPMiddleware(BaseHTTPMiddleware):

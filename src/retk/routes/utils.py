@@ -61,6 +61,7 @@ def verify_referer(referer: Optional[str] = Header(None)):
 
 
 async def __process_auth_headers(  # noqa: C901
+        is_refresh_token: bool,
         refresh_token_id: str,
         token: str = Header(alias="Authorization", default=""),
         request_id: str = Header(
@@ -70,7 +71,7 @@ async def __process_auth_headers(  # noqa: C901
     if token is None or token == "":
         raise json_exception(
             request_id=request_id,
-            code=const.CodeEnum.INVALID_AUTH,
+            code=const.CodeEnum.INVALID_AUTH if is_refresh_token else const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN,
             log_msg="empty token",
         )
     au = AuthedUser(
@@ -86,19 +87,19 @@ async def __process_auth_headers(  # noqa: C901
         if is_access is None:
             code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
-        elif (is_access and refresh_token_id != "") or (not is_access and refresh_token_id == ""):
+        elif is_access == is_refresh_token:
             code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
-        elif refresh_token_id != "" and payload["uid"] != refresh_token_id:
+        elif is_refresh_token and payload["uid"] != refresh_token_id:
             code = const.CodeEnum.INVALID_AUTH
             err = "invalid token"
         else:
-            u, code = await core.user.get(uid=payload["uid"])
+            u, code = await core.user.get(uid=payload["uid"], disabled=False)
             if code != const.CodeEnum.OK:
                 err = f"get user failed, code={code}"
 
     except jwt.exceptions.ExpiredSignatureError:
-        code = const.CodeEnum.EXPIRED_AUTH if refresh_token_id != "" else const.CodeEnum.EXPIRED_ACCESS_TOKEN
+        code = const.CodeEnum.EXPIRED_AUTH if is_refresh_token else const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN
         err = "auth expired"
     except jwt.exceptions.DecodeError:
         code = const.CodeEnum.INVALID_AUTH
@@ -126,7 +127,12 @@ async def process_normal_headers(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
-    return await __process_auth_headers(refresh_token_id="", token=token, request_id=request_id)
+    return await __process_auth_headers(
+        is_refresh_token=False,
+        refresh_token_id="",
+        token=token,
+        request_id=request_id
+    )
 
 
 async def process_refresh_token_headers(
@@ -136,7 +142,12 @@ async def process_refresh_token_headers(
             default="", alias="RequestId", max_length=const.settings.MD_MAX_LENGTH
         )
 ) -> AuthedUser:
-    return await __process_auth_headers(refresh_token_id=id_, token=token, request_id=request_id)
+    return await __process_auth_headers(
+        is_refresh_token=True,
+        refresh_token_id=id_,
+        token=token,
+        request_id=request_id
+    )
 
 
 async def process_no_auth_headers(

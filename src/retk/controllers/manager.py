@@ -20,9 +20,9 @@ async def get_user_info(
         req: schemas.manager.GetUserRequest,
 ) -> schemas.user.UserInfoResponse:
     if __check_use_uid(au=au, req=req):
-        u, code = await user.get(uid=req.uid, exclude_manager=True)
+        u, code = await user.get(uid=req.uid, disabled=None, exclude_manager=True)
     else:
-        u, code = await user.get_by_email(email=req.email, exclude_manager=True)
+        u, code = await user.get_by_email(email=req.email, disabled=None, exclude_manager=True)
     maybe_raise_json_exception(au=au, code=code)
     return schemas.user.get_user_info_response_from_u_dict(u=u, request_id=au.request_id)
 

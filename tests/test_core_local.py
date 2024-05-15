@@ -96,8 +96,12 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
 
         u, code = await core.user.get(uid=_uid)
-        self.assertEqual(const.CodeEnum.USER_DISABLED, code)
+        self.assertEqual(const.CodeEnum.USER_NOT_EXIST, code)
         self.assertIsNone(u)
+
+        u, code = await core.user.get(uid=_uid, disabled=None)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertTrue(u["disabled"])
 
         code = await core.account.manager.enable_by_uid(uid=_uid)
         self.assertEqual(const.CodeEnum.OK, code)

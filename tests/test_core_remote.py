@@ -163,8 +163,12 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         code = await core.account.manager.disable_by_uid(uid=_id)
         self.assertEqual(const.CodeEnum.OK, code)
 
-        u, code = await core.user.get(uid=_id)
-        self.assertEqual(const.CodeEnum.USER_DISABLED, code)
+        u, code = await core.user.get(uid=_id, disabled=False)
+        self.assertEqual(const.CodeEnum.USER_NOT_EXIST, code)
+
+        u, code = await core.user.get(uid=_id, disabled=None)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertTrue(u["disabled"])
 
         code = await core.account.manager.enable_by_uid(uid=_id)
         self.assertEqual(const.CodeEnum.OK, code)

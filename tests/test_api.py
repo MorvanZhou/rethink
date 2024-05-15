@@ -46,6 +46,15 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(Response, type(resp))
 
     def test_register(self):
+        resp = self.client.put(
+            "/api/account/auto-login",
+            headers={"RequestId": "xxx"},
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertIsNone(rj["user"])
+
         token, _ = account.app_captcha.generate()
         data = jwt_decode(token)
         resp = self.client.post(
@@ -86,7 +95,7 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertNotEqual("", rj["accessToken"])
+        self.assertNotEqual("", rj["token"])
         self.assertEqual("xxx", rj["requestId"])
 
 
@@ -104,24 +113,28 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "email": const.DEFAULT_USER["email"],
                 "password": "",
             })
-        self.assertEqual(200, resp.status_code)
-        rj = resp.json()
-        self.assertEqual(840, len(rj["accessToken"]))
-        self.assertTrue(rj["accessToken"].startswith("Bearer "))
-        self.refresh_token = rj["refreshToken"]
+        self.assertEqual(200, resp.status_code, msg=resp.json())
+        self.access_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+        self.refresh_token_id = resp.cookies.get(const.settings.COOKIE_REFRESH_TOKEN_ID)
+        self.refresh_token = resp.cookies.get(const.settings.COOKIE_REFRESH_TOKEN)
+
+        self.assertEqual(842, len(self.access_token))
+        self.assertTrue(self.access_token.startswith("\"Bearer "), msg=self.access_token)
+        self.assertTrue(self.refresh_token.startswith("\"Bearer "), msg=self.access_token)
         self.default_headers = {
-            "Authorization": rj["accessToken"],
             "RequestId": "xxx",
         }
+
         resp = self.client.get(
             "/api/users",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        self.assertEqual(200, resp.status_code, msg=resp.json())
         rj = resp.json()
-        self.uid = rj["uid"]
+        self.assertEqual(200, resp.status_code, msg=rj)
+        self.assertNotIn("detail", rj)
 
     async def asyncTearDown(self) -> None:
+        self.client.cookies.clear()
         await client.drop()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
@@ -145,34 +158,51 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(rid, rj["requestId"])
         return rj
 
-    async def test_access_refresh_token(self):
+    def set_access_token(self, token: str):
+        try:
+            self.client.cookies.delete(const.settings.COOKIE_ACCESS_TOKEN)
+        except KeyError:
+            pass
+        self.client.cookies[const.settings.COOKIE_ACCESS_TOKEN] = token
+
+    async def test_auto_login(self):
         resp = self.client.put(
+            "/api/account/auto-login",
+            headers={"RequestId": "xxx"},
+        )
+        self.assertEqual(200, resp.status_code)
+        rj = resp.json()
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertIsNotNone(rj["user"])
+
+        self.client.cookies.delete(const.settings.COOKIE_ACCESS_TOKEN)
+        resp = self.client.put(
+            "/api/account/auto-login",
+            headers={"RequestId": "xxx"},
+        )
+        self.assertEqual(200, resp.status_code)
+        self.assertIsNone(resp.json()["user"])
+
+    async def test_access_refresh_token(self):
+        self.client.put(
             "/api/account/login",
             json={
                 "email": const.DEFAULT_USER["email"],
                 "password": "",
             })
-        rj = resp.json()
-        access_token = rj["accessToken"]
-        refresh_token = rj["refreshToken"]
 
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": access_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.assertEqual(200, resp.status_code)
 
+        self.set_access_token(resp.cookies.get(const.settings.COOKIE_REFRESH_TOKEN))
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": refresh_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
-        self.error_check(resp, 401, const.CodeEnum.INVALID_AUTH)
+        self.error_check(resp, 200, const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN)
 
     async def test_access_token_expire(self):
         aed = config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA
@@ -187,81 +217,64 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "password": "",
                 "language": "zh",
             })
-        rj = resp.json()
-        access_token = rj["accessToken"]
-        refresh_token = rj["refreshToken"]
+        self.assertEqual(200, resp.status_code)
         time.sleep(0.001)
 
         resp = self.client.get(
             "/api/users",
             headers={
-                "Authorization": access_token,
                 "RequestId": "xxx"
-            }
+            },
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
         detail = rj["detail"]
-        self.assertEqual(const.CodeEnum.EXPIRED_ACCESS_TOKEN.value, detail["code"], msg=detail)
+        self.assertEqual(const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN.value, detail["code"], msg=detail)
         self.assertEqual("xxx", detail["requestId"], msg=detail)
 
         resp = self.client.get(
             "/api/account/access-token",
-            headers={
-                "Authorization": refresh_token,
-                "RequestId": "xxx",
-                "ID": self.uid,
-            }
+            headers=self.default_headers,
         )
         self.error_check(resp, 401, const.CodeEnum.EXPIRED_AUTH)
 
         config.get_settings().REFRESH_TOKEN_EXPIRE_DELTA = red
 
-        resp = self.client.put(
+        self.client.put(
             "/api/account/login",
             json={
                 "email": const.DEFAULT_USER["email"],
                 "password": "",
             })
-        rj = resp.json()
-        access_token = rj["accessToken"]
-        refresh_token = rj["refreshToken"]
+
         time.sleep(0.001)
 
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": access_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.assertEqual(200, resp.status_code)
         rj = resp.json()
-        self.assertEqual(const.CodeEnum.EXPIRED_ACCESS_TOKEN.value, rj["detail"]["code"], msg=rj)
+        self.assertEqual(const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN.value, rj["detail"]["code"], msg=rj)
 
         config.get_settings().ACCESS_TOKEN_EXPIRE_DELTA = aed
+        old_access_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         resp = self.client.get(
             "/api/account/access-token",
-            headers={
-                "Authorization": refresh_token,
-                "RequestId": "xxx",
-                "ID": self.uid,
-            }
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
-        self.assertNotEqual(access_token, rj["accessToken"])
-        self.assertTrue(rj["accessToken"].startswith("Bearer "))
-        self.assertEqual("", rj["refreshToken"])
+        self.check_ok_response(resp, 200)
+        at = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+        self.assertNotEqual(old_access_token, at)
+        self.assertTrue(at.startswith("\"Bearer "))
 
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": rj["accessToken"],
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
-        self.assertEqual(self.uid, resp.json()["uid"])
+        rj = resp.json()
+        self.assertEqual("rethink", rj["user"]["nickname"])
 
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
@@ -271,14 +284,12 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
 
         email = "a@b.c"
+        del self.client.cookies[const.settings.COOKIE_ACCESS_TOKEN]
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": "xxxx",
-                "RequestId": "xxx"
-            })
-        self.assertEqual(401, resp.status_code)
-        self.error_check(resp, 401, const.CodeEnum.INVALID_AUTH)
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 200, const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN)
 
         lang = "zh"
         resp = self.client.post(
@@ -290,18 +301,16 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "verification": code,
                 "language": lang,
             },
-            headers={"RequestId": "xxx"}
+            headers=self.default_headers
         )
-        rj = self.check_ok_response(resp, 201)
-        u_token = rj["accessToken"]
+        _ = self.check_ok_response(resp, 201)
+        u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         self.assertNotEqual("", u_token)
 
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": rj["accessToken"],
-                "RequestId": "xxx"
-            })
+            headers=self.default_headers,
+        )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("a**@b.c", rj["user"]["email"])
         self.assertEqual("zh", rj["user"]["settings"]["language"])
@@ -312,10 +321,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "oldPassword": "xxx111",
                 "newPassword": "abc222",
             },
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.error_check(resp, 400, const.CodeEnum.OLD_PASSWORD_ERROR, language=lang)
 
@@ -325,10 +331,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "oldPassword": "abc111",
                 "newPassword": "abc222",
             },
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx",
-            }
+            headers=self.default_headers,
         )
         _ = self.check_ok_response(resp, 200)
         u = await client.coll.users.find_one({"email": email})
@@ -367,13 +370,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                     "nodeDisplayMethod": const.NodeDisplayMethodEnum.LIST.value,
                 }
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         _ = self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/users",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("new nickname", rj["user"]["nickname"])
@@ -391,7 +394,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                     "editorCodeTheme": "dracula",
                 }
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("zh", rj["user"]["settings"]["language"])
@@ -408,13 +411,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/recent/searched",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(["aaa"], rj["queries"])
@@ -429,7 +432,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertGreater(len(rj["data"]["nodes"]), 0)
@@ -443,9 +446,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.post(
             "/api/nodes",
@@ -453,14 +456,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "node1\ntext",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 201)
         node = rj["node"]
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         n = rj["node"]
@@ -473,13 +476,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "md": "node2\ntext",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         n = rj["node"]
@@ -490,23 +493,23 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         resp = self.client.put(
             f'/api/trash/{node["id"]}',
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["data"]["nodes"]))
 
         resp = self.client.put(
             f'/api/trash/{node["id"]}/restore',
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}/at',
@@ -537,23 +540,22 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             f'/api/trash/{node["id"]}',
             headers=self.default_headers
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
         resp = self.client.delete(
             f"/api/trash/{node['id']}",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.assertEqual(200, resp.status_code)
-        rj = resp.json()
 
         resp = self.client.delete(
             "/api/trash/ssa",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 404, const.CodeEnum.NODE_NOT_EXIST)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 404, const.CodeEnum.NODE_NOT_EXIST)
 
@@ -586,7 +588,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                     "md": f"node{i}\ntext",
                     "type": const.NodeTypeEnum.MARKDOWN.value,
                 },
-                headers=self.default_headers
+                headers=self.default_headers,
             )
             self.check_ok_response(resp, 201)
 
@@ -599,7 +601,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(5, len(rj["data"]["nodes"]))
@@ -610,14 +612,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "nids": [n["id"] for n in rj["data"]["nodes"][:3]],
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(3, len(rj["data"]["nodes"]))
@@ -628,14 +630,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "nids": [n["id"] for n in rj["data"]["nodes"][:2]],
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["data"]["nodes"]))
@@ -646,13 +648,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "nids": [n["id"] for n in rj["data"]["nodes"]],
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
         resp = self.client.get(
             "/api/trash",
             params={"p": 0, "limit": 10},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(0, len(rj["data"]["nodes"]))
@@ -690,7 +692,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/upload-process",
-                headers=self.default_headers
+                headers=self.default_headers,
             )
             rj = self.check_ok_response(resp, 200)
             self.assertEqual("obsidian", rj["type"], msg=rj)
@@ -708,7 +710,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(5, len(rj["data"]["nodes"]))
@@ -738,7 +740,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             time.sleep(0.1)
             resp = self.client.get(
                 "/api/files/upload-process",
-                headers=self.default_headers
+                headers=self.default_headers,
             )
             self.assertEqual(200, resp.status_code)
             rj = resp.json()
@@ -757,7 +759,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(4, len(rj["data"]["nodes"]))
@@ -774,7 +776,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/files/vditor",
             files={"file[]": f1},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual({
@@ -792,7 +794,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/files/vditor",
             files={"file[]": f1},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual({
@@ -810,7 +812,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/files/vditor",
             files={"file[]": f1},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.assertEqual(200, resp.status_code, msg=resp.json())
         rj = resp.json()
@@ -825,7 +827,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/files/vditor/images",
             json={"url": img},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(img, rj["data"]["url"])
@@ -834,7 +836,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         resp = self.client.post(
             "/api/files/vditor/images",
             json={"url": img},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 400, const.CodeEnum.FILE_OPEN_ERROR)
 
@@ -849,7 +851,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "node1\ntext",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 201)
         node = rj["node"]
@@ -863,7 +865,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "https://baidu.com",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 201)
         node = rj["node"]
@@ -894,7 +896,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "title\ntext",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 201)
         n1 = rj["node"]
@@ -906,9 +908,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "md": "title1\ntext",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         time.sleep(0.001)
 
@@ -917,13 +919,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "md": "title2\ntext",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
-        rj = self.check_ok_response(resp, 200)
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f"/api/nodes/{n1['id']}/history",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         hist = rj["versions"]
@@ -931,7 +933,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         resp = self.client.get(
             f"/api/nodes/{n1['id']}/history/{hist[1]}/md",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("title1\ntext", rj["md"])
@@ -954,14 +956,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         register_official_plugins()
         resp = self.client.get(
             "/api/plugins",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         check_one_plugin(rj["plugins"])
 
         resp = self.client.get(
             "/api/plugins/editor-side",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         check_one_plugin(rj["plugins"])
@@ -969,7 +971,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
         resp = self.client.get(
             f"/api/plugins/{pid}",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertNotEqual("", rj["html"])
@@ -983,14 +985,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         nid = rj["data"]["nodes"][0]["id"]
 
         resp = self.client.get(
             f"/api/plugins/{pid}/editor-side/{nid}",
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 200)
         self.assertNotEqual("", rj["html"])
@@ -1003,7 +1005,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "method": "test",
                 "data": "test",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = resp.json()
         self.assertEqual(False, rj["success"])
@@ -1020,7 +1022,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "method": "method",
                 "data": "test",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         rj = resp.json()
         self.assertEqual("method", rj["method"])
@@ -1030,12 +1032,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         config.get_settings().PLUGINS = False
 
     async def test_manager(self):
+        manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         resp = self.client.put(
             "/api/managers/users/disable",
             json={
                 "uid": "xxx",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
 
@@ -1052,7 +1055,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "uid": "xxx",
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
 
@@ -1074,16 +1077,17 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers={"RequestId": "xxx"}
         )
-        rj = self.check_ok_response(resp, 201)
-        u_token = rj["accessToken"]
+        self.check_ok_response(resp, 201)
+        u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         uid = (await client.coll.users.find_one({"email": email}))["id"]
 
+        self.set_access_token(manager_token)
         resp = self.client.put(
             "/api/managers/users",
             json={
                 "uid": uid,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
@@ -1092,14 +1096,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": email,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
         resp = self.client.put(
             "/api/managers/users",
             json={},
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.error_check(resp, 400, const.CodeEnum.INVALID_PARAMS)
 
@@ -1108,54 +1112,60 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "uid": uid,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
-        resp = self.client.get(
-            "/api/users",
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx"
-            }
+        resp = self.client.put(
+            "/api/account/login",
+            json={
+                "email": email,
+                "password": "abc111",
+            },
+            headers=self.default_headers,
         )
         self.error_check(resp, 403, const.CodeEnum.USER_DISABLED)
 
+        self.set_access_token(u_token)
+        resp = self.client.get(
+            "/api/users",
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
+
+        self.set_access_token(manager_token)
         resp = self.client.put(
             "/api/managers/users/enable",
             json={
                 "email": email,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
+        self.set_access_token(u_token)
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
+        self.set_access_token(manager_token)
         resp = self.client.put(
             "/api/managers/users/delete",
             json={
                 "uid": uid,
             },
-            headers=self.default_headers
+            headers=self.default_headers,
         )
         self.check_ok_response(resp, 200)
 
+        self.set_access_token(u_token)
         resp = self.client.get(
             "/api/users",
-            headers={
-                "Authorization": u_token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
-        self.error_check(resp, 403, const.CodeEnum.USER_DISABLED)
+        self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
 
         doc = await client.coll.users.update_one(
             {"id": admin_uid},
@@ -1166,7 +1176,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_statistic_user_behavior(self):
         # login
-        resp = self.client.put(
+        self.client.put(
             "/api/account/login",
             json={
                 "email": const.DEFAULT_USER["email"],
@@ -1179,8 +1189,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         ).to_list(None)
         self.assertEqual(const.UserBehaviorTypeEnum.LOGIN.value, docs[-1]["type"])
 
-        token = resp.json()["accessToken"]
-
         # create node
         resp = self.client.post(
             "/api/nodes",
@@ -1188,10 +1196,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "node1\ntext",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1206,10 +1211,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "md": "node1\ntext",
                 "type": const.NodeTypeEnum.MARKDOWN.value,
             },
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1220,10 +1222,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         # trash node
         self.client.put(
             f"/api/trash/{resp.json()['node']['id']}",
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1233,10 +1232,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         # restore node
         self.client.put(
             f"/api/trash/{resp.json()['node']['id']}/restore",
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1246,17 +1242,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         # delete node
         self.client.put(
             f"/api/trash/{resp.json()['node']['id']}",
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         self.client.delete(
             f"/api/trash/{resp.json()['node']['id']}",
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1273,10 +1263,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 5
             },
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1292,10 +1279,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 "p": 0,
                 "limit": 10,
             },
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            }
+            headers=self.default_headers,
         )
         docs = await client.coll.user_behavior.find(
             {"uid": uid}
@@ -1306,14 +1290,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         # logout
         resp = self.client.post(
             "/api/statistic/user-behavior",
-            headers={
-                "Authorization": token,
-                "RequestId": "xxx"
-            },
             json={
                 "type": const.UserBehaviorTypeEnum.LOGOUT.value,
                 "remark": "logout",
-            }
+            },
+            headers=self.default_headers,
         )
         self.assertEqual(201, resp.status_code)
         docs = await client.coll.user_behavior.find(

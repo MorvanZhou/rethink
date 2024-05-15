@@ -96,11 +96,17 @@ async def login(
 ) -> JSONResponse:
     # TODO: 后台应记录成功登录用户名和 IP、时间.
     #  当尝试登录 IP 不在历史常登录 IP 地理位置时，应进行多因素二次验证用户身份，防止用户因密码泄漏被窃取账户
-    u, code = await user.get_by_email(req.email, disabled=False, exclude_manager=False)
+    u, code = await user.get_by_email(req.email, disabled=None, exclude_manager=False)
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
             code=code,
+            language=req.language,
+        )
+    if u["disabled"]:
+        raise json_exception(
+            request_id=req_id,
+            code=const.CodeEnum.USER_DISABLED,
             language=req.language,
         )
 
@@ -146,7 +152,7 @@ async def auto_login(
         payload = jwt_decode(token=token)
     except Exception:  # pylint: disable=broad-except
         return r
-    u, code = await user.get(uid=payload["uid"])
+    u, code = await user.get(uid=payload["uid"], disabled=False)
     if code != const.CodeEnum.OK:
         return r
     return schemas.user.get_user_info_response_from_u_dict(u, request_id=req_id)

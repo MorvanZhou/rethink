@@ -75,7 +75,7 @@ async def upload_obsidian_task(  # noqa: C901
     logger.debug(f"obsidian upload, uid={uid}, filter time: {t2 - t1:.2f}")
 
     # add new md files with only title
-    u, code = await core.user.get(uid=uid)
+    u, code = await core.user.get(uid=uid, disabled=False)
     au = AuthedUser(
         u=convert_user_dict_to_authed_user(u),
         request_id=request_id,
