@@ -204,6 +204,9 @@ class ESSearcher(BaseEngine):
         self.index = new_index
         logger.debug(f"elasticsearch reindex finished, new index: {self.index}")
 
+    async def close(self):
+        await self.es.close()
+
     async def drop(self):
         await self.connect()
         if self.index != "" and await self.es.indices.exists(index=self.index):

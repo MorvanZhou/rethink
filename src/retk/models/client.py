@@ -94,6 +94,13 @@ class Client:
 
         await self.search.init()
 
+    async def close(self):
+        if self.search is not None:
+            await self.search.close()
+        if self.mongo is not None:
+            if isinstance(self.mongo, MongitaClientDisk):
+                await self.mongo.close()
+
     async def drop(self):
         if self.search is not None:
             await self.search.drop()

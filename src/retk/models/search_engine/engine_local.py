@@ -81,6 +81,9 @@ class LocalSearcher(BaseEngine):
         else:
             self.ix = open_dir(self.index_path)
 
+    async def close(self):
+        self.ix.close()
+
     async def drop(self):
         try:
             w = self.ix.writer()

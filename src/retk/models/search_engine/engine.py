@@ -59,6 +59,10 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
+    async def close(self):
+        ...
+
+    @abstractmethod
     async def drop(self):
         ...
 
