@@ -40,12 +40,12 @@ class TestCoreAsyncTask(unittest.TestCase):
         scheduler.start()
 
     def setUp(self) -> None:
+        scheduler.clear_jobs()
         self.log_level = logger.level
         logger.setLevel("DEBUG")
 
     def tearDown(self) -> None:
         logger.setLevel(self.log_level)
-        scheduler.clear_jobs()
 
     @classmethod
     def tearDownClass(cls) -> None:

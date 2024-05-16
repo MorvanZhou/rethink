@@ -1353,12 +1353,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers=self.default_headers,
         )
         self.check_ok_response(resp, 201)
-
+        scheduler.start()
         scheduler.run_once_now(
             job_id="deliver_unscheduled_system_notices1",
             func=notice.deliver_unscheduled_system_notices,
         )
-        scheduler.start()
 
         docs = await client.coll.notice_manager_delivery.find(
             {"senderId": admin_uid}

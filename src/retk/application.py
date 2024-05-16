@@ -79,5 +79,13 @@ async def startup_event():
     utils.local_finish_up()
 
     # schedule job
-    scheduler.init_tasks()
     scheduler.start()
+    scheduler.init_tasks()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    scheduler.stop()
+    await client.close()
+    logger.debug("db closed")
+    logger.debug("shutdown_event")

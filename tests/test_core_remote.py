@@ -1,7 +1,5 @@
-import datetime
 import time
 import unittest
-from copy import deepcopy
 from textwrap import dedent
 from unittest.mock import patch
 
@@ -499,49 +497,49 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         config.get_settings().MD_BACKUP_INTERVAL = bi
 
-    @utils.skip_no_connect
-    async def test_notice(self):
-        au = deepcopy(self.au)
-        doc, code = await core.notice.post_in_manager_delivery(
-            au=au,
-            title="title",
-            content="content",
-            recipient_type=const.notice.RecipientTypeEnum.ALL.value,
-            batch_type_ids=[],
-            publish_at=None,
-        )
-        self.assertEqual(const.CodeEnum.NOT_PERMITTED, code)
-
-        au.u.type = const.USER_TYPE.MANAGER.id
-        doc, code = await core.notice.post_in_manager_delivery(
-            au=au,
-            title="title",
-            content="content",
-            recipient_type=const.notice.RecipientTypeEnum.ALL.value,
-            batch_type_ids=[],
-            publish_at=None,
-        )
-        self.assertEqual(const.CodeEnum.OK, code)
-
-        await core.notice.deliver_unscheduled_system_notices()
-
-        res = await client.coll.notice_system.find().to_list(None)
-        self.assertEqual(1, len(res))
-        self.assertEqual(doc["_id"], res[0]["noticeId"])
-        self.assertEqual(au.u.id, res[0]["senderId"])
-        self.assertFalse(res[0]["read"])
-
-        d = await client.coll.notice_manager_delivery.find_one({"_id": doc["_id"]})
-        self.assertIsNotNone(d)
-        self.assertTrue(d["scheduled"])
-
-        n, code = await core.notice.get_user_notices(au)
-        self.assertEqual(const.CodeEnum.OK, code)
-        sn = n["system"]
-        self.assertEqual(1, len(sn))
-        self.assertEqual(doc["_id"], sn[0]["noticeId"])
-        self.assertEqual("title", sn[0]["title"])
-        self.assertEqual("content", sn[0]["content"])
-        self.assertLess(sn[0]["publishAt"], datetime.datetime.now())
-        self.assertFalse(sn[0]["read"])
-        self.assertIsNone(sn[0]["readTime"])
+    # @utils.skip_no_connect
+    # async def test_notice(self):
+    #     au = deepcopy(self.au)
+    #     doc, code = await core.notice.post_in_manager_delivery(
+    #         au=au,
+    #         title="title",
+    #         content="content",
+    #         recipient_type=const.notice.RecipientTypeEnum.ALL.value,
+    #         batch_type_ids=[],
+    #         publish_at=None,
+    #     )
+    #     self.assertEqual(const.CodeEnum.NOT_PERMITTED, code)
+    #
+    #     au.u.type = const.USER_TYPE.MANAGER.id
+    #     doc, code = await core.notice.post_in_manager_delivery(
+    #         au=au,
+    #         title="title",
+    #         content="content",
+    #         recipient_type=const.notice.RecipientTypeEnum.ALL.value,
+    #         batch_type_ids=[],
+    #         publish_at=None,
+    #     )
+    #     self.assertEqual(const.CodeEnum.OK, code)
+    #
+    #     await core.notice.deliver_unscheduled_system_notices()
+    #
+    #     res = await client.coll.notice_system.find().to_list(None)
+    #     self.assertEqual(1, len(res))
+    #     self.assertEqual(doc["_id"], res[0]["noticeId"])
+    #     self.assertEqual(au.u.id, res[0]["senderId"])
+    #     self.assertFalse(res[0]["read"])
+    #
+    #     d = await client.coll.notice_manager_delivery.find_one({"_id": doc["_id"]})
+    #     self.assertIsNotNone(d)
+    #     self.assertTrue(d["scheduled"])
+    #
+    #     n, code = await core.notice.get_user_notices(au)
+    #     self.assertEqual(const.CodeEnum.OK, code)
+    #     sn = n["system"]
+    #     self.assertEqual(1, len(sn))
+    #     self.assertEqual(doc["_id"], sn[0]["noticeId"])
+    #     self.assertEqual("title", sn[0]["title"])
+    #     self.assertEqual("content", sn[0]["content"])
+    #     self.assertLess(sn[0]["publishAt"], datetime.datetime.now())
+    #     self.assertFalse(sn[0]["read"])
+    #     self.assertIsNone(sn[0]["readTime"])

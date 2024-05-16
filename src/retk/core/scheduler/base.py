@@ -61,7 +61,7 @@ class JobInfo:
 
 
 # a separate thread
-__scheduler = BackgroundScheduler()
+__scheduler: Optional[BackgroundScheduler] = None
 __jobs_info: OrderedDict[str, JobInfo] = OrderedDict()
 
 
@@ -110,10 +110,13 @@ def clear_jobs() -> None:
 
 
 def start():
+    global __scheduler
+    __scheduler = BackgroundScheduler()
     __scheduler.start()
 
 
 def stop():
+    __scheduler.remove_all_jobs()
     __scheduler.shutdown()
 
 
