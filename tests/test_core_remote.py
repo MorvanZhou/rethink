@@ -1,3 +1,4 @@
+import datetime
 import time
 import unittest
 from copy import deepcopy
@@ -533,3 +534,14 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         d = await client.coll.notice_manager_delivery.find_one({"_id": doc["_id"]})
         self.assertIsNotNone(d)
         self.assertTrue(d["scheduled"])
+
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        sn = n["system"]
+        self.assertEqual(1, len(sn))
+        self.assertEqual(doc["_id"], sn[0]["noticeId"])
+        self.assertEqual("title", sn[0]["title"])
+        self.assertEqual("content", sn[0]["content"])
+        self.assertLess(sn[0]["publishAt"], datetime.datetime.now())
+        self.assertFalse(sn[0]["read"])
+        self.assertIsNone(sn[0]["readTime"])

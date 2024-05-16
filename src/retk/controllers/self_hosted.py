@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from bson import ObjectId
+from bson.tz_util import utc
 
 from retk import const, __version__
 from retk.core import self_hosted
@@ -20,7 +21,7 @@ _local_system_authed_user = AuthedUser(
         avatar="",
         hashed="",
         disabled=False,
-        modified_at=datetime.now(),
+        modified_at=datetime.now(tz=utc),
         used_space=0,
         type=const.USER_TYPE.MANAGER,
         last_state=AuthedUser.User.LastState(
@@ -70,5 +71,5 @@ async def notice_new_pkg_version():
                 content="New version available, please update your client",
                 recipient_type=const.notice.RecipientTypeEnum.ALL,
                 batch_type_ids=[],
-                publish_at=datetime.now()
+                publish_at=datetime.now(tz=utc)
             )

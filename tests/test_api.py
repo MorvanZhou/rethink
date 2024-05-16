@@ -10,12 +10,13 @@ from unittest.mock import patch
 from zipfile import ZipFile
 
 from PIL import Image
+from bson.tz_util import utc
 from fastapi.testclient import TestClient
 from httpx import Response
 
 from retk import const, config, PluginAPICallReturn
 from retk.application import app
-from retk.core import account
+from retk.core import account, scheduler, notice
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
@@ -134,6 +135,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("detail", rj)
 
     async def asyncTearDown(self) -> None:
+        config.get_settings().ONE_USER = True
         self.client.cookies.clear()
         await client.drop()
         shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
@@ -153,7 +155,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.get_msg_by_code(code, language=language), detail["msg"], msg=detail)
 
     def check_ok_response(self, resp: Response, status_code: int = 200, rid="xxx") -> dict:
-        self.assertEqual(status_code, resp.status_code)
+        self.assertEqual(status_code, resp.status_code, msg=resp.json())
         rj = resp.json()
         self.assertEqual(rid, rj["requestId"])
         return rj
@@ -164,6 +166,23 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         except KeyError:
             pass
         self.client.cookies[const.settings.COOKIE_ACCESS_TOKEN] = token
+
+    async def set_default_manager(self):
+        u = await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})
+        admin_uid = u["id"]
+        doc = await client.coll.users.update_one(
+            {"id": admin_uid},
+            {"$set": {"type": const.USER_TYPE.ADMIN.id}}
+        )
+        self.assertEqual(1, doc.modified_count)
+        return admin_uid
+
+    async def clear_default_manager(self, admin_uid):
+        doc = await client.coll.users.update_one(
+            {"id": admin_uid},
+            {"$set": {"type": const.USER_TYPE.NORMAL.id}}
+        )
+        self.assertEqual(1, doc.modified_count)
 
     async def test_auto_login(self):
         resp = self.client.put(
@@ -1031,41 +1050,14 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         unregister_official_plugins()
         config.get_settings().PLUGINS = False
 
-    async def test_manager(self):
-        manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
-        resp = self.client.put(
-            "/api/managers/users/disable",
-            json={
-                "uid": "xxx",
-            },
-            headers=self.default_headers,
-        )
-        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
-
-        u = await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})
-        admin_uid = u["id"]
-        doc = await client.coll.users.update_one(
-            {"id": admin_uid},
-            {"$set": {"type": const.USER_TYPE.ADMIN.id}}
-        )
-        self.assertEqual(1, doc.modified_count)
-
-        resp = self.client.put(
-            "/api/managers/users/disable",
-            json={
-                "uid": "xxx",
-            },
-            headers=self.default_headers,
-        )
-        self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
-
+    async def create_new_temp_user(self, email):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
         token, code = account.app_captcha.generate()
         data = jwt_decode(token)
         code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
         lang = "zh"
-        email = "a@b.cd"
+
         resp = self.client.post(
             "/api/account",
             json={
@@ -1078,6 +1070,33 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers={"RequestId": "xxx"}
         )
         self.check_ok_response(resp, 201)
+        return resp
+
+    async def test_manager(self):
+        manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+        resp = self.client.put(
+            "/api/managers/users/disable",
+            json={
+                "uid": "xxx",
+            },
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
+
+        admin_uid = await self.set_default_manager()
+
+        resp = self.client.put(
+            "/api/managers/users/disable",
+            json={
+                "uid": "xxx",
+            },
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
+
+        email = "a@b.cd"
+        resp = await self.create_new_temp_user(email)
+
         u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         uid = (await client.coll.users.find_one({"email": email}))["id"]
 
@@ -1167,12 +1186,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
 
-        doc = await client.coll.users.update_one(
-            {"id": admin_uid},
-            {"$set": {"type": const.USER_TYPE.NORMAL.id}}
-        )
-        self.assertEqual(1, doc.modified_count)
-        config.get_settings().ONE_USER = True
+        await self.clear_default_manager(admin_uid)
 
     async def test_statistic_user_behavior(self):
         # login
@@ -1302,3 +1316,82 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         ).to_list(None)
         self.assertEqual(const.UserBehaviorTypeEnum.LOGOUT.value, docs[-1]["type"])
         self.assertEqual("logout", docs[-1]["remark"])
+
+    async def test_system_notice(self):
+        manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+
+        email = "a@b.cd"
+        resp = await self.create_new_temp_user(email)
+        u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+        self.assertEqual(201, resp.status_code)
+
+        admin_uid = await self.set_default_manager()
+        pa = datetime.datetime.now(tz=utc)
+        resp = self.client.post(
+            "/api/managers/notices/system",
+            json={
+                "title": "title",
+                "content": "content",
+                "recipientType": const.notice.RecipientTypeEnum.ALL.value,
+                "batchTypeIds": [],
+                "publishAt": pa.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            },
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
+
+        self.set_access_token(manager_token)
+        resp = self.client.post(
+            "/api/managers/notices/system",
+            json={
+                "title": "title",
+                "content": "content",
+                "recipientType": const.notice.RecipientTypeEnum.ALL.value,
+                "batchTypeIds": [],
+                "publishAt": pa.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            },
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 201)
+
+        scheduler.run_once_now(
+            job_id="deliver_unscheduled_system_notices1",
+            func=notice.deliver_unscheduled_system_notices,
+        )
+        scheduler.start()
+
+        docs = await client.coll.notice_manager_delivery.find(
+            {"senderId": admin_uid}
+        ).to_list(None)
+        self.assertEqual(1, len(docs))
+        self.assertEqual(const.notice.RecipientTypeEnum.ALL.value, docs[0]["recipientType"])
+        self.assertEqual("title", docs[0]["title"])
+        self.assertEqual("content", docs[0]["content"])
+        self.assertEqual(admin_uid, docs[0]["senderId"])
+        self.assertEqual([], docs[0]["batchTypeIds"])
+        self.assertFalse(docs[0]["scheduled"])
+        self.assertEqual(pa.second, docs[0]["publishAt"].second)
+
+        j = scheduler.get_job("deliver_unscheduled_system_notices1")
+        for _ in range(10):
+            if j.finished_at is not None:
+                break
+            time.sleep(0.1)
+        self.assertIsNotNone(j.finished_at)
+        scheduler.stop()
+
+        self.set_access_token(u_token)
+        resp = self.client.get(
+            "/api/users/notices",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
+        rj = resp.json()
+        self.assertIn("data", rj)
+        system_notices = rj["data"]["system"]
+        self.assertEqual(1, len(system_notices))
+        sn = system_notices[0]
+        self.assertEqual("title", sn["title"])
+        self.assertEqual("content", sn["content"])
+
+        await self.clear_default_manager(admin_uid)

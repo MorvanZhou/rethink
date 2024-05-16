@@ -76,3 +76,18 @@ async def delete_account(
         req: schemas.manager.GetUserRequest,
 ) -> schemas.RequestIdResponse:
     return await manager.delete_account(au=au, req=req)
+
+
+@router.post(
+    "/notices/system",
+    status_code=201,
+    response_model=schemas.RequestIdResponse,
+    summary="Post in manager delivery",
+    description="Post a notice in manager delivery",
+)
+@utils.measure_time_spend
+async def post_in_manager_delivery(
+        au: utils.ANNOTATED_AUTHED_ADMIN,
+        req: schemas.manager.ManagerNoticeDeliveryRequest,
+) -> schemas.RequestIdResponse:
+    return await manager.post_in_manager_delivery(au=au, req=req)

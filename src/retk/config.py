@@ -83,8 +83,8 @@ class Settings(BaseSettings):
             )
 
         self.REFRESH_TOKEN_EXPIRE_DELTA = datetime.timedelta(days=self.JWT_REFRESH_EXPIRED_DAYS)
-        # self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(minutes=self.JWT_ACCESS_EXPIRED_MINS)
-        self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(seconds=5)
+        self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(minutes=self.JWT_ACCESS_EXPIRED_MINS)
+
 
 @lru_cache()
 def get_settings() -> Settings:

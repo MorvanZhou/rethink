@@ -1,7 +1,7 @@
 from retk import const
 from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, json_exception
-from retk.core import account, user
+from retk.core import account, user, notice
 from retk.models.tps import AuthedUser
 
 
@@ -64,6 +64,25 @@ async def delete_account(
         await account.manager.delete_by_uid(uid=req.uid)
     else:
         await account.manager.delete_by_email(email=req.email)
+    return schemas.RequestIdResponse(
+        requestId=au.request_id,
+    )
+
+
+async def post_in_manager_delivery(
+        au: AuthedUser,
+        req: schemas.manager.ManagerNoticeDeliveryRequest,
+) -> schemas.RequestIdResponse:
+    _, code = await notice.post_in_manager_delivery(
+        au=au,
+        title=req.title,
+        content=req.content,
+        recipient_type=req.recipientType,
+        batch_type_ids=req.batchTypeIds,
+        publish_at=req.publishAt,
+    )
+    maybe_raise_json_exception(au=au, code=code)
+
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )

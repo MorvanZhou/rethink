@@ -1,10 +1,13 @@
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Callable, Optional, Tuple, Dict, Any, List
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from bson.tz_util import utc
 
+from retk import const
 from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 
 """
@@ -34,46 +37,72 @@ from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 
 @dataclass
 class JobInfo:
+    id: str
     type: str
     args: Tuple
     kwargs: Dict[str, Any]
-    execute_at: Optional[datetime] = None
+    executed_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     finished_return: Optional[str] = None
-    create_at: datetime = None
+    created_at: datetime = None
 
     def __post_init__(self):
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(tz=utc)
 
     def executing_time(self) -> timedelta:
+        if self.executed_at is None:
+            return timedelta(seconds=0)
         if self.finished_at is None:
-            return datetime.now() - self.execute_at
-        return self.finished_at - self.execute_at
+            return datetime.now() - self.executed_at
+        return self.finished_at - self.executed_at
+
+    def is_failed(self) -> bool:
+        return self.finished_at is not None and self.executed_at is None
 
 
 # a separate thread
 __scheduler = BackgroundScheduler()
-__jobs_info: List[JobInfo] = []
+__jobs_info: OrderedDict[str, JobInfo] = OrderedDict()
 
 
-def __wrap_func(func: Callable, job_info: JobInfo):
-    __jobs_info.insert(0, job_info)
+def __wrap_func(func: Callable, job_info: JobInfo) -> Optional[Callable]:
+    if job_info.id in __jobs_info:
+        job_info.finished_at = datetime.now(tz=utc)
+        job_info.finished_return = f"job_id={job_info.id} already exists!"
+        return
+
+    __jobs_info[job_info.id] = job_info
     if len(__jobs_info) > MAX_SCHEDULE_JOB_INFO_LEN:
         # dequeue the oldest job
-        __jobs_info.pop()
+        __jobs_info.popitem(last=False)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        job_info.execute_at = datetime.now()
+        job_info.executed_at = datetime.now(tz=utc)
         res = func(*args, **kwargs)
-        job_info.finished_at = datetime.now()
+        job_info.finished_at = datetime.now(tz=utc)
         job_info.finished_return = res
 
     return wrapper
 
 
+def init_tasks():
+    # check unscheduled system notices every minute
+    # run_every_at(
+    #     job_id="deliver_unscheduled_system_notices",
+    #     func=deliver_unscheduled_system_notices,
+    #     second=0,
+    # )
+    return
+
+
 def get_jobs() -> List[JobInfo]:
-    return __jobs_info
+    # from oldest to newest
+    return list(__jobs_info.values())
+
+
+def get_job(job_id: str) -> Optional[JobInfo]:
+    return __jobs_info.get(job_id)
 
 
 def clear_jobs() -> None:
@@ -97,50 +126,60 @@ def _get_default(args, kwargs):
 
 
 def run_once_at(
+        job_id: str,
         func: Callable,
         time: datetime,
         args: Optional[Tuple] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-):
+) -> Tuple[JobInfo, const.CodeEnum]:
     args, kwargs = _get_default(args, kwargs)
     ji = JobInfo(
+        id=job_id,
         type="date",
         args=args,
         kwargs=kwargs,
     )
     _func = __wrap_func(func=func, job_info=ji)
+    if _func is None:
+        return ji, const.CodeEnum.INVALID_SCHEDULE_JOB_ID
     __scheduler.add_job(
+        id=job_id,
         func=_func,
         trigger="date",
         run_date=time,
         args=args,
         kwargs=kwargs,
     )
+    return ji, const.CodeEnum.OK
 
 
 def run_once_now(
+        job_id: str,
         func: Callable,
         args: Optional[Tuple] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-):
-    return run_once_at(func=func, time=datetime.now(), args=args, kwargs=kwargs)
+) -> Tuple[JobInfo, const.CodeEnum]:
+    return run_once_at(job_id=job_id, func=func, time=datetime.now(tz=utc), args=args, kwargs=kwargs)
 
 
 def run_once_after(
+        job_id: str,
         func: Callable,
         second: float,
         args: Optional[Tuple] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-):
+) -> Tuple[JobInfo, const.CodeEnum]:
     return run_once_at(
+        job_id=job_id,
         func=func,
-        time=datetime.now() + timedelta(seconds=second),
+        time=datetime.now(tz=utc) + timedelta(seconds=second),
         args=args,
         kwargs=kwargs,
     )
 
 
 def run_every_at(
+        job_id: str,
         func: Callable,
         second: Optional[int] = None,
         minute: Optional[int] = None,
@@ -153,7 +192,7 @@ def run_every_at(
         end_date: Optional[datetime] = None,
         args: Optional[Tuple] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-):
+) -> Tuple[JobInfo, const.CodeEnum]:
     if second is not None:
         second = int(second)
         if second > 59 or second < 0:
@@ -185,12 +224,16 @@ def run_every_at(
 
     args, kwargs = _get_default(args, kwargs)
     ji = JobInfo(
+        id=job_id,
         type="cron",
         args=args,
         kwargs=kwargs,
     )
     _func = __wrap_func(func=func, job_info=ji)
+    if _func is None:
+        return ji, const.CodeEnum.INVALID_SCHEDULE_JOB_ID
     __scheduler.add_job(
+        id=job_id,
         func=_func,
         trigger="cron",
         second=second,
@@ -204,3 +247,4 @@ def run_every_at(
         args=args,
         kwargs=kwargs,
     )
+    return ji, const.CodeEnum.OK

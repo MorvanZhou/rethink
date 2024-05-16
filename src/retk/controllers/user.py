@@ -1,7 +1,7 @@
 from retk import const, core, config
 from retk.controllers import schemas
 from retk.controllers.utils import datetime2str, maybe_raise_json_exception
-from retk.core import account
+from retk.core import account, notice
 from retk.core.user import reset_password
 from retk.models.tps import AuthedUser
 from retk.utils import mask_email, regex
@@ -80,11 +80,23 @@ async def update_password(
     )
 
 
-async def get_notifications(
+async def get_user_notices(
         au: AuthedUser,
-) -> schemas.notice.NotificationResponse:
-    notifications = []
-    return schemas.notice.NotificationResponse(
+) -> schemas.user.NotificationResponse:
+    nt, code = await notice.get_user_notices(au=au)
+    maybe_raise_json_exception(au=au, code=code)
+
+    return schemas.user.NotificationResponse(
         requestId=au.request_id,
-        notifications=notifications,
+        data=schemas.user.NotificationResponse.Data(
+            system=[
+                schemas.user.NotificationResponse.Data.System(
+                    id=str(n["noticeId"]),
+                    title=n["title"],
+                    content=n["content"],
+                    publishAt=n["publishAt"],
+                    read=n["read"],
+                    readTime=n["readTime"],
+                ) for n in nt["system"]],
+        ),
     )

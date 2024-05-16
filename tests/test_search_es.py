@@ -3,6 +3,7 @@ import unittest
 
 import elastic_transport
 from bson import ObjectId
+from bson.tz_util import utc
 
 from retk import const, config
 from retk.models.search_engine.engine_es import ESSearcher, SearchDoc
@@ -44,7 +45,7 @@ class ESTest(unittest.IsolatedAsyncioTestCase):
                 avatar="",
                 hashed="",
                 disabled=False,
-                modified_at=datetime.datetime.now(),
+                modified_at=datetime.datetime.now(tz=utc),
                 used_space=0,
                 type=0,
 

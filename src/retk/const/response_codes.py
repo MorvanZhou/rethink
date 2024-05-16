@@ -43,6 +43,7 @@ class CodeEnum(IntEnum):
     EXPIRED_OR_NO_ACCESS_TOKEN = 33
     USER_NOT_EXIST = 34
     INVALID_PARAMS = 35
+    INVALID_SCHEDULE_JOB_ID = 36
 
 
 @dataclass
@@ -98,6 +99,7 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
                                                      en="Access token has expired or invalid"),
     CodeEnum.USER_NOT_EXIST: CodeMessage(zh="用户不存在", en="User does not exist"),
     CodeEnum.INVALID_PARAMS: CodeMessage(zh="无效参数", en="Invalid parameter"),
+    CodeEnum.INVALID_SCHEDULE_JOB_ID: CodeMessage(zh="无效的任务 ID", en="Invalid schedule job ID"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -137,6 +139,7 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN: 200,
     CodeEnum.USER_NOT_EXIST: 404,
     CodeEnum.INVALID_PARAMS: 400,
+    CodeEnum.INVALID_SCHEDULE_JOB_ID: 400,
 }
 
 

@@ -87,11 +87,12 @@ class EmailServer:
         html_body = MIMEText(html_message, 'html', 'utf-8')
         msg.attach(html_body)
 
-        scheduler.run_once_now(
+        _, code = scheduler.run_once_now(
+            job_id=f"send_email_{conf.RETHINK_EMAIL}_{recipients}_{subject}",
             func=scheduler.tasks.email.send,
             kwargs={"recipients": recipients, "subject": msg.as_string()},
         )
-        return const.CodeEnum.OK
+        return code
 
 
 email_server = EmailServer()

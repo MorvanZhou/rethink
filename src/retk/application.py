@@ -79,4 +79,5 @@ async def startup_event():
     utils.local_finish_up()
 
     # schedule job
+    scheduler.init_tasks()
     scheduler.start()

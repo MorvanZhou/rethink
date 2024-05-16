@@ -62,15 +62,15 @@ async def update_user_password(
 
 
 @router.get(
-    path="/notifications",
+    path="/notices",
     status_code=200,
-    response_model=schemas.notice.NotificationResponse,
+    response_model=schemas.user.NotificationResponse,
 )
 @utils.measure_time_spend
 async def get_notifications(
         au: utils.ANNOTATED_AUTHED_USER,
         referer: Optional[str] = utils.DEPENDS_REFERER,
-) -> schemas.notice.NotificationResponse:
-    return await user.get_notifications(
+) -> schemas.user.NotificationResponse:
+    return await user.get_user_notices(
         au=au,
     )

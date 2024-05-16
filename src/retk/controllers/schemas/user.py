@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import Optional, List
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
@@ -99,3 +100,19 @@ def get_user_info_response_from_u_dict(
             ),
         ),
     )
+
+
+class NotificationResponse(BaseModel):
+    class Data(BaseModel):
+        class System(BaseModel):
+            id: str
+            title: str
+            content: str
+            publishAt: datetime
+            read: bool
+            readTime: Optional[datetime]
+
+        system: List[System]
+
+    requestId: str
+    data: Data
