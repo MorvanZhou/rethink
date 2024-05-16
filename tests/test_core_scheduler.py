@@ -108,7 +108,7 @@ class TestCoreAsyncTask(unittest.TestCase):
             self.assertTrue(job.finished_return.startswith("test and print"))
 
         j = scheduler.get_job("test5")
-        self.assertIsInstance(j, scheduler.base.JobInfo)
+        self.assertIsInstance(j, scheduler.schedule.JobInfo)
         self.assertEqual("test and print '5'", j.finished_return)
 
         ji, code = scheduler.run_once_now(

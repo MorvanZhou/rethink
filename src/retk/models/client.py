@@ -23,6 +23,27 @@ except ImportError:
     pass
 
 
+def init_mongo(connection_timeout: int):
+    conf = config.get_settings()
+    if config.is_local_db():
+        if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():
+            raise FileNotFoundError(f"Path not exists: {conf.RETHINK_LOCAL_STORAGE_PATH}")
+        db_path = conf.RETHINK_LOCAL_STORAGE_PATH / ".data" / "db"
+        db_path.mkdir(parents=True, exist_ok=True)
+        mongo = MongitaClientDisk(db_path)
+    else:
+        mongo = AsyncIOMotorClient(
+            host=conf.DB_HOST,
+            port=conf.DB_PORT,
+            username=conf.DB_USER,
+            password=conf.DB_PASSWORD,
+            socketTimeoutMS=1000 * connection_timeout,
+        )
+
+    db = mongo[config.get_settings().DB_NAME]
+    return mongo, db
+
+
 class Client:
     coll: Collections = Collections()
     mongo: Optional[Union["AsyncIOMotorClient", MongitaClientDisk]] = None
@@ -51,23 +72,7 @@ class Client:
         await self.try_restore_search()
 
     def init_mongo(self):
-        conf = config.get_settings()
-        if config.is_local_db():
-            if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():
-                raise FileNotFoundError(f"Path not exists: {conf.RETHINK_LOCAL_STORAGE_PATH}")
-            db_path = conf.RETHINK_LOCAL_STORAGE_PATH / ".data" / "db"
-            db_path.mkdir(parents=True, exist_ok=True)
-            self.mongo = MongitaClientDisk(db_path)
-        else:
-            self.mongo = AsyncIOMotorClient(
-                host=conf.DB_HOST,
-                port=conf.DB_PORT,
-                username=conf.DB_USER,
-                password=conf.DB_PASSWORD,
-                socketTimeoutMS=1000 * self.connection_timeout,
-            )
-
-        db = self.mongo[config.get_settings().DB_NAME]
+        self.mongo, db = init_mongo(self.connection_timeout)
         self.coll.users = db["users"]
         self.coll.nodes = db["nodes"]
         self.coll.import_data = db["importData"]

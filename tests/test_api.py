@@ -16,7 +16,7 @@ from httpx import Response
 
 from retk import const, config, PluginAPICallReturn
 from retk.application import app
-from retk.core import account, scheduler, notice
+from retk.core import account, scheduler
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
@@ -1353,10 +1353,23 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             headers=self.default_headers,
         )
         self.check_ok_response(resp, 201)
+
+        resp = self.client.get(
+            "/api/managers/notices/system",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(1, rj["total"])
+        self.assertEqual(1, len(rj["notices"]))
+        self.assertEqual("title", rj["notices"][0]["title"])
+        self.assertEqual("content", rj["notices"][0]["content"])
+        self.assertEqual(pa.strftime("%Y-%m-%dT%H:%M:%SZ"), rj["notices"][0]["publishAt"])
+        self.assertFalse(rj["notices"][0]["scheduled"])
+
         scheduler.start()
         scheduler.run_once_now(
             job_id="deliver_unscheduled_system_notices1",
-            func=notice.deliver_unscheduled_system_notices,
+            func=scheduler.tasks.notice.deliver_unscheduled_system_notices,
         )
 
         docs = await client.coll.notice_manager_delivery.find(
@@ -1378,6 +1391,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             time.sleep(0.1)
         self.assertIsNotNone(j.finished_at)
         scheduler.stop()
+
+        resp = self.client.get(
+            "/api/managers/notices/system",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertTrue(rj["notices"][0]["scheduled"])
 
         self.set_access_token(u_token)
         resp = self.client.get(

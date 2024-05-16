@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from retk.controllers import schemas, manager
 from retk.routes import utils
@@ -91,3 +91,19 @@ async def post_in_manager_delivery(
         req: schemas.manager.ManagerNoticeDeliveryRequest,
 ) -> schemas.RequestIdResponse:
     return await manager.post_in_manager_delivery(au=au, req=req)
+
+
+@router.get(
+    "/notices/system",
+    status_code=200,
+    response_model=schemas.manager.GetSystemNoticesResponse,
+    summary="Get unscheduled system notices",
+    description="Get unscheduled system notices",
+)
+@utils.measure_time_spend
+async def get_unscheduled_system_notices(
+        au: ADMIN_AUTH,
+        p: int = Query(0, ge=0),
+        limit: int = Query(10, ge=1, le=100),
+) -> schemas.manager.GetSystemNoticesResponse:
+    return await manager.get_system_notices(au=au, page=p, limit=limit)

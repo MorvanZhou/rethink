@@ -86,3 +86,22 @@ async def post_in_manager_delivery(
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
+
+
+async def get_system_notices(
+        au: AuthedUser,
+        page: int,
+        limit: int,
+) -> schemas.manager.GetSystemNoticesResponse:
+    notices, total = await notice.get_system_notices(
+        page=page,
+        limit=limit,
+    )
+    for n in notices:
+        n["id"] = str(n["_id"])
+        del n["_id"]
+    return schemas.manager.GetSystemNoticesResponse(
+        requestId=au.request_id,
+        notices=notices,
+        total=total,
+    )

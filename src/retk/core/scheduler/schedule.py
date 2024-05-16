@@ -9,6 +9,7 @@ from bson.tz_util import utc
 
 from retk import const
 from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
+from . import tasks
 
 """
 - BlockingScheduler:
@@ -88,11 +89,11 @@ def __wrap_func(func: Callable, job_info: JobInfo) -> Optional[Callable]:
 
 def init_tasks():
     # check unscheduled system notices every minute
-    # run_every_at(
-    #     job_id="deliver_unscheduled_system_notices",
-    #     func=deliver_unscheduled_system_notices,
-    #     second=0,
-    # )
+    run_every_at(
+        job_id="deliver_unscheduled_system_notices",
+        func=tasks.notice.deliver_unscheduled_system_notices,
+        second=0,
+    )
     return
 
 
