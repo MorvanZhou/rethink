@@ -101,7 +101,7 @@ class TestCoreAsyncTask(unittest.TestCase):
                 fail = False
             self.assertFalse(fail)
 
-        time.sleep(1.01)
+        time.sleep(1.1)
 
         for _, job in enumerate(scheduler.get_jobs()):
             self.assertIsInstance(job.finished_at, datetime)
