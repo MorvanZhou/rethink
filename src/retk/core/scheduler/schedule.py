@@ -1,8 +1,8 @@
-from collections import OrderedDict
+from collections import OrderedDict as _OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable, Optional, Tuple, Dict, Any, List
+from typing import Callable, Optional, Tuple, Dict, Any, List, OrderedDict
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from bson.tz_util import utc
@@ -63,7 +63,7 @@ class JobInfo:
 
 # a separate thread
 __scheduler: Optional[BackgroundScheduler] = None
-__jobs_info: OrderedDict[str, JobInfo] = OrderedDict()
+__jobs_info: OrderedDict[str, JobInfo] = _OrderedDict()
 
 
 def __wrap_func(func: Callable, job_info: JobInfo) -> Optional[Callable]:
