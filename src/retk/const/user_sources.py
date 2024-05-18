@@ -1,16 +1,16 @@
-from enum import IntEnum, auto, unique
+from enum import IntEnum, unique
 
 
 @unique
 class UserSourceEnum(IntEnum):
     TEST = 0
-    EMAIL = auto()  # 1
-    PHONE = auto()  # 2
-    GOOGLE = auto()  # 3
-    FACEBOOK = auto()  # 4
-    WECHAT = auto()  # 5
-    GITHUB = auto()  # 6
-    LOCAL = auto()  # 7
+    EMAIL = 1
+    PHONE = 2
+    GOOGLE = 3
+    FACEBOOK = 4
+    WECHAT = 5
+    GITHUB = 6
+    LOCAL = 7
 
     def __str__(self):
         return self.value

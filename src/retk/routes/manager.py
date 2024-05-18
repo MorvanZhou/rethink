@@ -15,15 +15,13 @@ ADMIN_AUTH = utils.ANNOTATED_AUTHED_ADMIN
 @router.get(
     "/",
     status_code=200,
-    response_model=schemas.RequestIdResponse,
+    response_model=schemas.manager.GetManagerDataResponse,
 )
 @utils.measure_time_spend
-async def get_admin_info(
+async def get_manager_data(
         au: ADMIN_AUTH,
-) -> schemas.RequestIdResponse:
-    return schemas.RequestIdResponse(
-        requestId=au.request_id,
-    )
+) -> schemas.manager.GetManagerDataResponse:
+    return await manager.get_manager_data(au=au)
 
 
 @router.put(

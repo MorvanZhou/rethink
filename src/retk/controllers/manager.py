@@ -1,26 +1,90 @@
-from retk import const
+import httpx
+
+from retk import const, config
 from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, json_exception
-from retk.core import account, user, notice
+from retk.core import account, user, notice, analysis
 from retk.models.tps import AuthedUser
 from retk.utils import datetime2str
 
 
-def __check_use_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) -> bool:
-    if req.uid is None and req.email is None:
+async def __get_then_set_github_user_id(au: AuthedUser, req: schemas.manager.GetUserRequest):
+    if req.github.startswith("https://github.com/"):
+        req.github = req.github.split("/", 4)[3]
+    async with httpx.AsyncClient() as ac:
+        url = f"https://api.github.com/users/{req.github}"
+        try:
+            resp = await ac.get(
+                url=url,
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "Authorization": f"Bearer {config.get_settings().OAUTH_API_TOKEN_GITHUB}",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+                follow_redirects=False,
+                timeout=5.
+            )
+        except (
+                httpx.ConnectTimeout,
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.HTTPError
+        ) as e:
+            raise json_exception(
+                request_id=au.request_id,
+                code=const.CodeEnum.INVALID_PARAMS,
+                log_msg=f"get github user info failed, error={e}",
+            )
+        if resp.status_code != 200:
+            raise json_exception(
+                request_id=au.request_id,
+                code=const.CodeEnum.INVALID_PARAMS,
+                log_msg=f"get github user info failed, status_code={resp.status_code}",
+            )
+
+        rj = resp.json()
+        github_user_id = rj["id"]
+        u, code = await user.get_account(
+            account=str(github_user_id),
+            source=const.UserSourceEnum.GITHUB.value,
+            disabled=None,
+            exclude_manager=True,
+        )
+        if code == const.CodeEnum.OK:
+            req.uid = u["id"]
+
+
+async def __check_user_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) -> bool:
+    if req.uid is None and req.email is None and req.github is None:
         raise json_exception(
             request_id=au.request_id,
             code=const.CodeEnum.INVALID_PARAMS,
-            log_msg="uid and email can't be both not None",
+            log_msg="uid and email and github can't be all None",
         )
+    if req.github is not None:
+        await __get_then_set_github_user_id(au=au, req=req)
     return req.uid is not None
+
+
+async def get_manager_data(
+        au: AuthedUser,
+) -> schemas.manager.GetManagerDataResponse:
+    data, code = await analysis.get_marco_data()
+    maybe_raise_json_exception(au=au, code=code)
+    return schemas.manager.GetManagerDataResponse(
+        requestId=au.request_id,
+        data=schemas.manager.GetManagerDataResponse.Data(
+            userCount=data["user_count"],
+            nodeCount=data["node_count"],
+        )
+    )
 
 
 async def get_user_info(
         au: AuthedUser,
         req: schemas.manager.GetUserRequest,
 ) -> schemas.manager.GetUserResponse:
-    if __check_use_uid(au=au, req=req):
+    if await __check_user_uid(au=au, req=req):
         u, code = await user.get(uid=req.uid, disabled=None, exclude_manager=True)
     else:
         u, code = await user.get_by_email(email=req.email, disabled=None, exclude_manager=True)
@@ -62,7 +126,7 @@ async def disable_account(
         au: AuthedUser,
         req: schemas.manager.GetUserRequest,
 ) -> schemas.RequestIdResponse:
-    if __check_use_uid(au=au, req=req):
+    if await __check_user_uid(au=au, req=req):
         code = await account.manager.disable_by_uid(uid=req.uid)
     else:
         code = await account.manager.disable_by_email(email=req.email)
@@ -77,7 +141,7 @@ async def enable_account(
         au: AuthedUser,
         req: schemas.manager.GetUserRequest,
 ) -> schemas.RequestIdResponse:
-    if __check_use_uid(au=au, req=req):
+    if await __check_user_uid(au=au, req=req):
         code = await account.manager.enable_by_uid(uid=req.uid)
     else:
         code = await account.manager.enable_by_email(email=req.email)
@@ -91,7 +155,7 @@ async def delete_account(
         au: AuthedUser,
         req: schemas.manager.GetUserRequest,
 ) -> schemas.RequestIdResponse:
-    if __check_use_uid(au=au, req=req):
+    if await __check_user_uid(au=au, req=req):
         await account.manager.delete_by_uid(uid=req.uid)
     else:
         await account.manager.delete_by_email(email=req.email)

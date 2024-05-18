@@ -8,4 +8,5 @@ from . import (
     statistic,
     self_hosted,
     notice,
+    analysis,
 )

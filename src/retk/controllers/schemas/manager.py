@@ -8,7 +8,17 @@ from retk.const import settings, notice
 
 class GetUserRequest(BaseModel):
     email: Optional[str] = Field(max_length=settings.EMAIL_MAX_LENGTH, default=None)
+    github: Optional[str] = Field(max_length=50, default=None)
     uid: Optional[str] = Field(max_length=settings.UID_MAX_LENGTH, default=None)
+
+
+class GetManagerDataResponse(BaseModel):
+    class Data(BaseModel):
+        userCount: int = Field(description="total number of users")
+        nodeCount: int = Field(description="total number of nodes")
+
+    requestId: str = Field(max_length=settings.REQUEST_ID_MAX_LENGTH, description="request ID")
+    data: Data = Field(description="app data")
 
 
 class GetUserResponse(BaseModel):

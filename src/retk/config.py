@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     OAUTH_REDIRECT_URL: str = Field(env='OAUTH_REDIRECT_URL', default="")
     OAUTH_CLIENT_ID_GITHUB: str = Field(env='OAUTH_CLIENT_ID_GITHUB', default="")
     OAUTH_CLIENT_SEC_GITHUB: str = Field(env='OAUTH_CLIENT_SEC_GITHUB', default="")
+    OAUTH_API_TOKEN_GITHUB: str = Field(env='OAUTH_API_TOKEN_GITHUB', default="")
     OAUTH_CLIENT_ID_QQ: str = Field(env='OAUTH_CLIENT_ID_QQ', default="")
     OAUTH_CLIENT_SEC_QQ: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
     OAUTH_CLIENT_ID_FACEBOOK: str = Field(env='OAUTH_CLIENT_ID_QQ', default="")
