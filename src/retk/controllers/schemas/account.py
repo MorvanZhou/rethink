@@ -24,7 +24,7 @@ class LoginRequest(BaseModel):
 
 class EmailVerificationRequest(BaseModel):
     email: str = Field(max_length=settings.EMAIL_MAX_LENGTH)
-    userExistOk: bool = Field(type=bool, default=False)
+    userExistOk: bool = Field(default=False)
     captchaToken: str = Field(max_length=2000)
     captchaCode: str = Field(max_length=10)
     language: LanguageEnum = LanguageEnum.EN

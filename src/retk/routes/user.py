@@ -74,3 +74,35 @@ async def get_notifications(
     return await user.get_user_notices(
         au=au,
     )
+
+
+@router.put(
+    path="/notices/system/read/{notice_id}",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+@utils.measure_time_spend
+async def mark_read_notice(
+        au: utils.ANNOTATED_AUTHED_USER,
+        notice_id: str,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.RequestIdResponse:
+    return await user.mark_system_notice_read(
+        au=au,
+        notice_id=notice_id,
+    )
+
+
+@router.put(
+    path="/notices/system/read-all",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+@utils.measure_time_spend
+async def mark_read_all_notices(
+        au: utils.ANNOTATED_AUTHED_USER,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.RequestIdResponse:
+    return await user.mark_all_system_notice_read(
+        au=au,
+    )

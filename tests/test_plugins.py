@@ -78,8 +78,8 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         retk.remove_plugin(self.p)
         await client.drop()
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     def test_creation(self):
         self.assertEqual(self.p.id, "testPlugin")

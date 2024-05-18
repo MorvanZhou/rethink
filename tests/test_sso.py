@@ -12,7 +12,7 @@ class SSOTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
-        oauth.init_provider_map()
+        oauth.init_oauth_provider_map()
 
     @classmethod
     def tearDownClass(cls) -> None:

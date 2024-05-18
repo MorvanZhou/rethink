@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from retk.controllers import plugin as plugin_ops
 from retk.controllers import schemas
-from retk.plugins.register import register_official_plugins
 from retk.routes import utils
 
 router = APIRouter(
@@ -10,11 +9,6 @@ router = APIRouter(
     tags=["plugins"],
     responses={404: {"description": "Not found"}},
 )
-
-
-@router.on_event("startup")
-async def startup_event():
-    register_official_plugins()
 
 
 @router.get(

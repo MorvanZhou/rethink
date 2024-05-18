@@ -51,8 +51,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self) -> None:
         await client.drop()
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     async def test_user(self):
         u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
@@ -436,7 +436,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         res = await core.files.vditor_upload(au=self.au, files=[img_file])
         self.assertIn("fake.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["fake.png"])
-        local_file = Path(__file__).parent / "tmp" / ".data" / res["succMap"]["fake.png"][1:]
+        local_file = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / res["succMap"]["fake.png"][1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
         image.close()
@@ -465,7 +465,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertTrue(new_url.endswith(".png"))
         self.assertTrue(new_url.startswith("/"))
-        local_file = Path(__file__).parent / "tmp" / ".data" / new_url[1:]
+        local_file = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / new_url[1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
@@ -498,14 +498,14 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             au=self.au, md="[title](/qqq)\nbody", type_=const.NodeTypeEnum.MARKDOWN.value
         )
         self.assertEqual(const.CodeEnum.OK, code)
-        md_path = Path(__file__).parent / "tmp" / ".data" / "md" / (node["id"] + ".md")
+        md_path = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md" / (node["id"] + ".md")
         self.assertTrue(md_path.exists())
 
         time.sleep(1)
 
         _, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.CodeEnum.OK, code)
-        hist_dir = Path(__file__).parent / "tmp" / ".data" / "md" / "hist" / node["id"]
+        hist_dir = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md" / "hist" / node["id"]
         self.assertEqual(1, len(list(hist_dir.glob("*.md"))))
 
         time.sleep(1)
@@ -623,11 +623,66 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         n, code = await core.notice.get_user_notices(au)
         self.assertEqual(const.CodeEnum.OK, code)
-        sn = n["system"]
+        sn = n["system"]["notices"]
         self.assertEqual(1, len(sn))
-        self.assertEqual(doc["_id"], sn[0]["noticeId"])
+        self.assertEqual(1, n["system"]["total"])
+        self.assertEqual(str(doc["_id"]), sn[0]["id"])
         self.assertEqual("title", sn[0]["title"])
         self.assertEqual("content", sn[0]["content"])
-        self.assertLess(sn[0]["publishAt"], datetime.datetime.now())
+        self.assertLess(datetime.datetime.strptime(sn[0]["publishAt"], '%Y-%m-%dT%H:%M:%SZ'), datetime.datetime.now())
         self.assertFalse(sn[0]["read"])
         self.assertIsNone(sn[0]["readTime"])
+
+    async def test_mark_read(self):
+        au = deepcopy(self.au)
+        au.u.type = const.USER_TYPE.MANAGER.id
+        for i in range(3):
+            _, code = await core.notice.post_in_manager_delivery(
+                au=au,
+                title=f"title{i}",
+                content=f"content{i}",
+                recipient_type=const.notice.RecipientTypeEnum.ALL.value,
+                batch_type_ids=[],
+                publish_at=None,
+            )
+            self.assertEqual(const.CodeEnum.OK, code)
+
+        await tasks.notice.async_deliver_unscheduled_system_notices()
+
+        au.u.type = const.USER_TYPE.NORMAL.id
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        sn = n["system"]["notices"]
+        self.assertEqual(3, len(sn))
+        self.assertEqual(3, n["system"]["total"])
+        for s in sn:
+            self.assertFalse(s["read"])
+            self.assertIsNone(s["readTime"])
+
+        code = await core.notice.mark_system_notice_read(au, sn[0]["id"])
+        self.assertEqual(const.CodeEnum.OK, code)
+
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        _sn = n["system"]["notices"]
+        self.assertEqual(3, len(_sn))
+        self.assertEqual(3, n["system"]["total"])
+        for i in range(3):
+            if _sn[i]["id"] == sn[0]["id"]:
+                self.assertTrue(_sn[i]["read"])
+                self.assertIsNotNone(_sn[i]["readTime"])
+                continue
+            self.assertFalse(sn[i]["read"])
+            self.assertIsNone(sn[i]["readTime"])
+
+        code = await core.notice.mark_all_system_notice_read(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        sn = n["system"]["notices"]
+        self.assertEqual(3, len(sn))
+        self.assertEqual(3, n["system"]["total"])
+        for s in sn:
+            self.assertTrue(s["read"])
+            self.assertIsNotNone(s["readTime"])

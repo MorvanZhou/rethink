@@ -1,4 +1,3 @@
-import datetime
 import inspect
 from typing import Sequence
 from urllib.parse import urlparse
@@ -8,10 +7,6 @@ from fastapi import HTTPException
 from retk import const
 from retk.logger import logger
 from retk.models.tps import AuthedUser
-
-
-def datetime2str(dt: datetime.datetime) -> str:
-    return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
 def is_allowed_mime_type(data_url, allowed_mime_types: Sequence[str]):

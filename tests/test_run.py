@@ -7,7 +7,7 @@ import urllib.request
 from pathlib import Path
 
 import retk
-from retk import config
+from retk import config, const
 
 
 class TestRun(unittest.TestCase):
@@ -64,7 +64,7 @@ class TestRun(unittest.TestCase):
         self.assertTrue(self.path.exists())
         self.assertTrue(self.path.is_dir())
         self.assertTrue((self.path / ".data").exists())
-        self.assertEqual(2, len(list((self.path / ".data" / "md").glob("*.md"))))
+        self.assertEqual(2, len(list((self.path / const.settings.DOT_DATA / "md").glob("*.md"))))
 
     def test_run_with_pw(self):
         return self.test_run(password="12345678")

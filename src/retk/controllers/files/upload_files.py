@@ -6,10 +6,10 @@ from retk import const, core
 from retk.controllers import schemas
 from retk.controllers.utils import (
     AuthedUser,
-    datetime2str,
     is_allowed_mime_type,
     maybe_raise_json_exception,
 )
+from retk.utils import datetime2str
 
 
 async def upload_obsidian_files(

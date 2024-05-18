@@ -2,9 +2,9 @@ from typing import List
 
 from retk import const, core
 from retk.controllers import schemas
-from retk.controllers.utils import datetime2str, maybe_raise_json_exception
+from retk.controllers.utils import maybe_raise_json_exception
 from retk.models.tps import AuthedUser, Node
-from retk.utils import contain_only_http_link, get_title_description_from_link
+from retk.utils import contain_only_http_link, get_title_description_from_link, datetime2str
 
 
 def __get_node_data(n: Node) -> schemas.node.NodeData:

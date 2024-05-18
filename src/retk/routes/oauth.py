@@ -12,11 +12,6 @@ router = APIRouter(
 )
 
 
-@router.on_event("startup")
-async def startup_event():
-    co.init_provider_map()
-
-
 @router.get(
     path="/login/{provider}",
     status_code=200,

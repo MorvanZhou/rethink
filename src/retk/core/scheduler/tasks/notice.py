@@ -35,7 +35,9 @@ async def __deliver_scheduled_system_notices_batch(
         users: List[Dict[str, str]],
         sender_id: str,
         notice_id: ObjectId
-):
+) -> int:
+    if len(users) == 0:
+        return 0
     notices = [{
         "_id": ObjectId(),
         "senderId": sender_id,
@@ -45,7 +47,8 @@ async def __deliver_scheduled_system_notices_batch(
         "readTime": None,
     } for user in users]
     # Insert all notices at once
-    await db["noticeSystem"].insert_many(notices)
+    doc = await db["noticeSystem"].insert_many(notices)
+    return len(doc.inserted_ids)
 
 
 def deliver_unscheduled_system_notices():
@@ -61,6 +64,8 @@ async def async_deliver_unscheduled_system_notices():
     unscheduled = await db["noticeManagerDelivery"].find({
         "scheduled": False,
     }).to_list(None)
+    total_users = 0
+    success_users = 0
     for notice in unscheduled:
         notice_id = notice["_id"]
         sender_id = notice["senderId"]
@@ -70,12 +75,14 @@ async def async_deliver_unscheduled_system_notices():
             # send notice
             if recipient_type == const.notice.RecipientTypeEnum.ALL.value:
                 async for users in __get_users_in_batches(db, batch_size=100):
-                    await __deliver_scheduled_system_notices_batch(
+                    success_users_count = await __deliver_scheduled_system_notices_batch(
                         db=db,
                         users=users,
                         sender_id=sender_id,
                         notice_id=notice_id
                     )
+                    total_users += len(users)
+                    success_users += success_users_count
             elif recipient_type == const.notice.RecipientTypeEnum.BATCH.value:
                 batch_type_ids = notice["batchTypeIds"]
                 # Create a list of notices
@@ -88,27 +95,34 @@ async def async_deliver_unscheduled_system_notices():
                     "readTime": None,
                 } for user_id in batch_type_ids]
                 # Insert all notices at once
-                await db["noticeSystem"].insert_many(notices)
+                if len(notices) > 0:
+                    docs = await db["noticeSystem"].insert_many(notices)
+                    success_users += len(docs.inserted_ids)
+                total_users += len(batch_type_ids)
             elif recipient_type == const.notice.RecipientTypeEnum.ADMIN.value:
                 # Get all admins
                 admins = await db["users"].find(
-                    {"type": const.USER_TYPE.ADMIN.value}, {"id", 1}).to_list(None)
-                await __deliver_scheduled_system_notices_batch(
+                    {"type": const.USER_TYPE.ADMIN.id}, {"id", 1}).to_list(None)
+                success_users_count = await __deliver_scheduled_system_notices_batch(
                     db=db,
                     users=admins,
                     sender_id=sender_id,
                     notice_id=notice_id
                 )
+                total_users += len(admins)
+                success_users += success_users_count
             elif recipient_type == const.notice.RecipientTypeEnum.MANAGER.value:
                 # Get all managers
                 managers = await db["users"].find(
-                    {"type": const.USER_TYPE.MANAGER.value}, {"id", 1}).to_list(None)
-                await __deliver_scheduled_system_notices_batch(
+                    {"type": const.USER_TYPE.MANAGER.id}, projection=["id"]).to_list(None)
+                success_users_count = await __deliver_scheduled_system_notices_batch(
                     db=db,
                     users=managers,
                     sender_id=sender_id,
                     notice_id=notice_id
                 )
+                total_users += len(managers)
+                success_users += success_users_count
             else:
                 raise ValueError(f"Unknown recipient type: {recipient_type}")
 
@@ -117,4 +131,4 @@ async def async_deliver_unscheduled_system_notices():
                 {"_id": notice_id},
                 {"$set": {"scheduled": True}}
             )
-    return
+    return f"send success {success_users}/{total_users} users"

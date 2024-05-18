@@ -29,13 +29,13 @@ async def get_admin_info(
 @router.put(
     "/users",
     status_code=200,
-    response_model=schemas.user.UserInfoResponse,
+    response_model=schemas.manager.GetUserResponse,
 )
 @utils.measure_time_spend
 async def get_user_info(
         au: ADMIN_AUTH,
         req: schemas.manager.GetUserRequest,
-) -> schemas.user.UserInfoResponse:
+) -> schemas.manager.GetUserResponse:
     return await manager.get_user_info(au=au, req=req)
 
 

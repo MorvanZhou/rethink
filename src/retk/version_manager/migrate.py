@@ -52,7 +52,7 @@ def __read_dot_rethink(data_path: Path) -> Optional[Dict]:
     Returns:
         Dict: the content of the .rethink file.
     """
-    dot_rethink = data_path / ".data" / ".rethink.json"
+    dot_rethink = data_path / const.settings.DOT_DATA / ".rethink.json"
     try:
         with open(dot_rethink, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -67,7 +67,7 @@ def __renew_dot_rethink(dot_rethink: Dict, data_path: Path):
         dot_rethink (Dict): the content of the .rethink file.
         data_path (str): the path to the database folder.
     """
-    with open(data_path / ".data" / ".rethink.json", "w", encoding="utf-8") as f:
+    with open(data_path / const.settings.DOT_DATA / ".rethink.json", "w", encoding="utf-8") as f:
         json.dump(dot_rethink, f, indent=2, ensure_ascii=False)
 
 

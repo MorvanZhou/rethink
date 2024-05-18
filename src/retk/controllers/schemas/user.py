@@ -5,8 +5,8 @@ from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
 from retk import config
 from retk.const import settings, LanguageEnum, app, NodeDisplaySortKeyEnum, USER_TYPE
-from retk.controllers.utils import datetime2str
 from retk.models import tps
+from retk.utils import datetime2str
 
 
 class UserInfoResponse(BaseModel):
@@ -103,16 +103,17 @@ def get_user_info_response_from_u_dict(
 
 
 class NotificationResponse(BaseModel):
-    class Data(BaseModel):
-        class System(BaseModel):
+    class System(BaseModel):
+        class Notice(BaseModel):
             id: str
             title: str
             content: str
-            publishAt: datetime
+            publishAt: str
             read: bool
             readTime: Optional[datetime]
 
-        system: List[System]
+        total: int
+        notices: List[Notice]
 
     requestId: str
-    data: Data
+    system: System

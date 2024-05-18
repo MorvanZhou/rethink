@@ -67,10 +67,8 @@ __jobs_info: OrderedDict[str, JobInfo] = _OrderedDict()
 
 
 def __wrap_func(func: Callable, job_info: JobInfo) -> Optional[Callable]:
-    if job_info.id in __jobs_info:
-        job_info.finished_at = datetime.now(tz=utc)
-        job_info.finished_return = f"job_id={job_info.id} already exists!"
-        return
+    if job_info.id in __jobs_info or __scheduler.get_job(job_info.id) is not None:
+        raise KeyError(f"job id {job_info.id} already exists")
 
     __jobs_info[job_info.id] = job_info
     if len(__jobs_info) > MAX_SCHEDULE_JOB_INFO_LEN:

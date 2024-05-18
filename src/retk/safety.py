@@ -16,7 +16,7 @@ else:
     allow_origins = [
         "*",
     ]
-    csp_local = " http://localhost:* http://127.0.0.1:* "
+    csp_local = " http://localhost:* http://127.0.0.1:* https://cdn.jsdelivr.net "
     cookie_domain = None
     cookie_secure = False
 

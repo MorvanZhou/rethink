@@ -57,7 +57,7 @@ class LocalSearcher(BaseEngine):
 
     @property
     def index_path(self):
-        return config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "search"
+        return config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "search"
 
     async def init(self):
         def create_schema(analyzer):
@@ -79,6 +79,7 @@ class LocalSearcher(BaseEngine):
             self.index_path.mkdir(parents=True)
             self.ix = create_in(self.index_path, self.indexing_schema)
         else:
+            print(self.index_path)
             self.ix = open_dir(self.index_path)
 
     async def close(self):

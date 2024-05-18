@@ -59,14 +59,14 @@ class MigrateTest(unittest.TestCase):
             "language": "en"
         }
 
-        dot_data_dir = self.tmp_dir / ".data"
+        dot_data_dir = self.tmp_dir / const.settings.DOT_DATA
         dot_data_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(self.tmp_dir / ".data" / ".rethink.json", "w", encoding="utf-8") as f:
+        with open(self.tmp_dir / const.settings.DOT_DATA / ".rethink.json", "w", encoding="utf-8") as f:
             json.dump(dot_rethink, f, indent=2, ensure_ascii=False)
 
         version_manager.migrate.to_latest_version(self.tmp_dir)
-        v = version_manager.recover.load_dot_rethink(self.tmp_dir / ".data" / ".rethink.json")
+        v = version_manager.recover.load_dot_rethink(self.tmp_dir / const.settings.DOT_DATA / ".rethink.json")
         # self.assertEqual(__version__, v["version"])
         self.assertGreater(len(v["version"]), 0)
         self.assertIn("settings", v)

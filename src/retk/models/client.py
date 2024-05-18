@@ -28,7 +28,7 @@ def init_mongo(connection_timeout: int):
     if config.is_local_db():
         if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():
             raise FileNotFoundError(f"Path not exists: {conf.RETHINK_LOCAL_STORAGE_PATH}")
-        db_path = conf.RETHINK_LOCAL_STORAGE_PATH / ".data" / "db"
+        db_path = conf.RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "db"
         db_path.mkdir(parents=True, exist_ok=True)
         mongo = MongitaClientDisk(db_path)
     else:
@@ -111,7 +111,7 @@ class Client:
 
     async def local_try_add_default_user(self):
         _v = version_manager.recover.dump_default_dot_rethink(
-            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
+            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / ".rethink.json"
         )
 
         logger.info("running at the first time, a user with initial data will be created")
@@ -146,7 +146,7 @@ class Client:
                     body=body_,
                 )
             )
-            md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "md"
+            md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "md"
             md_dir.mkdir(parents=True, exist_ok=True)
             with open(md_dir / f"{n['id']}.md", "w", encoding="utf-8") as f:
                 f.write(md)
@@ -215,13 +215,13 @@ class Client:
                     await self._local_restore()
                     return
         # check local files count matches db
-        md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "md"
+        md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "md"
         if md_dir.exists():
             if len(list(md_dir.glob("*.md"))) != await self.coll.nodes.count_documents({}):
                 await self.drop()
                 await self._local_restore()
                 return
-        files_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "files"
+        files_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "files"
         if files_dir.exists():
             if len(list(files_dir.glob("*"))) != await self.coll.user_file.count_documents({}):
                 await self.drop()
@@ -254,7 +254,7 @@ class Client:
         # restore user
         version_manager.migrate.to_latest_version(config.get_settings().RETHINK_LOCAL_STORAGE_PATH)
         _v = version_manager.recover.load_dot_rethink(
-            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / ".rethink.json"
+            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / ".rethink.json"
         )
         if _v is None:
             return
@@ -290,7 +290,7 @@ class Client:
         _ = await self.coll.users.insert_one(u)
 
         # restore nodes
-        md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "md"
+        md_dir = config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / "md"
         if not md_dir.exists():
             return
         ns = []
@@ -330,7 +330,7 @@ class Client:
         logger.debug(f"restore nodes count: {len(res.inserted_ids)}")
 
         docs = []
-        for f in config.get_settings().RETHINK_LOCAL_STORAGE_PATH.glob(".data/files/*"):
+        for f in config.get_settings().RETHINK_LOCAL_STORAGE_PATH.glob(f"{const.settings.DOT_DATA}/files/*"):
             filename = f.name
             fid = filename.split(".")[0]
             created_time = datetime.datetime.fromtimestamp(f.stat().st_ctime, tz=utc)

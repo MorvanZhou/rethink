@@ -11,6 +11,41 @@ class GetUserRequest(BaseModel):
     uid: Optional[str] = Field(max_length=settings.UID_MAX_LENGTH, default=None)
 
 
+class GetUserResponse(BaseModel):
+    class User(BaseModel):
+        class LastState(BaseModel):
+            nodeDisplayMethod: int
+            nodeDisplaySortKey: str
+            recentSearch: List[str]
+            recentCursorSearchSelectedNIds: List[str]
+
+        class Settings(BaseModel):
+            language: str
+            theme: str
+            editorMode: str
+            editorFontSize: int
+            editorCodeTheme: str
+            editorSepRightWidth: int
+            editorSideCurrentToolId: str
+
+        id: str
+        source: int
+        account: str
+        nickname: str
+        email: str
+        avatar: str
+        disabled: bool
+        createdAt: str
+        modifiedAt: str
+        usedSpace: int
+        type: int
+        lastState: LastState
+        settings: Settings
+
+    requestId: str = Field(max_length=settings.REQUEST_ID_MAX_LENGTH, description="request ID")
+    user: User = Field(description="user info")
+
+
 class ManagerNoticeDeliveryRequest(BaseModel):
     title: str = Field(
         max_length=settings.MAX_SYSTEM_NOTICE_TITLE_LENGTH,

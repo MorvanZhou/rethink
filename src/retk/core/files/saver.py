@@ -9,7 +9,7 @@ from qcloud_cos import CosConfig, CosServiceError, CosS3Client
 
 from retk.config import get_settings, is_local_db
 from retk.const.app import FileTypesEnum
-from retk.const.settings import IMG_RESIZE_THRESHOLD
+from retk.const.settings import IMG_RESIZE_THRESHOLD, DOT_DATA
 from retk.core.user import update_used_space
 from retk.logger import logger
 from retk.models.client import client
@@ -80,7 +80,7 @@ class Saver:
         return url
 
     async def save_local(self, uid: str, file: File) -> str:
-        path = get_settings().RETHINK_LOCAL_STORAGE_PATH / ".data" / "files" / file.hashed_filename
+        path = get_settings().RETHINK_LOCAL_STORAGE_PATH / DOT_DATA / "files" / file.hashed_filename
         path.parent.mkdir(parents=True, exist_ok=True)
 
         if path.exists():

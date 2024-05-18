@@ -16,7 +16,7 @@ sso_map: Dict[str, SSOBase] = {}
 user_source_map: Dict[str, int] = {}
 
 
-def init_provider_map():
+def init_oauth_provider_map():
     sso_map.update({
         "github": GithubSSO(
             client_id=config.get_settings().OAUTH_CLIENT_ID_GITHUB,

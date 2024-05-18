@@ -1,11 +1,11 @@
 from typing import List, Dict, Tuple, Sequence, Literal
 
 from retk.controllers.schemas.node import NodesSearchResponse
-from retk.controllers.utils import datetime2str
 from retk.core.recent import put_recent_search
 from retk.models import tps
 from retk.models.client import client
 from retk.models.search_engine.engine import SearchResult
+from retk.utils import datetime2str
 
 
 async def _2node_data(

@@ -567,11 +567,67 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
 
         n, code = await core.notice.get_user_notices(au)
         self.assertEqual(const.CodeEnum.OK, code)
-        sn = n["system"]
+        sn = n["system"]["notices"]
         self.assertEqual(1, len(sn))
-        self.assertEqual(doc["_id"], sn[0]["noticeId"])
+        self.assertEqual(1, n["system"]["total"])
+        self.assertEqual(str(doc["_id"]), sn[0]["id"])
         self.assertEqual("title", sn[0]["title"])
         self.assertEqual("content", sn[0]["content"])
-        self.assertLess(sn[0]["publishAt"], datetime.datetime.now())
+        self.assertLess(datetime.datetime.strptime(sn[0]["publishAt"], '%Y-%m-%dT%H:%M:%SZ'), datetime.datetime.now())
         self.assertFalse(sn[0]["read"])
         self.assertIsNone(sn[0]["readTime"])
+
+    @utils.skip_no_connect
+    async def test_mark_read(self):
+        au = deepcopy(self.au)
+        au.u.type = const.USER_TYPE.MANAGER.id
+        for i in range(3):
+            _, code = await core.notice.post_in_manager_delivery(
+                au=au,
+                title=f"title{i}",
+                content=f"content{i}",
+                recipient_type=const.notice.RecipientTypeEnum.ALL.value,
+                batch_type_ids=[],
+                publish_at=None,
+            )
+            self.assertEqual(const.CodeEnum.OK, code)
+
+        await tasks.notice.async_deliver_unscheduled_system_notices()
+
+        au.u.type = const.USER_TYPE.NORMAL.id
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        sn = n["system"]["notices"]
+        self.assertEqual(3, len(sn))
+        self.assertEqual(3, n["system"]["total"])
+        for s in sn:
+            self.assertFalse(s["read"])
+            self.assertIsNone(s["readTime"])
+
+        code = await core.notice.mark_system_notice_read(au, sn[0]["id"])
+        self.assertEqual(const.CodeEnum.OK, code)
+
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        _sn = n["system"]["notices"]
+        self.assertEqual(3, len(_sn))
+        self.assertEqual(3, n["system"]["total"])
+        for i in range(3):
+            if _sn[i]["id"] == sn[0]["id"]:
+                self.assertTrue(_sn[i]["read"])
+                self.assertIsNotNone(_sn[i]["readTime"])
+                continue
+            self.assertFalse(sn[i]["read"])
+            self.assertIsNone(sn[i]["readTime"])
+
+        code = await core.notice.mark_all_system_notice_read(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+
+        n, code = await core.notice.get_user_notices(au)
+        self.assertEqual(const.CodeEnum.OK, code)
+        sn = n["system"]["notices"]
+        self.assertEqual(3, len(sn))
+        self.assertEqual(3, n["system"]["total"])
+        for s in sn:
+            self.assertTrue(s["read"])
+            self.assertIsNotNone(s["readTime"])

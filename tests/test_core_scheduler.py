@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 from bson.tz_util import utc
 
-from retk import const
 from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 from retk.core import scheduler
 from retk.logger import logger
@@ -111,16 +110,13 @@ class TestCoreAsyncTask(unittest.TestCase):
         self.assertIsInstance(j, scheduler.schedule.JobInfo)
         self.assertEqual("test and print '5'", j.finished_return)
 
-        ji, code = scheduler.run_once_now(
-            job_id="test5",
-            func=fake_test,
-            args=(6,),
-        )
-        self.assertEqual(const.CodeEnum.INVALID_SCHEDULE_JOB_ID, code)
-        self.assertEqual(f"job_id={ji.id} already exists!", ji.finished_return)
-        self.assertIsNone(ji.executed_at)
-        self.assertIsNotNone(ji.finished_at)
-        self.assertTrue(ji.is_failed())
+        with self.assertRaises(KeyError) as e:
+            scheduler.run_once_now(
+                job_id="test5",
+                func=fake_test,
+                args=(6,),
+            )
+            self.assertEqual("Job 'test5' already exists", str(e.exception))
 
     def test_async_task(self):
         scheduler.run_once_now(

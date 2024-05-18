@@ -1,13 +1,15 @@
 import asyncio
 import multiprocessing
 import traceback
+from typing import Optional
 
 from retk.logger import logger
 from .obsidian.task import upload_obsidian_task
 from .text.task import update_text_task
 
-ctx = multiprocessing.get_context('spawn')
-QUEUE = ctx.Queue()
+__process: Optional[multiprocessing.Process] = None
+__ctx = multiprocessing.get_context('spawn')
+QUEUE = __ctx.Queue()
 
 
 def __async_task(queue: multiprocessing.Queue):
@@ -27,7 +29,7 @@ def __async_task(queue: multiprocessing.Queue):
             continue
         try:
             loop.run_until_complete(func(**item))
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             msg = traceback.format_exc()
             oneline = msg.replace("\n", "\\n")
             logger.error(f"async task error: {oneline}")
@@ -35,9 +37,21 @@ def __async_task(queue: multiprocessing.Queue):
 
 
 def init():
-    p = ctx.Process(
+    global __process
+    __process = __ctx.Process(
         target=__async_task,
         args=(QUEUE,),
         daemon=True,
     )
-    p.start()
+    __process.start()
+    logger.info("async task process stopped")
+
+
+def stop():
+    global __process
+    if __process is None:
+        return
+    __process.terminate()
+    __process.join()
+    __process = None
+    logger.info("async task process stopped")

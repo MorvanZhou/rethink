@@ -1,10 +1,10 @@
 from retk import const, core, config
 from retk.controllers import schemas
-from retk.controllers.utils import datetime2str, maybe_raise_json_exception
+from retk.controllers.utils import maybe_raise_json_exception
 from retk.core import account, notice
 from retk.core.user import reset_password
 from retk.models.tps import AuthedUser
-from retk.utils import mask_email, regex
+from retk.utils import mask_email, regex, datetime2str
 
 
 async def get_user(
@@ -88,15 +88,39 @@ async def get_user_notices(
 
     return schemas.user.NotificationResponse(
         requestId=au.request_id,
-        data=schemas.user.NotificationResponse.Data(
-            system=[
-                schemas.user.NotificationResponse.Data.System(
-                    id=str(n["noticeId"]),
+        system=schemas.user.NotificationResponse.System(
+            total=nt["system"]["total"],
+            notices=[
+                schemas.user.NotificationResponse.System.Notice(
+                    id=n["id"],
                     title=n["title"],
                     content=n["content"],
                     publishAt=n["publishAt"],
                     read=n["read"],
                     readTime=n["readTime"],
-                ) for n in nt["system"]],
+                ) for n in nt["system"]["notices"]],
         ),
+    )
+
+
+async def mark_system_notice_read(
+        au: AuthedUser,
+        notice_id: str,
+) -> schemas.RequestIdResponse:
+    code = await notice.mark_system_notice_read(au=au, notice_id=notice_id)
+    maybe_raise_json_exception(au=au, code=code)
+
+    return schemas.RequestIdResponse(
+        requestId=au.request_id,
+    )
+
+
+async def mark_all_system_notice_read(
+        au: AuthedUser,
+) -> schemas.RequestIdResponse:
+    code = await notice.mark_all_system_notice_read(au=au)
+    maybe_raise_json_exception(au=au, code=code)
+
+    return schemas.RequestIdResponse(
+        requestId=au.request_id,
     )

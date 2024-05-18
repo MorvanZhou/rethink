@@ -3,6 +3,7 @@ from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, json_exception
 from retk.core import account, user, notice
 from retk.models.tps import AuthedUser
+from retk.utils import datetime2str
 
 
 def __check_use_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) -> bool:
@@ -18,13 +19,43 @@ def __check_use_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) -> bool
 async def get_user_info(
         au: AuthedUser,
         req: schemas.manager.GetUserRequest,
-) -> schemas.user.UserInfoResponse:
+) -> schemas.manager.GetUserResponse:
     if __check_use_uid(au=au, req=req):
         u, code = await user.get(uid=req.uid, disabled=None, exclude_manager=True)
     else:
         u, code = await user.get_by_email(email=req.email, disabled=None, exclude_manager=True)
     maybe_raise_json_exception(au=au, code=code)
-    return schemas.user.get_user_info_response_from_u_dict(u=u, request_id=au.request_id)
+    return schemas.manager.GetUserResponse(
+        requestId=au.request_id,
+        user=schemas.manager.GetUserResponse.User(
+            id=u["id"],
+            source=u["source"],
+            account=u["account"],
+            nickname=u["nickname"],
+            email=u["email"],
+            avatar=u["avatar"],
+            disabled=u["disabled"],
+            createdAt=datetime2str(u["_id"].generation_time),
+            modifiedAt=datetime2str(u["modifiedAt"]),
+            usedSpace=u["usedSpace"],
+            type=u["type"],
+            lastState=schemas.manager.GetUserResponse.User.LastState(
+                nodeDisplayMethod=u["lastState"]["nodeDisplayMethod"],
+                nodeDisplaySortKey=u["lastState"]["nodeDisplaySortKey"],
+                recentSearch=u["lastState"]["recentSearch"],
+                recentCursorSearchSelectedNIds=u["lastState"]["recentCursorSearchSelectedNIds"],
+            ),
+            settings=schemas.manager.GetUserResponse.User.Settings(
+                language=u["settings"]["language"],
+                theme=u["settings"]["theme"],
+                editorMode=u["settings"]["editorMode"],
+                editorFontSize=u["settings"]["editorFontSize"],
+                editorCodeTheme=u["settings"]["editorCodeTheme"],
+                editorSepRightWidth=u["settings"]["editorSepRightWidth"],
+                editorSideCurrentToolId=u["settings"]["editorSideCurrentToolId"],
+            ),
+        ),
+    )
 
 
 async def disable_account(

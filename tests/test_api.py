@@ -106,6 +106,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         utils.set_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
+        scheduler.start()
         await client.init()
         self.client = TestClient(app)
         resp = self.client.put(
@@ -137,9 +138,11 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         config.get_settings().ONE_USER = True
         self.client.cookies.clear()
+        scheduler.stop()
         await client.drop()
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / ".data" / "md", ignore_errors=True)
+        self.client.close()
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -166,6 +169,28 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         except KeyError:
             pass
         self.client.cookies[const.settings.COOKIE_ACCESS_TOKEN] = token
+
+    async def create_new_temp_user(self, email):
+        config.get_settings().ONE_USER = False
+        config.get_settings().DB_SALT = "test"
+        token, code = account.app_captcha.generate()
+        data = jwt_decode(token)
+        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
+        lang = "zh"
+
+        resp = self.client.post(
+            "/api/account",
+            json={
+                "email": email,
+                "password": "abc111",
+                "verificationToken": token,
+                "verification": code,
+                "language": lang,
+            },
+            headers={"RequestId": "xxx"}
+        )
+        self.check_ok_response(resp, 201)
+        return resp
 
     async def set_default_manager(self):
         u = await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})
@@ -1050,28 +1075,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         unregister_official_plugins()
         config.get_settings().PLUGINS = False
 
-    async def create_new_temp_user(self, email):
-        config.get_settings().ONE_USER = False
-        config.get_settings().DB_SALT = "test"
-        token, code = account.app_captcha.generate()
-        data = jwt_decode(token)
-        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
-        lang = "zh"
-
-        resp = self.client.post(
-            "/api/account",
-            json={
-                "email": email,
-                "password": "abc111",
-                "verificationToken": token,
-                "verification": code,
-                "language": lang,
-            },
-            headers={"RequestId": "xxx"}
-        )
-        self.check_ok_response(resp, 201)
-        return resp
-
     async def test_manager(self):
         manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         resp = self.client.put(
@@ -1108,7 +1111,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers=self.default_headers,
         )
-        self.check_ok_response(resp, 200)
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(email, rj["user"]["email"])
+        self.assertEqual(uid, rj["user"]["id"])
+        self.assertIn("source", rj["user"])
 
         resp = self.client.put(
             "/api/managers/users",
@@ -1366,7 +1372,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(pa.strftime("%Y-%m-%dT%H:%M:%SZ"), rj["notices"][0]["publishAt"])
         self.assertFalse(rj["notices"][0]["scheduled"])
 
-        scheduler.start()
         scheduler.run_once_now(
             job_id="deliver_unscheduled_system_notices1",
             func=scheduler.tasks.notice.deliver_unscheduled_system_notices,
@@ -1390,7 +1395,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
                 break
             time.sleep(0.1)
         self.assertIsNotNone(j.finished_at)
-        scheduler.stop()
 
         resp = self.client.get(
             "/api/managers/notices/system",
@@ -1406,11 +1410,119 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.check_ok_response(resp, 200)
         rj = resp.json()
-        self.assertIn("data", rj)
-        system_notices = rj["data"]["system"]
+        self.assertIn("system", rj)
+        system_notices = rj["system"]["notices"]
         self.assertEqual(1, len(system_notices))
         sn = system_notices[0]
         self.assertEqual("title", sn["title"])
         self.assertEqual("content", sn["content"])
 
         await self.clear_default_manager(admin_uid)
+
+    async def test_user_notice(self):
+        manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+
+        email = "a@b.cd"
+        resp = await self.create_new_temp_user(email)
+        u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
+        self.assertEqual(201, resp.status_code)
+
+        pa = datetime.datetime.now(tz=utc)
+
+        admin_uid = await self.set_default_manager()
+        self.set_access_token(manager_token)
+        for i in range(3):
+            resp = self.client.post(
+                "/api/managers/notices/system",
+                json={
+                    "title": f"title{i}",
+                    "content": f"content{i}",
+                    "recipientType": const.notice.RecipientTypeEnum.ALL.value,
+                    "batchTypeIds": [],
+                    "publishAt": pa.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                },
+                headers=self.default_headers,
+            )
+            self.check_ok_response(resp, 201)
+
+        resp = self.client.get(
+            "/api/managers/notices/system",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(3, rj["total"])
+        self.assertEqual(3, len(rj["notices"]))
+
+        scheduler.run_once_now(
+            job_id="deliver_unscheduled_system_notices2",
+            func=scheduler.tasks.notice.deliver_unscheduled_system_notices,
+        )
+        j = scheduler.get_job("deliver_unscheduled_system_notices2")
+        for _ in range(10):
+            if j.finished_at is not None:
+                break
+            time.sleep(0.1)
+        self.assertIsNotNone(j.finished_at)
+        self.assertEqual("send success 6/6 users", j.finished_return)
+
+        self.set_access_token(u_token)
+        resp = self.client.get(
+            "/api/users/notices",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(3, rj["system"]["total"])
+        self.assertEqual(3, len(rj["system"]["notices"]))
+        for i in range(3):
+            sn = rj["system"]["notices"][i]
+            self.assertEqual(f"title{i}", sn["title"])
+            self.assertEqual(f"content{i}", sn["content"])
+            self.assertFalse(sn["read"])
+            self.assertIsNone(sn["readTime"])
+
+        read_id = rj["system"]['notices'][0]['id']
+        resp = self.client.put(
+            f"/api/users/notices/system/read/{read_id}",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            "/api/users/notices",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(3, rj["system"]["total"])
+        self.assertEqual(3, len(rj["system"]["notices"]))
+        for i in range(3):
+            sn = rj["system"]["notices"][i]
+            self.assertEqual(f"title{i}", sn["title"])
+            self.assertEqual(f"content{i}", sn["content"])
+            if read_id == sn["id"]:
+                self.assertTrue(sn["read"])
+                self.assertIsNotNone(sn["readTime"])
+            else:
+                self.assertFalse(sn["read"])
+                self.assertIsNone(sn["readTime"])
+
+        resp = self.client.put(
+            "/api/users/notices/system/read-all",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            "/api/users/notices",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(3, rj["system"]["total"])
+        self.assertEqual(3, len(rj["system"]["notices"]))
+        for i in range(3):
+            sn = rj["system"]["notices"][i]
+            self.assertEqual(f"title{i}", sn["title"])
+            self.assertEqual(f"content{i}", sn["content"])
+            self.assertTrue(sn["read"])
+            self.assertIsNotNone(sn["readTime"])
+
+        self.clear_default_manager(admin_uid)
