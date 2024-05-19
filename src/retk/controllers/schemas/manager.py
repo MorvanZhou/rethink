@@ -77,7 +77,8 @@ class GetSystemNoticesResponse(BaseModel):
     class Notice(BaseModel):
         id: str = Field(description="notice ID")
         title: str = Field(description="title")
-        content: str = Field(description="content")
+        html: str = Field(description="html")
+        snippet: str = Field(description="snippet")
         recipientType: notice.RecipientTypeEnum = Field(description="recipient type")
         batchTypeIds: List[str] = Field(description="list of user ID if the recipientType is batch")
         publishAt: datetime = Field(description="publish time")

@@ -6,7 +6,6 @@ from fastapi.staticfiles import StaticFiles
 
 from retk import const, config
 from retk.logger import logger
-from retk.models.client import client
 from retk.routes import utils
 
 r_prefix = "/r"
@@ -26,17 +25,6 @@ node_file_router = APIRouter(
     tags=["self_hosted_files"],
     responses={404: {"description": "Not found"}},
 )
-
-
-@r_router.on_event("shutdown")
-async def shutdown_event():
-    if not config.is_local_db():
-        return
-    try:
-        await client.search.es.close()
-    except (AttributeError, ValueError):
-        pass
-    logger.debug("db closed")
 
 
 @r_router.get("/", response_class=HTMLResponse)

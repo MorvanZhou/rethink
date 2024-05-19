@@ -82,19 +82,23 @@ async def update_password(
 
 async def get_user_notices(
         au: AuthedUser,
+        unread_only: bool,
+        page: int,
+        limit: int,
 ) -> schemas.user.NotificationResponse:
-    nt, code = await notice.get_user_notices(au=au)
+    nt, code = await notice.get_user_notices(au=au, unread_only=unread_only, page=page, limit=limit)
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.user.NotificationResponse(
         requestId=au.request_id,
+        hasUnread=nt["hasUnread"],
         system=schemas.user.NotificationResponse.System(
             total=nt["system"]["total"],
             notices=[
                 schemas.user.NotificationResponse.System.Notice(
                     id=n["id"],
                     title=n["title"],
-                    content=n["content"],
+                    snippet=n["snippet"],
                     publishAt=n["publishAt"],
                     read=n["read"],
                     readTime=n["readTime"],
@@ -107,7 +111,7 @@ async def mark_system_notice_read(
         au: AuthedUser,
         notice_id: str,
 ) -> schemas.RequestIdResponse:
-    code = await notice.mark_system_notice_read(au=au, notice_id=notice_id)
+    code = await notice.mark_system_notice_read(uid=au.u.id, notice_id=notice_id)
     maybe_raise_json_exception(au=au, code=code)
 
     return schemas.RequestIdResponse(

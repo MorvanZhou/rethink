@@ -128,6 +128,9 @@ def __unmark_element(element, stream=None):
 Markdown.output_formats["plain"] = __unmark_element
 __md = Markdown(output_format="plain")
 __md.stripTopLevelTags = False
+__md_html = Markdown(
+    output_format="html",
+)
 
 
 def md2txt(md: str) -> str:
@@ -144,6 +147,13 @@ def preprocess_md(md: str, snippet_len: int = 200) -> Tuple[str, str, str]:
     body = md2txt(body.strip())
     snippet = strip_html_tags(body)[:snippet_len]
     return title, body, snippet
+
+
+def md2html(md: str) -> str:
+    _html = __md_html.convert(md)
+    # prevent XSS and other security issues
+    _html = re.sub(r"<script[^>]*>.*?</script>", "", _html, flags=re.DOTALL)
+    return _html
 
 
 def change_link_title(md: str, nid: str, new_title: str) -> str:

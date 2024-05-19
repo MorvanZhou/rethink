@@ -44,6 +44,7 @@ class CodeEnum(IntEnum):
     USER_NOT_EXIST = 34
     INVALID_PARAMS = 35
     INVALID_SCHEDULE_JOB_ID = 36
+    NOTICE_NOT_FOUND = 37
 
 
 @dataclass
@@ -100,6 +101,7 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
     CodeEnum.USER_NOT_EXIST: CodeMessage(zh="用户不存在", en="User does not exist"),
     CodeEnum.INVALID_PARAMS: CodeMessage(zh="无效参数", en="Invalid parameter"),
     CodeEnum.INVALID_SCHEDULE_JOB_ID: CodeMessage(zh="无效的任务 ID", en="Invalid schedule job ID"),
+    CodeEnum.NOTICE_NOT_FOUND: CodeMessage(zh="通知未找到", en="Notice not found"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -140,6 +142,7 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.USER_NOT_EXIST: 404,
     CodeEnum.INVALID_PARAMS: 400,
     CodeEnum.INVALID_SCHEDULE_JOB_ID: 400,
+    CodeEnum.NOTICE_NOT_FOUND: 404,
 }
 
 

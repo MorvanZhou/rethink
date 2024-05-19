@@ -10,7 +10,8 @@ class NoticeManagerDelivery(TypedDict):
     senderType: int  # user type, only admin and manager can send
     senderId: str
     title: str
-    content: str
+    html: str
+    snippet: str
     recipientType: int  # send to which user type, 0: batch, 1: all, 2: admin, 3: manager
     batchTypeIds: List[str]  # if recipient=batch, put user id here
     publishAt: datetime  # publish time

@@ -1368,7 +1368,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, rj["total"])
         self.assertEqual(1, len(rj["notices"]))
         self.assertEqual("title", rj["notices"][0]["title"])
-        self.assertEqual("content", rj["notices"][0]["content"])
+        self.assertEqual("<p>content</p>", rj["notices"][0]["html"])
+        self.assertEqual("content", rj["notices"][0]["snippet"])
         self.assertEqual(pa.strftime("%Y-%m-%dT%H:%M:%SZ"), rj["notices"][0]["publishAt"])
         self.assertFalse(rj["notices"][0]["scheduled"])
 
@@ -1383,7 +1384,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(docs))
         self.assertEqual(const.notice.RecipientTypeEnum.ALL.value, docs[0]["recipientType"])
         self.assertEqual("title", docs[0]["title"])
-        self.assertEqual("content", docs[0]["content"])
+        self.assertEqual("<p>content</p>", docs[0]["html"])
         self.assertEqual(admin_uid, docs[0]["senderId"])
         self.assertEqual([], docs[0]["batchTypeIds"])
         self.assertFalse(docs[0]["scheduled"])
@@ -1415,7 +1416,15 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(system_notices))
         sn = system_notices[0]
         self.assertEqual("title", sn["title"])
-        self.assertEqual("content", sn["content"])
+        self.assertEqual("content", sn["snippet"])
+
+        resp = self.client.get(
+            f"/api/notices/system/{sn['id']}",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual("title", rj["notice"]["title"])
+        self.assertEqual("<p>content</p>", rj["notice"]["html"])
 
         await self.clear_default_manager(admin_uid)
 
@@ -1427,11 +1436,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         u_token = resp.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
         self.assertEqual(201, resp.status_code)
 
-        pa = datetime.datetime.now(tz=utc)
-
         admin_uid = await self.set_default_manager()
         self.set_access_token(manager_token)
         for i in range(3):
+            pa = datetime.datetime.now(tz=utc) - datetime.timedelta(seconds=i + 1)
             resp = self.client.post(
                 "/api/managers/notices/system",
                 json={
@@ -1473,10 +1481,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(3, rj["system"]["total"])
         self.assertEqual(3, len(rj["system"]["notices"]))
-        for i in range(3):
-            sn = rj["system"]["notices"][i]
-            self.assertEqual(f"title{i}", sn["title"])
-            self.assertEqual(f"content{i}", sn["content"])
+        for i, sn in enumerate(rj["system"]["notices"]):
+            self.assertEqual(f"title{2 - i}", sn["title"])
+            self.assertEqual(f"content{2 - i}", sn["snippet"])
             self.assertFalse(sn["read"])
             self.assertIsNone(sn["readTime"])
 
@@ -1494,10 +1501,9 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(3, rj["system"]["total"])
         self.assertEqual(3, len(rj["system"]["notices"]))
-        for i in range(3):
-            sn = rj["system"]["notices"][i]
-            self.assertEqual(f"title{i}", sn["title"])
-            self.assertEqual(f"content{i}", sn["content"])
+        for i, sn in enumerate(rj["system"]["notices"]):
+            self.assertEqual(f"title{2 - i}", sn["title"])
+            self.assertEqual(f"content{2 - i}", sn["snippet"])
             if read_id == sn["id"]:
                 self.assertTrue(sn["read"])
                 self.assertIsNotNone(sn["readTime"])
@@ -1518,11 +1524,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(3, rj["system"]["total"])
         self.assertEqual(3, len(rj["system"]["notices"]))
-        for i in range(3):
-            sn = rj["system"]["notices"][i]
-            self.assertEqual(f"title{i}", sn["title"])
-            self.assertEqual(f"content{i}", sn["content"])
+        for i, sn in enumerate(rj["system"]["notices"]):
+            self.assertEqual(f"title{2 - i}", sn["title"])
+            self.assertEqual(f"content{2 - i}", sn["snippet"])
             self.assertTrue(sn["read"])
             self.assertIsNotNone(sn["readTime"])
 
-        self.clear_default_manager(admin_uid)
+        await self.clear_default_manager(admin_uid)

@@ -25,6 +25,7 @@ from .routes import (
     account,
     manager,
     statistic,
+    notice,
 )
 
 
@@ -66,7 +67,8 @@ async def lifespan(app: FastAPI):
     # on shutdown
     scheduler.stop()
     await client.close()
-    logger.debug("fastapi shutdown event: db closed")
+    await client.search.close()
+    logger.debug("fastapi shutdown event: db and searcher closed")
 
     async_tasks.stop()
     logger.debug("fastapi shutdown event: async_tasks stopped")
@@ -101,6 +103,7 @@ for r in [
     account,
     manager,
     statistic,
+    notice,
 ]:
     app.include_router(r.router)
 

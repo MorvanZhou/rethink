@@ -63,7 +63,7 @@ async def async_deliver_unscheduled_system_notices():
     _, db = init_mongo(connection_timeout=5)
     unscheduled = await db["noticeManagerDelivery"].find({
         "scheduled": False,
-    }).to_list(None)
+    }).sort("publishAt", -1).to_list(None)
     total_users = 0
     success_users = 0
     for notice in unscheduled:

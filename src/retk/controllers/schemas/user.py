@@ -107,7 +107,7 @@ class NotificationResponse(BaseModel):
         class Notice(BaseModel):
             id: str
             title: str
-            content: str
+            snippet: str
             publishAt: str
             read: bool
             readTime: Optional[datetime]
@@ -116,4 +116,5 @@ class NotificationResponse(BaseModel):
         notices: List[Notice]
 
     requestId: str
+    hasUnread: bool
     system: System

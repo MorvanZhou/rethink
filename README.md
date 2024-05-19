@@ -13,35 +13,33 @@
   <strong>English</strong> | <a href="README_ZH.md" target="_blank">简体中文</a>
 </p>
 
-A note-taking app dependent on python.
+Rethink is my understanding of self-developing.
+
+Every time a new thought is recorded,
+the relevant old thought will automatically emerge,
+cross-connect, and continuously analogize and upgrade cognition.
+
 The official web version can be found at [https://rethink.run](https://rethink.run).
 
 ![demo](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
 
-## Why Rethink
+## Let ideas find you rather than you find them
 
-Rethink was born out of my inability to find a note-taking app that truly catered to my needs. My vision for a
-note-taking app includes:
+Let people who love to record with no useless thought.
+Even with a continuous stream of input, you don't need to worry about finding it.
 
-1. **Effortless Recording**: When capturing ideas, rethink provides with a swift and seamless recording process.
-2. **Easy Application**: To facilitate easy application, merely jotting down notes is insufficient.
-   The recorded information should be able to form a knowledge network,
-   enabling your accumulated knowledge to compound over time.
-   This foundation allows for effective application and each new idea recorded serves to reinforce
-   and strengthen the existing knowledge network.
+We introduce a recommendation mechanism that allows old records to come back while recording a new thought.
+Making the new thought more connectable and memorable.
 
 ## Features
 
-1. **Bi-directional links**: A knowledge network is important.
-   Rethink allows you to @ link to other notes in the note with one click;
-2. **Markdown syntax**: Seamless support for Markdown syntax, the format of notes is more controllable;
-3. **Automatic association**: Too many notes? Don't remember what you wrote before?
-   Unable to effectively form a note network?
-   Rethink automatically recommend related notes while writing,
+1. **Bi-directional links**: To @ link in the note with one click;
+2. **Markdown syntax**: Seamless support for Markdown syntax;
+3. **Automatic association**: Automatically recommend related notes while writing,
    actively assist you in forming a knowledge network.
 4. **Local storage**: Rethink attaches great importance to data security.
    You can store data in a local storage.
-   Or you can also use the online version [https://rethink.run](https://rethink.run),
+   Or the online version [https://rethink.run](https://rethink.run),
    which makes it easy to synchronize across multiple platforms.
 5. **Multi-language**: Support multiple languages, including Chinese and English.
 

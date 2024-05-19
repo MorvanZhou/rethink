@@ -577,7 +577,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, total)
         self.assertEqual(doc["_id"], docs[0]["_id"])
         self.assertEqual("title", docs[0]["title"])
-        self.assertEqual("content", docs[0]["content"])
+        self.assertEqual("content", docs[0]["snippet"])
         self.assertEqual(publish_at.second, docs[0]["publishAt"].second)
         self.assertFalse(docs[0]["scheduled"])
 
@@ -628,7 +628,15 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, n["system"]["total"])
         self.assertEqual(str(doc["_id"]), sn[0]["id"])
         self.assertEqual("title", sn[0]["title"])
-        self.assertEqual("content", sn[0]["content"])
+        self.assertEqual("content", sn[0]["snippet"])
+        self.assertLess(datetime.datetime.strptime(sn[0]["publishAt"], '%Y-%m-%dT%H:%M:%SZ'), datetime.datetime.now())
+        self.assertFalse(sn[0]["read"])
+        self.assertIsNone(sn[0]["readTime"])
+
+        n, code = await core.notice.get_system_notice(au.u.id, notice_id=str(doc["_id"]))
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertEqual("title", n["title"])
+        self.assertEqual("<p>content</p>", n["html"])
         self.assertLess(datetime.datetime.strptime(sn[0]["publishAt"], '%Y-%m-%dT%H:%M:%SZ'), datetime.datetime.now())
         self.assertFalse(sn[0]["read"])
         self.assertIsNone(sn[0]["readTime"])
@@ -659,7 +667,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(s["read"])
             self.assertIsNone(s["readTime"])
 
-        code = await core.notice.mark_system_notice_read(au, sn[0]["id"])
+        code = await core.notice.mark_system_notice_read(au.u.id, sn[0]["id"])
         self.assertEqual(const.CodeEnum.OK, code)
 
         n, code = await core.notice.get_user_notices(au)

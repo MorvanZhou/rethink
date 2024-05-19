@@ -7,7 +7,7 @@ from bson.tz_util import utc
 from retk import const, config
 from retk.models.client import client
 from retk.models.tps import AuthedUser, NoticeManagerDelivery
-from retk.utils import datetime2str
+from retk.utils import datetime2str, md2html, md2txt
 
 
 async def post_in_manager_delivery(
@@ -35,7 +35,8 @@ async def post_in_manager_delivery(
         "senderType": au.u.type,
         "senderId": au.u.id,
         "title": title,
-        "content": content,
+        "html": md2html(content),
+        "snippet": md2txt(content)[:20],
         "recipientType": recipient_type,  # send to which user type, 0: all, 1: batch, 2: admin, 3: manager
         "batchTypeIds": batch_type_ids,  # if recipient=batch, put user id here
         "publishAt": publish_at,  # publish time
@@ -58,13 +59,41 @@ async def get_system_notices(
     return notices, total
 
 
+async def get_system_notice(
+        uid: str,
+        notice_id: str,
+) -> Tuple[Optional[NoticeManagerDelivery], const.CodeEnum]:
+    notice = await client.coll.notice_manager_delivery.find_one(
+        {"_id": ObjectId(notice_id), "scheduled": True}
+    )
+    if notice is None or notice["senderType"] not in [const.USER_TYPE.ADMIN.id, const.USER_TYPE.MANAGER.id]:
+        # check if the notice exists and is sent by admin or manager
+        return None, const.CodeEnum.NOTICE_NOT_FOUND
+    if notice["recipientType"] == const.notice.RecipientTypeEnum.ALL:
+        # this notice is for all users
+        return notice, const.CodeEnum.OK
+    elif notice["recipientType"] == const.notice.RecipientTypeEnum.BATCH:
+        # this notice is for some users
+        if uid in notice["batchTypeIds"]:
+            # check if the user is in the batch
+            return notice, const.CodeEnum.OK
+        return None, const.CodeEnum.NOTICE_NOT_FOUND
+    else:
+        # this notice is for a specific user type
+        u = await client.coll.users.find_one({"id": uid})
+        if u is None or u["type"] != notice["recipientType"]:
+            # check if the user is the recipient type
+            return None, const.CodeEnum.NOTICE_NOT_FOUND
+    return notice, const.CodeEnum.OK
+
+
 class Notice(TypedDict):
     id: str
     title: str
-    content: str
+    snippet: str
     publishAt: str
     read: bool
-    readTime: Optional[datetime]
+    readTime: Optional[str]
 
 
 class SystemNotices(TypedDict):
@@ -73,49 +102,65 @@ class SystemNotices(TypedDict):
 
 
 class Notices(TypedDict):
+    hasUnread: bool
     system: SystemNotices
 
 
-async def get_user_notices(au: AuthedUser) -> Tuple[Notices, const.CodeEnum]:
+async def get_user_notices(
+        au: AuthedUser,
+        unread_only: bool = False,
+        page: int = 0,
+        limit: int = 10,
+) -> Tuple[Notices, const.CodeEnum]:
+    c = {"recipientId": au.u.id}
+    if unread_only:
+        c["read"] = False
     if not config.is_local_db():
-        system_notices = await client.coll.notice_system.find(
-            {"recipientId": au.u.id},
+        user_system_notices = await client.coll.notice_system.find(
+            c,
             projection={"noticeId": 1, "read": 1, "readTime": 1}
-        ).limit(10).to_list(None)
+        ).sort("_id", -1).skip(page * limit).limit(limit=limit).to_list(None)
         # Get the details of the notices
         n_details = await client.coll.notice_manager_delivery.find(
-            {"_id": {"$in": [n["noticeId"] for n in system_notices]}},
-            projection={"title": 1, "content": 1, "publishAt": 1}
+            {"_id": {"$in": [n["noticeId"] for n in user_system_notices]}},
+            projection={"title": 1, "snippet": 1, "publishAt": 1}
         ).to_list(None)
     else:
-        system_notices = await client.coll.notice_system.find(
-            {"recipientId": au.u.id},
-        ).limit(10).to_list(None)
-        system_notices = [{
+        user_system_notices = await client.coll.notice_system.find(
+            c,
+        ).sort("_id", -1).skip(page * limit).limit(limit=limit).to_list(None)
+        user_system_notices = [{
             "noticeId": n["noticeId"],
             "read": n["read"],
             "readTime": n["readTime"],
-        } for n in system_notices]
+        } for n in user_system_notices]
         # Get the details of the notices
         n_details = await client.coll.notice_manager_delivery.find(
-            {"_id": {"$in": [n["noticeId"] for n in system_notices]}},
+            {"_id": {"$in": [n["noticeId"] for n in user_system_notices]}},
         ).to_list(None)
 
-    total_system_system = await client.coll.notice_system.count_documents({"recipientId": au.u.id})
+    total_system_system = await client.coll.notice_system.count_documents(c)
+    if c.get("read", True):
+        # if not unread_only, check if there are unread notices
+        has_unread = await client.coll.notice_system.count_documents({"recipientId": au.u.id, "read": False}) > 0
+    else:
+        has_unread = total_system_system > 0
+
     n_details_dict = {n["_id"]: n for n in n_details}
     new_system_notices: List[Notice] = []
-    for sn in system_notices:
-        detail = n_details_dict[sn["noticeId"]]
+    for usn in user_system_notices:
+        detail = n_details_dict[usn["noticeId"]]
         new_system_notices.append({
-            "id": str(sn["noticeId"]),
+            "id": str(usn["noticeId"]),
             "title": detail["title"],
-            "content": detail["content"],
+            "snippet": detail["snippet"],
             "publishAt": datetime2str(detail["publishAt"]),
-            "read": sn["read"],
-            "readTime": sn["readTime"],
+            "read": usn["read"],
+            "readTime": datetime2str(usn["readTime"]) if usn["readTime"] is not None else None,
         })
 
     return {
+        "hasUnread": has_unread,
         "system": {
             "total": total_system_system,
             "notices": new_system_notices,
@@ -124,11 +169,11 @@ async def get_user_notices(au: AuthedUser) -> Tuple[Notices, const.CodeEnum]:
 
 
 async def mark_system_notice_read(
-        au: AuthedUser,
+        uid: str,
         notice_id: str,
 ) -> const.CodeEnum:
     res = await client.coll.notice_system.update_one(
-        {"recipientId": au.u.id, "noticeId": ObjectId(notice_id)},
+        {"recipientId": uid, "noticeId": ObjectId(notice_id)},
         {"$set": {"read": True, "readTime": datetime.now(tz=utc)}}
     )
     if not res.acknowledged:
