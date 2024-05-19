@@ -35,7 +35,7 @@ class GetUserResponse(BaseModel):
             editorMode: str
             editorFontSize: int
             editorCodeTheme: str
-            editorSepRightWidth: int
+            editorSepRightWidth: float
             editorSideCurrentToolId: str
 
         id: str
