@@ -88,7 +88,7 @@ class EmailServer:
         msg.attach(html_body)
 
         _, code = scheduler.run_once_now(
-            job_id=f"send_email_{conf.RETHINK_EMAIL}_{recipients}_{subject}",
+            job_id=f"send_email_{conf.RETHINK_EMAIL}_{recipients}_{subject}_{html_message}",
             func=scheduler.tasks.email.send,
             kwargs={"recipients": recipients, "subject": msg.as_string()},
         )
