@@ -54,15 +54,29 @@ async def __get_then_set_github_user_id(au: AuthedUser, req: schemas.manager.Get
             req.uid = u["id"]
 
 
+async def __get_then_set_google_user_id(req: schemas.manager.GetUserRequest):
+    # req.google is a email
+    u, code = await user.get_google_account_by_email(
+        email=req.google,
+        disabled=None,
+        exclude_manager=True,
+    )
+    if code == const.CodeEnum.OK:
+        req.uid = u["id"]
+
+
 async def __check_user_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) -> bool:
-    if req.uid is None and req.email is None and req.github is None:
+    # if all req.dict().values() is None, raise exception
+    if all(v is None for v in req.dict().values()):
         raise json_exception(
             request_id=au.request_id,
             code=const.CodeEnum.INVALID_PARAMS,
-            log_msg="uid and email and github can't be all None",
+            log_msg="uid and email and github and google can't be all None",
         )
     if req.github is not None:
         await __get_then_set_github_user_id(au=au, req=req)
+    elif req.google is not None:
+        await __get_then_set_google_user_id(req=req)
     return req.uid is not None
 
 

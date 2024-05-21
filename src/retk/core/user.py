@@ -134,7 +134,7 @@ async def patch(  # noqa: C901
     return await get(uid=au.u.id, disabled=None)
 
 
-def __get_user_condition(condition: dict, exclude_manager: bool) -> dict:
+def __get_condition_filter_manager(condition: dict, exclude_manager: bool) -> dict:
     if exclude_manager:
         condition["type"] = {"$nin": [
             const.user_types.USER_TYPE.ADMIN.id,
@@ -164,7 +164,25 @@ async def get_account(
     c = {"source": source, "account": account}
     if disabled is not None:
         c["disabled"] = disabled
-    c = __get_user_condition(condition=c, exclude_manager=False)  # exclude_manager)
+    c = __get_condition_filter_manager(condition=c, exclude_manager=False)  # exclude_manager)
+    u = await client.coll.users.find_one(c)
+    if u is None:
+        return None, const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
+    return u, const.CodeEnum.OK
+
+
+async def get_google_account_by_email(
+        email: str,
+        disabled: Optional[bool] = False,
+        exclude_manager: bool = False,
+) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:
+    c = {
+        "source": const.UserSourceEnum.GOOGLE.value,
+        "email": email,
+    }
+    if disabled is not None:
+        c["disabled"] = disabled
+    c = __get_condition_filter_manager(condition=c, exclude_manager=exclude_manager)
     u = await client.coll.users.find_one(c)
     if u is None:
         return None, const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
@@ -179,7 +197,7 @@ async def get(
     c = {"id": uid}
     if disabled is not None:
         c["disabled"] = disabled
-    c = __get_user_condition(condition=c, exclude_manager=exclude_manager)
+    c = __get_condition_filter_manager(condition=c, exclude_manager=exclude_manager)
     u = await client.coll.users.find_one(c)
     if u is None:
         return None, const.CodeEnum.USER_NOT_EXIST

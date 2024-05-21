@@ -18,7 +18,7 @@ router = APIRouter(
     response_model=co.OAuthResponse,
 )
 @utils.measure_time_spend
-async def login_github(
+async def login_provider(
         provider: str = Annotated[str, Path(title="The provider name", max_length=40)],
 ) -> co.OAuthResponse:
     return await co.login_provider(provider_name=provider)
@@ -29,7 +29,7 @@ async def login_github(
     status_code=200,
 )
 @utils.measure_time_spend
-async def callback_github(
+async def callback_provider(
         request: Request,
         provider: str = Annotated[str, Path(title="The provider name", max_length=40)],
 ) -> JSONResponse:

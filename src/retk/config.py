@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     OAUTH_CLIENT_SEC_QQ: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
     OAUTH_CLIENT_ID_FACEBOOK: str = Field(env='OAUTH_CLIENT_ID_QQ', default="")
     OAUTH_CLIENT_SEC_FACEBOOK: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
+    OAUTH_CLIENT_ID_GOOGLE: str = Field(env='OAUTH_CLIENT_ID_GOOGLE', default="")
+    OAUTH_CLIENT_SEC_GOOGLE: str = Field(env='OAUTH_CLIENT_SEC_GOOGLE', default="")
     COS_SECRET_ID: str = Field(env='COS_SECRET_ID', default="")
     COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
     COS_REGION: str = Field(env="COS_REGION", default="")

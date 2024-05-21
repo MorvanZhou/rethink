@@ -10,6 +10,7 @@ class GetUserRequest(BaseModel):
     email: Optional[str] = Field(max_length=settings.EMAIL_MAX_LENGTH, default=None)
     github: Optional[str] = Field(max_length=50, default=None)
     uid: Optional[str] = Field(max_length=settings.UID_MAX_LENGTH, default=None)
+    google: Optional[str] = Field(max_length=settings.EMAIL_MAX_LENGTH, default=None)
 
 
 class GetManagerDataResponse(BaseModel):

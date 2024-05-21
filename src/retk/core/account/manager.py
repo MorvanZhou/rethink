@@ -81,6 +81,8 @@ async def __delete_post_process(uid: str):
     await client.coll.nodes.delete_many({"uid": uid})
     await client.coll.user_file.delete_many({"uid": uid})
     await client.coll.import_data.delete_many({"uid": uid})
+    await client.coll.notice_system.delete_many({"recipientId": uid})
+    await client.coll.user_behavior.delete_many({"uid": uid})
     await client.search.force_delete_all(uid=uid)
 
 

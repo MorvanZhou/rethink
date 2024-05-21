@@ -9,6 +9,7 @@ from retk.controllers.utils import json_exception
 from retk.depend.sso.base import SSOLoginError, SSOBase
 from retk.depend.sso.facebook import FacebookSSO
 from retk.depend.sso.github import GithubSSO
+from retk.depend.sso.google import GoogleSSO
 # from retk.depend.sso.qq import QQSSO
 from .schemas.oauth import OAuthResponse
 
@@ -32,10 +33,18 @@ def init_oauth_provider_map():
             allow_insecure_http=False,
             use_state=False,
         ),
+        "google": GoogleSSO(
+            client_id=config.get_settings().OAUTH_CLIENT_ID_GOOGLE,
+            client_secret=config.get_settings().OAUTH_CLIENT_SEC_GOOGLE,
+            redirect_uri=f"{config.get_settings().OAUTH_REDIRECT_URL}/google",
+            allow_insecure_http=False,
+            use_state=False,
+        ),
     })
     user_source_map.update({
         "github": const.UserSourceEnum.GITHUB.value,
         "facebook": const.UserSourceEnum.FACEBOOK.value,
+        "google": const.UserSourceEnum.GOOGLE.value,
     })
 
 
