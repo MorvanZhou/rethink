@@ -38,15 +38,15 @@ Rethink 表示重新思考，是对个人成长的新理解。
    ，便于在多个平台之间同步；
 5. **多语言**：支持多种语言，包括中文和英文。
 
-## 容器化部署
+## 使用 Docker 容器化部署
 
-1. 拉取镜像：
+### 拉取镜像：
 
 ```shell
 docker pull morvanzhou/rethink
 ```
 
-2. 运行容器：
+### 运行容器：
 
 为了保证数据安全，您应该将本地路径挂载到容器中。
 
@@ -69,13 +69,15 @@ docker run -e API_URL=http://127.0.0.1:8081 -p 8081:8080 -v /your/data/path:/app
 docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
 ```
 
-全部可配置的环境变量如下：
+### 全部可配置的环境变量：
 
 - `API_URL`：前端服务中 API 的地址，默认为 `http://127.0.0.1:8080`
 - `APP_PASSWORD`：鉴权密码，默认为 None
 - `APP_LANGUAGE`：语言，默认为英语，可选值：zh, en
 
-## 使用 python 的 pip 安装
+## 使用 Python 部署
+
+### 通过 pip 安装
 
 第二种安装使用 Rethink 的方法是通过 pip 安装。然后用 python 直接启动服务。
 
@@ -91,7 +93,7 @@ pip install retk
 pip install -U retk
 ```
 
-## 使用
+### 通过 Python 配置
 
 使用 `retk.run()` 方式，快速启动笔记 web 服务，并将你的笔记数据本地化保存，
 默认保存路径为此脚本路径下的 `.data` 文件夹：

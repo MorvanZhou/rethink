@@ -43,15 +43,15 @@ Making the new thought more connectable and memorable.
    which makes it easy to synchronize across multiple platforms.
 5. **Multi-language**: Support multiple languages, including Chinese and English.
 
-## Deploy by Docker
+## Deploy with Docker
 
-1. Pull the image:
+### Pull the image:
 
 ```shell
 docker pull morvanzhou/rethink
 ```
 
-2. Run the container:
+### Run the container:
 
 For keeping your data safe, you should mount a local path to the container.
 
@@ -73,13 +73,15 @@ If you want to set a password for authorization, you have to also add a environm
 docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
 ```
 
-All environment variables:
+### All environment variables:
 
 - `API_URL`: the API url in app js code, default is `http://127.0.0.1:8080`
 - `APP_PASSWORD`: authorization password, default is None
 - `APP_LANGUAGE`: language, default is English, optional: zh, en
 
-## Use Python and pip to install
+## Deploy with Python
+
+### Install via pip
 
 The second way to use Rethink is to install it via pip.
 
@@ -95,7 +97,7 @@ To update:
 pip install -U retk
 ```
 
-## Usage
+### Config via Python
 
 Quickly start the note web service with `retk.run()`, and save your note data locally,
 The default save path is the `.data` folder under the path of this script:
