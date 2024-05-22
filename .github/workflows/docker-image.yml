@@ -22,8 +22,8 @@ jobs:
         password: ${{ secrets.RETHINK_DOCKERHUB_TOKEN }}
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v5.3.0
       with:
         context: .
         push: true
-        tags: morvanzhou/rethink:${{ github.ref_name }}
+        tags: morvanzhou/rethink:${{ github.ref_name }},morvanzhou/rethink:latest
