@@ -71,12 +71,11 @@ def run(
         raise FileNotFoundError(f"Path not exists: {path}")
     if not path.is_dir():
         raise NotADirectoryError(f"Path is not a directory: {path}")
-    os.environ["VUE_APP_API_PORT"] = str(port)
+    os.environ["VUE_APP_API_URL"] = f"http://{host}:{port}"
     os.environ["VUE_APP_MODE"] = "local"
     os.environ["RETHINK_DEFAULT_LANGUAGE"] = language
     os.environ["RETHINK_LOCAL_STORAGE_PATH"] = str(path)
     os.environ["RETHINK_SERVER_HEADLESS"] = "1" if headless else "0"
-    os.environ["RETHINK_SERVER_HOSTNAME"] = host
     os.environ["RETHINK_SERVER_DEBUG"] = "true" if debug else "false"
     if password is not None:
         l_pw = len(password)

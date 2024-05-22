@@ -14,7 +14,7 @@
 </p>
 
 
-Rethink 表示重新思考，是我对于成长的理解。
+Rethink 表示重新思考，是对个人成长的新理解。
 
 每次记下新的认知时，相关的老认知都会自动涌现，交叉贯通，新旧认知不断 类比-迁移。
 使得每次记录都有再次发光的机会。所以 Rethink 的中文名是 比移。
@@ -38,7 +38,46 @@ Rethink 表示重新思考，是我对于成长的理解。
    ，便于在多个平台之间同步；
 5. **多语言**：支持多种语言，包括中文和英文。
 
-## 安装
+## 容器化部署
+
+1. 拉取镜像：
+
+```shell
+docker pull morvanzhou/rethink
+```
+
+2. 运行容器：
+
+为了保证数据安全，您应该将本地路径挂载到容器中。
+
+```shell
+docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+现在你可以在浏览器中访问 `http://127.0.0.1:8080` 使用服务。
+
+如果你想自定义其他端口，你除了需要修改 `-p` 参数的前半部分，还需要添加一个环境变量 `API_URL` 来重定向前端服务中的 API 的地址：
+请确保 `API_URL` 里的端口号和 `-p` 参数的前半部分一致。
+
+```shell 
+docker run -e API_URL=http://127.0.0.1:8081 -p 8081:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+如果你想做为 Rethink 鉴权，你可以添加环境变量 `APP_PASSWORD`：
+
+```shell
+docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+全部可配置的环境变量如下：
+
+- `API_URL`：前端服务中 API 的地址，默认为 `http://127.0.0.1:8080`
+- `APP_PASSWORD`：鉴权密码，默认为 None
+- `APP_LANGUAGE`：语言，默认为英语，可选值：zh, en
+
+## 使用 python 的 pip 安装
+
+第二种安装使用 Rethink 的方法是通过 pip 安装。然后用 python 直接启动服务。
 
 首次安装：
 

@@ -36,7 +36,8 @@ async def app_page() -> HTMLResponse:
     if not config.is_local_db():
         raise HTTPException(status_code=404, detail="only support local storage")
     content = (const.settings.FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
-    script = f"window.VUE_APP_API_PORT={os.getenv('VUE_APP_API_PORT')};"
+    api_url = os.getenv('VUE_APP_API_URL')
+    script = f"window.VUE_APP_API_URL='{api_url}';"
     language = os.getenv("RETHINK_DEFAULT_LANGUAGE")
     if language is not None:
         script += f"window.VUE_APP_LANGUAGE='{language}';"

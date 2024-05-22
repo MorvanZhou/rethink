@@ -5,7 +5,11 @@ from typing import List, Tuple
 
 from bson.tz_util import utc
 from pydantic_settings import BaseSettings
-from qcloud_cos import CosConfig, CosServiceError, CosS3Client
+
+try:
+    from qcloud_cos import CosConfig, CosServiceError, CosS3Client
+except ImportError:
+    pass
 
 from retk import config, const
 from retk.logger import logger
@@ -200,7 +204,7 @@ def __cos_connect(
         nid: str,
         version: str,
         exist_ok: bool = False,
-) -> Tuple[CosS3Client, str, const.CodeEnum]:
+) -> Tuple["CosS3Client", str, const.CodeEnum]:
     cos_client, key = __get_client_and_key(settings, uid, nid, version)
 
     if not exist_ok:
@@ -217,7 +221,7 @@ def __cos_connect(
     return cos_client, key, const.CodeEnum.OK
 
 
-def __get_client_and_key(settings: BaseSettings, uid: str, nid: str, version: str = None) -> Tuple[CosS3Client, str]:
+def __get_client_and_key(settings: BaseSettings, uid: str, nid: str, version: str = None) -> Tuple["CosS3Client", str]:
     cos_client = CosS3Client(
         CosConfig(
             Region=settings.COS_REGION,

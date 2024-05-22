@@ -13,7 +13,7 @@
   <strong>English</strong> | <a href="README_ZH.md" target="_blank">简体中文</a>
 </p>
 
-Rethink is my understanding of self-developing.
+Rethink is a new understanding of self-developing.
 
 Every time a new thought is recorded,
 the relevant old thought will automatically emerge,
@@ -43,7 +43,45 @@ Making the new thought more connectable and memorable.
    which makes it easy to synchronize across multiple platforms.
 5. **Multi-language**: Support multiple languages, including Chinese and English.
 
-## Install
+## Deploy by Docker
+
+1. Pull the image:
+
+```shell
+docker pull morvanzhou/rethink
+```
+
+2. Run the container:
+
+For keeping your data safe, you should mount a local path to the container.
+
+```shell
+docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+Then you can visit `http://127.0.0.1:8080` in your browser.
+
+If you want to define another host's port, you have to also add an environment variable `API_URL`:
+
+```shell
+docker run -e API_URL=http://127.0.0.1:8001 -p 8001:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+If you want to set a password for authorization, you have to also add a environment variable `APP_PASSWORD`:
+
+```shell
+docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+```
+
+All environment variables:
+
+- `API_URL`: the API url in app js code, default is `http://127.0.0.1:8080`
+- `APP_PASSWORD`: authorization password, default is None
+- `APP_LANGUAGE`: language, default is English, optional: zh, en
+
+## Use Python and pip to install
+
+The second way to use Rethink is to install it via pip.
 
 First install:
 

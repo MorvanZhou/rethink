@@ -161,11 +161,10 @@ class Plugin:
             str: the api call url
         """
         try:
-            port = os.environ["VUE_APP_API_PORT"]
-            host = os.environ['RETHINK_SERVER_HOSTNAME']
+            addr = os.environ["VUE_APP_API_URL"]
         except KeyError:
             raise ValueError("the host or port number is not set in the environment.")
-        return f"http://{host}:{port}/api/plugins/call"
+        return f"{addr}/api/plugins/call"
 
 
 event_plugin_map: Dict[str, List[Plugin]] = {

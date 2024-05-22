@@ -1,2 +1,26 @@
-/**/.env.development
 /**/.data
+/.*
+/logs
+/tmp
+/tests
+/img
+/dist
+/**/*.egg-info
+
+# local env files
+/.env.dev
+/.env.prod
+/.env.local
+
+# Editor directories and files
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+/temp
+/src/retk/plugins/official_plugins/**/*.json

@@ -324,13 +324,10 @@ def mask_email(email: str):
 
 def local_finish_up():
     if config.is_local_db():
-        host = os.getenv('RETHINK_SERVER_HOSTNAME')
-        port = os.getenv('VUE_APP_API_PORT')
-        print(f"Rethink running on http://{host}:{port} (Press CTRL+C to quit)")
-        if os.getenv("RETHINK_SERVER_HEADLESS", "0") == "0" and host and port:
-            webbrowser.open_new_tab(
-                f"http://{host}:{port}"
-            )
+        addr = os.getenv('VUE_APP_API_URL')
+        print(f"Rethink running on {addr} (Press CTRL+C to quit)")
+        if os.getenv("RETHINK_SERVER_HEADLESS", "0") == "0" and addr:
+            webbrowser.open_new_tab(addr)
 
 
 def get_user_dict(

@@ -5,7 +5,11 @@ from typing import BinaryIO
 
 from PIL import Image, UnidentifiedImageError
 from bson import ObjectId
-from qcloud_cos import CosConfig, CosServiceError, CosS3Client
+
+try:
+    from qcloud_cos import CosConfig, CosServiceError, CosS3Client
+except ImportError:
+    pass
 
 from retk.config import get_settings, is_local_db
 from retk.const.app import FileTypesEnum
