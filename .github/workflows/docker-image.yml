@@ -1,0 +1,29 @@
+name: Docker Image CI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: sh dockerBuild.sh
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: morvanzhou
+        password: ${{ secrets.RETHINK_DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: morvanzhou/rethink:${{ github.ref_name }}
