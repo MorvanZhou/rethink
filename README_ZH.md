@@ -38,6 +38,11 @@ Rethink 表示重新思考，是对个人成长的新理解。
    ，便于在多个平台之间同步；
 5. **多语言**：支持多种语言，包括中文和英文。
 
+安装部署方式：
+
+- [使用 Docker 容器化部署](#使用-docker-容器化部署)
+- [使用 Python 部署](#使用-python-部署)
+
 ## 使用 Docker 容器化部署
 
 ### 拉取镜像：
@@ -57,7 +62,7 @@ docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
 现在你可以在浏览器中访问 `http://127.0.0.1:8080` 使用服务。
 
 如果你想自定义其他端口，你除了需要修改 `-p` 参数的前半部分，还需要添加一个环境变量 `API_URL` 来重定向前端服务中的 API 的地址：
-请确保 `API_URL` 里的端口号和 `-p` 参数的前半部分一致。
+请确保 `API_URL` 里的端口号和 `-p` 参数的前半部分一致 (在下面案例中的 `8001` 端口)。
 
 ```shell 
 docker run -e API_URL=http://127.0.0.1:8081 -p 8081:8080 -v /your/data/path:/app/.data morvanzhou/rethink

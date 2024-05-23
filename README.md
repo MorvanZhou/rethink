@@ -43,6 +43,11 @@ Making the new thought more connectable and memorable.
    which makes it easy to synchronize across multiple platforms.
 5. **Multi-language**: Support multiple languages, including Chinese and English.
 
+Deploy methods:
+
+- [Deploy with Docker](#deploy-with-docker)
+- [Deploy with Python](#deploy-with-python)
+
 ## Deploy with Docker
 
 ### Pull the image:
@@ -56,21 +61,33 @@ docker pull morvanzhou/rethink
 For keeping your data safe, you should mount a local path to the container.
 
 ```shell
-docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+  -p 8080:8080 \
+  -v /your/data/path:/app/.data \
+  morvanzhou/rethink
 ```
 
 Then you can visit `http://127.0.0.1:8080` in your browser.
 
-If you want to define another host's port, you have to also add an environment variable `API_URL`:
+If you want to define another host's port, you have to also add an environment variable `API_URL`,
+and make sure the port is the same as the host's port (`8001` in this example):
 
 ```shell
-docker run -e API_URL=http://127.0.0.1:8001 -p 8001:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+  -e API_URL=http://127.0.0.1:8001 \
+  -p 8001:8080 \
+  -v /your/data/path:/app/.data \
+  morvanzhou/rethink
 ```
 
-If you want to set a password for authorization, you have to also add a environment variable `APP_PASSWORD`:
+If you want to set a password for authorization, just add a environment variable `APP_PASSWORD`:
 
 ```shell
-docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+ -e APP_PASSWORD=12345678 \
+ -p 8080:8080 \
+ -v /your/data/path:/app/.data \
+ morvanzhou/rethink
 ```
 
 ### All environment variables:
