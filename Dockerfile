@@ -1,10 +1,10 @@
 FROM python:3.11.9-slim-bullseye
 MAINTAINER morvanzhou@hotmail.com
 
-WORKDIR /app
+WORKDIR /
 
-COPY . /app
-ENV PYTHONPATH=/app/src
+COPY . /
+ENV PYTHONPATH=/src
 RUN python3 -m pip install --no-cache-dir -e .
 
 EXPOSE 8080

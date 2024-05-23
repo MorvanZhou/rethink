@@ -63,7 +63,7 @@ For keeping your data safe, you should mount a local path to the container.
 ```shell
 docker run \
   -p 8080:8080 \
-  -v /your/data/path:/app/.data \
+  -v /your/data/path:/.data \
   morvanzhou/rethink
 ```
 
@@ -76,7 +76,7 @@ and make sure the port is the same as the host's port (`8001` in this example):
 docker run \
   -e API_URL=http://127.0.0.1:8001 \
   -p 8001:8080 \
-  -v /your/data/path:/app/.data \
+  -v /your/data/path:/.data \
   morvanzhou/rethink
 ```
 
@@ -86,7 +86,7 @@ If you want to set a password for authorization, just add a environment variable
 docker run \
  -e APP_PASSWORD=12345678 \
  -p 8080:8080 \
- -v /your/data/path:/app/.data \
+ -v /your/data/path:/.data \
  morvanzhou/rethink
 ```
 

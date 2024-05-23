@@ -56,7 +56,10 @@ docker pull morvanzhou/rethink
 为了保证数据安全，您应该将本地路径挂载到容器中。
 
 ```shell
-docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+ -p 8080:8080 \
+ -v /your/data/path:/.data \
+ morvanzhou/rethink
 ```
 
 现在你可以在浏览器中访问 `http://127.0.0.1:8080` 使用服务。
@@ -65,13 +68,21 @@ docker run -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
 请确保 `API_URL` 里的端口号和 `-p` 参数的前半部分一致 (在下面案例中的 `8001` 端口)。
 
 ```shell 
-docker run -e API_URL=http://127.0.0.1:8081 -p 8081:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+ -e API_URL=http://127.0.0.1:8081 \
+ -p 8081:8080 \
+ -v /your/data/path:/.data \
+ morvanzhou/rethink
 ```
 
 如果你想做为 Rethink 鉴权，你可以添加环境变量 `APP_PASSWORD`：
 
 ```shell
-docker run -e APP_PASSWORD=12345678 -p 8080:8080 -v /your/data/path:/app/.data morvanzhou/rethink
+docker run \
+ -e APP_PASSWORD=12345678 \
+ -p 8080:8080 \
+ -v /your/data/path:/.data \
+ morvanzhou/rethink
 ```
 
 ### 全部可配置的环境变量：
