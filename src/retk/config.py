@@ -49,8 +49,9 @@ class Settings(BaseSettings):
     OAUTH_CLIENT_SEC_GOOGLE: str = Field(env='OAUTH_CLIENT_SEC_GOOGLE', default="")
     COS_SECRET_ID: str = Field(env='COS_SECRET_ID', default="")
     COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
-    COS_REGION: str = Field(env="COS_REGION", default="")
+    COS_REGION: Optional[str] = Field(env="COS_REGION", default=None)
     COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
+    COS_DOMAIN: Optional[str] = Field(env="COS_DOMAIN", default=None)
     MD_BACKUP_INTERVAL: int = Field(env="MD_BACKUP_INTERVAL", default=60 * 5)  # 5 minutes
 
     model_config = SettingsConfigDict(
@@ -87,6 +88,11 @@ class Settings(BaseSettings):
 
         self.REFRESH_TOKEN_EXPIRE_DELTA = datetime.timedelta(days=self.JWT_REFRESH_EXPIRED_DAYS)
         self.ACCESS_TOKEN_EXPIRE_DELTA = datetime.timedelta(minutes=self.JWT_ACCESS_EXPIRED_MINS)
+
+        if self.COS_DOMAIN == "":
+            self.COS_DOMAIN = None
+        if self.COS_REGION == "":
+            self.COS_REGION = None
 
 
 @lru_cache()

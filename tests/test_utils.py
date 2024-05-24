@@ -124,6 +124,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
         s.COS_BUCKET_NAME = "rethink-dev-1258395282"
         s.COS_REGION = "ap-hongkong"
         s.DB_HOST = "127.0.0.1"
+        s.COS_DOMAIN = None
         mock_get_settings.return_value = s
         for url, content, res in [
             (
@@ -221,19 +222,27 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
         "retk.config.get_settings",
     )
     def test_ssrf(self, mock_get_settings):
-        for pre, url in [
+        for pre, url, domain in [
             (
                     "rethink-product-1258395282",
                     "https://rethink-product-1258395282.cos.ap-hongkong.myqcloud.com/userData/Rro/as.png",
+                    None,
             ),
             (
                     "rethink-dev-1258395282",
                     "https://rethink-dev-1258395282.cos.ap-hongkong.myqcloud.com/userData/qwqd/qwww.png",
+                    None,
+            ),
+            (
+                    "rethink-dev-1258395282",
+                    "https://files.rethink.run/userData/qwqd/qwww.png",
+                    "files.rethink.run"
             ),
         ]:
             s = config.Settings
             s.COS_BUCKET_NAME = pre
             s.COS_REGION = "ap-hongkong"
             s.DB_HOST = "127.0.0.1"
+            s.COS_DOMAIN = domain
             mock_get_settings.return_value = s
             self.assertTrue(utils.ssrf_check(url), msg=url)

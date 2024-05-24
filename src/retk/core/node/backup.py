@@ -228,7 +228,7 @@ def __get_client_and_key(settings: BaseSettings, uid: str, nid: str, version: st
             SecretId=settings.COS_SECRET_ID,
             SecretKey=settings.COS_SECRET_KEY,
             Token=None,
-            Domain=None,
+            Domain=settings.COS_DOMAIN,
             Scheme='https',
         )
     )

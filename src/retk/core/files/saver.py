@@ -119,7 +119,7 @@ class Saver:
         secret_id = settings.COS_SECRET_ID
         secret_key = settings.COS_SECRET_KEY
         region = settings.COS_REGION
-        domain = None
+        domain = settings.COS_DOMAIN
         cos_conf = CosConfig(
             Region=region,
             SecretId=secret_id,
@@ -132,7 +132,8 @@ class Saver:
 
         key = f"userData/{uid}/{file.hashed_filename}"
 
-        url = f"https://{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com/{key}"
+        domain = settings.COS_DOMAIN or f"{settings.COS_BUCKET_NAME}.cos.{region}.myqcloud.com"
+        url = f"https://{domain}/{key}"
 
         doc = await client.coll.user_file.find_one({"uid": uid, "fid": file.hashed_filename})
         if doc:
