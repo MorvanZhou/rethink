@@ -20,7 +20,7 @@ if __name__ == "__main__":
     os.environ["VUE_APP_API_URL"] = f"http://{args.host}:{args.port}"
     if os.environ.get("VUE_APP_MODE") is None:
         os.environ["VUE_APP_MODE"] = args.mode
-
+    os.environ["RETHINK_LOCAL_STORAGE_PATH"] = os.getcwd()
     os.environ["RETHINK_SERVER_HEADLESS"] = "1" if args.headless else "0"
     os.environ["RETHINK_SERVER_DEBUG"] = "true" if args.debug else "false"
     if args.password is not None:

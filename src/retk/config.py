@@ -13,7 +13,7 @@ from retk.logger import logger
 
 
 class Settings(BaseSettings):
-    ONE_USER: bool = Field(default=1, env='ONE_USER')
+    ONE_USER: bool = Field(default=False, env='ONE_USER')
     RETHINK_SERVER_DEBUG: bool = Field(default=False, env='RETHINK_SERVER_DEBUG')
     VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     PLUGINS: bool = Field(default=False, env='PLUGINS')

@@ -9,6 +9,7 @@ Options:
   -m, --mode      Set mode to local, dev or prod, personal use is restricted to local mode
   -r, --reload    Reload server on code change
   -h, --help      Show this help message and exit
+  --password,      Set password for local mode
 "
 
 # set mode
@@ -16,6 +17,7 @@ mode="local"
 reload=""
 host="127.0.0.1"
 port="8000"
+password=""
 
 
 while [[ $# -gt 0 ]]
@@ -45,6 +47,11 @@ do
       shift
       shift
       ;;
+    --password)
+      password="$2"
+      shift
+      shift
+      ;;
     *)
       echo "Unknown option $key"
       exit 1
@@ -58,6 +65,9 @@ export VUE_APP_MODE=$mode
 if [ $mode == "local" ]; then
   export RETHINK_LOCAL_STORAGE_PATH=.
   export RETHINK_SERVER_HEADLESS=1
+  if [ $password != "" ]; then
+    export RETHINK_LOCAL_PASSWORD=$password
+  fi
 fi
 echo "Running in $mode mode with reload=$reload on $host:$port"
 # set working directory to retk
