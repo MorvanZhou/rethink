@@ -17,6 +17,7 @@ router = APIRouter(
 @router.post(
     "/",
     status_code=201,
+    response_model=schemas.user.UserInfoResponse,
 )
 @utils.measure_time_spend
 async def signup(
@@ -30,6 +31,7 @@ async def signup(
 @router.put(
     "/auto-login",
     status_code=200,
+    response_model=schemas.user.UserInfoResponse,
 )
 @utils.measure_time_spend
 async def auto_login(
@@ -47,6 +49,7 @@ async def auto_login(
 @router.put(
     "/login",
     status_code=200,
+    response_model=schemas.user.UserInfoResponse,
 )
 @utils.measure_time_spend
 async def login(
@@ -60,6 +63,7 @@ async def login(
 @router.put(
     path="/password",
     status_code=200,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def forget_password(
@@ -87,6 +91,7 @@ async def email_verification(
 @router.get(
     "/access-token",
     status_code=200,
+    response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
 async def refresh_token(

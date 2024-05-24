@@ -37,6 +37,19 @@ async def get_user_info(
     return await manager.get_user_info(au=au, req=req)
 
 
+@router.get(
+    "/nodes/{nid}",
+    status_code=200,
+    response_model=schemas.manager.GetUserNodeResponse,
+)
+@utils.measure_time_spend
+async def get_node_info(
+        au: ADMIN_AUTH,
+        nid: str,
+) -> schemas.manager.GetUserNodeResponse:
+    return await manager.get_node_info(au=au, nid=nid)
+
+
 @router.put(
     "/users/disable",
     status_code=200,

@@ -19,7 +19,7 @@ class DailySummary(retk.Plugin):
 
     def __init__(self):
         super().__init__()
-        self.data_path = Path(__file__).parent / ".data.json"
+        self.data_path = Path(self.data_dir) / ".data.json"
         today = datetime.now().strftime("%Y-%m-%d")
         if not self.data_path.exists():
             self.data = [{

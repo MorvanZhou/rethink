@@ -3,7 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 from bson.tz_util import utc
 
-from retk import const, __version__
+from retk import const, __version__, utils
 from retk.core import self_hosted, scheduler, user
 from retk.core.notice import post_in_manager_delivery
 from retk.logger import logger
@@ -102,7 +102,7 @@ async def notice_new_pkg_version():
             __new_version_content_temp_zh if language == "zh" else __new_version_content_temp_en
         ).format(local_version_str, remote_version_str)
         for notice in res:
-            if notice["title"] == __new_version_title_zh or notice["title"] == __new_version_title_en:
+            if notice["title"] == title and notice["html"] == utils.md2html(content):
                 return
         await post_in_manager_delivery(
             au=_local_system_authed_user,

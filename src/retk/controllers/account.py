@@ -1,5 +1,5 @@
 from random import randint
-from typing import Tuple
+from typing import Tuple, Dict, Union
 
 from fastapi.responses import StreamingResponse, JSONResponse
 
@@ -7,16 +7,32 @@ from retk import config, const, safety
 from retk.controllers import schemas
 from retk.controllers.utils import json_exception
 from retk.core import account, user, statistic
-from retk.models.tps import AuthedUser
+from retk.models.tps import AuthedUser, UserMeta
 from retk.utils import get_token, jwt_encode, jwt_decode
 
 
-def set_cookie_response(uid: str, req_id: str, status_code: int, access_token: str, refresh_token: str):
+def set_cookie_response(
+        u: Union[UserMeta, Dict[str, str]],
+        req_id: str,
+        status_code: int,
+        access_token: str,
+        refresh_token: str,
+) -> JSONResponse:
+    if "id" not in u:
+        raise json_exception(
+            request_id=req_id,
+            code=const.CodeEnum.INVALID_AUTH,
+            language=const.LanguageEnum.EN.value,
+            log_msg="user id not found",
+        )
+    if len(u) > 1:
+        content = schemas.user.get_user_info_response_from_u_dict(u, request_id=req_id).model_dump()
+    else:
+        content = {"requestId": req_id}
     resp = JSONResponse(
         status_code=status_code,
-        content={
-            "requestId": req_id,
-        })
+        content=content,
+    )
     s = config.get_settings()
 
     resp.set_cookie(
@@ -41,7 +57,7 @@ def set_cookie_response(uid: str, req_id: str, status_code: int, access_token: s
         )
         resp.set_cookie(
             key=const.settings.COOKIE_REFRESH_TOKEN_ID,
-            value=uid,
+            value=u["id"],
             httponly=True,  # prevent JavaScript from accessing the cookie, XSS
             secure=safety.cookie_secure,  # only send the cookie over HTTPS
             samesite=safety.cookie_samesite,  # prevent CSRF
@@ -82,7 +98,7 @@ async def signup(
         language=req.language,
     )
     return set_cookie_response(
-        uid=new_user["id"],
+        u=new_user,
         req_id=req_id,
         status_code=201,
         access_token=access_token,
@@ -131,7 +147,7 @@ async def login(
         remark="",
     )
     return set_cookie_response(
-        uid=u["id"],
+        u=u,
         req_id=req_id,
         status_code=200,
         access_token=access_token,
@@ -310,7 +326,7 @@ async def get_new_access_token(
         },
     )
     return set_cookie_response(
-        uid=au.u.id,
+        u={"id": au.u.id},
         req_id=au.request_id,
         status_code=200,
         access_token=access_token,

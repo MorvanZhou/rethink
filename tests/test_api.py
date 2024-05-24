@@ -123,6 +123,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(842, len(self.access_token))
         self.assertTrue(self.access_token.startswith("\"Bearer "), msg=self.access_token)
         self.assertTrue(self.refresh_token.startswith("\"Bearer "), msg=self.access_token)
+        rj = resp.json()
+        self.assertEqual(200, resp.status_code, msg=rj)
+        self.assertNotIn("detail", rj)
+
         self.default_headers = {
             "RequestId": "xxx",
         }
@@ -189,7 +193,10 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers={"RequestId": "xxx"}
         )
-        self.check_ok_response(resp, 201)
+        rj = self.check_ok_response(resp, 201)
+        self.assertEqual("xxx", rj["requestId"])
+        self.assertEqual(email, rj["user"]["email"])
+
         return resp
 
     async def set_default_manager(self):
@@ -218,6 +225,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = resp.json()
         self.assertEqual("xxx", rj["requestId"])
         self.assertIsNotNone(rj["user"])
+        self.assertEqual("rethink", rj["user"]["nickname"])
+        self.assertEqual("en", rj["user"]["settings"]["language"])
 
         self.client.cookies.delete(const.settings.COOKIE_ACCESS_TOKEN)
         resp = self.client.put(
@@ -228,12 +237,13 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(resp.json()["user"])
 
     async def test_access_refresh_token(self):
-        self.client.put(
+        resp = self.client.put(
             "/api/account/login",
             json={
                 "email": const.DEFAULT_USER["email"],
                 "password": "",
             })
+        self.assertEqual(200, resp.status_code)
 
         resp = self.client.get(
             "/api/users",

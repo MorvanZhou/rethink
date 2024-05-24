@@ -23,4 +23,3 @@
 *.sw?
 
 /temp
-/src/retk/plugins/official_plugins/**/*.json

@@ -44,7 +44,7 @@ import os
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-from retk import const
+from retk import const, config
 from retk.core.scheduler.timing import Timing
 from retk.models import tps
 
@@ -165,6 +165,23 @@ class Plugin:
         except KeyError:
             raise ValueError("the host or port number is not set in the environment.")
         return f"{addr}/api/plugins/call"
+
+    @property
+    def data_dir(self) -> str:
+        """
+        The data directory for the plugin.
+
+        Returns:
+            str: the data directory
+        """
+        p = os.path.join(
+            config.get_settings().RETHINK_LOCAL_STORAGE_PATH,
+            const.settings.DOT_DATA,
+            "plugins",
+            self.id,
+        )
+        os.makedirs(p, exist_ok=True)
+        return p
 
 
 event_plugin_map: Dict[str, List[Plugin]] = {

@@ -57,6 +57,27 @@ class GetUserResponse(BaseModel):
     user: User = Field(description="user info")
 
 
+class GetUserNodeResponse(BaseModel):
+    class Node(BaseModel):
+        id: str
+        uid: str
+        md: str
+        title: str
+        snippet: str
+        type: int  # const.NodeType.MARKDOWN.value
+        disabled: bool
+        inTrash: bool
+        modifiedAt: str
+        inTrashAt: Optional[str]
+        createdAt: str
+        fromNodeIds: List[str]
+        toNodeIds: List[str]
+        history: List[str]
+
+    requestId: str = Field(max_length=settings.REQUEST_ID_MAX_LENGTH, description="request ID")
+    node: Node = Field(description="node info")
+
+
 class ManagerNoticeDeliveryRequest(BaseModel):
     title: str = Field(
         max_length=settings.MAX_SYSTEM_NOTICE_TITLE_LENGTH,

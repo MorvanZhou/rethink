@@ -92,7 +92,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
         )
 
         return set_cookie_response(
-            uid=u["id"],
+            u=u,
             req_id="",
             status_code=200,
             access_token=access_token,
@@ -129,7 +129,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
         language=language,
     )
     return set_cookie_response(
-        uid=u["id"],
+        u=u,
         req_id="",
         status_code=201,
         access_token=access_token,

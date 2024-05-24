@@ -122,3 +122,10 @@ async def enable_by_uid(uid: str) -> const.CodeEnum:
 
 async def enable_by_email(email: str) -> const.CodeEnum:
     return await __disable_enable({"source": const.UserSourceEnum.EMAIL.value, "account": email}, disable=False)
+
+
+async def get_node_info(nid: str) -> Tuple[Optional[tps.Node], const.CodeEnum]:
+    n = await client.coll.nodes.find_one({"id": nid})
+    if n is None:
+        return None, const.CodeEnum.NODE_NOT_EXIST
+    return n, const.CodeEnum.OK

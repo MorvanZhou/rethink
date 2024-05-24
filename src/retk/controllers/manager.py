@@ -129,9 +129,36 @@ async def get_user_info(
                 editorMode=u["settings"]["editorMode"],
                 editorFontSize=u["settings"]["editorFontSize"],
                 editorCodeTheme=u["settings"]["editorCodeTheme"],
-                editorSepRightWidth=u["settings"]["editorSepRightWidth"],
+                editorSepRightWidth=u["settings"].get("editorSepRightWidth", 200),
                 editorSideCurrentToolId=u["settings"]["editorSideCurrentToolId"],
             ),
+        ),
+    )
+
+
+async def get_node_info(
+        au: AuthedUser,
+        nid: str,
+) -> schemas.manager.GetUserNodeResponse:
+    n, code = await account.manager.get_node_info(nid=nid)
+    maybe_raise_json_exception(au=au, code=code)
+    return schemas.manager.GetUserNodeResponse(
+        requestId=au.request_id,
+        node=schemas.manager.GetUserNodeResponse.Node(
+            id=n["id"],
+            uid=n["uid"],
+            md=n["md"],
+            title=n["title"],
+            snippet=n["snippet"],
+            type=n["type"],
+            disabled=n["disabled"],
+            inTrash=n["inTrash"],
+            modifiedAt=datetime2str(n["modifiedAt"]),
+            inTrashAt=datetime2str(n["inTrashAt"]) if n["inTrashAt"] is not None else None,
+            createdAt=datetime2str(n["_id"].generation_time),
+            fromNodeIds=n["fromNodeIds"],
+            toNodeIds=n["toNodeIds"],
+            history=n["history"],
         ),
     )
 
