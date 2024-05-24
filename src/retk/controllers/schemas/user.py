@@ -3,10 +3,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, NonNegativeInt, Field, NonNegativeFloat
 
-from retk import config
-from retk.const import settings, LanguageEnum, app, NodeDisplaySortKeyEnum, USER_TYPE
-from retk.models import tps
-from retk.utils import datetime2str
+from retk.const import settings, LanguageEnum, app, NodeDisplaySortKeyEnum
 
 
 class UserInfoResponse(BaseModel):
@@ -33,6 +30,7 @@ class UserInfoResponse(BaseModel):
         maxSpace: NonNegativeInt = 0
         lastState: LastState
         settings: Settings
+        totalNodes: NonNegativeInt = 0
 
     requestId: str
     user: User = None
@@ -63,43 +61,6 @@ class PatchUserRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     oldPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
     newPassword: str = Field(max_length=settings.PASSWORD_MAX_LENGTH)
-
-
-def get_user_info_response_from_u_dict(
-        u: tps.UserMeta,
-        request_id: str,
-) -> UserInfoResponse:
-    if config.is_local_db():
-        max_space = 0
-    else:
-        max_space = USER_TYPE.id2config(u["type"]).max_store_space
-    last_state = u["lastState"]
-    u_settings = u["settings"]
-    return UserInfoResponse(
-        requestId=request_id,
-        user=UserInfoResponse.User(
-            email=u["email"],
-            nickname=u["nickname"],
-            avatar=u["avatar"],
-            source=u["source"],
-            createdAt=datetime2str(u["_id"].generation_time),
-            usedSpace=u["usedSpace"],
-            maxSpace=max_space,
-            lastState=UserInfoResponse.User.LastState(
-                nodeDisplayMethod=last_state["nodeDisplayMethod"],
-                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
-            ),
-            settings=UserInfoResponse.User.Settings(
-                language=u_settings["language"],
-                theme=u_settings["theme"],
-                editorMode=u_settings["editorMode"],
-                editorFontSize=u_settings["editorFontSize"],
-                editorCodeTheme=u_settings["editorCodeTheme"],
-                editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
-                editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
-            ),
-        ),
-    )
 
 
 class NotificationResponse(BaseModel):

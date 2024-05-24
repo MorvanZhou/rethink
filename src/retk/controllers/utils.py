@@ -4,9 +4,12 @@ from urllib.parse import urlparse
 
 from fastapi import HTTPException
 
-from retk import const
+from retk import const, config
+from retk.controllers.schemas.user import UserInfoResponse
+from retk.core.user import get_user_nodes_count
 from retk.logger import logger
-from retk.models.tps import AuthedUser
+from retk.models.tps import AuthedUser, UserMeta
+from retk.utils import datetime2str
 
 
 def is_allowed_mime_type(data_url, allowed_mime_types: Sequence[str]):
@@ -71,3 +74,41 @@ def maybe_raise_json_exception(
             code=code,
             language=au.language,
         )
+
+
+async def get_user_info_response_from_u_dict(
+        u: UserMeta,
+        request_id: str,
+) -> UserInfoResponse:
+    if config.is_local_db():
+        max_space = 0
+    else:
+        max_space = const.USER_TYPE.id2config(u["type"]).max_store_space
+    last_state = u["lastState"]
+    u_settings = u["settings"]
+    return UserInfoResponse(
+        requestId=request_id,
+        user=UserInfoResponse.User(
+            email=u["email"],
+            nickname=u["nickname"],
+            avatar=u["avatar"],
+            source=u["source"],
+            createdAt=datetime2str(u["_id"].generation_time),
+            usedSpace=u["usedSpace"],
+            maxSpace=max_space,
+            lastState=UserInfoResponse.User.LastState(
+                nodeDisplayMethod=last_state["nodeDisplayMethod"],
+                nodeDisplaySortKey=last_state["nodeDisplaySortKey"],
+            ),
+            settings=UserInfoResponse.User.Settings(
+                language=u_settings["language"],
+                theme=u_settings["theme"],
+                editorMode=u_settings["editorMode"],
+                editorFontSize=u_settings["editorFontSize"],
+                editorCodeTheme=u_settings["editorCodeTheme"],
+                editorSepRightWidth=u_settings.get("editorSepRightWidth", 200),
+                editorSideCurrentToolId=u_settings.get("editorSideCurrentToolId", ""),
+            ),
+            totalNodes=await get_user_nodes_count(uid=u["id"], disabled=False, in_trash=False),
+        ),
+    )

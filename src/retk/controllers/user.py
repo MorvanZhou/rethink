@@ -1,6 +1,6 @@
 from retk import const, core, config
 from retk.controllers import schemas
-from retk.controllers.utils import maybe_raise_json_exception
+from retk.controllers.utils import maybe_raise_json_exception, get_user_info_response_from_u_dict
 from retk.core import account, notice
 from retk.core.user import reset_password
 from retk.models.tps import AuthedUser
@@ -38,6 +38,7 @@ async def get_user(
                 editorSepRightWidth=au.u.settings.editor_sep_right_width,
                 editorSideCurrentToolId=au.u.settings.editor_side_current_tool_id,
             ),
+            totalNodes=await core.user.get_user_nodes_count(uid=au.u.id, disabled=False, in_trash=False),
         ),
     )
 
@@ -53,7 +54,7 @@ async def patch_user(
     maybe_raise_json_exception(au=au, code=code)
 
     u["email"] = mask_email(u["email"])
-    return schemas.user.get_user_info_response_from_u_dict(u=u, request_id=au.request_id)
+    return await get_user_info_response_from_u_dict(u=u, request_id=au.request_id)
 
 
 async def update_password(

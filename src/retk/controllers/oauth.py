@@ -91,7 +91,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
             language=u["settings"]["language"],
         )
 
-        return set_cookie_response(
+        return await set_cookie_response(
             u=u,
             req_id="",
             status_code=200,
@@ -128,7 +128,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
         uid=u["id"],
         language=language,
     )
-    return set_cookie_response(
+    return await set_cookie_response(
         u=u,
         req_id="",
         status_code=201,

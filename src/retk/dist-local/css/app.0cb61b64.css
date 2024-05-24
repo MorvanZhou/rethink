@@ -21,7 +21,7 @@ body,
 }
 
 .white-font {
-  color: #f1f1f1;
+  color: #f6f6f6;
 }
 
 .hover-node-bg:hover {
@@ -466,6 +466,28 @@ em.match {
   overflow-y: auto;
 }
 
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blink {
+  animation: blink 0.6s;
+}
+
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/App.vue?vue&type=style&index=0&id=7ba5bd90&scoped=true&lang=css ***!
   \********************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -525,6 +547,29 @@ em.match {
 
 .left-side-items[data-v-9c8cfb28] {
   margin-top: 1em;
+}
+.static[data-v-9c8cfb28] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 1em;
+}
+.value[data-v-9c8cfb28] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #606060;
+}
+.number[data-v-9c8cfb28] {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+.sm-number[data-v-9c8cfb28] {
+  font-size: 1em;
+}
+.title[data-v-9c8cfb28] {
+  font-size: 0.8em;
 }
 .left-side-item[data-v-9c8cfb28] {
   padding: 10px 20px;
@@ -5577,4 +5622,24 @@ li[data-v-314222b0] {
   white-space: pre-wrap;
 }
 
+
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/messageBox/DeleteConfirmMsgBox.vue?vue&type=style&index=0&id=0753a324&scoped=true&lang=css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.del-btn[data-v-0753a324] {
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-left: 15px;
+  border: none;
+  color: #f2f2f2;
+  background-color: #ff3333;
+  cursor: pointer;
+}
+.del-btn[data-v-0753a324]:hover {
+  color: #ffffff;
+}
+.deleting[data-v-0753a324] {
+  background-color: #ff6666;
+}
 

@@ -234,3 +234,7 @@ async def reset_password(uid: str, hashed: str) -> const.CodeEnum:
         {"$set": {"hashed": hashed}}
     )
     return const.CodeEnum.OK if res.acknowledged == 1 else const.CodeEnum.OPERATION_FAILED
+
+
+async def get_user_nodes_count(uid: str, disabled: bool = False, in_trash: bool = False) -> int:
+    return await client.coll.nodes.count_documents({"uid": uid, "disabled": disabled, "inTrash": in_trash})

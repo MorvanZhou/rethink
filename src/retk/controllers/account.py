@@ -5,13 +5,13 @@ from fastapi.responses import StreamingResponse, JSONResponse
 
 from retk import config, const, safety
 from retk.controllers import schemas
-from retk.controllers.utils import json_exception
+from retk.controllers.utils import json_exception, get_user_info_response_from_u_dict
 from retk.core import account, user, statistic
 from retk.models.tps import AuthedUser, UserMeta
 from retk.utils import get_token, jwt_encode, jwt_decode
 
 
-def set_cookie_response(
+async def set_cookie_response(
         u: Union[UserMeta, Dict[str, str]],
         req_id: str,
         status_code: int,
@@ -26,7 +26,7 @@ def set_cookie_response(
             log_msg="user id not found",
         )
     if len(u) > 1:
-        content = schemas.user.get_user_info_response_from_u_dict(u, request_id=req_id).model_dump()
+        content = (await get_user_info_response_from_u_dict(u, request_id=req_id)).model_dump()
     else:
         content = {"requestId": req_id}
     resp = JSONResponse(
@@ -97,7 +97,7 @@ async def signup(
         uid=new_user["id"],
         language=req.language,
     )
-    return set_cookie_response(
+    return await set_cookie_response(
         u=new_user,
         req_id=req_id,
         status_code=201,
@@ -146,7 +146,7 @@ async def login(
         type_=const.UserBehaviorTypeEnum.LOGIN,
         remark="",
     )
-    return set_cookie_response(
+    return await set_cookie_response(
         u=u,
         req_id=req_id,
         status_code=200,
@@ -171,7 +171,7 @@ async def auto_login(
     u, code = await user.get(uid=payload["uid"], disabled=False)
     if code != const.CodeEnum.OK:
         return r
-    return schemas.user.get_user_info_response_from_u_dict(u, request_id=req_id)
+    return await get_user_info_response_from_u_dict(u, request_id=req_id)
 
 
 async def logout(
@@ -325,7 +325,7 @@ async def get_new_access_token(
             "language": au.language,
         },
     )
-    return set_cookie_response(
+    return await set_cookie_response(
         u={"id": au.u.id},
         req_id=au.request_id,
         status_code=200,

@@ -196,6 +196,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 201)
         self.assertEqual("xxx", rj["requestId"])
         self.assertEqual(email, rj["user"]["email"])
+        self.assertEqual(2, rj["user"]["totalNodes"])
 
         return resp
 
