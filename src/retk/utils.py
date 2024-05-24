@@ -223,7 +223,7 @@ def ssrf_check(url: str) -> bool:
         return True
     # cos url
     settings = config.get_settings()
-    if host == f"{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com":
+    if host == f"{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com" or host == settings.COS_DOMAIN:
         return True
     try:
         ip = ipaddress.IPv4Address(socket.gethostbyname(host))
