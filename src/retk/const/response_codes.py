@@ -45,6 +45,9 @@ class CodeEnum(IntEnum):
     INVALID_PARAMS = 35
     INVALID_SCHEDULE_JOB_ID = 36
     NOTICE_NOT_FOUND = 37
+    LLM_TIMEOUT = 38
+    LLM_SERVICE_ERROR = 39
+    LLM_NO_CHOICE = 40
 
 
 @dataclass
@@ -102,6 +105,9 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
     CodeEnum.INVALID_PARAMS: CodeMessage(zh="无效参数", en="Invalid parameter"),
     CodeEnum.INVALID_SCHEDULE_JOB_ID: CodeMessage(zh="无效的任务 ID", en="Invalid schedule job ID"),
     CodeEnum.NOTICE_NOT_FOUND: CodeMessage(zh="通知未找到", en="Notice not found"),
+    CodeEnum.LLM_TIMEOUT: CodeMessage(zh="模型超时", en="Model timeout"),
+    CodeEnum.LLM_SERVICE_ERROR: CodeMessage(zh="模型服务错误", en="Model service error"),
+    CodeEnum.LLM_NO_CHOICE: CodeMessage(zh="无回复", en="No response"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -143,6 +149,9 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.INVALID_PARAMS: 400,
     CodeEnum.INVALID_SCHEDULE_JOB_ID: 400,
     CodeEnum.NOTICE_NOT_FOUND: 404,
+    CodeEnum.LLM_TIMEOUT: 408,
+    CodeEnum.LLM_SERVICE_ERROR: 500,
+    CodeEnum.LLM_NO_CHOICE: 404,
 }
 
 

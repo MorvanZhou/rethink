@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     DB_HOST: str = Field(env='DB_HOST', default="")
     DB_PORT: int = Field(env='DB_PORT', default=-1)
     DB_SALT: str = Field(env='BD_SALT', default="")
+    HUNYUAN_SECRET_ID: str = Field(env='HUNYUAN_SECRET_ID', default="")
+    HUNYUAN_SECRET_KEY: str = Field(env='HUNYUAN_SECRET_KEY', default="")
     ES_USER: str = Field(env='ES_USER', default="")
     ES_PASSWORD: str = Field(env='ES_PASSWORD', default="")
     ES_HOSTS: str = Field(env='ES_HOSTS', default="")
