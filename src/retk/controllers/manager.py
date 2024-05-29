@@ -85,10 +85,21 @@ async def get_manager_data(
 ) -> schemas.manager.GetManagerDataResponse:
     data, code = await analysis.get_marco_data()
     maybe_raise_json_exception(au=au, code=code)
+    uc = data["user_count"]
     return schemas.manager.GetManagerDataResponse(
         requestId=au.request_id,
         data=schemas.manager.GetManagerDataResponse.Data(
-            userCount=data["user_count"],
+            userCount=schemas.manager.GetManagerDataResponse.Data.UserCount(
+                test=uc["TEST"],
+                email=uc["EMAIL"],
+                phone=uc["PHONE"],
+                google=uc["GOOGLE"],
+                facebook=uc["FACEBOOK"],
+                wechat=uc["WECHAT"],
+                github=uc["GITHUB"],
+                local=uc["LOCAL"],
+                total=uc["total"],
+            ),
             nodeCount=data["node_count"],
         )
     )

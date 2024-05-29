@@ -15,7 +15,18 @@ class GetUserRequest(BaseModel):
 
 class GetManagerDataResponse(BaseModel):
     class Data(BaseModel):
-        userCount: int = Field(description="total number of users")
+        class UserCount(BaseModel):
+            test: int
+            email: int
+            phone: int
+            google: int
+            facebook: int
+            wechat: int
+            github: int
+            local: int
+            total: int
+
+        userCount: UserCount = Field(description="total number of users")
         nodeCount: int = Field(description="total number of nodes")
 
     requestId: str = Field(max_length=settings.REQUEST_ID_MAX_LENGTH, description="request ID")
