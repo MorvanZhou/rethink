@@ -7,7 +7,7 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from retk import const, core
+from retk import const, core, httpx_helper
 from retk.config import is_local_db
 from retk.logger import logger
 from retk.models.client import client
@@ -149,36 +149,35 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
         return "", const.CodeEnum.FILE_OPEN_ERROR
     if await core.user.user_space_not_enough(au=au):
         return "", const.CodeEnum.USER_SPACE_NOT_ENOUGH
-    async with httpx.AsyncClient() as ac:
-        try:
-            response = await ac.get(
-                url=url,
-                headers=ASYNC_CLIENT_HEADERS,
-                follow_redirects=False,
-                timeout=5.
-            )
-        except (
-                httpx.ConnectTimeout,
-                RuntimeError,
-                httpx.ConnectError,
-                httpx.ReadTimeout,
-                httpx.HTTPError
-        ) as e:
-            logger.debug(f"failed to get {url}: {e}")
-            return "", const.CodeEnum.FILE_OPEN_ERROR
-        if response.status_code in [301, 302]:
-            return await fetch_image_vditor(au=au, url=response.headers["Location"], count=count + 1)
-        elif response.status_code != 200:
-            return "", const.CodeEnum.FILE_OPEN_ERROR
-
-        content = response.content
-
-        file = UploadFile(
-            filename=url.split("?", 1)[0].split("/")[-1],  # remove url parameters
-            file=io.BytesIO(content),
-            headers=Headers(response.headers),
-            size=len(content)
+    try:
+        response = await httpx_helper.get_async_client().get(
+            url=url,
+            headers=ASYNC_CLIENT_HEADERS,
+            follow_redirects=False,
+            timeout=5.
         )
+    except (
+            httpx.ConnectTimeout,
+            RuntimeError,
+            httpx.ConnectError,
+            httpx.ReadTimeout,
+            httpx.HTTPError
+    ) as e:
+        logger.debug(f"failed to get {url}: {e}")
+        return "", const.CodeEnum.FILE_OPEN_ERROR
+    if response.status_code in [301, 302]:
+        return await fetch_image_vditor(au=au, url=response.headers["Location"], count=count + 1)
+    elif response.status_code != 200:
+        return "", const.CodeEnum.FILE_OPEN_ERROR
+
+    content = response.content
+
+    file = UploadFile(
+        filename=url.split("?", 1)[0].split("/")[-1],  # remove url parameters
+        file=io.BytesIO(content),
+        headers=Headers(response.headers),
+        size=len(content)
+    )
 
     if not file.content_type.startswith(const.app.ValidUploadedFilePrefixEnum.IMAGE.value):
         return "", const.CodeEnum.INVALID_FILE_TYPE

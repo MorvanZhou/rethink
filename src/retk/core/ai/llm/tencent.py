@@ -2,11 +2,9 @@ import hashlib
 import hmac
 import json
 import time
-from abc import ABC
 from datetime import datetime
-from typing import TypedDict, Tuple, Dict, AsyncIterable
-
-import httpx
+from enum import Enum
+from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional
 
 from retk import config, const
 from retk.logger import logger
@@ -23,32 +21,42 @@ Headers = TypedDict("Headers", {
 })
 
 
+class TencentModelEnum(str, Enum):
+    HUNYUAN_PRO = "hunyuan-pro"
+    HUNYUAN_STANDARD = "hunyuan-standard"
+    HUNYUAN_STANDARD_256K = "hunyuan-standard-256K"
+    HUNYUAN_LITE = "hunyuan-lite"
+
+
 # 计算签名摘要函数
 def sign(key, msg):
     return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
 
 
-class _Hunyuan(BaseLLM, ABC):
+class Tencent(BaseLLM):
     service = "hunyuan"
     host = "hunyuan.tencentcloudapi.com"
     version = "2023-09-01"
-    endpoint = f"https://{host}"
 
     def __init__(
             self,
-            name: str,
             top_p: float = 0.9,
             temperature: float = 0.7,
             timeout: float = 60.,
+            secret_id: str = None,
+            secret_key: str = None,
     ):
-        self.name = name
-        super().__init__()
-        self.top_p = top_p
-        self.temperature = temperature
-        self.timeout = timeout
-
-        self.secret_id = config.get_settings().HUNYUAN_SECRET_ID
-        self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY
+        super().__init__(
+            endpoint=f"https://{self.host}",
+            top_p=top_p,
+            temperature=temperature,
+            timeout=timeout,
+            default_model=TencentModelEnum.HUNYUAN_LITE.value,
+        )
+        self.secret_id = config.get_settings().HUNYUAN_SECRET_ID if secret_id is None else secret_id
+        self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY if secret_key is None else secret_key
+        if self.secret_id == "" or self.secret_key == "":
+            raise ValueError("Tencent secret id or key is empty")
 
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
         algorithm = "TC3-HMAC-SHA256"
@@ -97,23 +105,26 @@ class _Hunyuan(BaseLLM, ABC):
             "Content-Type": ct,
         }
 
-    def get_payload(self, messages: MessagesType, stream: bool) -> bytes:
+    def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
+        if model is None:
+            model = self.default_model
         return json.dumps(
             {
-                "Model": self.name,
-                "Messages": messages,
+                "Model": model,
+                "Messages": [{"Role": m["role"], "Content": m["content"]} for m in messages],
                 "Stream": stream,
                 "TopP": self.top_p,
                 "Temperature": self.temperature,
                 "EnableEnhancement": False,
-            }, ensure_ascii=False, separators=(",", ":")
+            },
+            ensure_ascii=False, separators=(",", ":")
         ).encode("utf-8")
 
     @staticmethod
-    def handle_err(error: Dict):
+    def handle_err(req_id: str, error: Dict):
         msg = error.get("Message")
         code = error.get("Code")
-        logger.error(f"Model error code={code}, msg={msg}")
+        logger.error(f"ReqId={req_id} Tencent model error code={code}, msg={msg}")
         if code == 4001:
             ccode = const.CodeEnum.LLM_TIMEOUT
         else:
@@ -121,94 +132,77 @@ class _Hunyuan(BaseLLM, ABC):
         return msg, ccode
 
     @staticmethod
-    def handle_normal_response(rj: Dict, stream: bool) -> Tuple[str, const.CodeEnum]:
-        choices = rj["Choices"]
+    def handle_normal_response(req_id: str, resp: Dict, stream: bool) -> Tuple[str, const.CodeEnum]:
+        choices = resp["Choices"]
         if len(choices) == 0:
             return "No response", const.CodeEnum.LLM_NO_CHOICE
         choice = choices[0]
         m = choice["Delta"] if stream else choice["Message"]
+        logger.info(f"ReqId={req_id} Tencent model usage: {resp['Usage']}")
         return m["Content"], const.CodeEnum.OK
 
-    async def complete(self, messages: MessagesType) -> Tuple[str, const.CodeEnum]:
+    async def complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> Tuple[str, const.CodeEnum]:
         action = "ChatCompletions"
-        payload = self.get_payload(messages=messages, stream=False)
+        payload = self.get_payload(model=model, messages=messages, stream=False)
         headers = self.get_headers(action=action, payload=payload)
 
-        async with httpx.AsyncClient() as client:
-            try:
-                resp = await client.post(
-                    url=self.endpoint,
-                    headers=headers,
-                    content=payload,
-                    follow_redirects=False,
-                    timeout=self.timeout,
-                )
-            except (
-                    httpx.ConnectTimeout,
-                    httpx.ConnectError,
-                    httpx.ReadTimeout,
-            ) as e:
-                logger.error(f"Model error: {e}")
-                return "Model timeout, please try later", const.CodeEnum.LLM_TIMEOUT
-            except httpx.HTTPError as e:
-                logger.error(f"Model error: {e}")
-                return "Model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
-            if resp.status_code != 200:
-                logger.error(f"Model error: {resp.text}")
-                return "Model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
+        rj, code = await self._complete(
+            url=self.endpoint,
+            headers=headers,
+            payload=payload,
+            req_id=req_id,
+        )
+        if code != const.CodeEnum.OK:
+            return "Model error, please try later", code
 
-            rj = resp.json()["Response"]
-            error = rj.get("Error")
-            if error is not None:
-                return self.handle_err(error)
-            return self.handle_normal_response(rj=rj, stream=False)
+        resp = rj["Response"]
+        error = resp.get("Error")
+        if error is not None:
+            return self.handle_err(req_id, error)
 
-    async def stream_complete(self, messages: MessagesType) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
+        return self.handle_normal_response(req_id=req_id, resp=resp, stream=False)
+
+    async def stream_complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None
+    ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
         action = "ChatCompletions"
-        payload = self.get_payload(messages=messages, stream=True)
+        payload = self.get_payload(model=model, messages=messages, stream=True)
         headers = self.get_headers(action=action, payload=payload)
 
-        async with httpx.AsyncClient() as client:
-            async with client.stream(
-                    method="POST",
-                    url=self.endpoint,
-                    headers=headers,
-                    content=payload,
-                    follow_redirects=False,
-                    timeout=self.timeout,
-            ) as resp:
-                if resp.status_code != 200:
-                    logger.error(f"Model error: {resp.text}")
-                    yield "Model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
-                    return
-
-                async for chunk in resp.aiter_bytes():
-                    yield chunk, const.CodeEnum.OK
-
-
-class HunyuanPro(_Hunyuan):
-    model_name = "hunyuan-pro"
-
-    def __init__(self, top_p: float = 0.9, temperature: float = 0.7):
-        super().__init__(name=self.model_name, top_p=top_p, temperature=temperature)
-
-
-class HunyuanStandard(_Hunyuan):
-    model_name = "hunyuan-standard"
-
-    def __init__(self, top_p: float = 0.9, temperature: float = 0.7):
-        super().__init__(name=self.model_name, top_p=top_p, temperature=temperature)
-
-
-class HunyuanStandard256K(_Hunyuan):
-    model_name = "hunyuan-standard-256K"
-
-    def __init__(self, top_p: float = 0.9, temperature: float = 0.7):
-        super().__init__(name=self.model_name, top_p=top_p, temperature=temperature)
-
-
-class HunyuanLite(_Hunyuan):
-    model_name = "hunyuan-lite"
-
-    def __init__(self, top_p: float = 0.9, temperature: float = 0.7):
-        super().__init__(name=self.model_name, top_p=top_p, temperature=temperature)
+        async for b, code in self._stream_complete(
+                url=self.endpoint,
+                headers=headers,
+                payload=payload,
+                req_id=req_id,
+        ):
+            txt = ""
+            lines = b.splitlines()
+            for line in lines:
+                s = line.decode("utf-8").strip()
+                if s == "":
+                    continue
+                try:
+                    json_str = s[6:]
+                except IndexError:
+                    logger.error(f"ReqId={req_id} Tencent model stream error: string={s}")
+                    continue
+                try:
+                    json_data = json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    logger.error(f"ReqId={req_id} Tencent model stream error: string={s}, error={e}")
+                    continue
+                choice = json_data["Choices"][0]
+                if choice["FinishReason"] != "":
+                    logger.info(f"ReqId={req_id} Tencent model usage: {json_data['Usage']}")
+                    break
+                content = choice["Delta"]["Content"]
+                txt += content
+            yield txt.encode("utf-8"), code

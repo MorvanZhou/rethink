@@ -1,6 +1,6 @@
 import httpx
 
-from retk import const, config
+from retk import const, config, httpx_helper
 from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, json_exception
 from retk.core import account, user, notice, analysis
@@ -11,47 +11,47 @@ from retk.utils import datetime2str
 async def __get_then_set_github_user_id(au: AuthedUser, req: schemas.manager.GetUserRequest):
     if req.github.startswith("https://github.com/"):
         req.github = req.github.split("/", 4)[3]
-    async with httpx.AsyncClient() as ac:
-        url = f"https://api.github.com/users/{req.github}"
-        try:
-            resp = await ac.get(
-                url=url,
-                headers={
-                    "Accept": "application/vnd.github+json",
-                    "Authorization": f"Bearer {config.get_settings().OAUTH_API_TOKEN_GITHUB}",
-                    "X-GitHub-Api-Version": "2022-11-28",
-                },
-                follow_redirects=False,
-                timeout=5.
-            )
-        except (
-                httpx.ConnectTimeout,
-                httpx.ConnectError,
-                httpx.ReadTimeout,
-                httpx.HTTPError
-        ) as e:
-            raise json_exception(
-                request_id=au.request_id,
-                code=const.CodeEnum.INVALID_PARAMS,
-                log_msg=f"get github user info failed, error={e}",
-            )
-        if resp.status_code != 200:
-            raise json_exception(
-                request_id=au.request_id,
-                code=const.CodeEnum.INVALID_PARAMS,
-                log_msg=f"get github user info failed, status_code={resp.status_code}",
-            )
 
-        rj = resp.json()
-        github_user_id = rj["id"]
-        u, code = await user.get_account(
-            account=str(github_user_id),
-            source=const.UserSourceEnum.GITHUB.value,
-            disabled=None,
-            exclude_manager=True,
+    url = f"https://api.github.com/users/{req.github}"
+    try:
+        resp = await httpx_helper.get_async_client().get(
+            url=url,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {config.get_settings().OAUTH_API_TOKEN_GITHUB}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            follow_redirects=False,
+            timeout=5.
         )
-        if code == const.CodeEnum.OK:
-            req.uid = u["id"]
+    except (
+            httpx.ConnectTimeout,
+            httpx.ConnectError,
+            httpx.ReadTimeout,
+            httpx.HTTPError
+    ) as e:
+        raise json_exception(
+            request_id=au.request_id,
+            code=const.CodeEnum.INVALID_PARAMS,
+            log_msg=f"get github user info failed, error={e}",
+        )
+    if resp.status_code != 200:
+        raise json_exception(
+            request_id=au.request_id,
+            code=const.CodeEnum.INVALID_PARAMS,
+            log_msg=f"get github user info failed, status_code={resp.status_code}",
+        )
+
+    rj = resp.json()
+    github_user_id = rj["id"]
+    u, code = await user.get_account(
+        account=str(github_user_id),
+        source=const.UserSourceEnum.GITHUB.value,
+        disabled=None,
+        exclude_manager=True,
+    )
+    if code == const.CodeEnum.OK:
+        req.uid = u["id"]
 
 
 async def __get_then_set_google_user_id(req: schemas.manager.GetUserRequest):

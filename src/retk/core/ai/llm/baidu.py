@@ -1,0 +1,149 @@
+import json
+from datetime import datetime
+from enum import Enum
+from typing import Tuple, AsyncIterable
+
+from retk import config, const, httpx_helper
+from retk.logger import logger
+from .base import BaseLLM, MessagesType
+
+
+class BaiduModelEnum(str, Enum):
+    ERNIE_SPEED_128K = "ernie-speed-128k"
+    ERNIE_SPEED_8K = "ernie_speed"
+    ERNIE_LITE_8K = "ernie-lite-8k"
+    ERNIE_LITE_8K_0922 = "eb-instant"
+    ERNIE_TINY_8K = "ernie-tiny-8k"
+    YI_34B_CHAT = "yi_34b_chat"
+
+
+class Baidu(BaseLLM):
+    def __init__(
+            self,
+            top_p: float = 0.9,
+            temperature: float = 0.7,
+            timeout: float = 60.,
+            api_key: str = None,
+            secret_key: str = None,
+    ):
+        super().__init__(
+            endpoint="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/",
+            top_p=top_p,
+            temperature=temperature,
+            timeout=timeout,
+            default_model=BaiduModelEnum.ERNIE_SPEED_128K.value,
+        )
+        self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY if api_key is None else api_key
+        self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY if secret_key is None else secret_key
+        if self.api_key == "" or self.secret_key == "":
+            raise ValueError("Baidu api key or key is empty")
+
+        self.headers = {
+            "Content-Type": "application/json",
+        }
+
+        self.token_expires_at = datetime.now().timestamp()
+        self.token = ""
+
+    async def set_token(self, req_id: str = None):
+        if self.token_expires_at > datetime.now().timestamp():
+            return
+        resp = await httpx_helper.get_async_client().post(
+            url="https://aip.baidubce.com/oauth/2.0/token",
+            headers={"Content-Type": "application/json", 'Accept': 'application/json'},
+            content=b"",
+            params={
+                "grant_type": "client_credentials",
+                "client_id": self.api_key,
+                "client_secret": self.secret_key,
+            }
+        )
+        if resp.status_code != 200:
+            logger.error(f"ReqId={req_id} Baidu model error: {resp.text}")
+            return ""
+        rj = resp.json()
+        if rj.get("error") is not None:
+            logger.error(f"ReqId={req_id} Baidu model token error: {rj['error_description']}")
+            return ""
+
+        self.token_expires_at = rj["expires_in"] + datetime.now().timestamp()
+        self.token = rj["access_token"]
+
+    @staticmethod
+    def get_payload(messages: MessagesType, stream: bool) -> bytes:
+        return json.dumps(
+            {
+                "messages": messages,
+                "stream": stream,
+            },
+            ensure_ascii=False, separators=(",", ":")
+        ).encode("utf-8")
+
+    async def complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> Tuple[str, const.CodeEnum]:
+        if model is None:
+            model = self.default_model
+        payload = self.get_payload(messages=messages, stream=False)
+
+        await self.set_token()
+
+        resp, code = await self._complete(
+            url=self.endpoint + model,
+            headers=self.headers,
+            payload=payload,
+            params={"access_token": self.token},
+            req_id=req_id,
+        )
+        if code != const.CodeEnum.OK:
+            return "Model error, please try later", code
+
+        if resp.get("error_code") is not None:
+            logger.error(f"ReqId={req_id} Baidu model error: code={resp['error_code']} {resp['error_msg']}")
+            return resp["error_msg"], const.CodeEnum.LLM_SERVICE_ERROR
+        logger.info(f"ReqId={req_id} Baidu model usage: {resp['usage']}")
+        return resp["result"], const.CodeEnum.OK
+
+    async def stream_complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
+        if model is None:
+            model = self.default_model
+        payload = self.get_payload(messages=messages, stream=True)
+
+        await self.set_token()
+        async for b, code in self._stream_complete(
+                url=self.endpoint + model,
+                headers=self.headers,
+                payload=payload,
+                params={"access_token": self.token},
+                req_id=req_id,
+        ):
+            txt = ""
+            lines = b.splitlines()
+            for line in lines:
+                s = line.decode("utf-8").strip()
+                if s == "":
+                    continue
+                try:
+                    json_str = s[6:]
+                except IndexError:
+                    logger.error(f"ReqId={req_id} Baidu model stream error: string={s}")
+                    continue
+                try:
+                    json_data = json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    logger.error(f"ReqId={req_id} Baidu model stream error: string={s}, error={e}")
+                    continue
+
+                if json_data["is_end"]:
+                    logger.info(f"ReqId={req_id} Baidu model usage: {json_data['usage']}")
+                    break
+                txt += json_data["result"]
+            yield txt.encode("utf-8"), code

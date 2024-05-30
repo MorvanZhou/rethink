@@ -16,7 +16,7 @@ import jwt
 from bson import ObjectId
 from markdown import Markdown
 
-from retk import config, const, regex
+from retk import config, const, regex, httpx_helper
 from retk.logger import logger
 from retk.models import tps
 
@@ -260,31 +260,30 @@ async def get_title_description_from_link(  # noqa: C901
         return no_title, no_description
     # end of SSRF protection
 
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                url=url,
-                headers=ASYNC_CLIENT_HEADERS,
-                timeout=3.
-            )
-        except (
-                httpx.ConnectTimeout,
-                RuntimeError,
-                httpx.ConnectError,
-                httpx.ReadTimeout,
-                httpx.HTTPError
-        ) as e:
-            logger.debug(f"failed to get {url}: {e}")
-            return no_title, no_description
-        if response.status_code in (301, 302):
-            return await get_title_description_from_link(
-                url=response.headers["Location"],
-                language=language,
-                count=count + 1,
-            )
-        if response.status_code != 200:
-            return no_title, no_description
-        html = response.text
+    try:
+        response = await httpx_helper.get_async_client().get(
+            url=url,
+            headers=ASYNC_CLIENT_HEADERS,
+            timeout=3.
+        )
+    except (
+            httpx.ConnectTimeout,
+            RuntimeError,
+            httpx.ConnectError,
+            httpx.ReadTimeout,
+            httpx.HTTPError
+    ) as e:
+        logger.debug(f"failed to get {url}: {e}")
+        return no_title, no_description
+    if response.status_code in (301, 302):
+        return await get_title_description_from_link(
+            url=response.headers["Location"],
+            language=language,
+            count=count + 1,
+        )
+    if response.status_code != 200:
+        return no_title, no_description
+    html = response.text
 
     title, description = "", ""
     found = re.search(r'<meta[^>]*name="title"[^>]*content="([^"]*)"[^>]*>', html, re.DOTALL)

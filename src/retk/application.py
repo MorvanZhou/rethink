@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from retk import const, config, safety, utils
+from retk import const, config, safety, utils, httpx_helper
 from retk.controllers.oauth import init_oauth_provider_map
 from retk.controllers.self_hosted import notice_new_pkg_version
 from retk.core import scheduler
@@ -71,6 +71,8 @@ async def lifespan(app: FastAPI):
 
     async_tasks.stop()
     logger.debug("fastapi shutdown event: async_tasks stopped")
+
+    await httpx_helper.close_async_client()
 
 
 app = FastAPI(

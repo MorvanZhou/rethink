@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # aliyun
     ALIYUN_DASHSCOPE_API_KEY: str = Field(env='ALIYUN_DASHSCOPE_API_KEY', default="")
 
+    # baidu
+    BAIDU_QIANFAN_API_KEY: str = Field(env='BAIDU_QIANFAN_API_KEY', default="")
+    BAIDU_QIANFAN_SECRET_KEY: str = Field(env='BAIDU_QIANFAN_SECRET_KEY', default="")
+
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")

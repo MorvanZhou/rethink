@@ -1,22 +1,104 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Literal, AsyncIterable, Tuple
 
-from retk import const
+import httpx
 
-MessagesType = List[Dict[Literal["Role", "Content"], str]]
+from retk import const, httpx_helper
+from retk.logger import logger
+
+MessagesType = List[Dict[Literal["role", "content"], str]]
 
 
 class BaseLLM(ABC):
-    name: str = None
+    default_timeout = 60.
 
-    def __init__(self):
-        if self.name is None:
-            raise ValueError("llm model name must be defined")
+    def __init__(
+            self,
+            endpoint: str,
+            top_p: float = 1.,
+            temperature: float = 1.,
+            timeout: float = None,
+            default_model: str = None
+    ):
+        self.top_p = top_p
+        self.temperature = temperature
+        self.timeout = self.default_timeout if timeout is not None else timeout
+        self.default_model = default_model
+        self.endpoint = endpoint
+
+    async def _complete(
+            self,
+            url: str,
+            headers: Dict[str, str],
+            payload: bytes,
+            params: Dict[str, str] = None,
+            req_id: str = None,
+    ) -> Tuple[Dict, const.CodeEnum]:
+        try:
+            resp = await httpx_helper.get_async_client().post(
+                url=url,
+                headers=headers,
+                content=payload,
+                params=params,
+                follow_redirects=False,
+                timeout=self.timeout,
+            )
+        except (
+                httpx.ConnectTimeout,
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+        ) as e:
+            logger.error(f"ReqId={req_id} Model error: {e}")
+            return {}, const.CodeEnum.LLM_TIMEOUT
+        except httpx.HTTPError as e:
+            logger.error(f"ReqId={req_id} Model error: {e}")
+            return {}, const.CodeEnum.LLM_SERVICE_ERROR
+        if resp.status_code != 200:
+            logger.error(f"ReqId={req_id} Model error: {resp.text}")
+            return {}, const.CodeEnum.LLM_SERVICE_ERROR
+
+        rj = resp.json()
+        return rj, const.CodeEnum.OK
 
     @abstractmethod
-    async def complete(self, *args, **kwargs) -> Tuple[str, const.CodeEnum]:
+    async def complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> Tuple[str, const.CodeEnum]:
         ...
 
+    async def _stream_complete(
+            self,
+            url: str,
+            headers: Dict[str, str],
+            payload: bytes,
+            params: Dict[str, str] = None,
+            req_id: str = None,
+    ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
+        async with httpx_helper.get_async_client().stream(
+                method="POST",
+                url=url,
+                headers=headers,
+                content=payload,
+                params=params,
+                follow_redirects=False,
+                timeout=self.timeout,
+        ) as resp:
+            if resp.status_code != 200:
+                logger.error(f"ReqId={req_id} Model error: {resp.text}")
+                yield "Model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
+                return
+
+            async for chunk in resp.aiter_bytes():
+                yield chunk, const.CodeEnum.OK
+
     @abstractmethod
-    async def stream_complete(self, *args, **kwargs) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
+    async def stream_complete(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None
+    ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
         ...
