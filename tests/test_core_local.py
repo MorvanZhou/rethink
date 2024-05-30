@@ -31,14 +31,14 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
         # create a fake image
-        tmp_path = Path(__file__).parent / "tmp" / "fake.png"
+        tmp_path = Path(__file__).parent / "temp" / "fake.png"
         tmp_path.parent.mkdir(parents=True, exist_ok=True)
         Image.new("RGB", (100, 100)).save(tmp_path)
 
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
-        shutil.rmtree(Path(__file__).parent / "tmp", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp", ignore_errors=True)
 
     async def asyncSetUp(self) -> None:
         await client.init()
@@ -51,8 +51,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self) -> None:
         await client.drop()
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     async def test_user(self):
         u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
@@ -423,7 +423,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.au.u.id)
         self.assertEqual(const.CodeEnum.OK, code)
         used_space = u["usedSpace"]
-        p = Path(__file__).parent / "tmp" / "fake.png"
+        p = Path(__file__).parent / "temp" / "fake.png"
 
         image = Image.open(p)
         buf = BytesIO()
@@ -436,7 +436,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         res = await core.files.vditor_upload(au=self.au, files=[img_file])
         self.assertIn("fake.png", res["succMap"])
         self.assertTrue(".png" in res["succMap"]["fake.png"])
-        local_file = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / res["succMap"]["fake.png"][1:]
+        local_file = Path(__file__).parent / "temp" / const.settings.DOT_DATA / res["succMap"]["fake.png"][1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
         image.close()
@@ -450,7 +450,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         "retk.core.files.upload.httpx.AsyncClient.get",
     )
     async def test_fetch_image_vditor(self, mock_get):
-        f = open(Path(__file__).parent / "tmp" / "fake.png", "rb")
+        f = open(Path(__file__).parent / "temp" / "fake.png", "rb")
         mock_get.return_value = httpx.Response(
             200,
             content=f.read(),
@@ -465,7 +465,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertTrue(new_url.endswith(".png"))
         self.assertTrue(new_url.startswith("/"))
-        local_file = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / new_url[1:]
+        local_file = Path(__file__).parent / "temp" / const.settings.DOT_DATA / new_url[1:]
         self.assertTrue(local_file.exists())
         local_file.unlink()
 
@@ -498,14 +498,14 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
             au=self.au, md="[title](/qqq)\nbody", type_=const.NodeTypeEnum.MARKDOWN.value
         )
         self.assertEqual(const.CodeEnum.OK, code)
-        md_path = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md" / (node["id"] + ".md")
+        md_path = Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md" / (node["id"] + ".md")
         self.assertTrue(md_path.exists())
 
         time.sleep(1)
 
         _, _, code = await core.node.update_md(au=self.au, nid=node["id"], md="title2\nbody2")
         self.assertEqual(const.CodeEnum.OK, code)
-        hist_dir = Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md" / "hist" / node["id"]
+        hist_dir = Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md" / "hist" / node["id"]
         self.assertEqual(1, len(list(hist_dir.glob("*.md"))))
 
         time.sleep(1)

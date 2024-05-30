@@ -17,7 +17,7 @@ class TestPlugin(retk.Plugin):
     version = "0.1.0"
     description = "A demo test plugin."
     author = "morvanzhou"
-    icon = "tmp/back.svg"
+    icon = "temp/back.svg"
     template = "<h1>{h}</h1>\n<p>{p}</p>"
 
     def __init__(self):
@@ -53,7 +53,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         utils.set_env(".env.test.local")
-        tmp_dir = Path(__file__).parent / "tmp"
+        tmp_dir = Path(__file__).parent / "temp"
         tmp_dir.mkdir(exist_ok=True)
         with open(tmp_dir / "back.svg", "w") as f:
             f.write(svg)
@@ -61,7 +61,7 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
-        shutil.rmtree(Path(__file__).parent / "tmp", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp", ignore_errors=True)
 
     async def asyncSetUp(self) -> None:
         self.p = TestPlugin()
@@ -78,8 +78,8 @@ class DemoCount(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         retk.remove_plugin(self.p)
         await client.drop()
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     def test_creation(self):
         self.assertEqual(self.p.id, "testPlugin")

@@ -12,7 +12,7 @@ def set_env(file=".env.test.local"):
             os.environ["VUE_APP_MODE"] = "local"
             os.environ["VUE_APP_API_URL"] = "http//127.0.0.1:8000"
         if file.endswith(".local"):
-            tmp = Path(__file__).parent / "tmp"
+            tmp = Path(__file__).parent / "temp"
             if tmp.exists():
                 shutil.rmtree(tmp, ignore_errors=True)
             tmp.mkdir(exist_ok=True)

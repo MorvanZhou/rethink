@@ -8,7 +8,7 @@ from retk import const, version_manager, __version__
 
 class RecoverTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.tmp_dir = Path(__file__).parent / "tmp"
+        self.tmp_dir = Path(__file__).parent / "temp"
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self) -> None:
@@ -41,7 +41,7 @@ class RecoverTest(unittest.TestCase):
 
 class MigrateTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.tmp_dir = Path(__file__).parent / "tmp"
+        self.tmp_dir = Path(__file__).parent / "temp"
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self) -> None:

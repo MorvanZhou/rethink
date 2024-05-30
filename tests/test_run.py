@@ -16,7 +16,7 @@ class TestRun(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         config.get_settings.cache_clear()
-        cls.path = p = Path(__file__).parent / "tmp"
+        cls.path = p = Path(__file__).parent / "temp"
         p.mkdir(exist_ok=True)
 
     @classmethod

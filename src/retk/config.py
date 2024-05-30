@@ -13,32 +13,48 @@ from retk.logger import logger
 
 
 class Settings(BaseSettings):
+    # system settings
     ONE_USER: bool = Field(default=False, env='ONE_USER')
     RETHINK_SERVER_DEBUG: bool = Field(default=False, env='RETHINK_SERVER_DEBUG')
     VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     PLUGINS: bool = Field(default=False, env='PLUGINS')
     RETHINK_LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='RETHINK_LOCAL_STORAGE_PATH', default=None)
+    CAPTCHA_SALT: str = Field(env='CAPTCHA_SALT', default="")
+    MD_BACKUP_INTERVAL: int = Field(env="MD_BACKUP_INTERVAL", default=60 * 5)  # 5 minutes
+
+    # database settings: MongoDB
     DB_NAME: str = Field(env='DB_NAME', default="")
     DB_USER: str = Field(env='DB_USER', default="")
     DB_PASSWORD: str = Field(env='DB_PASSWORD', default="")
     DB_HOST: str = Field(env='DB_HOST', default="")
     DB_PORT: int = Field(env='DB_PORT', default=-1)
     DB_SALT: str = Field(env='BD_SALT', default="")
-    HUNYUAN_SECRET_ID: str = Field(env='HUNYUAN_SECRET_ID', default="")
-    HUNYUAN_SECRET_KEY: str = Field(env='HUNYUAN_SECRET_KEY', default="")
+
+    # database settings: ElasticSearch
     ES_USER: str = Field(env='ES_USER', default="")
     ES_PASSWORD: str = Field(env='ES_PASSWORD', default="")
     ES_HOSTS: str = Field(env='ES_HOSTS', default="")
     ES_INDEX_ALIAS: str = Field(env='ES_INDEX_ALIAS', default="")
-    CAPTCHA_SALT: str = Field(env='CAPTCHA_SALT', default="")
+
+    # database settings: COS
+    COS_SECRET_ID: str = Field(env='COS_SECRET_ID', default="")
+    COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
+    COS_REGION: Optional[str] = Field(env="COS_REGION", default=None)
+    COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
+    COS_DOMAIN: Optional[str] = Field(env="COS_DOMAIN", default=None)
+
+    # hunyuan
+    HUNYUAN_SECRET_ID: str = Field(env='HUNYUAN_SECRET_ID', default="")
+    HUNYUAN_SECRET_KEY: str = Field(env='HUNYUAN_SECRET_KEY', default="")
+
+    # aliyun
+    ALIYUN_DASHSCOPE_API_KEY: str = Field(env='ALIYUN_DASHSCOPE_API_KEY', default="")
+
+    # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")
-    JWT_KEY: bytes = Field(env='JWT_KEY', default=b"")
-    JWT_KEY_PUB: bytes = Field(env='JWT_KEY_PUB', default=b"")
-    JWT_REFRESH_EXPIRED_DAYS: int = Field(default=1, env='JWT_REFRESH_EXPIRED_DAYS')
-    JWT_ACCESS_EXPIRED_MINS: int = Field(default=5, env='JWT_ACCESS_EXPIRED_MINS')
-    REFRESH_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(days=1))
-    ACCESS_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(minutes=15))
+
+    # OAuth settings
     OAUTH_REDIRECT_URL: str = Field(env='OAUTH_REDIRECT_URL', default="")
     OAUTH_CLIENT_ID_GITHUB: str = Field(env='OAUTH_CLIENT_ID_GITHUB', default="")
     OAUTH_CLIENT_SEC_GITHUB: str = Field(env='OAUTH_CLIENT_SEC_GITHUB', default="")
@@ -49,12 +65,14 @@ class Settings(BaseSettings):
     OAUTH_CLIENT_SEC_FACEBOOK: str = Field(env='OAUTH_CLIENT_SEC_QQ', default="")
     OAUTH_CLIENT_ID_GOOGLE: str = Field(env='OAUTH_CLIENT_ID_GOOGLE', default="")
     OAUTH_CLIENT_SEC_GOOGLE: str = Field(env='OAUTH_CLIENT_SEC_GOOGLE', default="")
-    COS_SECRET_ID: str = Field(env='COS_SECRET_ID', default="")
-    COS_SECRET_KEY: str = Field(env="COS_SECRET_KEY", default="")
-    COS_REGION: Optional[str] = Field(env="COS_REGION", default=None)
-    COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
-    COS_DOMAIN: Optional[str] = Field(env="COS_DOMAIN", default=None)
-    MD_BACKUP_INTERVAL: int = Field(env="MD_BACKUP_INTERVAL", default=60 * 5)  # 5 minutes
+
+    # auth secret
+    JWT_KEY: bytes = Field(env='JWT_KEY', default=b"")
+    JWT_KEY_PUB: bytes = Field(env='JWT_KEY_PUB', default=b"")
+    JWT_REFRESH_EXPIRED_DAYS: int = Field(default=1, env='JWT_REFRESH_EXPIRED_DAYS')
+    JWT_ACCESS_EXPIRED_MINS: int = Field(default=5, env='JWT_ACCESS_EXPIRED_MINS')
+    REFRESH_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(days=1))
+    ACCESS_TOKEN_EXPIRE_DELTA: datetime.timedelta = Field(default=datetime.timedelta(minutes=15))
 
     model_config = SettingsConfigDict(
         env_file=".env",

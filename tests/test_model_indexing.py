@@ -27,7 +27,7 @@ class TestModelIndexing(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(out_index, index)
 
-        mongo_path = os.path.join("tmp", "mongo")
+        mongo_path = os.path.join("temp", "mongo")
         os.makedirs(mongo_path, exist_ok=True)
         mongo = MongitaClientDisk(mongo_path)
         db = mongo["test_db"]

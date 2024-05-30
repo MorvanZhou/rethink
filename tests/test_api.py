@@ -145,8 +145,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         scheduler.stop()
         await client.drop()
         self.client.close()
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "files", ignore_errors=True)
-        shutil.rmtree(Path(__file__).parent / "tmp" / const.settings.DOT_DATA / "md", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "files", ignore_errors=True)
+        shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
