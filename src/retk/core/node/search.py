@@ -26,6 +26,7 @@ async def _2node_data(
             type=n["type"],
             createdAt=datetime2str(n["_id"].generation_time),
             modifiedAt=datetime2str(n["modifiedAt"]),
+            favorite=n.get("favorite", False),
         )
         results.append(r)
     return results
@@ -107,6 +108,7 @@ async def at(
                 type=n["type"],
                 createdAt=datetime2str(n["_id"].generation_time),
                 modifiedAt=datetime2str(n["modifiedAt"]),
+                favorite=n.get("favorite", False),
             ) for n in _nodes
         ], len(rn)
 

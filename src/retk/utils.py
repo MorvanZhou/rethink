@@ -419,6 +419,7 @@ def get_node_dict(
         "fromNodeIds": from_node_ids,
         "toNodeIds": to_node_ids,
         "history": history,
+        "favorite": False,
     }
 
 

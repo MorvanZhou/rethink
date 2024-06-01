@@ -3,6 +3,7 @@
   \***************************************************************************************************************************************************************************************************************************/
 :root {
   --editor-height: calc(100vh - 145px);
+  --bg-white: #ffffff;
 }
 
 body {
@@ -36,6 +37,14 @@ body,
   font-weight: bold;
 }
 
+.bg-light-grey {
+  background: #f5f7f8;
+}
+
+.bg-white {
+  background: #ffffff;
+}
+
 .vditor-wysiwyg a {
   color: rgb(49, 88, 191);
 }
@@ -55,7 +64,6 @@ body,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
   opacity: 0.95;
 }
 
@@ -162,7 +170,6 @@ body,
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1001;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -171,7 +178,6 @@ body,
 .msg-box-content {
   width: 60%;
   max-width: 400px;
-  background-color: #ffffff;
   padding: 20px;
   border-radius: 5px;
   display: flex;
@@ -232,7 +238,6 @@ em.match {
   height: 100%;
   -webkit-backdrop-filter: blur(5px);
           backdrop-filter: blur(5px);
-  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -242,7 +247,6 @@ em.match {
 .sign-pop-window {
   width: 100%;
   max-width: 450px;
-  background-color: #ffffff;
   padding: 10px 20px 20px 20px;
   border-radius: 5px;
 }
@@ -410,7 +414,7 @@ em.match {
 }
 
 .snippet-expanded p {
-  margin: 0 0 1rem 0;
+  margin: 0;
 }
 
 .snippet-expanded img {
@@ -488,6 +492,30 @@ em.match {
   animation: blink 0.6s;
 }
 
+.z-top-menu {
+  z-index: 2;
+}
+
+.z-recommend {
+  z-index: 3;
+}
+
+.z-side-menu {
+  z-index: 5;
+}
+
+.z-blur-background {
+  z-index: 1000;
+}
+
+.z-popup {
+  z-index: 1001;
+}
+
+.z-search {
+  z-index: 1002 !important;
+}
+
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/App.vue?vue&type=style&index=0&id=7ba5bd90&scoped=true&lang=css ***!
   \********************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -553,7 +581,7 @@ em.match {
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
-  margin-bottom: 1em;
+  margin: 1.5rem 0;
 }
 .value[data-v-9c8cfb28] {
   display: flex;
@@ -595,7 +623,6 @@ em.match {
   position: fixed;
   top: 0;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.4);
-  z-index: 5;
 }
 .no-collapsed[data-v-573bae43] {
   width: 200px;
@@ -851,6 +878,41 @@ img[data-v-4f42ee16] {
   width: 60px;
 }
 
+/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/search/SearchResults.vue?vue&type=style&index=0&id=5eebfc8b&scoped=true&lang=css ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.search-results[data-v-5eebfc8b] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 60%;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  padding: 5px 0;
+}
+.no-result[data-v-5eebfc8b] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #666;
+  height: 3em;
+}
+.search-result[data-v-5eebfc8b] {
+  cursor: pointer;
+  padding: 10px 10px 10px 10px;
+  letter-spacing: 1px;
+}
+.node-hl[data-v-5eebfc8b] {
+  font-size: 0.9em;
+  padding: 0;
+  color: #666;
+}
+
 /*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/search/SearchTool.vue?vue&type=style&index=0&id=48038053&scoped=true&lang=css ***!
   \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -885,38 +947,7 @@ img[data-v-4f42ee16] {
   height: 1em;
   width: 1em;
 }
-.search-results[data-v-48038053] {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 60%;
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  z-index: 5;
-  padding: 5px 0;
-}
-.no-result[data-v-48038053] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #666;
-  height: 3em;
-}
-.search-result[data-v-48038053] {
-  cursor: pointer;
-  padding: 10px 10px 10px 10px;
-  letter-spacing: 1px;
-}
-.node-hl[data-v-48038053] {
-  font-size: 0.9em;
-  padding: 0;
-  color: #666;
-}
+
 
 /*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/nav/top/elements/UserMenu.vue?vue&type=style&index=0&id=5e4f0e8e&scoped=true&lang=css ***!
@@ -1053,7 +1084,6 @@ img[data-v-4f42ee16] {
   background-color: white;
   border-radius: 5px;
   box-shadow: 0 0 5px #ccc;
-  z-index: 10;
 }
 .user-menu.expand[data-v-0006b23b] {
   width: 200px;
@@ -1140,7 +1170,6 @@ header[data-v-3b6abb4d] {
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 1;
 }
 .header-sm[data-v-3b6abb4d] {
   height: 30px;
@@ -1400,9 +1429,17 @@ input[data-v-2145b739]:focus {
   border: 1px solid #3d3d3d;
 }
 select[data-v-2145b739] {
-  padding: 5px;
+  padding: 0.4rem;
   border-radius: 5px;
   border: 1px solid #ccc;
+  -webkit-padding-start: 0.7rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23000%27 width=%2718px%27 height=%2718px%27%3E%3Cpath d=%27M7 10l5 5 5-5z%27/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 18px;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3781,8 +3818,6 @@ pre {
   width: 300px;
   border: 1px solid #e5e5e5;
   border-radius: 5px;
-  background-color: #fff;
-  z-index: 3;
 }
 
 
@@ -3803,8 +3838,6 @@ pre {
   border-style: solid;
   border-radius: 8px 8px 0 0;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
-  background-color: #fff;
-  z-index: 5;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3819,7 +3852,6 @@ pre {
   width: 45px;
   margin: 0 auto;
   border: 1px solid #e0e0e0;
-  z-index: 1;
 }
 .item[data-v-112e84ff] {
   position: relative;
@@ -3847,7 +3879,6 @@ pre {
   border-radius: 0.5em;
   padding: 0.5em;
   margin: 0.5em;
-  z-index: 1;
   box-shadow: 0 0 5px #e0e0e0;
 }
 
@@ -3949,7 +3980,7 @@ pre {
 }
 .snippet[data-v-40af974e] {
   max-height: 90px;
-  font-size: 0.9em;
+  font-size: 0.8rem;
   letter-spacing: 1px;
   text-align: left;
   padding: 0 0 8px 0;
@@ -4181,6 +4212,37 @@ pre {
   mask: var(--mask);
 }
 
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/recom/RecommendPanel.vue?vue&type=style&index=0&id=c882c6c6&scoped=true&lang=css ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.editor-recommendations[data-v-c882c6c6] {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  height: 80px;
+  overflow-y: hidden;
+}
+.auto-recommend[data-v-c882c6c6] {
+  flex: 1;
+  display: flex;
+  justify-content: left;
+  padding-left: 1em;
+  align-items: center;
+  color: #666;
+  border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+  box-shadow: 0 0 5px #e5e5e5;
+  border-left: 3px solid #f87575;
+}
+.height-sm[data-v-c882c6c6] {
+  height: 67px !important;
+}
+.scroll-sm[data-v-c882c6c6] {
+  overflow-x: scroll;
+}
+
+
 /*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/recom/RecommendPopupWindow.vue?vue&type=style&index=0&id=68a8b995&scoped=true&lang=css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -4194,16 +4256,13 @@ pre {
   background-color: rgba(0, 0, 0, 0.4);
   -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
-  z-index: 9;
 }
 .popup[data-v-68a8b995] {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #fff;
   border-radius: 5px;
-  z-index: 10;
 }
 .header[data-v-68a8b995] {
   display: flex;
@@ -4230,47 +4289,15 @@ img[data-v-68a8b995]:hover {
 }
 .detail-md-content[data-v-68a8b995] {
   padding: 10px;
-  max-height: 600px;
-  width: 800px;
+  height: 70vh;
+  width: 60vw;
   overflow-y: auto;
   word-break: break-all;
 }
 .detail-md-content-sm[data-v-68a8b995] {
   width: 90vw;
-  height: 80vh;
+  height: 70vh;
 }
-
-/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/editor/recom/RecommendPanel.vue?vue&type=style&index=0&id=c882c6c6&scoped=true&lang=css ***!
-  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.editor-recommendations[data-v-c882c6c6] {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  height: 80px;
-  overflow-y: hidden;
-}
-.auto-recommend[data-v-c882c6c6] {
-  flex: 1;
-  display: flex;
-  justify-content: left;
-  padding-left: 1em;
-  align-items: center;
-  color: #666;
-  border-bottom-right-radius: 5px;
-  border-top-right-radius: 5px;
-  background: #ffffff;
-  box-shadow: 0 0 5px #e5e5e5;
-  border-left: 3px solid #f87575;
-}
-.height-sm[data-v-c882c6c6] {
-  height: 67px !important;
-}
-.scroll-sm[data-v-c882c6c6] {
-  overflow-x: scroll;
-}
-
 
 /*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/EditorView.vue?vue&type=style&index=0&id=5cd56b1a&scoped=true&lang=css ***!
@@ -4278,9 +4305,6 @@ img[data-v-68a8b995]:hover {
 
 .white-background[data-v-5cd56b1a] {
   background: #fff;
-}
-.gray-background[data-v-5cd56b1a] {
-  background: #f5f7f8;
 }
 .node-edit[data-v-5cd56b1a] {
   flex-grow: 1;
@@ -4290,8 +4314,6 @@ img[data-v-68a8b995]:hover {
 #sm-sticky-panel[data-v-5cd56b1a] {
   position: sticky;
   top: 0;
-  z-index: 4;
-  background: #f5f7f8;
 }
 
 /*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -4304,10 +4326,8 @@ img[data-v-68a8b995]:hover {
   top: 25px;
   right: 0;
   width: 200px;
-  background-color: #fff;
   border-radius: 5px;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
-  z-index: 100;
   display: none;
 }
 .dropdown-menu button[data-v-6459f500] {
@@ -4349,19 +4369,30 @@ img[data-v-68a8b995]:hover {
   margin-right: 10px;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
 }
 .node-more-hide[data-v-6484916a] {
   opacity: 0;
 }
 img[data-v-6484916a] {
+  border-radius: 3px;
+  margin-left: 5px;
+}
+.more[data-v-6484916a] {
   width: 20px;
   height: 20px;
-  border-radius: 3px;
+}
+.favorite[data-v-6484916a] {
+  width: 16px;
+  height: 16px;
+  padding: 3px;
+  opacity: 0.8;
 }
 img[data-v-6484916a]:hover {
-  background-color: #e8e7e7;
+  background-color: #d7d1d1;
   cursor: default;
 }
+
 
 /*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/tools/ShowNotice.vue?vue&type=style&index=0&id=7385bbc7&scoped=true&lang=css ***!
@@ -4373,7 +4404,6 @@ img[data-v-6484916a]:hover {
   background: #eaeaea;
   padding: 5px;
   border-radius: 5px;
-  z-index: 100;
   border: 1px solid #eaeaea;
   box-shadow: 0 0 5px #eaeaea;
   font-size: 0.7em;
@@ -4399,6 +4429,9 @@ img[data-v-6484916a]:hover {
   font-size: 1em;
   font-weight: bold;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .title-sm[data-v-e1905aa2] {
   font-size: 1em;
@@ -4461,7 +4494,6 @@ img[data-v-6484916a]:hover {
   \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 table.view {
-  width: 100%;
   height: 100%;
   position: relative;
   border-collapse: collapse;
@@ -4471,6 +4503,7 @@ table.view {
   overflow-y: auto;
   display: block;
   background: #ffffff;
+  padding: 0 5px;
 }
 .view tr {
   height: 3.5em;
@@ -4513,9 +4546,6 @@ table.view {
   width: 45%;
   padding-left: 8px;
   padding-right: 10px;
-}
-.default-cursor {
-  cursor: default;
 }
 .view tr.tr-sm td.title {
   width: 60%;
@@ -4598,7 +4628,6 @@ table.view {
   border-radius: 8px;
   box-shadow: rgba(69, 92, 104, 0.19) 0 6px 10px;
   background-color: rgb(255, 255, 255);
-  z-index: 2;
 }
 .dropdown-menu button[data-v-1f3d58bc] {
   display: flex;
@@ -4637,7 +4666,7 @@ table.view {
   border-right: 1px solid #e7e7e7;
   border-left: none;
   border-top: 1px solid #e7e7e7;
-  background-color: #fff;
+  background: var(--bg-white);
   color: #616161;
   cursor: pointer;
 }
@@ -4682,16 +4711,15 @@ table.view {
   \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 .quick-post-panel[data-v-7aa49a1e] {
-  width: 100%;
   height: 80px;
   background-color: #fff;
   border: 2px solid rgb(0 160 75 / 40%);
   border-radius: 5px;
   box-sizing: border-box;
   padding: 10px 5px 5px 10px;
-  margin-top: 10px;
   transition: all 0.3s;
   flex-shrink: 0;
+  margin: 10px 5px 0 5px;
 }
 .quick-post-panel[data-v-7aa49a1e]:hover {
   border: 2px solid rgb(0 160 75 / 90%);
@@ -4781,13 +4809,13 @@ table.view {
 }
 .search-results[data-v-19c64c31] {
   flex: 1;
-  width: 100%;
   overflow-y: auto;
-  padding-top: 13px;
+  padding: 13px 10px 0 10px;
 }
 .search-result[data-v-19c64c31] {
   border: 1px solid #eaeaea;
   border-radius: 5px;
+  background: white;
   padding: 5px;
   cursor: default;
   margin-bottom: 10px;
@@ -4862,16 +4890,16 @@ table.view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  height: 100%
+  height: 100%;
 }
 .header[data-v-6fddd196] {
-  width: 100%;
+  width: 95%;
   height: 40px;
   display: flex;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
+  padding: 10px;
 }
 .input-wrapper[data-v-6fddd196] {
   flex: 1;
@@ -5026,7 +5054,6 @@ table.view {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -5034,7 +5061,6 @@ table.view {
 .upload-window[data-v-1f422cd2] {
   width: 80%;
   max-width: 600px;
-  background-color: #ffffff;
   padding: 20px;
   border-radius: 5px;
   display: flex;
@@ -5078,7 +5104,6 @@ table.view {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -5086,7 +5111,6 @@ table.view {
 .upload-window[data-v-3614a3b8] {
   width: 80%;
   max-width: 600px;
-  background-color: #ffffff;
   padding: 20px;
   border-radius: 5px;
   display: flex;
@@ -5402,8 +5426,9 @@ h2[data-v-314222b0] {
   display: flex;
   flex-direction: row;
   align-items: end;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   width: 100%;
+  flex-wrap: wrap;
 }
 .data-number[data-v-314222b0] {
   display: flex;
@@ -5411,18 +5436,16 @@ h2[data-v-314222b0] {
   align-items: center;
   justify-content: center;
   margin: 10px 0;
-  width: 150px;
 }
 .data-value[data-v-314222b0] {
   margin-bottom: 10px;
   font-size: 1.3rem;
   font-weight: 600;
   text-align: center;
-  width: 120px;
   color: #2d2d2d;
 }
 .data-name[data-v-314222b0] {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 300;
   color: #5d5c5c;
 }
@@ -5607,12 +5630,10 @@ li[data-v-314222b0] {
   max-width: 300px;
   min-width: 250px;
   height: 0;
-  z-index: 1001;
 }
 .flash-popup-box-content {
   padding: 10px;
   border-radius: 5px;
-  background-color: #ffffff;
   border: 3px solid #84e3b0;
   box-shadow: 0 0 5px #84e3b0;
 }

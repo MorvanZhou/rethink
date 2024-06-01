@@ -36,6 +36,7 @@ def __get_node_data(n: Node) -> schemas.node.NodeData:
         disabled=n["disabled"],
         createdAt=datetime2str(n["_id"].generation_time),
         modifiedAt=datetime2str(n["modifiedAt"]),
+        favorite=n.get("favorite", False),
         fromNodes=from_nodes,
         toNodes=to_nodes,
     )
@@ -152,6 +153,7 @@ def _get_node_search_response_data(nodes: List[Node], total: int) -> schemas.nod
                 type=n["type"],
                 createdAt=datetime2str(n["_id"].generation_time),
                 modifiedAt=datetime2str(n["modifiedAt"]),
+                favorite=n.get("favorite", False)
             ) for n in nodes],
         total=total,
     )
@@ -188,4 +190,36 @@ async def get_hist_edition_md(
     return schemas.node.HistEditionMdResponse(
         requestId=au.request_id,
         md=md,
+    )
+
+
+async def set_favorite(
+        au: AuthedUser,
+        nid: str,
+        favorite: bool,
+) -> schemas.RequestIdResponse:
+    await core.node.set_favorite(
+        au=au,
+        nid=nid,
+        favorite=favorite,
+    )
+
+    return schemas.RequestIdResponse(
+        requestId=au.request_id,
+    )
+
+
+async def get_favorite_nodes(
+        au: AuthedUser,
+        p: int,
+        limit: int,
+) -> schemas.node.NodesSearchResponse:
+    nodes, total = await core.node.get_favorite(
+        au=au,
+        page=p,
+        limit=limit,
+    )
+    return schemas.node.NodesSearchResponse(
+        requestId=au.request_id,
+        data=_get_node_search_response_data(nodes=nodes, total=total),
     )

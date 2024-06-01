@@ -212,6 +212,26 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("title", n["title"])
 
+        code = await core.node.set_favorite(au=self.au, nid=node["id"], favorite=True)
+        self.assertEqual(const.CodeEnum.OK, code)
+        n, code = await core.node.get(au=self.au, nid=node["id"])
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertTrue(n["favorite"])
+
+        favorites, total = await core.node.get_favorite(au=self.au, page=0, limit=10)
+        self.assertEqual(1, len(favorites))
+        self.assertEqual(1, total)
+
+        code = await core.node.set_favorite(au=self.au, nid=node["id"], favorite=False)
+        self.assertEqual(const.CodeEnum.OK, code)
+        n, code = await core.node.get(au=self.au, nid=node["id"])
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertFalse(n["favorite"])
+
+        favorites, total = await core.node.get_favorite(au=self.au, page=0, limit=10)
+        self.assertEqual(0, len(favorites))
+        self.assertEqual(0, total)
+
         await client.search.refresh()
         ns, total = await client.search.search(au=self.au)
         self.assertEqual(3, len(ns))

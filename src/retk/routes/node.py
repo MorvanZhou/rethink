@@ -79,6 +79,26 @@ async def get_search_nodes(
 
 # make sure this is before /{nid} otherwise it will be treated as a nid
 @router.get(
+    path="/favorite",
+    status_code=200,
+    response_model=schemas.node.NodesSearchResponse,
+)
+@utils.measure_time_spend
+async def get_favorite_nodes(
+        au: utils.ANNOTATED_AUTHED_USER,
+        p: int = Query(default=0, ge=0, description="page number"),
+        limit: int = Query(default=10, ge=0, le=const.settings.SEARCH_LIMIT_MAX),
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.node.NodesSearchResponse:
+    return await node_ops.get_favorite_nodes(
+        au=au,
+        p=p,
+        limit=limit,
+    )
+
+
+# make sure this is before /{nid} otherwise it will be treated as a nid
+@router.get(
     path="/core",
     status_code=200,
     response_model=schemas.node.NodesSearchResponse,
@@ -211,4 +231,40 @@ async def put_node_md(
         au=au,
         req=req,
         nid=nid,
+    )
+
+
+@router.put(
+    path="/{nid}/favorite",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+@utils.measure_time_spend
+async def put_node_favorite(
+        au: utils.ANNOTATED_AUTHED_USER,
+        nid: str = utils.ANNOTATED_NID,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.RequestIdResponse:
+    return await node_ops.set_favorite(
+        au=au,
+        nid=nid,
+        favorite=True,
+    )
+
+
+@router.delete(
+    path="/{nid}/favorite",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+@utils.measure_time_spend
+async def delete_node_favorite(
+        au: utils.ANNOTATED_AUTHED_USER,
+        nid: str = utils.ANNOTATED_NID,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.RequestIdResponse:
+    return await node_ops.set_favorite(
+        au=au,
+        nid=nid,
+        favorite=False,
     )

@@ -515,6 +515,27 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 201)
         node = rj["node"]
+        self.assertFalse(node["favorite"])
+
+        resp = self.client.put(
+            f"/api/nodes/{node['id']}/favorite",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
+
+        resp = self.client.get(
+            f"/api/nodes/{node['id']}",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        n = rj["node"]
+        self.assertTrue(n["favorite"])
+
+        resp = self.client.delete(
+            f"/api/nodes/{node['id']}/favorite",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f'/api/nodes/{node["id"]}',
@@ -525,6 +546,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("node1", n["title"], msg=rj)
         self.assertEqual("node1\ntext", n["md"])
         self.assertEqual(const.NodeTypeEnum.MARKDOWN.value, n["type"])
+        self.assertFalse(n["favorite"])
 
         resp = self.client.put(
             f'/api/nodes/{node["id"]}/md',

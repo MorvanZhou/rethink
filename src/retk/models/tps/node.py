@@ -30,3 +30,4 @@ class Node(TypedDict):
     fromNodeIds: List[str]
     toNodeIds: List[str]
     history: List[str]
+    favorite: bool

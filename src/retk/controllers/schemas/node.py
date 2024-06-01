@@ -25,6 +25,7 @@ class NodeData(BaseModel):
     disabled: bool
     createdAt: str
     modifiedAt: str
+    favorite: bool
     fromNodes: List[LinkedNode] = Field(default_factory=list)
     toNodes: List[LinkedNode] = Field(default_factory=list)
 
@@ -56,6 +57,7 @@ class NodesSearchResponse(BaseModel):
             type: int
             createdAt: str
             modifiedAt: str
+            favorite: bool
 
         nodes: List[Node]
         total: NonNegativeInt

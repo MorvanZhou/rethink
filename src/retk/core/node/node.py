@@ -223,6 +223,30 @@ async def update_md(  # noqa: C901
     return doc, old_n, code
 
 
+async def set_favorite(au: tps.AuthedUser, nid: str, favorite: bool) -> const.CodeEnum:
+    if regex.NID.match(nid) is None:
+        return const.CodeEnum.NODE_NOT_EXIST
+    await client.coll.nodes.update_one(
+        {"id": nid, "uid": au.u.id},
+        {"$set": {"favorite": favorite}}
+    )
+    return const.CodeEnum.OK
+
+
+async def get_favorite(au: tps.AuthedUser, page: int, limit: int) -> Tuple[List[tps.Node], int]:
+    condition = {
+        "uid": au.u.id,
+        "disabled": False,
+        "inTrash": False,  # "inTrash": False, "inTrashAt": None,
+        "favorite": True,
+    }
+    docs = client.coll.nodes.find(condition).sort([("modifiedAt", -1), ("_id", -1)])
+    total = await client.coll.nodes.count_documents(condition)
+    if limit > 0:
+        docs = docs.skip(page * limit).limit(limit)
+    return await docs.to_list(length=None), total
+
+
 async def to_trash(au: tps.AuthedUser, nid: str) -> const.CodeEnum:
     return await batch_to_trash(au=au, nids=[nid])
 
