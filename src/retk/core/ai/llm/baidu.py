@@ -23,8 +23,6 @@ class Baidu(BaseLLM):
             top_p: float = 0.9,
             temperature: float = 0.7,
             timeout: float = 60.,
-            api_key: str = None,
-            secret_key: str = None,
     ):
         super().__init__(
             endpoint="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/",
@@ -33,8 +31,8 @@ class Baidu(BaseLLM):
             timeout=timeout,
             default_model=BaiduModelEnum.ERNIE_SPEED_128K.value,
         )
-        self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY if api_key is None else api_key
-        self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY if secret_key is None else secret_key
+        self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY
+        self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY
         if self.api_key == "" or self.secret_key == "":
             raise ValueError("Baidu api key or key is empty")
 
@@ -125,6 +123,9 @@ class Baidu(BaseLLM):
                 params={"access_token": self.token},
                 req_id=req_id,
         ):
+            if code != const.CodeEnum.OK:
+                yield b, code
+                continue
             txt = ""
             lines = b.splitlines()
             for line in lines:

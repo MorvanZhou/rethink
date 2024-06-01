@@ -1,11 +1,11 @@
 import json
 import unittest
 from datetime import datetime
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, Mock
 
 from httpx import Response
 
-from retk import const
+from retk import const, config
 from retk.core.ai import llm
 from . import utils
 
@@ -45,6 +45,18 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         utils.drop_env(".env.test.local")
+
+    def tearDown(self):
+        c = config.get_settings()
+        c.HUNYUAN_SECRET_ID = ""
+        c.HUNYUAN_SECRET_KEY = ""
+        c.ALIYUN_DASHSCOPE_API_KEY = ""
+        c.BAIDU_QIANFAN_API_KEY = ""
+        c.BAIDU_QIANFAN_SECRET_KEY = ""
+        c.OPENAI_API_KEY = ""
+        c.XFYUN_APP_ID = ""
+        c.XFYUN_API_SECRET = ""
+        c.XFYUN_API_KEY = ""
 
     async def test_hunyuan_complete(self):
         try:
@@ -101,7 +113,43 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
 
-    def test_authorization(self):
+    async def test_openai_complete(self):
+        try:
+            m = llm.OpenAI()
+        except ValueError:
+            return
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        print(text)
+
+    async def test_openai_stream_complete(self):
+        try:
+            m = llm.OpenAI()
+        except ValueError:
+            return
+        async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
+            self.assertEqual(const.CodeEnum.OK, code)
+            print(b.decode("utf-8"))
+
+    async def test_xfyun_complete(self):
+        try:
+            m = llm.XfYun()
+        except ValueError:
+            return
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        print(text)
+
+    async def test_xfyun_stream_complete(self):
+        try:
+            m = llm.XfYun()
+        except ValueError:
+            return
+        async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
+            self.assertEqual(const.CodeEnum.OK, code)
+            print(b.decode("utf-8"))
+
+    def test_hunyuan_authorization(self):
         payload = {
             "Model": "hunyuan-lite",
             "Messages": [{"Role": "user", "Content": "你是谁"}],
@@ -111,10 +159,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             "EnableEnhancement": False,
         }
         payload = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        m = llm.Tencent(
-            secret_id=self.sid,
-            secret_key=self.skey
-        )
+        config.get_settings().HUNYUAN_SECRET_ID = self.sid
+        config.get_settings().HUNYUAN_SECRET_KEY = self.skey
+        m = llm.Tencent()
         auth = m.get_auth(
             action="ChatCompletions",
             payload=payload,
@@ -140,10 +187,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
                 }
             }
         )
-        m = llm.Tencent(
-            secret_id=self.sid,
-            secret_key=self.skey
-        )
+        config.get_settings().HUNYUAN_SECRET_ID = self.sid
+        config.get_settings().HUNYUAN_SECRET_KEY = self.skey
+        m = llm.Tencent()
         self.assertEqual("hunyuan-lite", m.default_model)
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.LLM_SERVICE_ERROR, code, msg=text)
@@ -172,10 +218,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
                 }
             }
         )
-        m = llm.Tencent(
-            secret_id=self.sid,
-            secret_key=self.skey
-        )
+        config.get_settings().HUNYUAN_SECRET_ID = self.sid
+        config.get_settings().HUNYUAN_SECRET_KEY = self.skey
+        m = llm.Tencent()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
@@ -204,7 +249,8 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
                 }
             }
         )
-        m = llm.Aliyun(api_key="testkey")
+        config.get_settings().ALIYUN_DASHSCOPE_API_KEY = self.skey
+        m = llm.Aliyun()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
@@ -221,9 +267,93 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
 
     @patch("httpx.AsyncClient.post", new_callable=AsyncMock, side_effect=mock_baidu_post)
     async def test_baidu_complete_mock(self, mock_post):
-        m = llm.Baidu(api_key="testkey", secret_key="testkey")
+        config.get_settings().BAIDU_QIANFAN_API_KEY = self.sid
+        config.get_settings().BAIDU_QIANFAN_SECRET_KEY = self.skey
+        m = llm.Baidu()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
         # assert called twice
         mock_post.assert_called()
+
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    async def test_openai_complete_mock(self, mock_post):
+        mock_post.return_value = Response(
+            status_code=200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "我是一个AI助手。"
+                        }
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 3,
+                    "completion_tokens": 14,
+                    "total_tokens": 17
+                }
+            }
+        )
+        config.get_settings().OPENAI_API_KEY = self.sid
+        m = llm.OpenAI()
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        self.assertEqual("我是一个AI助手。", text)
+        mock_post.assert_called_once()
+
+    @patch("wsgiref.handlers.format_date_time")
+    def test_xfyun_auth(self, mock_format_date_time: Mock):
+        mock_format_date_time.return_value = "Fri, 05 May 2023 10:43:39 GMT"
+        config.get_settings().XFYUN_API_KEY = "addd2272b6d8b7c8abdd79531420ca3b"
+        config.get_settings().XFYUN_API_SECRET = "MjlmNzkzNmZkMDQ2OTc0ZDdmNGE2ZTZi"
+        config.get_settings().XFYUN_APP_ID = "testappid"
+        m = llm.XfYun()
+        url = m.get_url(
+            model="v1.1",
+        )
+        self.assertEqual(
+            "wss://spark-api.xf-yun.com/v1.1/chat?"
+            "authorization=YXBpX2tleT0iYWRkZDIyNzJiNmQ4YjdjOGFiZGQ3OTUzMTQyMGNhM2IiLCBhbGdvcml0aG09ImhtYWMtc2"
+            "hhMjU2IiwgaGVhZGVycz0iaG9zdCBkYXRlIHJlcXVlc3QtbGluZSIsIHNpZ25hdHVyZT0iejVnSGR1M3B4VlY0QURNeWs0Njd"
+            "3T1dEUTlxNkJRelIzbmZNVGpjL0RhUT0i&date=Fri%2C+05+May+2023+10%3A43%3A39+GMT&host=spark-api.xf-yun.com",
+            url
+        )
+
+    @patch("websockets.connect")
+    async def test_xfyun_complete_mock(self, mock_connect):
+        config.get_settings().XFYUN_API_KEY = "testkey"
+        config.get_settings().XFYUN_API_SECRET = "testsecret"
+        config.get_settings().XFYUN_APP_ID = "testappid"
+
+        def get_mock_messages():
+            # 返回模拟的消息
+            for _ in range(3):
+                message = {
+                    "header": {"code": 0},
+                    "payload": {
+                        "choices": {
+                            "status": 1,
+                            "text": [{"content": "mocked_content"}]
+                        },
+                        "usage": "mocked_usage"
+                    }
+                }
+                yield json.dumps(message)
+
+        # 创建一个 AsyncMock 对象模拟 ws
+        mock_ws = AsyncMock()
+
+        # 设置 ws.send 和 ws.__aiter__ 的返回值
+        mock_ws.send.return_value = None
+        mock_ws.__aiter__.return_value = get_mock_messages()
+
+        # 设置 websockets.connect 的返回值
+        mock_connect.return_value.__aenter__.return_value = mock_ws
+
+        m = llm.XfYun()
+
+        async for result in m.stream_complete([{"role": "user", "content": "你是谁"}]):
+            # 对返回的结果进行断言
+            self.assertEqual(result, (b"mocked_content", const.CodeEnum.OK))

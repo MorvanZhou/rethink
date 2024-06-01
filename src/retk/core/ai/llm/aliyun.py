@@ -21,7 +21,7 @@ class Aliyun(BaseLLM):
             top_p: float = 0.9,
             temperature: float = 0.7,
             timeout: float = 60.,
-            api_key: str = None):
+    ):
         super().__init__(
             endpoint="https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
             top_p=top_p,
@@ -29,7 +29,7 @@ class Aliyun(BaseLLM):
             timeout=timeout,
             default_model=AliyunModelEnum.QWEN1_5_0_5B.value,
         )
-        self.api_key = config.get_settings().ALIYUN_DASHSCOPE_API_KEY if api_key is None else api_key
+        self.api_key = config.get_settings().ALIYUN_DASHSCOPE_API_KEY
         if self.api_key == "":
             raise ValueError("Aliyun API key is empty")
 
@@ -93,6 +93,9 @@ class Aliyun(BaseLLM):
                 payload=payload,
                 req_id=req_id
         ):
+            if code != const.CodeEnum.OK:
+                yield b, code
+                continue
             txt = ""
             lines = b.splitlines()
             for line in lines:

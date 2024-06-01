@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     BAIDU_QIANFAN_API_KEY: str = Field(env='BAIDU_QIANFAN_API_KEY', default="")
     BAIDU_QIANFAN_SECRET_KEY: str = Field(env='BAIDU_QIANFAN_SECRET_KEY', default="")
 
+    # openai project api key
+    OPENAI_API_KEY: str = Field(env='OPENAI_API_KEY', default="")
+
+    # xfyun api
+    XFYUN_APP_ID: str = Field(env='XFYUN_APP_ID', default="")
+    XFYUN_API_SECRET: str = Field(env='XFYUN_API_SECRET', default="")
+    XFYUN_API_KEY: str = Field(env='XFYUN_API_KEY', default="")
+
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")

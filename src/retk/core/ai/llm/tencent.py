@@ -43,8 +43,6 @@ class Tencent(BaseLLM):
             top_p: float = 0.9,
             temperature: float = 0.7,
             timeout: float = 60.,
-            secret_id: str = None,
-            secret_key: str = None,
     ):
         super().__init__(
             endpoint=f"https://{self.host}",
@@ -53,8 +51,8 @@ class Tencent(BaseLLM):
             timeout=timeout,
             default_model=TencentModelEnum.HUNYUAN_LITE.value,
         )
-        self.secret_id = config.get_settings().HUNYUAN_SECRET_ID if secret_id is None else secret_id
-        self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY if secret_key is None else secret_key
+        self.secret_id = config.get_settings().HUNYUAN_SECRET_ID
+        self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY
         if self.secret_id == "" or self.secret_key == "":
             raise ValueError("Tencent secret id or key is empty")
 
@@ -183,6 +181,9 @@ class Tencent(BaseLLM):
                 payload=payload,
                 req_id=req_id,
         ):
+            if code != const.CodeEnum.OK:
+                yield b, code
+                continue
             txt = ""
             lines = b.splitlines()
             for line in lines:

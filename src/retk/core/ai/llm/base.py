@@ -54,7 +54,8 @@ class BaseLLM(ABC):
             logger.error(f"ReqId={req_id} Model error: {e}")
             return {}, const.CodeEnum.LLM_SERVICE_ERROR
         if resp.status_code != 200:
-            logger.error(f"ReqId={req_id} Model error: {resp.text}")
+            txt = resp.text.replace('\n', '')
+            logger.error(f"ReqId={req_id} Model error: {txt}")
             return {}, const.CodeEnum.LLM_SERVICE_ERROR
 
         rj = resp.json()
@@ -87,8 +88,9 @@ class BaseLLM(ABC):
                 timeout=self.timeout,
         ) as resp:
             if resp.status_code != 200:
+                await resp.aread()
                 logger.error(f"ReqId={req_id} Model error: {resp.text}")
-                yield "Model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
+                yield resp.content, const.CodeEnum.LLM_SERVICE_ERROR
                 return
 
             async for chunk in resp.aiter_bytes():
