@@ -1,10 +1,8 @@
-from typing import Tuple
-
-from pydantic import Field, BaseModel
+from pydantic import BaseModel
 
 
-class LatestVersionResponse(BaseModel):
+class AppUpdateResponse(BaseModel):
     requestId: str
     hasNewVersion: bool
-    local: Tuple[int, int, int]
-    remote: Tuple[int, int, int] = Field(default=(0, 0, 0))
+    updated: bool
+    message: str = ""

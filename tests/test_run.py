@@ -24,7 +24,13 @@ class TestRun(unittest.TestCase):
         shutil.rmtree(str(cls.path), ignore_errors=True)
         config.get_settings.cache_clear()
 
-    def test_run(self, password=None):
+    def tearDown(self) -> None:
+        self.assertTrue(self.path.exists())
+        self.assertTrue(self.path.is_dir())
+        self.assertTrue((self.path / ".data").exists())
+        self.assertEqual(2, len(list((self.path / const.settings.DOT_DATA / "md").glob("*.md"))))
+
+    def start_server(self, password=None):
         port = 8001
 
         p = multiprocessing.Process(target=retk.run, kwargs={
@@ -33,6 +39,7 @@ class TestRun(unittest.TestCase):
         })
         p.start()
         # p.join()
+
         while True:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(2)
@@ -41,6 +48,10 @@ class TestRun(unittest.TestCase):
             if result == 0:
                 break
             time.sleep(0.1)
+        return p, port
+
+    def test_run(self, password=None):
+        p, port = self.start_server(password=password)
 
         for url in [
             "",
@@ -61,10 +72,6 @@ class TestRun(unittest.TestCase):
 
         p.kill()
         p.join()
-        self.assertTrue(self.path.exists())
-        self.assertTrue(self.path.is_dir())
-        self.assertTrue((self.path / ".data").exists())
-        self.assertEqual(2, len(list((self.path / const.settings.DOT_DATA / "md").glob("*.md"))))
 
     def test_run_with_pw(self):
         return self.test_run(password="12345678")

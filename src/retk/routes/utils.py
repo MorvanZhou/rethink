@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 from functools import wraps
@@ -9,10 +10,16 @@ from fastapi.params import Path
 from starlette.status import HTTP_403_FORBIDDEN
 from typing_extensions import Annotated
 
-from retk import const, config, core
+from retk import core, httpx_helper, const, config, utils
+from retk.controllers.oauth import init_oauth_provider_map
 from retk.controllers.utils import json_exception
-from retk.logger import logger
+from retk.core import scheduler
+from retk.core.files.importing import async_tasks
+from retk.core.self_hosted import notice_new_pkg_version
+from retk.logger import logger, add_rotating_file_handler
+from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
+from retk.plugins.register import register_official_plugins
 from retk.utils import jwt_decode
 
 REFERER_PREFIX = f"https://{const.settings.DOMAIN}"
@@ -58,6 +65,50 @@ def verify_referer(referer: Optional[str] = Header(None)):
             detail="Invalid referer",
         )
     return referer
+
+
+async def on_startup():
+    if not config.is_local_db():
+        add_rotating_file_handler(
+            log_dir=const.settings.RETHINK_DIR.parent.parent / "logs",
+            max_bytes=10 * 1024 * 1024,
+            backup_count=10,
+        )
+    logger.debug(f'startup_event RETHINK_LOCAL_STORAGE_PATH: {os.environ.get("RETHINK_LOCAL_STORAGE_PATH")}')
+    logger.debug(f'startup_event VUE_APP_MODE: {os.environ.get("VUE_APP_MODE")}')
+    logger.debug(f'startup_event VUE_APP_API_URL: {os.environ.get("VUE_APP_API_URL")}')
+    logger.debug(f'startup_event RETHINK_DEFAULT_LANGUAGE: {os.environ.get("RETHINK_DEFAULT_LANGUAGE")}')
+    await client.init()
+
+    # schedule job
+    scheduler.start()
+    scheduler.init_tasks()
+
+    # init oauth provider map
+    init_oauth_provider_map()
+
+    # notice new pkg version
+    if config.is_local_db():
+        await notice_new_pkg_version()
+
+    # register official plugins
+    register_official_plugins()
+
+    # local finish up
+    utils.local_finish_up()
+
+
+async def on_shutdown():
+    # on shutdown
+    scheduler.stop()
+    await client.close()
+    await client.search.close()
+    logger.debug("fastapi shutdown event: db and searcher closed")
+
+    async_tasks.stop()
+    logger.debug("fastapi shutdown event: async_tasks stopped")
+
+    await httpx_helper.close_async_client()
 
 
 async def __process_auth_headers(  # noqa: C901

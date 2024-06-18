@@ -1,10 +1,14 @@
 import os
+import subprocess
+import sys
 
 from fastapi import APIRouter, HTTPException, FastAPI
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from retk import const, config
+from retk.controllers import schemas
+from retk.core.self_hosted import has_new_version
 from retk.logger import logger
 from retk.routes import utils
 
@@ -47,6 +51,63 @@ async def app_page() -> HTMLResponse:
     return HTMLResponse(
         content=content + script,
         status_code=200,
+    )
+
+
+@r_router.post(
+    "/update",
+    status_code=201,
+    response_model=schemas.app_system.AppUpdateResponse,
+)
+async def update_app(
+        au: utils.ANNOTATED_AUTHED_USER,
+) -> schemas.app_system.AppUpdateResponse:
+    if not config.is_local_db():
+        raise HTTPException(status_code=404, detail="only support local storage")
+    has, remote, _ = await has_new_version()
+    if not has:
+        return schemas.app_system.AppUpdateResponse(
+            requestId=au.request_id,
+            hasNewVersion=False,
+            updated=False,
+        )
+
+    # run pip install
+    r_version = f"{remote[0]}.{remote[1]}.{remote[2]}"
+    logger.info(f"updating to {r_version}")
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", f"retk=={r_version}"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"update failed: {e}")
+        return schemas.app_system.AppUpdateResponse(
+            requestId=au.request_id,
+            hasNewVersion=True,
+            updated=False,
+            message="pip upgrade failed",
+        )
+    logger.info(f"updated to {r_version} success")
+    await utils.on_shutdown()
+    try:
+        os.execv(sys.executable, ['python'] + sys.argv)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"update failed: {e}")
+        return schemas.app_system.AppUpdateResponse(
+            requestId=au.request_id,
+            hasNewVersion=True,
+            updated=False,
+            message="os.execv failed",
+        )
+    logger.info(f"restarted with {r_version} success")
+    return schemas.app_system.AppUpdateResponse(
+        requestId=au.request_id,
+        hasNewVersion=True,
+        updated=True,
+        message="",
     )
 
 
