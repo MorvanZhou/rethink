@@ -8,7 +8,7 @@ from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLM, MessagesType
+from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 Headers = TypedDict("Headers", {
     "Authorization": str,
@@ -22,10 +22,10 @@ Headers = TypedDict("Headers", {
 
 
 class TencentModelEnum(str, Enum):
-    HUNYUAN_PRO = "hunyuan-pro"
-    HUNYUAN_STANDARD = "hunyuan-standard"
-    HUNYUAN_STANDARD_256K = "hunyuan-standard-256K"
-    HUNYUAN_LITE = "hunyuan-lite"
+    HUNYUAN_PRO = "hunyuan-pro"  # in 0.03/1000, out 0.10/1000
+    HUNYUAN_STANDARD = "hunyuan-standard"  # in 0.0045/1000, out 0.005/1000
+    HUNYUAN_STANDARD_256K = "hunyuan-standard-256K"  # in 0.015/1000, out 0.06/1000
+    HUNYUAN_LITE = "hunyuan-lite"  # free
 
 
 # 计算签名摘要函数
@@ -33,7 +33,7 @@ def sign(key, msg):
     return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
 
 
-class Tencent(BaseLLM):
+class TencentService(BaseLLMService):
     service = "hunyuan"
     host = "hunyuan.tencentcloudapi.com"
     version = "2023-09-01"
@@ -54,7 +54,7 @@ class Tencent(BaseLLM):
         self.secret_id = config.get_settings().HUNYUAN_SECRET_ID
         self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY
         if self.secret_id == "" or self.secret_key == "":
-            raise ValueError("Tencent secret id or key is empty")
+            raise NoAPIKeyError("Tencent secret id or key is empty")
 
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
         algorithm = "TC3-HMAC-SHA256"

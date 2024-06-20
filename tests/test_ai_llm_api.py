@@ -7,6 +7,7 @@ from httpx import Response
 
 from retk import const, config
 from retk.core.ai import llm
+from retk.core.ai.llm.api.base import NoAPIKeyError
 from . import utils
 
 
@@ -35,6 +36,30 @@ async def mock_baidu_post(url, *args, **kwargs):
         raise ValueError(f"Unexpected URL: {url}")
 
 
+def skip_no_api_key(fn):
+    async def wrapper(*args):
+        try:
+            return await fn(*args)
+        except NoAPIKeyError:
+            pass
+
+    return wrapper
+
+
+def clear_all_api_key():
+    c = config.get_settings()
+    c.HUNYUAN_SECRET_ID = ""
+    c.HUNYUAN_SECRET_KEY = ""
+    c.ALIYUN_DASHSCOPE_API_KEY = ""
+    c.BAIDU_QIANFAN_API_KEY = ""
+    c.BAIDU_QIANFAN_SECRET_KEY = ""
+    c.OPENAI_API_KEY = ""
+    c.XFYUN_APP_ID = ""
+    c.XFYUN_API_SECRET = ""
+    c.XFYUN_API_KEY = ""
+    c.MOONSHOT_API_KEY = ""
+
+
 class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
@@ -47,104 +72,89 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         utils.drop_env(".env.test.local")
 
     def tearDown(self):
-        c = config.get_settings()
-        c.HUNYUAN_SECRET_ID = ""
-        c.HUNYUAN_SECRET_KEY = ""
-        c.ALIYUN_DASHSCOPE_API_KEY = ""
-        c.BAIDU_QIANFAN_API_KEY = ""
-        c.BAIDU_QIANFAN_SECRET_KEY = ""
-        c.OPENAI_API_KEY = ""
-        c.XFYUN_APP_ID = ""
-        c.XFYUN_API_SECRET = ""
-        c.XFYUN_API_KEY = ""
+        clear_all_api_key()
 
+    @skip_no_api_key
     async def test_hunyuan_complete(self):
-        try:
-            m = llm.Tencent()
-        except ValueError:
-            return
+        m = llm.api.TencentService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         print(text)
 
+    @skip_no_api_key
     async def test_hunyuan_stream_complete(self):
-        try:
-            m = llm.Tencent()
-        except ValueError:
-            return
+        m = llm.api.TencentService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             s = b.decode("utf-8")
             print(s)
 
+    @skip_no_api_key
     async def test_aliyun_complete(self):
-        try:
-            m = llm.Aliyun()
-        except ValueError:
-            return
+        m = llm.api.AliyunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         print(text)
 
+    @skip_no_api_key
     async def test_aliyun_stream_complete(self):
-        try:
-            m = llm.Aliyun()
-        except ValueError:
-            return
+        m = llm.api.AliyunService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
 
+    @skip_no_api_key
     async def test_baidu_complete(self):
-        try:
-            m = llm.Baidu()
-        except ValueError:
-            return
+        m = llm.api.BaiduService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         print(text)
 
+    @skip_no_api_key
     async def test_baidu_stream_complete(self):
-        try:
-            m = llm.Baidu()
-        except ValueError:
-            return
+        m = llm.api.BaiduService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
 
+    @skip_no_api_key
     async def test_openai_complete(self):
-        try:
-            m = llm.OpenAI()
-        except ValueError:
-            return
+        m = llm.api.OpenaiService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         print(text)
 
+    @skip_no_api_key
     async def test_openai_stream_complete(self):
-        try:
-            m = llm.OpenAI()
-        except ValueError:
-            return
+        m = llm.api.OpenaiService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
 
+    @skip_no_api_key
     async def test_xfyun_complete(self):
-        try:
-            m = llm.XfYun()
-        except ValueError:
-            return
+        m = llm.api.XfYunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         print(text)
 
+    @skip_no_api_key
     async def test_xfyun_stream_complete(self):
-        try:
-            m = llm.XfYun()
-        except ValueError:
-            return
+        m = llm.api.XfYunService()
+        async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
+            self.assertEqual(const.CodeEnum.OK, code)
+            print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_moonshot_complete(self):
+        m = llm.api.MoonshotService()
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        print(text)
+
+    @skip_no_api_key
+    async def test_moonshot_stream_complete(self):
+        m = llm.api.MoonshotService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
@@ -161,7 +171,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         payload = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         config.get_settings().HUNYUAN_SECRET_ID = self.sid
         config.get_settings().HUNYUAN_SECRET_KEY = self.skey
-        m = llm.Tencent()
+        m = llm.api.TencentService()
         auth = m.get_auth(
             action="ChatCompletions",
             payload=payload,
@@ -189,7 +199,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         )
         config.get_settings().HUNYUAN_SECRET_ID = self.sid
         config.get_settings().HUNYUAN_SECRET_KEY = self.skey
-        m = llm.Tencent()
+        m = llm.api.TencentService()
         self.assertEqual("hunyuan-lite", m.default_model)
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.LLM_SERVICE_ERROR, code, msg=text)
@@ -220,7 +230,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         )
         config.get_settings().HUNYUAN_SECRET_ID = self.sid
         config.get_settings().HUNYUAN_SECRET_KEY = self.skey
-        m = llm.Tencent()
+        m = llm.api.TencentService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
@@ -250,17 +260,15 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             }
         )
         config.get_settings().ALIYUN_DASHSCOPE_API_KEY = self.skey
-        m = llm.Aliyun()
+        m = llm.api.AliyunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
         mock_post.assert_called_once()
 
+    @skip_no_api_key
     async def test_baidu_token(self):
-        try:
-            m = llm.Baidu()
-        except ValueError:
-            return
+        m = llm.api.BaiduService()
         await m.set_token()
         self.assertNotEqual("", m.token)
         self.assertGreater(m.token_expires_at, datetime.now().timestamp())
@@ -269,7 +277,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_baidu_complete_mock(self, mock_post):
         config.get_settings().BAIDU_QIANFAN_API_KEY = self.sid
         config.get_settings().BAIDU_QIANFAN_SECRET_KEY = self.skey
-        m = llm.Baidu()
+        m = llm.api.BaiduService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
@@ -297,7 +305,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             }
         )
         config.get_settings().OPENAI_API_KEY = self.sid
-        m = llm.OpenAI()
+        m = llm.api.OpenaiService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
         self.assertEqual(const.CodeEnum.OK, code, msg=text)
         self.assertEqual("我是一个AI助手。", text)
@@ -309,7 +317,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         config.get_settings().XFYUN_API_KEY = "addd2272b6d8b7c8abdd79531420ca3b"
         config.get_settings().XFYUN_API_SECRET = "MjlmNzkzNmZkMDQ2OTc0ZDdmNGE2ZTZi"
         config.get_settings().XFYUN_APP_ID = "testappid"
-        m = llm.XfYun()
+        m = llm.api.XfYunService()
         url = m.get_url(
             model="v1.1",
         )
@@ -352,8 +360,35 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         # 设置 websockets.connect 的返回值
         mock_connect.return_value.__aenter__.return_value = mock_ws
 
-        m = llm.XfYun()
+        m = llm.api.XfYunService()
 
         async for result in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             # 对返回的结果进行断言
             self.assertEqual(result, (b"mocked_content", const.CodeEnum.OK))
+
+    @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
+    async def test_moonshot_complete_mock(self, mock_post):
+        mock_post.return_value = Response(
+            status_code=200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "我是一个AI助手。"
+                        },
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 3,
+                    "completion_tokens": 14,
+                    "total_tokens": 17
+                }
+            }
+        )
+        config.get_settings().MOONSHOT_API_KEY = self.sid
+        m = llm.api.MoonshotService()
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        self.assertEqual("我是一个AI助手。", text)
+        mock_post.assert_called_once()

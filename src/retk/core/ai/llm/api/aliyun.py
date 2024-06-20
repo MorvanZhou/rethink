@@ -4,18 +4,21 @@ from typing import Tuple, AsyncIterable, Optional, Dict
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLM, MessagesType
+from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
+# https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-thousand-questions-metering-and-billing
 class AliyunModelEnum(str, Enum):
-    QWEN1_5_0_5B = "qwen1.5-0.5b-chat"
-    QWEN1_8B = "qwen-1.8b-chat"
-    BAICHUAN7BV1 = "baichuan-7b-v1"
-    LLAMA3_70B = "llama3-70b-instruct"
-    CHATGLM3_6B = "chatglm3-6b"
+    QWEN1_5_05B = "qwen1.5-0.5b-chat"  # free
+    QWEN_2B = "qwen-1.8b-chat"  # free
+    BAICHUAN7BV1 = "baichuan-7b-v1"  # free
+    QWEN_LONG = "qwen-long"  # in 0.0005/1000, out 0.002/1000
+    QWEN_TURBO = "qwen-turbo"  # in 0.002/1000, out 0.006/1000
+    QWEN_PLUS = "qwen-plus"  # in 0.004/1000, out 0.012/1000
+    QWEN_MAX = "qwen-max"  # in 0.04/1000, out 0.12/1000
 
 
-class Aliyun(BaseLLM):
+class AliyunService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
@@ -27,11 +30,11 @@ class Aliyun(BaseLLM):
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
-            default_model=AliyunModelEnum.QWEN1_5_0_5B.value,
+            default_model=AliyunModelEnum.QWEN1_5_05B.value,
         )
         self.api_key = config.get_settings().ALIYUN_DASHSCOPE_API_KEY
         if self.api_key == "":
-            raise ValueError("Aliyun API key is empty")
+            raise NoAPIKeyError("Aliyun API key is empty")
 
     def get_headers(self, stream: bool) -> Dict[str, str]:
         h = {

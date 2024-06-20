@@ -14,7 +14,7 @@ import websockets.exceptions
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLM, MessagesType
+from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
 class XfYunModelEnum(str, Enum):
@@ -32,7 +32,7 @@ _domain_map = {
 }
 
 
-class XfYun(BaseLLM):
+class XfYunService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
@@ -51,7 +51,7 @@ class XfYun(BaseLLM):
         self.api_key = _s.XFYUN_API_KEY
         self.app_id = _s.XFYUN_APP_ID
         if self.api_secret == "" or self.api_key == "" or self.app_id == "":
-            raise ValueError("XfYun api secret or key is empty")
+            raise NoAPIKeyError("XfYun api secret or key is empty")
 
     def get_url(self, model: Optional[str], req_id: str = None) -> str:
         if model is None:

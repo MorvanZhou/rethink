@@ -5,7 +5,7 @@ from typing import Tuple, AsyncIterable
 
 from retk import config, const, httpx_helper
 from retk.logger import logger
-from .base import BaseLLM, MessagesType
+from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
 class BaiduModelEnum(str, Enum):
@@ -17,7 +17,7 @@ class BaiduModelEnum(str, Enum):
     YI_34B_CHAT = "yi_34b_chat"
 
 
-class Baidu(BaseLLM):
+class BaiduService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
@@ -34,7 +34,7 @@ class Baidu(BaseLLM):
         self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY
         self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY
         if self.api_key == "" or self.secret_key == "":
-            raise ValueError("Baidu api key or key is empty")
+            raise NoAPIKeyError("Baidu api key or key is empty")
 
         self.headers = {
             "Content-Type": "application/json",
@@ -69,6 +69,10 @@ class Baidu(BaseLLM):
 
     @staticmethod
     def get_payload(messages: MessagesType, stream: bool) -> bytes:
+        if messages[0]["role"] == "system":
+            messages[0]["role"] = "user"
+            if messages[1]["role"] == "user":
+                messages.insert(1, {"role": "assistant", "content": "明白。"})
         return json.dumps(
             {
                 "messages": messages,

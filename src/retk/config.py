@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     XFYUN_API_SECRET: str = Field(env='XFYUN_API_SECRET', default="")
     XFYUN_API_KEY: str = Field(env='XFYUN_API_KEY', default="")
 
+    # moonshot api
+    MOONSHOT_API_KEY: str = Field(env='MOONSHOT_API_KEY', default="")
+
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")

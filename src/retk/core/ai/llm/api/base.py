@@ -9,7 +9,11 @@ from retk.logger import logger
 MessagesType = List[Dict[Literal["role", "content"], str]]
 
 
-class BaseLLM(ABC):
+class NoAPIKeyError(Exception):
+    pass
+
+
+class BaseLLMService(ABC):
     default_timeout = 60.
 
     def __init__(
