@@ -4,6 +4,7 @@ from retk import config
 from .openai import OpenaiLLMStyle
 
 
+# https://platform.moonshot.cn/docs/pricing#%E4%BB%B7%E6%A0%BC%E8%AF%B4%E6%98%8E
 class MoonshotModelEnum(str, Enum):
     V1_8K = "moonshot-v1-8k"
     V1_32K = "moonshot-v1-32k"

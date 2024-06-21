@@ -16,7 +16,7 @@ from . import backup, node_utils
 
 
 @plugins.handler.on_node_added
-async def post(  # noqa: C901
+async def post(
         au: tps.AuthedUser,
         md: str,
         type_: int = const.NodeTypeEnum.MARKDOWN.value,
@@ -127,7 +127,7 @@ async def get_batch(
 
 @plugins.handler.on_node_updated
 @plugins.handler.before_node_updated
-async def update_md(  # noqa: C901
+async def update_md(
         au: tps.AuthedUser,
         nid: str,
         md: str,

@@ -1,4 +1,4 @@
-from . import (  # noqa: F401
+from . import (
     app,
     settings,
     notice,

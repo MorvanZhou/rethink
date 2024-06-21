@@ -16,7 +16,7 @@ from . import tasks
  use when the scheduler is the only thing running in your process
 
 - BackgroundScheduler:
- use when you’re not using any of the frameworks below, 
+ use when you’re not using any of the frameworks below,
  and want the scheduler to run in the background inside your application
 
 - AsyncIOScheduler:
@@ -28,7 +28,7 @@ from . import tasks
 - TornadoScheduler:
  use if you’re building a Tornado application
 
-- TwistedScheduler: 
+- TwistedScheduler:
  use if you’re building a Twisted application
 
 - QtScheduler:

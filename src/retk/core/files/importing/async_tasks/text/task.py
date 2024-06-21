@@ -8,7 +8,7 @@ from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
 from .. import utils
 
 
-async def update_text_task(  # noqa: C901
+async def update_text_task(
         files: List[dict],
         max_file_size: int,
         uid: str,

@@ -7,9 +7,10 @@ from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
+# https://openai.com/api/pricing/
 class OpenaiModelEnum(str, Enum):
     GPT4 = "gpt-4"
-    GPT4_TURBO_PREVIEW = "gpt-4-turbo-preview"
+    GPT4_TURBO = "gpt-4-turbo"
     GPT4_32K = "gpt-4-32k"
     GPT35_TURBO = "gpt-3.5-turbo"
     GPT35_TURBO_16K = "gpt-3.5-turbo-16k"

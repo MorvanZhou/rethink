@@ -43,10 +43,9 @@ class SearchResult:
     bodyHighlights: List[str]
 
 
-STOPWORDS = sorted(list(set(
-    (Path(__file__).parent / "cn_stopwords.txt").read_text(encoding="utf-8").splitlines()
-    + (Path(__file__).parent / "baidu_stopwords.txt").read_text(encoding="utf-8").splitlines()
-)))
+__s1 = (Path(__file__).parent / "cn_stopwords.txt").read_text(encoding="utf-8").splitlines()
+__s2 = (Path(__file__).parent / "baidu_stopwords.txt").read_text(encoding="utf-8").splitlines()
+STOPWORDS = sorted(list(set(__s1 + __s2)))
 
 
 class BaseEngine(ABC):

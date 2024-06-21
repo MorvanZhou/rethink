@@ -1,4 +1,3 @@
-# noqa: F401
 from retk.models.tps.auth_user import AuthedUser, convert_user_dict_to_authed_user
 from retk.models.tps.import_data import ImportData
 from retk.models.tps.node import Node, LinkedNode

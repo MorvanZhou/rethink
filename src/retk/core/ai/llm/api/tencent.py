@@ -21,6 +21,7 @@ Headers = TypedDict("Headers", {
 })
 
 
+# https://cloud.tencent.com/document/product/1729/97731
 class TencentModelEnum(str, Enum):
     HUNYUAN_PRO = "hunyuan-pro"  # in 0.03/1000, out 0.10/1000
     HUNYUAN_STANDARD = "hunyuan-standard"  # in 0.0045/1000, out 0.005/1000

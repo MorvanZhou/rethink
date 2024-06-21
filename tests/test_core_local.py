@@ -185,10 +185,10 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         u, code = await core.user.get(self.au.u.id)
         self.assertEqual(const.CodeEnum.OK, code)
-        self.assertEqual(used_space + (
-                len(n["md"].encode("utf-8")) -
-                len(node["md"].encode("utf-8"))
-        ), u["usedSpace"])
+        self.assertEqual(
+            used_space + (len(n["md"].encode("utf-8")) - len(node["md"].encode("utf-8"))),
+            u["usedSpace"]
+        )
 
         code = await core.node.disable(au=self.au, nid=node["id"])
         self.assertEqual(const.CodeEnum.OK, code)

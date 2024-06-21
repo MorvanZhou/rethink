@@ -69,7 +69,7 @@ async def add(
     return data, const.CodeEnum.OK
 
 
-async def patch(  # noqa: C901
+async def patch(
         au: tps.AuthedUser,
         req: PatchUserRequest,
 ) -> Tuple[Optional[tps.UserMeta], const.CodeEnum]:

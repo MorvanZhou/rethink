@@ -126,7 +126,7 @@ def _overlap(iter_a, iter_b):
     return not set(iter_a).isdisjoint(iter_b)
 
 
-def _doc_matches_agg(doc_v, query_ops):  # noqa: C901
+def _doc_matches_agg(doc_v, query_ops):
     """
     Return whether an individual document value matches a dict of
     query operations. Usually there will be one query_op but sometimes there
@@ -153,8 +153,7 @@ def _doc_matches_agg(doc_v, query_ops):  # noqa: C901
             elif query_op == '$in':
                 if not isinstance(query_val, (list, tuple, set)):
                     raise MongitaError("'$in' requires an iterable")
-                if not ((isinstance(doc_v, list) and _overlap(doc_v, query_val))
-                        or (doc_v in query_val)):
+                if not ((isinstance(doc_v, list) and _overlap(doc_v, query_val)) or (doc_v in query_val)):
                     return False
             elif query_op == '$nin':
                 if not isinstance(query_val, (list, tuple, set)):
@@ -255,7 +254,7 @@ def _idx_filter_sort(query_op_tup):
             query_op in ('$lt', '$lte', '$gt', '$gte'))
 
 
-def _get_ids_from_idx(idx, query_ops):  # noqa: C901
+def _get_ids_from_idx(idx, query_ops):
     """
     Returns the ids that match a set of query_ops in an index.
 
@@ -335,7 +334,7 @@ def _failed_update_error(update_op, update_op_dict, doc, msg):
                         ({update_op: update_op_dict}, doc, msg))
 
 
-def _update_item_in_doc(update_op, update_op_dict, doc):  # noqa: C901
+def _update_item_in_doc(update_op, update_op_dict, doc):
     """
     Given an $update_op, a {doc_key: value} update_op_dict, and a doc,
     Update the doc in-place at doc_key with the update operation.
@@ -394,7 +393,7 @@ def _rightpad(item, desired_length):
         item.append(None)
 
 
-def _get_datastructure_from_doc(doc, key):  # noqa: C901
+def _get_datastructure_from_doc(doc, key):
     """
     Get a pass-by-reference data structure from the document so that we can
     update it in-place. This dives deep into the document with the key
@@ -843,7 +842,7 @@ class Collection():
             if doc:
                 return copy.deepcopy(doc)
 
-    def __find_ids(self, filter, sort=None, limit=None, skip=None, metadata=None):  # noqa: C901
+    def __find_ids(self, filter, sort=None, limit=None, skip=None, metadata=None):
         """
         Given a filter, find all doc_ids that match this filter.
         Be sure to also sort and limit them.

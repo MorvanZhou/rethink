@@ -156,7 +156,7 @@ def _decode_filename(filepath: str) -> str:
     return filepath
 
 
-def unzip_obsidian(zip_bytes: bytes) -> UnzipObsidian:  # noqa: C901
+def unzip_obsidian(zip_bytes: bytes) -> UnzipObsidian:
     with zipfile.ZipFile(io.BytesIO(zip_bytes), 'r') as zf:
         filepaths = zf.namelist()
         extracted_files = UnzipObsidian()

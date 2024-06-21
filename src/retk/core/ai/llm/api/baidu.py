@@ -8,13 +8,15 @@ from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
+# https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlrk4akp7#tokens%E7%94%A8%E9%87%8F%E5%90%8E%E4%BB%98%E8%B4%B9
 class BaiduModelEnum(str, Enum):
-    ERNIE_SPEED_128K = "ernie-speed-128k"
-    ERNIE_SPEED_8K = "ernie_speed"
-    ERNIE_LITE_8K = "ernie-lite-8k"
-    ERNIE_LITE_8K_0922 = "eb-instant"
-    ERNIE_TINY_8K = "ernie-tiny-8k"
-    YI_34B_CHAT = "yi_34b_chat"
+    ERNIE4_8K = "completions_pro"  # 0.12 / 0.12
+    ERNIE35_8K = "completions"  # 0.012 / 0.012
+    ERNIE35_128K = "ernie-3.5-128k"  # 0.048 / 0.096
+    ERNIE_SPEED_128K = "ernie-speed-128k"  # free
+    ERNIE_SPEED_8K = "ernie_speed"  # free
+    ERNIE_LITE_8K = "ernie-lite-8k"  # free
+    ERNIE_TINY_8K = "ernie-tiny-8k"  # free
 
 
 class BaiduService(BaseLLMService):
@@ -29,7 +31,7 @@ class BaiduService(BaseLLMService):
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
-            default_model=BaiduModelEnum.ERNIE_SPEED_128K.value,
+            default_model=BaiduModelEnum.ERNIE_SPEED_8K.value,
         )
         self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY
         self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY

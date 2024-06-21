@@ -10,7 +10,7 @@ from . import ops
 from .. import utils
 
 
-async def upload_obsidian_task(  # noqa: C901
+async def upload_obsidian_task(
         bytes_data: bytes,
         filename: str,
         max_file_size: int,

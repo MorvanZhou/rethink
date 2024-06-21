@@ -236,7 +236,7 @@ def ssrf_check(url: str) -> bool:
     return False
 
 
-async def get_title_description_from_link(  # noqa: C901
+async def get_title_description_from_link(
         url: str,
         language: str,
         count=0

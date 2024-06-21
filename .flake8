@@ -1,0 +1,27 @@
+[flake8]
+per-file-ignores =
+    */__init__.py: F401
+ignore=C901,E126
+exclude =
+    /venv,
+    /.tox,
+    /**/.data,
+    /tests/tmp,
+    /**/*.egg-info,
+    /dist,
+    /logs,
+    **/__pycache__,
+    /.run,
+    **/.env*,
+    /.gitignore,
+    /.pylintrc,
+    /.dockerignore,
+    .idea,
+    .git,
+    .vscode,
+    *.suo,
+    *.ntvs*,
+    *.njsproj,
+    *.sln,
+    *.sw?,
+    /temp,

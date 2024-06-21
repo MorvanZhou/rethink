@@ -170,7 +170,8 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
             (
                     "https://mp.weixin.qq.com/s/jbB0GXbjHpFR8m1-6TSASw",
                     """<title></title><meta name="description" content="" />""",
-                    False),
+                    False
+            ),
             (
                     "http://127.0.0.1",
                     "",

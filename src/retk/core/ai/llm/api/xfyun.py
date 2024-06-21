@@ -17,17 +17,16 @@ from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError
 
 
+# https://xinghuo.xfyun.cn/sparkapi
 class XfYunModelEnum(str, Enum):
     SPARK35_MAX = "v3.5"
     SPARK_PRO = "v3.1"
-    SPARK_V2 = "v2.1"
     SPARK_LITE = "v1.1"
 
 
 _domain_map = {
     XfYunModelEnum.SPARK35_MAX.value: "generalv3.5",
     XfYunModelEnum.SPARK_PRO.value: "generalv3",
-    XfYunModelEnum.SPARK_V2.value: "generalv2",
     XfYunModelEnum.SPARK_LITE.value: "general",
 }
 

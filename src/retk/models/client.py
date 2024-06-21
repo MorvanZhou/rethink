@@ -196,7 +196,7 @@ class Client:
             docs=search_docs,
         )
 
-    async def local_try_create_or_restore(self):  # noqa: C901
+    async def local_try_create_or_restore(self):
         if not config.get_settings().ONE_USER:
             return
 

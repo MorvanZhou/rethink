@@ -17,7 +17,7 @@ from retk.models import tps
 from retk.models.client import client
 
 
-async def storage_md(node: tps.Node, keep_hist: bool) -> const.CodeEnum:  # noqa: C901
+async def storage_md(node: tps.Node, keep_hist: bool) -> const.CodeEnum:
     nid = node["id"]
     md = node["md"]
     hist = node.get("history", [])

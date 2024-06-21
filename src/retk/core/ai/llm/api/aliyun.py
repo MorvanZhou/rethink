@@ -11,7 +11,6 @@ from .base import BaseLLMService, MessagesType, NoAPIKeyError
 class AliyunModelEnum(str, Enum):
     QWEN1_5_05B = "qwen1.5-0.5b-chat"  # free
     QWEN_2B = "qwen-1.8b-chat"  # free
-    BAICHUAN7BV1 = "baichuan-7b-v1"  # free
     QWEN_LONG = "qwen-long"  # in 0.0005/1000, out 0.002/1000
     QWEN_TURBO = "qwen-turbo"  # in 0.002/1000, out 0.006/1000
     QWEN_PLUS = "qwen-plus"  # in 0.004/1000, out 0.012/1000

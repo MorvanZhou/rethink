@@ -1,6 +1,6 @@
 from . import tasks
 from . import timing
-from .schedule import (  # noqa: F401
+from .schedule import (
     init_tasks,
     start,
     stop,
