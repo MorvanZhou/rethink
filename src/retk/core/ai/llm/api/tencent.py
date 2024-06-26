@@ -52,12 +52,12 @@ class TencentService(BaseLLMService):
             timeout=timeout,
             default_model=TencentModelEnum.HUNYUAN_LITE.value,
         )
-        self.secret_id = config.get_settings().HUNYUAN_SECRET_ID
-        self.secret_key = config.get_settings().HUNYUAN_SECRET_KEY
-        if self.secret_id == "" or self.secret_key == "":
-            raise NoAPIKeyError("Tencent secret id or key is empty")
 
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
+        _s = config.get_settings()
+        if _s.HUNYUAN_SECRET_KEY == "" or _s.HUNYUAN_SECRET_ID == "":
+            raise NoAPIKeyError("Tencent secret id or key is empty")
+
         algorithm = "TC3-HMAC-SHA256"
         date = datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d")
 
@@ -78,14 +78,14 @@ class TencentService(BaseLLMService):
         string_to_sign = f"{algorithm}\n{timestamp}\n{credential_scope}\n{hashed_canonical_request}"
 
         # ************* 步骤 3：计算签名 *************
-        secret_date = sign(f"TC3{self.secret_key}".encode("utf-8"), date)
+        secret_date = sign(f"TC3{_s.HUNYUAN_SECRET_KEY}".encode("utf-8"), date)
         secret_service = sign(secret_date, self.service)
         secret_signing = sign(secret_service, "tc3_request")
         signature = hmac.new(secret_signing, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
 
         # ************* 步骤 4：拼接 Authorization *************
         authorization = f"{algorithm}" \
-                        f" Credential={self.secret_id}/{credential_scope}," \
+                        f" Credential={_s.HUNYUAN_SECRET_ID}/{credential_scope}," \
                         f" SignedHeaders={signed_headers}," \
                         f" Signature={signature}"
         return authorization

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Tuple
 
 from retk import const
+from .db_ops import extend_on_node_update, extend_on_node_post, LLM_SERVICES
 from ..api.base import BaseLLMService, MessagesType
 
 system_summary_prompt = (Path(__file__).parent / "system_summary.md").read_text(encoding="utf-8")
@@ -12,12 +13,12 @@ async def _send(
         llm_service: BaseLLMService,
         model: str,
         system_prompt: str,
-        query: str,
+        md: str,
         req_id: str,
 ) -> Tuple[str, const.CodeEnum]:
     _msgs: MessagesType = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": query},
+        {"role": "user", "content": md},
     ]
     return await llm_service.complete(messages=_msgs, model=model, req_id=req_id)
 
@@ -25,14 +26,14 @@ async def _send(
 async def summary(
         llm_service: BaseLLMService,
         model: str,
-        query: str,
+        md: str,
         req_id: str = None,
 ) -> Tuple[str, const.CodeEnum]:
     return await _send(
         llm_service=llm_service,
         model=model,
         system_prompt=system_summary_prompt,
-        query=query,
+        md=md,
         req_id=req_id,
     )
 
@@ -40,13 +41,13 @@ async def summary(
 async def extend(
         llm_service: BaseLLMService,
         model: str,
-        query: str,
+        md: str,
         req_id: str = None,
 ) -> Tuple[str, const.CodeEnum]:
     return await _send(
         llm_service=llm_service,
         model=model,
         system_prompt=system_extend_prompt,
-        query=query,
+        md=md,
         req_id=req_id,
     )

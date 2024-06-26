@@ -3,7 +3,7 @@ import time
 import unittest
 from copy import deepcopy
 from textwrap import dedent
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import elastic_transport
 import pymongo.errors
@@ -20,6 +20,7 @@ from retk.utils import get_token
 from . import utils
 
 
+@patch("retk.core.ai.llm.knowledge._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
 class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     default_pwd = "rethink123"
 
@@ -40,7 +41,8 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             client.connection_timeout = 1
             await client.init()
             for coll in client.coll.__dict__.values():
-                await coll.delete_many({})
+                if coll is not None:
+                    await coll.delete_many({})
 
             u, code = await signup(
                 email=const.DEFAULT_USER["email"],
@@ -85,7 +87,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             utils.skip_no_connect.skip = True
 
     @utils.skip_no_connect
-    async def test_same_key(self):
+    async def test_same_key(self, mock_send):
         async def add():
             oid = ObjectId()
             await client.coll.users.insert_one({
@@ -126,7 +128,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             await add()
 
     @utils.skip_no_connect
-    async def test_user(self):
+    async def test_user(self, mock_send):
         u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("rethink", u["nickname"])
@@ -187,6 +189,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_node(
             self,
+            mock_send,
             mock_save_md_to_cos,
             mock_get_md_from_cos,
             mock_remove_md_from_cos,
@@ -282,6 +285,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_parse_at(
             self,
+            mock_send,
             mock_save_md_to_cos,
             mock_get_md_from_cos,
             mock_remove_md_from_cos,
@@ -347,7 +351,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(n["fromNodeIds"]))
 
     @utils.skip_no_connect
-    async def test_add_set(self):
+    async def test_add_set(self, mock_send):
         node, code = await core.node.post(
             au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -361,7 +365,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(node["toNodeIds"]))
 
     @utils.skip_no_connect
-    async def test_to_trash(self):
+    async def test_to_trash(self, mock_send):
         n1, code = await core.node.post(
             au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -399,10 +403,12 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_batch(
             self,
+            mock_send,
             mock_save_md_to_cos,
             mock_get_md_from_cos,
             mock_remove_md_from_cos,
             mock_remove_md_all_versions_from_cos,
+
     ):
         mock_save_md_to_cos.return_value = const.CodeEnum.OK
         mock_get_md_from_cos.return_value = ("", const.CodeEnum.OK)
@@ -446,7 +452,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, len(tns))
 
     @utils.skip_no_connect
-    async def test_update_used_space(self):
+    async def test_update_used_space(self, mock_send):
         u, code = await core.user.get(self.au.u.id)
         base_used_space = u["usedSpace"]
         for delta, value in [
@@ -473,6 +479,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     @patch("retk.core.node.backup.__save_md_to_cos")
     async def test_md_history(
             self,
+            mock_send,
             mock_save_md_to_cos,
             mock_get_md_from_cos,
             mock_remove_md_from_cos,
@@ -520,7 +527,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         config.get_settings().MD_BACKUP_INTERVAL = bi
 
     @utils.skip_no_connect
-    async def test_system_notice(self):
+    async def test_system_notice(self, mock_send):
         au = deepcopy(self.au)
         au.u.type = const.USER_TYPE.MANAGER.id
         publish_at = datetime.datetime.now()
@@ -549,7 +556,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(docs[0]["scheduled"])
 
     @utils.skip_no_connect
-    async def test_notice(self):
+    async def test_notice(self, mock_send):
         au = deepcopy(self.au)
         doc, code = await core.notice.post_in_manager_delivery(
             au=au,
@@ -605,7 +612,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(sn[0]["readTime"])
 
     @utils.skip_no_connect
-    async def test_mark_read(self):
+    async def test_mark_read(self, mock_send):
         au = deepcopy(self.au)
         au.u.type = const.USER_TYPE.MANAGER.id
         for i in range(3):

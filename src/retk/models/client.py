@@ -80,6 +80,8 @@ class Client:
         self.coll.user_behavior = db["userBehavior"]
         self.coll.notice_manager_delivery = db["noticeManagerDelivery"]
         self.coll.notice_system = db["noticeSystem"]
+        self.coll.llm_extend_node_queue = db["llmExtendNodeQueue"]
+        self.coll.llm_extended_node = db["llmExtendedNode"]
 
     async def init_search(self):
         conf = config.get_settings()

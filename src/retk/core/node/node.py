@@ -7,7 +7,7 @@ from bson.tz_util import utc
 
 from retk import config, const, utils, regex
 from retk import plugins
-from retk.core import user
+from retk.core import user, ai
 from retk.logger import logger
 from retk.models import tps, db_ops
 from retk.models.client import client
@@ -78,6 +78,7 @@ async def post(
         code = await client.search.add(au=au, doc=SearchDoc(nid=nid, title=title, body=body))
         if code != const.CodeEnum.OK:
             logger.error(f"add search index failed, code: {code}")
+    await ai.llm.knowledge.extend_on_node_post(data=data)
     return data, const.CodeEnum.OK
 
 
@@ -220,6 +221,8 @@ async def update_md(
     code = await backup.storage_md(node=doc, keep_hist=True)
     if code != const.CodeEnum.OK:
         return doc, old_n, code
+
+    await ai.llm.knowledge.extend_on_node_update(old_data=old_n, new_data=doc)
     return doc, old_n, code
 
 

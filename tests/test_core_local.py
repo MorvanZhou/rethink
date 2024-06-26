@@ -6,7 +6,7 @@ from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
 from textwrap import dedent
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import httpx
 from PIL import Image
@@ -26,6 +26,7 @@ from retk.utils import short_uuid
 from . import utils
 
 
+@patch("retk.core.ai.llm.knowledge._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
 class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -54,7 +55,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "files", ignore_errors=True)
         shutil.rmtree(Path(__file__).parent / "temp" / const.settings.DOT_DATA / "md", ignore_errors=True)
 
-    async def test_user(self):
+    async def test_user(self, mock_send):
         u, code = await core.user.get_by_email(email=const.DEFAULT_USER["email"])
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("rethink", u["nickname"])
@@ -113,7 +114,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         await core.account.manager.delete_by_uid(uid=_uid)
 
-    async def test_node(self):
+    async def test_node(self, mock_send):
         node, code = await core.node.post(
             au=self.au, md="a" * (const.settings.MD_MAX_LENGTH + 1), type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -212,7 +213,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, len(nodes))
         self.assertEqual(2, total)
 
-    async def test_parse_at(self):
+    async def test_parse_at(self, mock_send):
         nid1, _ = await core.node.post(
             au=self.au, md="c", type_=const.NodeTypeEnum.MARKDOWN.value,
         )
@@ -265,7 +266,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(0, len(n["fromNodeIds"]))
 
-    async def test_add_set(self):
+    async def test_add_set(self, mock_send):
         node, code = await core.node.post(
             au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -278,7 +279,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(1, len(node["toNodeIds"]))
 
-    async def test_cursor_text(self):
+    async def test_cursor_text(self, mock_send):
         n1, code = await core.node.post(
             au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -322,7 +323,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, total)
         self.assertEqual("Welcome to Rethink", recom[2].title)
 
-    async def test_to_trash(self):
+    async def test_to_trash(self, mock_send):
         n1, code = await core.node.post(
             au=self.au, md="title\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -350,7 +351,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(4, len(nodes))
         self.assertEqual(4, total)
 
-    async def test_search(self):
+    async def test_search(self, mock_send):
         code = await core.recent.put_recent_search(au=self.au, query="a")
         self.assertEqual(const.CodeEnum.OK, code)
         await core.recent.put_recent_search(au=self.au, query="c")
@@ -360,7 +361,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(doc)
         self.assertEqual(["b", "c", "a"], doc["lastState"]["recentSearch"])
 
-    async def test_batch(self):
+    async def test_batch(self, mock_send):
         ns = []
         for i in range(10):
             n, code = await core.node.post(
@@ -393,19 +394,19 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, total)
         self.assertEqual(0, len(tns))
 
-    async def test_files_upload_process(self):
+    async def test_files_upload_process(self, mock_send):
         now = datetime.datetime.now(tz=utc)
-        doc: ImportData = {
-            "_id": ObjectId(),
-            "uid": "xxx",
-            "process": 0,
-            "type": "text",
-            "startAt": now,
-            "running": True,
-            "obsidian": {},
-            "msg": "",
-            "code": const.CodeEnum.OK.value,
-        }
+        doc = ImportData(
+            _id=ObjectId(),
+            uid="xxx",
+            process=0,
+            type="text",
+            startAt=now,
+            running=True,
+            obsidian={},
+            msg="",
+            code=const.CodeEnum.OK.value,
+        )
         res = await client.coll.import_data.insert_one(doc)
         self.assertTrue(res.acknowledged)
 
@@ -423,7 +424,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         await client.coll.import_data.delete_one({"uid": "xxx"})
 
-    async def test_update_title_and_from_nodes_updates(self):
+    async def test_update_title_and_from_nodes_updates(self, mock_send):
         n1, code = await core.node.post(
             au=self.au, md="title1\ntext", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -439,7 +440,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(f"title2\n[@title1Changed](/n/{n1['id']})", n2["md"])
 
-    async def test_upload_image_vditor(self):
+    async def test_upload_image_vditor(self, mock_send):
         u, code = await core.user.get(self.au.u.id)
         self.assertEqual(const.CodeEnum.OK, code)
         used_space = u["usedSpace"]
@@ -466,10 +467,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         u, code = await core.user.get(self.au.u.id)
         self.assertEqual(used_space + size, u["usedSpace"])
 
-    @patch(
-        "retk.core.files.upload.httpx.AsyncClient.get",
-    )
-    async def test_fetch_image_vditor(self, mock_get):
+    @patch("retk.core.files.upload.httpx.AsyncClient.get", )
+    async def test_fetch_image_vditor(self, mock_get, mock_send):
         f = open(Path(__file__).parent / "temp" / "fake.png", "rb")
         mock_get.return_value = httpx.Response(
             200,
@@ -493,7 +492,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(used_space + f.tell(), u["usedSpace"])
         f.close()
 
-    async def test_update_used_space(self):
+    async def test_update_used_space(self, mock_send):
         u, code = await core.user.get(self.au.u.id)
         base_used_space = u["usedSpace"]
         for delta, value in [
@@ -513,7 +512,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
                 base_used_space = 0
             self.assertAlmostEqual(value, now, msg=f"delta: {delta}, value: {value}")
 
-    async def test_node_version(self):
+    async def test_node_version(self, mock_send):
         node, code = await core.node.post(
             au=self.au, md="[title](/qqq)\nbody", type_=const.NodeTypeEnum.MARKDOWN.value
         )
@@ -534,7 +533,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(2, len(list(hist_dir.glob("*.md"))))
 
-    async def test_md_history(self):
+    async def test_md_history(self, mock_send):
         bi = config.get_settings().MD_BACKUP_INTERVAL
         config.get_settings().MD_BACKUP_INTERVAL = 0.0001
         n1, code = await core.node.post(
@@ -571,14 +570,14 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
         config.get_settings().MD_BACKUP_INTERVAL = bi
 
-    async def test_get_version(self):
+    async def test_get_version(self, mock_send):
         v, code = await core.self_hosted.get_latest_pkg_version()
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(3, len(v))
         for num in v:
             self.assertTrue(isinstance(num, int))
 
-    async def test_system_notice(self):
+    async def test_system_notice(self, mock_send):
         au = deepcopy(self.au)
         au.u.type = const.USER_TYPE.MANAGER.id
         publish_at = datetime.datetime.now()
@@ -606,7 +605,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         docs, total = await core.notice.get_system_notices(0, 10)
         self.assertTrue(docs[0]["scheduled"])
 
-    async def test_notice(self):
+    async def test_notice(self, mock_send):
         au = deepcopy(self.au)
         doc, code = await core.notice.post_in_manager_delivery(
             au=au,
@@ -661,7 +660,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(sn[0]["read"])
         self.assertIsNone(sn[0]["readTime"])
 
-    async def test_mark_read(self):
+    async def test_mark_read(self, mock_send):
         au = deepcopy(self.au)
         au.u.type = const.USER_TYPE.MANAGER.id
         for i in range(3):

@@ -20,17 +20,17 @@ async def check_last_task_finished(uid: str, type_: str) -> Tuple[Optional[Impor
         return None, False
 
     if doc is None:
-        doc: ImportData = {
-            "_id": ObjectId(),
-            "uid": uid,
-            "process": 0,
-            "type": type_,
-            "startAt": datetime.datetime.now(tz=utc),
-            "running": True,
-            "msg": "",
-            "code": 0,
-            "obsidian": {},
-        }
+        doc: ImportData = ImportData(
+            _id=ObjectId(),
+            uid=uid,
+            process=0,
+            type=type_,
+            startAt=datetime.datetime.now(tz=utc),
+            running=True,
+            msg="",
+            code=0,
+            obsidian={},
+        )
         res = await client.coll.import_data.insert_one(doc)
         if not res.acknowledged:
             await set_running_false(

@@ -33,11 +33,6 @@ class BaiduService(BaseLLMService):
             timeout=timeout,
             default_model=BaiduModelEnum.ERNIE_SPEED_8K.value,
         )
-        self.api_key = config.get_settings().BAIDU_QIANFAN_API_KEY
-        self.secret_key = config.get_settings().BAIDU_QIANFAN_SECRET_KEY
-        if self.api_key == "" or self.secret_key == "":
-            raise NoAPIKeyError("Baidu api key or key is empty")
-
         self.headers = {
             "Content-Type": "application/json",
         }
@@ -46,16 +41,21 @@ class BaiduService(BaseLLMService):
         self.token = ""
 
     async def set_token(self, req_id: str = None):
+        _s = config.get_settings()
+        if _s.BAIDU_QIANFAN_API_KEY == "" or _s.BAIDU_QIANFAN_SECRET_KEY == "":
+            raise NoAPIKeyError("Baidu api key or skey is empty")
+
         if self.token_expires_at > datetime.now().timestamp():
             return
+
         resp = await httpx_helper.get_async_client().post(
             url="https://aip.baidubce.com/oauth/2.0/token",
             headers={"Content-Type": "application/json", 'Accept': 'application/json'},
             content=b"",
             params={
                 "grant_type": "client_credentials",
-                "client_id": self.api_key,
-                "client_secret": self.secret_key,
+                "client_id": _s.BAIDU_QIANFAN_API_KEY,
+                "client_secret": _s.BAIDU_QIANFAN_SECRET_KEY,
             }
         )
         if resp.status_code != 200:

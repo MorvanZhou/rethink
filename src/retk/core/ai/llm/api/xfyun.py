@@ -45,24 +45,22 @@ class XfYunService(BaseLLMService):
             timeout=timeout,
             default_model=XfYunModelEnum.SPARK_LITE.value,
         )
-        _s = config.get_settings()
-        self.api_secret = _s.XFYUN_API_SECRET
-        self.api_key = _s.XFYUN_API_KEY
-        self.app_id = _s.XFYUN_APP_ID
-        if self.api_secret == "" or self.api_key == "" or self.app_id == "":
-            raise NoAPIKeyError("XfYun api secret or key is empty")
 
     def get_url(self, model: Optional[str], req_id: str = None) -> str:
+        _s = config.get_settings()
+        if _s.XFYUN_API_KEY == "" or _s.XFYUN_API_SECRET == "" or _s.XFYUN_APP_ID == "":
+            raise NoAPIKeyError("XfYun api secret or skey or appID is empty")
+
         if model is None:
             model = self.default_model
         cur_time = datetime.now()
         date = handlers.format_date_time(mktime(cur_time.timetuple()))
 
         tmp = f"host: spark-api.xf-yun.com\ndate: {date}\nGET /{model}/chat HTTP/1.1"
-        tmp_sha = hmac.new(self.api_secret.encode('utf-8'), tmp.encode('utf-8'), digestmod=hashlib.sha256).digest()
+        tmp_sha = hmac.new(_s.XFYUN_API_SECRET.encode('utf-8'), tmp.encode('utf-8'), digestmod=hashlib.sha256).digest()
 
         signature = base64.b64encode(tmp_sha).decode(encoding='utf-8')
-        authorization_origin = f'api_key="{self.api_key}", ' \
+        authorization_origin = f'api_key="{_s.XFYUN_API_KEY}", ' \
                                f'algorithm="hmac-sha256", ' \
                                f'headers="host date request-line", ' \
                                f'signature="{signature}"'
@@ -79,7 +77,7 @@ class XfYunService(BaseLLMService):
     def get_data(self, model: str, messages: MessagesType) -> Dict:
         return {
             "header": {
-                "app_id": self.app_id,
+                "app_id": config.get_settings().XFYUN_APP_ID,
                 "uid": "12345"
             },
             "parameter": {

@@ -8,7 +8,7 @@ import uuid
 import webbrowser
 from html.parser import HTMLParser
 from io import StringIO
-from typing import Tuple, Optional, List, Dict, Any
+from typing import Tuple, Optional, List, Literal
 from urllib.parse import urlparse
 
 import httpx
@@ -349,43 +349,43 @@ def get_user_dict(
         last_state_node_display_sort_key: str,
 
         settings_language: str,
-        settings_theme: str,
-        settings_editor_mode: str,
+        settings_theme: Literal["light", "dark"],
+        settings_editor_mode: Literal["ir", "wysiwyg"],
         settings_editor_font_size: int,
-        settings_editor_code_theme: str,
+        settings_editor_code_theme: tps.user.CODE_THEME_TYPES,
         settings_editor_sep_right_width: int,
         settings_editor_side_current_tool_id: str,
 ) -> tps.UserMeta:
-    return {
-        "_id": _id,
-        "id": uid,
-        "source": source,
-        "account": account,
-        "nickname": nickname,
-        "email": email,
-        "avatar": avatar,
-        "hashed": hashed,
-        "disabled": disabled,
-        "modifiedAt": modified_at,
-        "usedSpace": used_space,
-        "type": type_,
+    return tps.UserMeta(
+        _id=_id,
+        id=uid,
+        source=source,
+        account=account,
+        nickname=nickname,
+        email=email,
+        avatar=avatar,
+        hashed=hashed,
+        disabled=disabled,
+        modifiedAt=modified_at,
+        usedSpace=used_space,
+        type=type_,
 
-        "lastState": {
-            "recentCursorSearchSelectedNIds": last_state_recent_cursor_search_selected_nids,
-            "recentSearch": last_state_recent_search,
-            "nodeDisplayMethod": last_state_node_display_method,
-            "nodeDisplaySortKey": last_state_node_display_sort_key,
-        },
-        "settings": {
-            "language": settings_language,
-            "theme": settings_theme,
-            "editorMode": settings_editor_mode,
-            "editorFontSize": settings_editor_font_size,
-            "editorCodeTheme": settings_editor_code_theme,
-            "editorSepRightWidth": settings_editor_sep_right_width,
-            "editorSideCurrentToolId": settings_editor_side_current_tool_id,
-        },
-    }
+        lastState=tps.user._LastState(
+            recentCursorSearchSelectedNIds=last_state_recent_cursor_search_selected_nids,
+            recentSearch=last_state_recent_search,
+            nodeDisplayMethod=last_state_node_display_method,
+            nodeDisplaySortKey=last_state_node_display_sort_key,
+        ),
+        settings=tps.user._Settings(
+            language=settings_language,
+            theme=settings_theme,
+            editorMode=settings_editor_mode,
+            editorFontSize=settings_editor_font_size,
+            editorCodeTheme=settings_editor_code_theme,
+            editorSepRightWidth=settings_editor_sep_right_width,
+            editorSideCurrentToolId=settings_editor_side_current_tool_id,
+        ),
+    )
 
 
 def get_node_dict(
@@ -402,25 +402,25 @@ def get_node_dict(
         in_trash_at: Optional[datetime.datetime],
         from_node_ids: List[str],
         to_node_ids: List[str],
-        history: List[Dict[str, Any]],
+        history: List[str],
 ) -> tps.Node:
-    return {
-        "_id": _id,
-        "id": nid,
-        "uid": uid,
-        "md": md,
-        "title": title,
-        "snippet": snippet,
-        "type": type_,
-        "disabled": disabled,
-        "inTrash": in_trash,
-        "modifiedAt": modified_at,
-        "inTrashAt": in_trash_at,
-        "fromNodeIds": from_node_ids,
-        "toNodeIds": to_node_ids,
-        "history": history,
-        "favorite": False,
-    }
+    return tps.Node(
+        _id=_id,
+        id=nid,
+        uid=uid,
+        md=md,
+        title=title,
+        snippet=snippet,
+        type=type_,
+        disabled=disabled,
+        inTrash=in_trash,
+        modifiedAt=modified_at,
+        inTrashAt=in_trash_at,
+        fromNodeIds=from_node_ids,
+        toNodeIds=to_node_ids,
+        history=history,
+        favorite=False,
+    )
 
 
 def get_token(uid: str, language: str) -> Tuple[str, str]:

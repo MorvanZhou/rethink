@@ -31,14 +31,15 @@ class AliyunService(BaseLLMService):
             timeout=timeout,
             default_model=AliyunModelEnum.QWEN1_5_05B.value,
         )
-        self.api_key = config.get_settings().ALIYUN_DASHSCOPE_API_KEY
-        if self.api_key == "":
-            raise NoAPIKeyError("Aliyun API key is empty")
 
-    def get_headers(self, stream: bool) -> Dict[str, str]:
+    @staticmethod
+    def get_headers(stream: bool) -> Dict[str, str]:
+        k = config.get_settings().ALIYUN_DASHSCOPE_API_KEY
+        if k == "":
+            raise NoAPIKeyError("Aliyun API key is empty")
         h = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.api_key}',
+            'Authorization': f'Bearer {k}',
         }
         if stream:
             h["Accept"] = "text/event-stream"

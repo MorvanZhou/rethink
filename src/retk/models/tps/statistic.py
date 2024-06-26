@@ -6,5 +6,5 @@ from bson import ObjectId
 class UserBehavior(TypedDict):
     _id: ObjectId
     uid: str
-    bType: int
+    type: int
     remark: str

@@ -1,4 +1,5 @@
 import json
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Tuple, AsyncIterable, Optional
 
@@ -16,10 +17,9 @@ class OpenaiModelEnum(str, Enum):
     GPT35_TURBO_16K = "gpt-3.5-turbo-16k"
 
 
-class OpenaiLLMStyle(BaseLLMService):
+class OpenaiLLMStyle(BaseLLMService, ABC):
     def __init__(
             self,
-            api_key: str,
             endpoint: str,
             default_model: str,
             top_p: float = 0.9,
@@ -33,12 +33,20 @@ class OpenaiLLMStyle(BaseLLMService):
             timeout=timeout,
             default_model=default_model,
         )
-        self.api_key = api_key
-        if self.api_key == "":
-            raise NoAPIKeyError(f"{self.__class__.__name__} API key is empty")
-        self.headers = {
+
+    @staticmethod
+    @abstractmethod
+    def get_api_key():
+        pass
+
+    def get_headers(self):
+        k = self.get_api_key()
+        if k == "":
+            raise NoAPIKeyError(f"{self.__class__.__name__} api key is empty")
+
+        return {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {k}",
         }
 
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
@@ -62,7 +70,7 @@ class OpenaiLLMStyle(BaseLLMService):
         payload = self.get_payload(model, messages, stream=False)
         rj, code = await self._complete(
             url=self.endpoint,
-            headers=self.headers,
+            headers=self.get_headers(),
             payload=payload,
             req_id=req_id,
         )
@@ -82,7 +90,7 @@ class OpenaiLLMStyle(BaseLLMService):
         payload = self.get_payload(model, messages, stream=True)
         async for b, code in self._stream_complete(
                 url=self.endpoint,
-                headers=self.headers,
+                headers=self.get_headers(),
                 payload=payload,
                 req_id=req_id
         ):
@@ -118,10 +126,13 @@ class OpenaiService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
-            api_key=config.get_settings().OPENAI_API_KEY,
             endpoint="https://api.openai.com/v1/chat/completions",
             default_model=OpenaiModelEnum.GPT35_TURBO.value,
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
         )
+
+    @staticmethod
+    def get_api_key():
+        return config.get_settings().OPENAI_API_KEY

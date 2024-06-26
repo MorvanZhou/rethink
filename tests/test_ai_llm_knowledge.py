@@ -16,7 +16,7 @@ md_source = """\
 2. 工艺简单，大量的预制工作，较低出餐时间，出餐快。适合快节奏的打工人群
 3. 因为出餐快，所以不用招人，省人力成本
 
-![IMG6992.png](https://files.rethink.run/userData/RroFuzYSd8NGoKRL5zrrkZ/3a4344ccd6ba477e59ddf1f7f67e98bd.png)
+![IMG6992.png](https://files.rethink.run/userData/3a4344ccd6ba477e59ddf1f7f67e98bd.png)
 
 更值得一提的是猪脚饭在广东便宜，其它地方贵，原因之一是可以从香港走私猪脚，因为外国人不吃，所以产能过剩
 
@@ -62,7 +62,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             text, code = await llm.knowledge.summary(
                 llm_service=service,
                 model=model.value,
-                query=md_source,
+                md=md_source,
             )
             self.assertEqual(const.CodeEnum.OK, code, msg=text)
             print(f"{service.__class__.__name__} {model.name}\n{text}\n\n")
@@ -80,7 +80,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             text, code = await llm.knowledge.extend(
                 llm_service=service,
                 model=model.value,
-                query=md_summary,
+                md=md_summary,
             )
             self.assertEqual(const.CodeEnum.OK, code, msg=text)
             print(f"{service.__class__.__name__} {model.name}\n{text}\n\n")

@@ -30,18 +30,18 @@ async def post_in_manager_delivery(
         publish_at = publish_at.astimezone(utc)
 
     # add system notice
-    notice: NoticeManagerDelivery = {
-        "_id": ObjectId(),
-        "senderType": au.u.type,
-        "senderId": au.u.id,
-        "title": title,
-        "html": md2html(content),
-        "snippet": md2txt(content)[:20],
-        "recipientType": recipient_type,  # send to which user type, 0: all, 1: batch, 2: admin, 3: manager
-        "batchTypeIds": batch_type_ids,  # if recipient=batch, put user id here
-        "publishAt": publish_at,  # publish time
-        "scheduled": False,  # has been scheduled to sent to user
-    }
+    notice = NoticeManagerDelivery(
+        _id=ObjectId(),
+        senderType=au.u.type,
+        senderId=au.u.id,
+        title=title,
+        html=md2html(content),
+        snippet=md2txt(content)[:20],
+        recipientType=recipient_type,  # send to which user type, 0: all, 1: batch, 2: admin, 3: manager
+        batchTypeIds=batch_type_ids,  # if recipient=batch, put user id here
+        publishAt=publish_at,  # publish time
+        scheduled=False,  # has been scheduled to sent to user
+    )
     res = await client.coll.notice_manager_delivery.insert_one(notice)
     if not res.acknowledged:
         return None, const.CodeEnum.OPERATION_FAILED
@@ -150,14 +150,14 @@ async def get_user_notices(
     new_system_notices: List[Notice] = []
     for usn in user_system_notices:
         detail = n_details_dict[usn["noticeId"]]
-        new_system_notices.append({
-            "id": str(usn["noticeId"]),
-            "title": detail["title"],
-            "snippet": detail["snippet"],
-            "publishAt": datetime2str(detail["publishAt"]),
-            "read": usn["read"],
-            "readTime": datetime2str(usn["readTime"]) if usn["readTime"] is not None else None,
-        })
+        new_system_notices.append(Notice(
+            id=str(usn["noticeId"]),
+            title=detail["title"],
+            snippet=detail["snippet"],
+            publishAt=datetime2str(detail["publishAt"]),
+            read=usn["read"],
+            readTime=datetime2str(usn["readTime"]) if usn["readTime"] is not None else None,
+        ))
 
     return {
         "hasUnread": has_unread,

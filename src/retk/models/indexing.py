@@ -19,6 +19,7 @@ async def remote_try_build_index(coll: Collections):
     await user_behavior_coll(coll.user_behavior)
     await notice_manager_delivery_coll(coll.notice_manager_delivery)
     await notice_system_coll(coll.notice_system)
+    await llm_extend_node_queue_coll(coll.llm_extend_node_queue)
 
 
 async def not_in_and_create_index(coll: "AsyncIOMotorCollection", index_info, keys: list, unique: bool) -> str:
@@ -127,4 +128,14 @@ async def notice_system_coll(coll: "AsyncIOMotorCollection"):
         index_info=index_info,
         keys=["senderId"],
         unique=False
+    )
+
+
+async def llm_extend_node_queue_coll(coll: "AsyncIOMotorCollection"):
+    index_info = await coll.index_information()
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["uid"],
+        unique=False,
     )

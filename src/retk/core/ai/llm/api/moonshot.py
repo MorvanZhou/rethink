@@ -19,10 +19,13 @@ class MoonshotService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
-            api_key=config.get_settings().MOONSHOT_API_KEY,
             endpoint="https://api.moonshot.cn/v1/chat/completions",
             default_model=MoonshotModelEnum.V1_8K.value,
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
         )
+
+    @staticmethod
+    def get_api_key():
+        return config.get_settings().MOONSHOT_API_KEY
