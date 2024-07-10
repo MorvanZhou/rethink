@@ -92,6 +92,7 @@ def init_tasks():
         func=tasks.notice.deliver_unscheduled_system_notices,
         second=0,
     )
+
     # check unscheduled extend node every hour
     run_every_at(
         job_id="deliver_unscheduled_node_extend",

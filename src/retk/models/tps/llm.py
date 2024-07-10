@@ -1,4 +1,4 @@
-from typing import TypedDict, List
+from typing import TypedDict
 
 from bson import ObjectId
 
@@ -7,6 +7,7 @@ class NodeExtendQueue(TypedDict):
     _id: ObjectId
     uid: str
     nid: str
+    modifiedAt: int
     summaryService: str
     summaryModel: str
     extendService: str
@@ -16,6 +17,6 @@ class NodeExtendQueue(TypedDict):
 class ExtendedNode(TypedDict):
     _id: ObjectId
     uid: str
-    sourceNids: List[str]
-    sourceMd: List[str]
+    sourceNid: str
+    sourceMd: str
     extendMd: str

@@ -12,6 +12,7 @@ from . import (
     manager,
     statistic,
     notice,
+    ai,
 )
 
 

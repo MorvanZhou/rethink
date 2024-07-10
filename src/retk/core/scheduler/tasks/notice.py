@@ -7,19 +7,20 @@ from bson.tz_util import utc
 
 from retk import const, config
 from retk.models.client import init_mongo
+from retk.models.coll import CollNameEnum
 
 
 async def __get_users_in_batches(db, batch_size=100):
     # Get the total number of users
-    total_users = await db["users"].count_documents({})
+    total_users = await db[CollNameEnum.users.value].count_documents({})
     if config.is_local_db():
-        fn = db["users"].find(
+        fn = db[CollNameEnum.users.value].find(
             {},
         ).sort(
             [("_id", -1)]
         )
     else:
-        fn = db["users"].find(
+        fn = db[CollNameEnum.users.value].find(
             {}, projection=["id"]
         ).sort(
             [("_id", -1)]
@@ -47,7 +48,7 @@ async def __deliver_scheduled_system_notices_batch(
         "readTime": None,
     } for user in users]
     # Insert all notices at once
-    doc = await db["noticeSystem"].insert_many(notices)
+    doc = await db[CollNameEnum.notice_system.value].insert_many(notices)
     return len(doc.inserted_ids)
 
 
@@ -61,7 +62,7 @@ def deliver_unscheduled_system_notices():
 
 async def async_deliver_unscheduled_system_notices():
     _, db = init_mongo(connection_timeout=5)
-    unscheduled = await db["noticeManagerDelivery"].find({
+    unscheduled = await db[CollNameEnum.notice_manager_delivery.value].find({
         "scheduled": False,
     }).sort("publishAt", -1).to_list(None)
     total_users = 0
@@ -96,12 +97,12 @@ async def async_deliver_unscheduled_system_notices():
                 } for user_id in batch_type_ids]
                 # Insert all notices at once
                 if len(notices) > 0:
-                    docs = await db["noticeSystem"].insert_many(notices)
+                    docs = await db[CollNameEnum.notice_system.value].insert_many(notices)
                     success_users += len(docs.inserted_ids)
                 total_users += len(batch_type_ids)
             elif recipient_type == const.notice.RecipientTypeEnum.ADMIN.value:
                 # Get all admins
-                admins = await db["users"].find(
+                admins = await db[CollNameEnum.users.value].find(
                     {"type": const.USER_TYPE.ADMIN.id}, {"id", 1}).to_list(None)
                 success_users_count = await __deliver_scheduled_system_notices_batch(
                     db=db,
@@ -113,7 +114,7 @@ async def async_deliver_unscheduled_system_notices():
                 success_users += success_users_count
             elif recipient_type == const.notice.RecipientTypeEnum.MANAGER.value:
                 # Get all managers
-                managers = await db["users"].find(
+                managers = await db[CollNameEnum.users.value].find(
                     {"type": const.USER_TYPE.MANAGER.id}, projection=["id"]).to_list(None)
                 success_users_count = await __deliver_scheduled_system_notices_batch(
                     db=db,
@@ -127,7 +128,7 @@ async def async_deliver_unscheduled_system_notices():
                 raise ValueError(f"Unknown recipient type: {recipient_type}")
 
             # Update the notice to indicate that it has been scheduled
-            await db["noticeManagerDelivery"].update_one(
+            await db[CollNameEnum.notice_manager_delivery.value].update_one(
                 {"_id": notice_id},
                 {"$set": {"scheduled": True}}
             )

@@ -8,7 +8,7 @@ from typing import Tuple, Dict, Optional
 
 from retk import regex, const
 from retk.core.files.saver import saver, File
-from retk.utils import short_uuid
+from retk.utils import short_uuid, get_at_node_md_link
 
 
 @dataclass
@@ -142,7 +142,7 @@ async def replace_inner_link_and_upload(
         except KeyError:
             nid = short_uuid()
             exist_path2nid[path] = nid
-        md = f"{md[: span[0]]}[@{filename}](/n/{nid}){md[span[1]:]}"
+        md = f"{md[: span[0]]}{get_at_node_md_link(filename, nid)}{md[span[1]:]}"
     return md
 
 

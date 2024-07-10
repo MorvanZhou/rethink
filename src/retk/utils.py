@@ -156,10 +156,14 @@ def md2html(md: str) -> str:
     return _html
 
 
+def get_at_node_md_link(title: str, nid: str) -> str:
+    return f"[@{title}](/n/{nid})"
+
+
 def change_link_title(md: str, nid: str, new_title: str) -> str:
     new_md = re.sub(
         r"\[@[^].]*?]\(/n/{}/?\)".format(nid),
-        f"[@{new_title}](/n/{nid})",
+        get_at_node_md_link(new_title, nid),
         md,
     )
     return new_md

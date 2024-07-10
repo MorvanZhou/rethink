@@ -9,4 +9,5 @@ from . import (
     self_hosted,
     notice,
     analysis,
+    ai,
 )

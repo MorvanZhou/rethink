@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Tuple
 
 from retk import const
-from .db_ops import extend_on_node_update, extend_on_node_post, LLM_SERVICES
+from . import extended
+from .extending import extend_on_node_update, extend_on_node_post, LLM_SERVICES
 from ..api.base import BaseLLMService, MessagesType
 
 system_summary_prompt = (Path(__file__).parent / "system_summary.md").read_text(encoding="utf-8")

@@ -136,6 +136,16 @@ async def llm_extend_node_queue_coll(coll: "AsyncIOMotorCollection"):
     await not_in_and_create_index(
         coll=coll,
         index_info=index_info,
-        keys=["uid"],
+        keys=["uid", "modifiedAt"],
         unique=False,
+    )
+
+
+async def llm_extended_node_coll(coll: "AsyncIOMotorCollection"):
+    index_info = await coll.index_information()
+    await not_in_and_create_index(
+        coll=coll,
+        index_info=index_info,
+        keys=["uid", "sourceNid"],
+        unique=True,
     )

@@ -17,6 +17,7 @@ from starlette.datastructures import Headers
 
 from retk import const, core, config
 from retk.controllers.schemas.user import PatchUserRequest
+from retk.core.ai.llm.knowledge.extending import extend_on_node_update
 from retk.core.files.importing.async_tasks.utils import update_process
 from retk.core.scheduler import tasks
 from retk.models import db_ops
@@ -212,6 +213,41 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         nodes, total = await core.node.core_nodes(au=self.au, page=0, limit=10)
         self.assertEqual(2, len(nodes))
         self.assertEqual(2, total)
+
+    async def test_node_in_ai_extend_queue(self, mock_send):
+        node, code = await core.node.post(
+            au=self.au, md="knowledge test\nthis is a knowledge test"
+        )
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIsNotNone(node)
+
+        q = await client.coll.llm_extend_node_queue.find().to_list(None)
+        self.assertEqual(1, len(q))
+        self.assertEqual(node["id"], q[0]["nid"])
+        q_time = q[0]["modifiedAt"]
+
+        time.sleep(0.1)
+
+        new_node, old_node, code = await core.node.update_md(
+            au=self.au, nid=node["id"], md="knowledge test\nthis is a knowledge test\n\nnew line",
+        )
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertEqual(node["id"], new_node["id"])
+        self.assertEqual("knowledge test", new_node["title"])
+        self.assertEqual("knowledge test\nthis is a knowledge test\n\nnew line", new_node["md"])
+
+        q_ = await client.coll.llm_extend_node_queue.find().to_list(None)
+        self.assertEqual(1, len(q))
+        self.assertEqual(node["id"], q[0]["nid"])
+        self.assertEqual(q_[0]["modifiedAt"], q_time)
+        time.sleep(1)
+        new_node, old_node, code = await core.node.update_md(
+            au=self.au, nid=node["id"], md="knowledge test\nthis is a knowledge test\n\nnew line\n\nnewline2",
+        )
+        await extend_on_node_update(old_node, new_node, cooling_time=1)
+        q_ = await client.coll.llm_extend_node_queue.find().to_list(None)
+        self.assertEqual(1, len(q))
+        self.assertGreater(q_[0]["modifiedAt"], q_time)
 
     async def test_parse_at(self, mock_send):
         nid1, _ = await core.node.post(

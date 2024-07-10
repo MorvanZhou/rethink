@@ -57,7 +57,7 @@ async def post(
         type_=type_,
         disabled=False,
         in_trash=False,
-        modified_at=_id.generation_time,
+        modified_at=datetime.datetime.now(tz=utc),
         in_trash_at=None,
         from_node_ids=from_nids,
         to_node_ids=new_to_node_ids,

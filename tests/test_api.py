@@ -10,6 +10,7 @@ from unittest.mock import patch
 from zipfile import ZipFile
 
 from PIL import Image
+from bson import ObjectId
 from bson.tz_util import utc
 from fastapi.testclient import TestClient
 from httpx import Response
@@ -19,6 +20,7 @@ from retk.application import app
 from retk.core import account, scheduler
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
+from retk.models.tps.llm import ExtendedNode
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
 from retk.utils import jwt_decode
 from . import utils
@@ -1564,3 +1566,54 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             self.assertIsNotNone(sn["readTime"])
 
         await self.clear_default_manager(admin_uid)
+
+    async def test_node_extend(self):
+        resp = self.client.post(
+            "/api/nodes",
+            json={
+                "md": "node1\ntext",
+                "type": const.NodeTypeEnum.MARKDOWN.value,
+            },
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 201)
+        node = rj["node"]
+        self.assertFalse(node["favorite"])
+        uid = (await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})).get("id")
+
+        await client.coll.llm_extended_node.insert_one(
+            ExtendedNode(
+                _id=ObjectId(),
+                uid=uid,
+                sourceNid=node["id"],
+                sourceMd=node["md"],
+                extendMd="this is extended md",
+            ),
+        )
+
+        resp = self.client.get(
+            f"/api/ai/extended-nodes",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(1, len(rj["nodes"]))
+        n = rj["nodes"][0]
+        self.assertEqual("this is extended md", n["md"])
+        self.assertEqual(node["id"], n["sourceNid"])
+
+        resp = self.client.post(
+            f"/api/ai/extended-nodes/accept/{n['id']}",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 201)
+        self.assertEqual(
+            f"this is extended md\n\n[@node1](/n/{n['sourceNid']})",
+            rj["node"]["md"]
+        )
+
+        resp = self.client.get(
+            f"/api/ai/extended-nodes",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(0, len(rj["nodes"]))

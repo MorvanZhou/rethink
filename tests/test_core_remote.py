@@ -12,6 +12,7 @@ from bson import ObjectId
 from retk import const, config, core
 from retk.controllers.schemas.user import PatchUserRequest
 from retk.core.account.manager import signup
+from retk.core.ai.llm.knowledge.extending import extend_on_node_update
 from retk.core.scheduler import tasks
 from retk.models import db_ops
 from retk.models.client import client
@@ -277,6 +278,58 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         nodes, total = await core.node.core_nodes(au=self.au, page=0, limit=10)
         self.assertEqual(2, len(nodes))
         self.assertEqual(2, total)
+
+    @utils.skip_no_connect
+    @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")
+    @patch("retk.core.node.backup.__remove_md_from_cos")
+    @patch("retk.core.node.backup.__get_md_from_cos")
+    @patch("retk.core.node.backup.__save_md_to_cos")
+    async def test_node_in_ai_extend_queue(
+            self,
+            mock_send,
+            mock_save_md_to_cos,
+            mock_get_md_from_cos,
+            mock_remove_md_from_cos,
+            mock_remove_md_all_versions_from_cos,
+    ):
+        mock_save_md_to_cos.return_value = const.CodeEnum.OK
+        mock_get_md_from_cos.return_value = ("", const.CodeEnum.OK)
+        mock_remove_md_from_cos.return_value = const.CodeEnum.OK
+        mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
+
+        node, code = await core.node.post(
+            au=self.au, md="knowledge test\nthis is a knowledge test"
+        )
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIsNotNone(node)
+
+        qs = await client.coll.llm_extend_node_queue.find().to_list(None)
+        q = [q for q in qs if q["nid"] == node["id"]]
+        self.assertEqual(node["id"], q[0]["nid"])
+        q_time = q[0]["modifiedAt"]
+        time.sleep(0.1)
+
+        new_node, old_node, code = await core.node.update_md(
+            au=self.au, nid=node["id"], md="knowledge test\nthis is a knowledge test\n\nnew line",
+        )
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertEqual(node["id"], new_node["id"])
+        self.assertEqual("knowledge test", new_node["title"])
+        self.assertEqual("knowledge test\nthis is a knowledge test\n\nnew line", new_node["md"])
+
+        qs_ = await client.coll.llm_extend_node_queue.find().to_list(None)
+        q_ = [q for q in qs_ if q["nid"] == node["id"]]
+        self.assertEqual(node["id"], q_[0]["nid"])
+        self.assertEqual(q_[0]["modifiedAt"], q_time)
+
+        time.sleep(1)
+        new_node, old_node, code = await core.node.update_md(
+            au=self.au, nid=node["id"], md="knowledge test\nthis is a knowledge test\n\nnew line\n\nnewline2",
+        )
+        await extend_on_node_update(old_data=old_node, new_data=new_node, cooling_time=1)
+        qs_ = await client.coll.llm_extend_node_queue.find().to_list(None)
+        q_ = [q for q in qs_ if q["nid"] == node["id"]]
+        self.assertGreater(q_[0]["modifiedAt"], q_time)
 
     @utils.skip_no_connect
     @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")

@@ -18,6 +18,7 @@ from .routes import (
     manager,
     statistic,
     notice,
+    ai,
 )
 from .routes.utils import on_shutdown, on_startup
 
@@ -59,6 +60,7 @@ for r in [
     manager,
     statistic,
     notice,
+    ai,
 ]:
     app.include_router(r.router)
 

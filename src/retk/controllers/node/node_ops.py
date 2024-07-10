@@ -7,7 +7,7 @@ from retk.models.tps import AuthedUser, Node
 from retk.utils import contain_only_http_link, get_title_description_from_link, datetime2str
 
 
-def __get_node_data(n: Node) -> schemas.node.NodeData:
+def get_node_data(n: Node) -> schemas.node.NodeData:
     from_nodes: List[schemas.node.NodeData.LinkedNode] = []
     to_nodes: List[schemas.node.NodeData.LinkedNode] = []
     for nodes, n_nodes in zip(
@@ -62,7 +62,7 @@ async def post_node(
     )
     return schemas.node.NodeResponse(
         requestId=au.request_id,
-        node=__get_node_data(n),
+        node=get_node_data(n),
     )
 
 
@@ -102,7 +102,7 @@ async def get_node(
 
     return schemas.node.NodeResponse(
         requestId=au.request_id,
-        node=__get_node_data(n),
+        node=get_node_data(n),
     )
 
 
@@ -120,7 +120,7 @@ async def update_md(
 
     return schemas.node.NodeResponse(
         requestId=au.request_id,
-        node=__get_node_data(n),
+        node=get_node_data(n),
     )
 
 

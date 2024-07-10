@@ -12,7 +12,7 @@ from retk.depend.mongita import MongitaClientDisk
 from retk.logger import logger
 from retk.models.search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
 from retk.models.search_engine.engine_local import LocalSearcher
-from .coll import Collections
+from .coll import Collections, CollNameEnum
 from .indexing import remote_try_build_index
 from .tps import UserFile, ImportData, UserMeta, Node, AuthedUser, convert_user_dict_to_authed_user
 
@@ -73,15 +73,15 @@ class Client:
 
     def init_mongo(self):
         self.mongo, db = init_mongo(self.connection_timeout)
-        self.coll.users = db["users"]
-        self.coll.nodes = db["nodes"]
-        self.coll.import_data = db["importData"]
-        self.coll.user_file = db["userFile"]
-        self.coll.user_behavior = db["userBehavior"]
-        self.coll.notice_manager_delivery = db["noticeManagerDelivery"]
-        self.coll.notice_system = db["noticeSystem"]
-        self.coll.llm_extend_node_queue = db["llmExtendNodeQueue"]
-        self.coll.llm_extended_node = db["llmExtendedNode"]
+        self.coll.users = db[CollNameEnum.users.value]
+        self.coll.nodes = db[CollNameEnum.nodes.value]
+        self.coll.import_data = db[CollNameEnum.import_data.value]
+        self.coll.user_file = db[CollNameEnum.user_file.value]
+        self.coll.user_behavior = db[CollNameEnum.user_behavior.value]
+        self.coll.notice_manager_delivery = db[CollNameEnum.notice_manager_delivery.value]
+        self.coll.notice_system = db[CollNameEnum.notice_system.value]
+        self.coll.llm_extend_node_queue = db[CollNameEnum.llm_extend_node_queue.value]
+        self.coll.llm_extended_node = db[CollNameEnum.llm_extended_node.value]
 
     async def init_search(self):
         conf = config.get_settings()
