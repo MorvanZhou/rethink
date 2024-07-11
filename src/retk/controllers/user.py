@@ -15,6 +15,7 @@ async def get_user(
         max_space = 0
     else:
         max_space = const.USER_TYPE.id2config(au.u.type).max_store_space
+    total_nodes = await core.user.get_user_nodes_count(uid=au.u.id, disabled=False, in_trash=False)
     return schemas.user.UserInfoResponse(
         requestId=au.request_id,
         user=schemas.user.UserInfoResponse.User(
@@ -38,7 +39,7 @@ async def get_user(
                 editorSepRightWidth=au.u.settings.editor_sep_right_width,
                 editorSideCurrentToolId=au.u.settings.editor_side_current_tool_id,
             ),
-            totalNodes=await core.user.get_user_nodes_count(uid=au.u.id, disabled=False, in_trash=False),
+            totalNodes=total_nodes,
         ),
     )
 

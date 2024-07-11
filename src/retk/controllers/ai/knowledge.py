@@ -9,14 +9,24 @@ async def get_extended_nodes(
         au: AuthedUser,
 ) -> schemas.ai.GetExtendedNodesResponse:
     docs = await core.ai.llm.knowledge.extended.get_extended_nodes(uid=au.u.id)
-    return schemas.ai.GetExtendedNodesResponse(
-        requestId=au.request_id,
-        nodes=[schemas.ai.GetExtendedNodesResponse.Node(
+    nodes = []
+    for doc in docs:
+        res = doc["extendMd"].split("\n", 1)
+        if len(res) == 2:
+            title, content = res
+        else:
+            title, content = res[0], ""
+        node = schemas.ai.GetExtendedNodesResponse.Node(
             id=str(doc["_id"]),
             sourceNid=doc["sourceNid"],
             sourceTitle=doc["sourceMd"].split("\n", 1)[0].strip(),
-            md=doc["extendMd"],
-        ) for doc in docs]
+            title=title.strip(),
+            content=content.strip(),
+        )
+        nodes.append(node)
+    return schemas.ai.GetExtendedNodesResponse(
+        requestId=au.request_id,
+        nodes=nodes
     )
 
 

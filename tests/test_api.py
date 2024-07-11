@@ -1598,7 +1598,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(1, len(rj["nodes"]))
         n = rj["nodes"][0]
-        self.assertEqual("this is extended md", n["md"])
+        self.assertEqual("this is extended md", n["title"])
+        self.assertEqual("", n["content"])
         self.assertEqual(node["id"], n["sourceNid"])
 
         resp = self.client.post(

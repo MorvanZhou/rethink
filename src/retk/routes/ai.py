@@ -8,7 +8,7 @@ from retk.routes import utils
 
 router = APIRouter(
     prefix="/api/ai",
-    tags=["node"],
+    tags=["ai"],
     responses={404: {"description": "Not found"}},
 )
 
