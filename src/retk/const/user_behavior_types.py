@@ -11,6 +11,8 @@ class UserBehaviorTypeEnum(IntEnum):
     NODE_TRASHED_OPS = 4
     NODE_RESTORED_OPS = 5
     NODE_DELETED_OPS = 6
+    EXTENDED_NODE_ACCEPTED = 14
+
     # search, backend
     SEARCH_GLOBAL = 7
     SEARCH_AT = 8
@@ -20,6 +22,7 @@ class UserBehaviorTypeEnum(IntEnum):
     # view node, frontend
     VIEW_NODE_FROM_RECOMMENDATION = 11
     VIEW_NODE_FROM_LINKED_NODE = 12
+    VIEW_EXTENDED_NODE = 13
 
 
 USER_BEHAVIOR_TYPE_MAP = {

@@ -47,7 +47,8 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
             if code != const.CodeEnum.OK:
                 logger.error(f"knowledge summary error: {code}")
                 continue
-            logger.debug(f"summary: {_summary}")
+            oneline_s = _summary.replace('\n', '\n\n')
+            logger.debug(f"summary: {oneline_s}")
             e0 = time.perf_counter()
             _extended, code = await knowledge.extend(
                 llm_service=knowledge.LLM_SERVICES[item["extendService"]],
@@ -59,7 +60,8 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
             if code != const.CodeEnum.OK:
                 logger.error(f"knowledge extend error: {code}")
                 continue
-            logger.debug(f"extended: {_extended}")
+            oneline_e = _extended.replace('\n', '\n\n')
+            logger.debug(f"extended: {oneline_e}")
             ext = ExtendedNode(
                 uid=item["uid"],
                 sourceNid=item["nid"],
