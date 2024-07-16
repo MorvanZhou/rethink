@@ -1603,7 +1603,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(node["id"], n["sourceNid"])
 
         resp = self.client.post(
-            f"/api/ai/extended-nodes/accept/{n['id']}",
+            f"/api/ai/extended-nodes/{n['id']}",
             headers=self.default_headers,
         )
         rj = self.check_ok_response(resp, 201)
@@ -1611,6 +1611,30 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             f"this is extended md\n\n[@node1](/n/{n['sourceNid']})",
             rj["node"]["md"]
         )
+
+        resp = self.client.get(
+            f"/api/ai/extended-nodes",
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(0, len(rj["nodes"]))
+
+        oid = ObjectId()
+        await client.coll.llm_extended_node.insert_one(
+            ExtendedNode(
+                _id=oid,
+                uid=uid,
+                sourceNid=node["id"],
+                sourceMd=node["md"],
+                extendMd="this is extended md",
+            ),
+        )
+
+        resp = self.client.delete(
+            f"/api/ai/extended-nodes/{oid}",
+            headers=self.default_headers,
+        )
+        self.check_ok_response(resp, 200)
 
         resp = self.client.get(
             f"/api/ai/extended-nodes",

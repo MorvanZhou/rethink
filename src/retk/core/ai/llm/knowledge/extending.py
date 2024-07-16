@@ -28,10 +28,10 @@ async def extend_on_node_post(data: Node):
         uid=data["uid"],
         nid=data["id"],
         modifiedAt=int(data["modifiedAt"].replace(tzinfo=utc).timestamp()),
-        summaryService="tencent",
-        summaryModel=api.TencentModelEnum.HUNYUAN_LITE.value,
-        extendService="tencent",
-        extendModel=api.TencentModelEnum.HUNYUAN_LITE.value,
+        summaryService="baidu",
+        summaryModel=api.BaiduModelEnum.ERNIE_SPEED_8K.value,
+        extendService="moonshot",
+        extendModel=api.MoonshotModelEnum.V1_8K.value,
     )
 
     # sort by _id desc

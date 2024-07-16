@@ -43,3 +43,16 @@ async def accept_extended_node(
         requestId=au.request_id,
         node=get_node_data(n),
     )
+
+
+async def reject_extended_node(
+        au: AuthedUser,
+        eid: str,
+) -> schemas.RequestIdResponse:
+    await core.ai.llm.knowledge.extended.reject_extended_node(
+        au=au,
+        eid=eid,
+    )
+    return schemas.RequestIdResponse(
+        requestId=au.request_id,
+    )

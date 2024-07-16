@@ -27,7 +27,7 @@ from retk.utils import short_uuid
 from . import utils
 
 
-@patch("retk.core.ai.llm.knowledge._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
+@patch("retk.core.ai.llm.knowledge.ops._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
 class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:

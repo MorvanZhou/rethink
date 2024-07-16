@@ -29,7 +29,7 @@ async def get_extended_nodes(
 
 
 @router.post(
-    path="/extended-nodes/accept/{eid}",
+    path="/extended-nodes/{eid}",
     status_code=201,
     response_model=schemas.node.NodeResponse,
 )
@@ -39,6 +39,22 @@ async def accept_extended_node(
         referer: Optional[str] = utils.DEPENDS_REFERER,
 ) -> schemas.node.NodeResponse:
     return await knowledge.accept_extended_node(
+        au=au,
+        eid=eid,
+    )
+
+
+@router.delete(
+    path="/extended-nodes/{eid}",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+async def reject_extended_node(
+        au: utils.ANNOTATED_AUTHED_USER,
+        eid: str,
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> schemas.RequestIdResponse:
+    return await knowledge.reject_extended_node(
         au=au,
         eid=eid,
     )

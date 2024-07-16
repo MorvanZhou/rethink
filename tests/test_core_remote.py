@@ -21,7 +21,7 @@ from retk.utils import get_token
 from . import utils
 
 
-@patch("retk.core.ai.llm.knowledge._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
+@patch("retk.core.ai.llm.knowledge.ops._send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])
 class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
     default_pwd = "rethink123"
 

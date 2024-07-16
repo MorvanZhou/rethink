@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from bson import ObjectId
 
@@ -22,18 +22,21 @@ async def get_extended_nodes(
 async def accept_extended_node(
         au: AuthedUser,
         eid: str,
-) -> Tuple[Node, CodeEnum]:
+) -> Tuple[Optional[Node], CodeEnum]:
     if not is_local_db():
         doc = await client.coll.llm_extended_node.find_one_and_delete(
-            {"_id": ObjectId(eid)},
+            {"_id": ObjectId(eid), "uid": au.u.id},
         )
     else:
         doc = await client.coll.llm_extended_node.find_one(
-            {"_id": ObjectId(eid)},
+            {"_id": ObjectId(eid), "uid": au.u.id},
         )
-        await client.coll.llm_extended_node.delete_one(
-            {"_id": ObjectId(eid)},
-        )
+        if doc is not None:
+            await client.coll.llm_extended_node.delete_one(
+                {"_id": ObjectId(eid), "uid": au.u.id},
+            )
+    if doc is None:
+        return None, CodeEnum.NODE_NOT_EXIST
     title = doc["sourceMd"].split("\n", 1)[0].strip()
     at_node = get_at_node_md_link(title, doc["sourceNid"])
     md = doc["extendMd"] + "\n\n" + at_node
@@ -43,3 +46,12 @@ async def accept_extended_node(
         from_nid=doc["sourceNid"],
     )
     return n, code
+
+
+async def reject_extended_node(
+        au: AuthedUser,
+        eid: str,
+):
+    await client.coll.llm_extended_node.delete_one(
+        {"_id": ObjectId(eid), "uid": au.u.id},
+    )

@@ -48,6 +48,7 @@ class CodeEnum(IntEnum):
     LLM_TIMEOUT = 38
     LLM_SERVICE_ERROR = 39
     LLM_NO_CHOICE = 40
+    LLM_INVALID_RESPONSE_FORMAT = 41
 
 
 @dataclass
@@ -108,6 +109,7 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
     CodeEnum.LLM_TIMEOUT: CodeMessage(zh="模型超时", en="Model timeout"),
     CodeEnum.LLM_SERVICE_ERROR: CodeMessage(zh="模型服务错误", en="Model service error"),
     CodeEnum.LLM_NO_CHOICE: CodeMessage(zh="无回复", en="No response"),
+    CodeEnum.LLM_INVALID_RESPONSE_FORMAT: CodeMessage(zh="无效的回复格式", en="Invalid response format"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -152,6 +154,7 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.LLM_TIMEOUT: 408,
     CodeEnum.LLM_SERVICE_ERROR: 500,
     CodeEnum.LLM_NO_CHOICE: 404,
+    CodeEnum.LLM_INVALID_RESPONSE_FORMAT: 500,
 }
 
 
