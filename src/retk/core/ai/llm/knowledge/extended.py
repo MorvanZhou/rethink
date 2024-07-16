@@ -15,7 +15,7 @@ from retk.utils import get_at_node_md_link
 async def get_extended_nodes(
         uid: str,
 ) -> List[ExtendedNode]:
-    docs = await client.coll.llm_extended_node.find({"uid": uid}).to_list(None)
+    docs = await client.coll.llm_extended_node.find({"uid": uid}).sort("_id", -1).to_list(None)
     return docs
 
 

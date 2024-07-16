@@ -35,12 +35,12 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
         for item in batch:
             req_id = "".join([str(random.randint(0, 9)) for _ in range(10)])
             node = await db[CollNameEnum.nodes.value].find_one({"id": item["nid"]})
-            # md = md[:int(8000 * 1.8)]
+            md = node["md"][:int(5000 * 1.8)]  # cut md
             s0 = time.perf_counter()
             _summary, code = await knowledge.summary(
                 llm_service=knowledge.LLM_SERVICES[item["summaryService"]],
                 model=item["summaryModel"],
-                md=node["md"],
+                md=md,
                 req_id=req_id,
             )
             s1 = time.perf_counter()
@@ -58,7 +58,7 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
             )
             e1 = time.perf_counter()
             if code != const.CodeEnum.OK:
-                logger.error(f"knowledge extend error: {code}")
+                logger.error(f"knowledge extend error: code={code}")
                 continue
             oneline_e = _extended.replace('\n', '\\n')
             logger.debug(f"extended: {oneline_e}")

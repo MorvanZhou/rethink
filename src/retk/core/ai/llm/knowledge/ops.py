@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Tuple
 
 from retk import const
+from retk.logger import logger
 from .utils import parse_json_pattern, remove_links
 from ..api.base import BaseLLMService, MessagesType
 
@@ -58,5 +59,6 @@ async def extend(
     try:
         title, content = parse_json_pattern(msg)
     except ValueError as e:
+        logger.error(f"parse_json_pattern error: {e}. msg: {msg}")
         return str(e), const.CodeEnum.LLM_INVALID_RESPONSE_FORMAT
     return f"{title}\n\n{content}", const.CodeEnum.OK

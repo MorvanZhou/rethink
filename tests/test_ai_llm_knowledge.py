@@ -110,6 +110,10 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
                 print(f"{service.__class__.__name__} {model.name}\n{text}\n\n")
 
     def test_json_pattern(self):
+        title, content = parse_json_pattern("""{"title": "tttt", "content": "cccc\n21\n2"}""")
+        self.assertEqual("tttt", title)
+        self.assertEqual("cccc\n21\n2", content)
+
         cases = [
             """\
             {
@@ -132,7 +136,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
               "content": "cccc"
             }
             23423saq1是当前
-            """
+            """,
         ]
         for case in cases:
             case = dedent(case)
