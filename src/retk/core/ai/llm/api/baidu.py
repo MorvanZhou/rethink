@@ -3,20 +3,57 @@ from datetime import datetime
 from enum import Enum
 from typing import Tuple, AsyncIterable
 
-from retk import config, const, httpx_helper
+import httpx
+
+from retk import config, const
 from retk.logger import logger
-from .base import BaseLLMService, MessagesType, NoAPIKeyError
+from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlrk4akp7#tokens%E7%94%A8%E9%87%8F%E5%90%8E%E4%BB%98%E8%B4%B9
-class BaiduModelEnum(str, Enum):
-    ERNIE4_8K = "completions_pro"  # 0.12 / 0.12
-    ERNIE35_8K = "completions"  # 0.012 / 0.012
-    ERNIE35_128K = "ernie-3.5-128k"  # 0.048 / 0.096
-    ERNIE_SPEED_128K = "ernie-speed-128k"  # free
-    ERNIE_SPEED_8K = "ernie_speed"  # free
-    ERNIE_LITE_8K = "ernie-lite-8k"  # free
-    ERNIE_TINY_8K = "ernie-tiny-8k"  # free
+class BaiduModelEnum(Enum):
+    ERNIE4_8K = ModelConfig(
+        key="completions_pro",
+        max_tokens=8000,
+        RPM=120,
+        TPM=120_000,
+    )  # 0.12 / 0.12
+    ERNIE35_8K = ModelConfig(
+        key="completions",
+        max_tokens=8000,
+        RPM=300,
+        TPM=300_000,
+    )  # 0.012 / 0.012
+    ERNIE35_128K = ModelConfig(
+        key="ernie-3.5-128k",
+        max_tokens=128000,
+        RPM=100,
+        TPM=100_000,
+    )  # 0.048 / 0.096
+    ERNIE_SPEED_128K = ModelConfig(
+        key="ernie-speed-128k",
+        max_tokens=128000,
+        RPM=6,
+        TPM=128_000,
+    )  # free
+    ERNIE_SPEED_8K = ModelConfig(
+        key="ernie_speed",
+        max_tokens=8000,
+        RPM=300,
+        TPM=300_000,
+    )  # free
+    ERNIE_LITE_8K = ModelConfig(
+        key="ernie-lite-8k",
+        max_tokens=8000,
+        RPM=300,
+        TPM=300_000,
+    )  # free
+    ERNIE_TINY_8K = ModelConfig(
+        key="ernie-tiny-8k",
+        max_tokens=8000,
+        RPM=300,
+        TPM=300_000,
+    )  # free
 
 
 class BaiduService(BaseLLMService):
@@ -40,6 +77,10 @@ class BaiduService(BaseLLMService):
         self.token_expires_at = datetime.now().timestamp()
         self.token = ""
 
+    @staticmethod
+    def get_concurrency() -> int:
+        return 9999
+
     async def set_token(self, req_id: str = None):
         _s = config.get_settings()
         if _s.BAIDU_QIANFAN_API_KEY == "" or _s.BAIDU_QIANFAN_SECRET_KEY == "":
@@ -48,16 +89,17 @@ class BaiduService(BaseLLMService):
         if self.token_expires_at > datetime.now().timestamp():
             return
 
-        resp = await httpx_helper.get_async_client().post(
-            url="https://aip.baidubce.com/oauth/2.0/token",
-            headers={"Content-Type": "application/json", 'Accept': 'application/json'},
-            content=b"",
-            params={
-                "grant_type": "client_credentials",
-                "client_id": _s.BAIDU_QIANFAN_API_KEY,
-                "client_secret": _s.BAIDU_QIANFAN_SECRET_KEY,
-            }
-        )
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                url="https://aip.baidubce.com/oauth/2.0/token",
+                headers={"Content-Type": "application/json", 'Accept': 'application/json'},
+                content=b"",
+                params={
+                    "grant_type": "client_credentials",
+                    "client_id": _s.BAIDU_QIANFAN_API_KEY,
+                    "client_secret": _s.BAIDU_QIANFAN_SECRET_KEY,
+                }
+            )
         if resp.status_code != 200:
             logger.error(f"ReqId={req_id} Baidu model error: {resp.text}")
             return ""
@@ -90,7 +132,7 @@ class BaiduService(BaseLLMService):
             req_id: str = None,
     ) -> Tuple[str, const.CodeEnum]:
         if model is None:
-            model = self.default_model
+            model = self.default_model.key
         payload = self.get_payload(messages=messages, stream=False)
 
         await self.set_token()
@@ -118,7 +160,7 @@ class BaiduService(BaseLLMService):
             req_id: str = None,
     ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
         if model is None:
-            model = self.default_model
+            model = self.default_model.key
         payload = self.get_payload(messages=messages, stream=True)
 
         await self.set_token()

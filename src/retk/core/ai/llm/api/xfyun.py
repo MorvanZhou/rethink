@@ -1,33 +1,38 @@
-import base64
-import hashlib
-import hmac
 import json
-from datetime import datetime
 from enum import Enum
-from time import mktime
 from typing import Optional, Tuple, Dict, AsyncIterable
-from urllib.parse import urlencode
-from wsgiref import handlers
-
-import websockets
-import websockets.exceptions
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLMService, MessagesType, NoAPIKeyError
+from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://xinghuo.xfyun.cn/sparkapi
-class XfYunModelEnum(str, Enum):
-    SPARK35_MAX = "v3.5"
-    SPARK_PRO = "v3.1"
-    SPARK_LITE = "v1.1"
+# https://www.xfyun.cn/doc/spark/HTTP%E8%B0%83%E7%94%A8%E6%96%87%E6%A1%A3.html#_3-%E8%AF%B7%E6%B1%82%E8%AF%B4%E6%98%8E
+class XfYunModelEnum(Enum):
+    SPARK40_ULTRA = ModelConfig(
+        key="v4.0",
+        max_tokens=8192,
+    )
+    SPARK35_MAX = ModelConfig(
+        key="v3.5",
+        max_tokens=8192,
+    )
+    SPARK_PRO = ModelConfig(
+        key="v3.1",
+        max_tokens=8192,
+    )
+    SPARK_LITE = ModelConfig(
+        key="v1.1",
+        max_tokens=8192,
+    )
 
 
 _domain_map = {
-    XfYunModelEnum.SPARK35_MAX.value: "generalv3.5",
-    XfYunModelEnum.SPARK_PRO.value: "generalv3",
-    XfYunModelEnum.SPARK_LITE.value: "general",
+    XfYunModelEnum.SPARK40_ULTRA.value.key: "4.0Ultra",
+    XfYunModelEnum.SPARK35_MAX.value.key: "generalv3.5",
+    XfYunModelEnum.SPARK_PRO.value.key: "generalv3",
+    XfYunModelEnum.SPARK_LITE.value.key: "general",
 }
 
 
@@ -39,62 +44,38 @@ class XfYunService(BaseLLMService):
             timeout: float = 60.,
     ):
         super().__init__(
-            endpoint="wss://spark-api.xf-yun.com/",
+            endpoint="https://spark-api-open.xf-yun.com/v1/chat/completions",
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
             default_model=XfYunModelEnum.SPARK_LITE.value,
         )
 
-    def get_url(self, model: Optional[str], req_id: str = None) -> str:
+    @staticmethod
+    def get_concurrency() -> int:
+        return 1
+
+    @staticmethod
+    def get_headers() -> Dict:
         _s = config.get_settings()
-        if _s.XFYUN_API_KEY == "" or _s.XFYUN_API_SECRET == "" or _s.XFYUN_APP_ID == "":
+        if _s.XFYUN_API_KEY == "" or _s.XFYUN_API_SECRET == "":
             raise NoAPIKeyError("XfYun api secret or skey or appID is empty")
-
-        if model is None:
-            model = self.default_model
-        cur_time = datetime.now()
-        date = handlers.format_date_time(mktime(cur_time.timetuple()))
-
-        tmp = f"host: spark-api.xf-yun.com\ndate: {date}\nGET /{model}/chat HTTP/1.1"
-        tmp_sha = hmac.new(_s.XFYUN_API_SECRET.encode('utf-8'), tmp.encode('utf-8'), digestmod=hashlib.sha256).digest()
-
-        signature = base64.b64encode(tmp_sha).decode(encoding='utf-8')
-        authorization_origin = f'api_key="{_s.XFYUN_API_KEY}", ' \
-                               f'algorithm="hmac-sha256", ' \
-                               f'headers="host date request-line", ' \
-                               f'signature="{signature}"'
-        authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode(encoding='utf-8')
-
-        v = {
-            "authorization": authorization,  # 上方鉴权生成的authorization
-            "date": date,  # 步骤1生成的date
-            "host": "spark-api.xf-yun.com"  # 请求的主机名，根据具体接口替换
-        }
-        url = f"wss://spark-api.xf-yun.com/{model}/chat?" + urlencode(v)
-        return url
-
-    def get_data(self, model: str, messages: MessagesType) -> Dict:
         return {
-            "header": {
-                "app_id": config.get_settings().XFYUN_APP_ID,
-                "uid": "12345"
-            },
-            "parameter": {
-                "chat": {
-                    "domain": _domain_map[model],
-                    "temperature": self.temperature,
-                    # "max_tokens": 1024,
-                }
-            },
-            "payload": {
-                "message": {
-                    # 如果想获取结合上下文的回答，需要开发者每次将历史问答信息一起传给服务端，如下示例
-                    # 注意：text里面的所有content内容加一起的tokens需要控制在8192以内，开发者如有较长对话需求，需要适当裁剪历史信息
-                    "text": messages,
-                }
-            }
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {_s.XFYUN_API_KEY}:{_s.XFYUN_API_SECRET}",
         }
+
+    def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
+        if model is None:
+            model = self.default_model.key
+        data = {
+            "model": _domain_map[model],
+            "stream": stream,
+            "messages": messages,
+            "temperature": self.temperature,
+            "top_k": 4,
+        }
+        return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
     async def complete(
             self,
@@ -102,48 +83,60 @@ class XfYunService(BaseLLMService):
             model: str = None,
             req_id: str = None,
     ) -> Tuple[str, const.CodeEnum]:
-        txt = ""
-        async for content, code in self.stream_complete(messages, model, req_id):
-            if code != const.CodeEnum.OK:
-                return "", code
-            txt += content.decode("utf-8")
-        return txt, const.CodeEnum.OK
+        payload = self.get_payload(model, messages, stream=False)
+        rj, code = await self._complete(
+            url=self.endpoint,
+            headers=self.get_headers(),
+            payload=payload,
+            req_id=req_id,
+        )
+        if code != const.CodeEnum.OK:
+            return "", code
+        if rj["code"] != 0:
+            return rj["message"], const.CodeEnum.LLM_SERVICE_ERROR
+        logger.info(f"ReqId={req_id} {self.__class__.__name__} model usage: {rj['usage']}")
+        return rj["choices"][0]["message"]["content"], code
 
     async def stream_complete(
             self,
             messages: MessagesType,
             model: str = None,
-            req_id: str = None,
+            req_id: str = None
     ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
-        if model is None:
-            model = self.default_model
-        url = self.get_url(model, req_id)
-
-        try:
-            async with websockets.connect(url) as ws:
-                await ws.send(json.dumps(
-                    self.get_data(model=model, messages=messages), ensure_ascii=False, separators=(",", ":")
-                ))
-                async for message in ws:
-                    data = json.loads(message)
-                    code = data['header']['code']
-                    if code != 0:
-                        logger.error(f"ReqId={req_id} 请求错误: {code}, {data}")
-                        yield b"", const.CodeEnum.LLM_SERVICE_ERROR
-                        break
-
-                    choices = data["payload"]["choices"]
-                    status = choices["status"]
-                    content = choices["text"][0]["content"]
-
-                    if status == 2:
-                        # 关闭会话
-                        break
-                    yield content.encode("utf-8"), const.CodeEnum.OK
-
-        except websockets.exceptions.InvalidStatusCode as e:
-            logger.error(f"ReqId={req_id} XfYun model error: {e}")
-            yield b"", const.CodeEnum.LLM_SERVICE_ERROR
-        usage = data['payload']['usage']
-        logger.info(f"ReqId={req_id} XfYun model usage: {usage}")
-        return
+        payload = self.get_payload(model, messages, stream=True)
+        async for b, code in self._stream_complete(
+                url=self.endpoint,
+                headers=self.get_headers(),
+                payload=payload,
+                req_id=req_id
+        ):
+            if code != const.CodeEnum.OK:
+                yield b, code
+                continue
+            txt = ""
+            lines = filter(lambda s: s != b"", b.split("\n\n".encode("utf-8")))
+            for line in lines:
+                json_str = line.decode("utf-8")[5:].strip()
+                if json_str == "[DONE]":
+                    break
+                try:
+                    json_data = json.loads(json_str)
+                except json.JSONDecodeError:
+                    logger.error(f"ReqId={req_id} {self.__class__.__name__} model stream error: json={json_str}")
+                    continue
+                if json_data["code"] != 0:
+                    logger.error(
+                        f"ReqId={req_id} {self.__class__.__name__} model error:"
+                        f" code={json_data['code']} {json_data['message']}"
+                    )
+                    break
+                choice = json_data["choices"][0]
+                try:
+                    usage = choice["usage"]
+                except KeyError:
+                    pass
+                else:
+                    logger.info(f"ReqId={req_id} {self.__class__.__name__} model usage: {usage}")
+                    break
+                txt += choice["delta"]["content"]
+            yield txt.encode("utf-8"), code

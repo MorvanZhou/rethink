@@ -94,10 +94,10 @@ def init_tasks():
     )
 
     # check unscheduled extend node every hour
-    run_every_at(
+    run_every_interval(
         job_id="deliver_unscheduled_node_extend",
         func=tasks.extend_node.deliver_unscheduled_extend_nodes,
-        minute=0,
+        hours=1,
     )
     return
 
@@ -253,6 +253,42 @@ def run_every_at(
         day_of_week=day_of_week,
         start_date=start_date,
         end_date=end_date,
+        args=args,
+        kwargs=kwargs,
+    )
+    return ji, const.CodeEnum.OK
+
+
+def run_every_interval(
+        job_id: str,
+        func: Callable,
+        seconds: int = 0,
+        minutes: int = 0,
+        hours: int = 0,
+        days: int = 0,
+        weeks: int = 0,
+        args: Optional[Tuple] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+) -> Tuple[JobInfo, const.CodeEnum]:
+    args, kwargs = _get_default(args, kwargs)
+    ji = JobInfo(
+        id=job_id,
+        type="interval",
+        args=args,
+        kwargs=kwargs,
+    )
+    _func = __wrap_func(func=func, job_info=ji)
+    if _func is None:
+        return ji, const.CodeEnum.INVALID_SCHEDULE_JOB_ID
+    __scheduler.add_job(
+        id=job_id,
+        func=_func,
+        trigger="interval",
+        seconds=seconds,
+        minutes=minutes,
+        hours=hours,
+        days=days,
+        weeks=weeks,
         args=args,
         kwargs=kwargs,
     )

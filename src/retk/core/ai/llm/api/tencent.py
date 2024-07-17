@@ -8,7 +8,7 @@ from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLMService, MessagesType, NoAPIKeyError
+from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 Headers = TypedDict("Headers", {
     "Authorization": str,
@@ -22,11 +22,23 @@ Headers = TypedDict("Headers", {
 
 
 # https://cloud.tencent.com/document/product/1729/97731
-class TencentModelEnum(str, Enum):
-    HUNYUAN_PRO = "hunyuan-pro"  # in 0.03/1000, out 0.10/1000
-    HUNYUAN_STANDARD = "hunyuan-standard"  # in 0.0045/1000, out 0.005/1000
-    HUNYUAN_STANDARD_256K = "hunyuan-standard-256K"  # in 0.015/1000, out 0.06/1000
-    HUNYUAN_LITE = "hunyuan-lite"  # free
+class TencentModelEnum(Enum):
+    HUNYUAN_PRO = ModelConfig(
+        key="hunyuan-pro",
+        max_tokens=32000,
+    )  # in 0.03/1000, out 0.10/1000
+    HUNYUAN_STANDARD = ModelConfig(
+        key="hunyuan-standard",
+        max_tokens=32000,
+    )  # in 0.0045/1000, out 0.005/1000
+    HUNYUAN_STANDARD_256K = ModelConfig(
+        key="hunyuan-standard-256K",
+        max_tokens=256000,
+    )  # in 0.015/1000, out 0.06/1000
+    HUNYUAN_LITE = ModelConfig(
+        key="hunyuan-lite",
+        max_tokens=256000,
+    )  # free
 
 
 # 计算签名摘要函数
@@ -52,6 +64,10 @@ class TencentService(BaseLLMService):
             timeout=timeout,
             default_model=TencentModelEnum.HUNYUAN_LITE.value,
         )
+
+    @staticmethod
+    def get_concurrency() -> int:
+        return 5
 
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
         _s = config.get_settings()
@@ -106,7 +122,7 @@ class TencentService(BaseLLMService):
 
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
-            model = self.default_model
+            model = self.default_model.key
         return json.dumps(
             {
                 "Model": model,

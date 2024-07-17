@@ -1,8 +1,8 @@
 """Google SSO Login Helper
 """
+import httpx
 
 from .base import DiscoveryDocument, OpenID, SSOBase, SSOLoginError
-from ... import httpx_helper
 
 
 class QQSSO(SSOBase):
@@ -29,6 +29,7 @@ class QQSSO(SSOBase):
 
     async def get_discovery_document(self) -> DiscoveryDocument:
         """Get document containing handy urls"""
-        response = await httpx_helper.get_async_client().get(self.discovery_url)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(self.discovery_url)
         content = response.json()
         return content

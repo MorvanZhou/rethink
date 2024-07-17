@@ -23,15 +23,17 @@ LLM_SERVICES = {
 
 
 async def extend_on_node_post(data: Node):
+    if data["md"].strip() == "":
+        return
     q: NodeExtendQueue = NodeExtendQueue(
         _id=ObjectId(),
         uid=data["uid"],
         nid=data["id"],
         modifiedAt=int(data["modifiedAt"].replace(tzinfo=utc).timestamp()),
         summaryService="baidu",
-        summaryModel=api.BaiduModelEnum.ERNIE_SPEED_8K.value,
+        summaryModel=api.BaiduModelEnum.ERNIE_SPEED_8K.value.key,
         extendService="moonshot",
-        extendModel=api.MoonshotModelEnum.V1_8K.value,
+        extendModel=api.MoonshotModelEnum.V1_8K.value.key,
     )
 
     # sort by _id desc

@@ -7,7 +7,7 @@ from bson.tz_util import utc
 from fastapi import UploadFile
 from starlette.datastructures import Headers
 
-from retk import const, core, httpx_helper
+from retk import const, core
 from retk.config import is_local_db
 from retk.logger import logger
 from retk.models.client import client
@@ -150,12 +150,13 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
     if await core.user.user_space_not_enough(au=au):
         return "", const.CodeEnum.USER_SPACE_NOT_ENOUGH
     try:
-        response = await httpx_helper.get_async_client().get(
-            url=url,
-            headers=ASYNC_CLIENT_HEADERS,
-            follow_redirects=False,
-            timeout=5.
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url=url,
+                headers=ASYNC_CLIENT_HEADERS,
+                follow_redirects=False,
+                timeout=5.
+            )
     except (
             httpx.ConnectTimeout,
             RuntimeError,

@@ -83,7 +83,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             for md in md_source:
                 text, code = await llm.knowledge.summary(
                     llm_service=service,
-                    model=model.value,
+                    model=model.value.key,
                     md=md,
                 )
                 self.assertEqual(const.CodeEnum.OK, code, msg=text)
@@ -103,7 +103,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             for md in md_source:
                 text, code = await llm.knowledge.extend(
                     llm_service=service,
-                    model=model.value,
+                    model=model.value.key,
                     md=md,
                 )
                 self.assertEqual(const.CodeEnum.OK, code, msg=text)

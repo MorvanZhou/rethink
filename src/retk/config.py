@@ -64,6 +64,10 @@ class Settings(BaseSettings):
 
     # moonshot api
     MOONSHOT_API_KEY: str = Field(env='MOONSHOT_API_KEY', default="")
+    MOONSHOT_CONCURRENCY: int = Field(env='MOONSHOT_CONCURRENCY', default=1)
+    MOONSHOT_RPM: int = Field(env='MOONSHOT_RPM', default=3)
+    MOONSHOT_TPM: int = Field(env='MOONSHOT_TPM', default=32_000)
+    MOONSHOT_TPD: int = Field(env='MOONSHOT_TPD', default=1_500_000)
 
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")

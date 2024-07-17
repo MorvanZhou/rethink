@@ -5,23 +5,34 @@ from typing import Tuple, AsyncIterable, Optional
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLMService, MessagesType, NoAPIKeyError
+from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://openai.com/api/pricing/
-class OpenaiModelEnum(str, Enum):
-    GPT4 = "gpt-4"
-    GPT4_TURBO = "gpt-4-turbo"
-    GPT4_32K = "gpt-4-32k"
-    GPT35_TURBO = "gpt-3.5-turbo"
-    GPT35_TURBO_16K = "gpt-3.5-turbo-16k"
+class OpenaiModelEnum(Enum):
+    GPT4 = ModelConfig(
+        key="gpt-4",
+        max_tokens=8192,
+    )
+    GPT4_TURBO = ModelConfig(
+        key="gpt-4-turbo",
+        max_tokens=128000,
+    )
+    GPT4_32K = ModelConfig(
+        key="gpt-4-32k",
+        max_tokens=32000,
+    )
+    GPT35_TURBO = ModelConfig(
+        key="gpt-3.5-turbo",
+        max_tokens=16385,
+    )
 
 
 class OpenaiLLMStyle(BaseLLMService, ABC):
     def __init__(
             self,
             endpoint: str,
-            default_model: str,
+            default_model: ModelConfig,
             top_p: float = 0.9,
             temperature: float = 0.7,
             timeout: float = 60.,
@@ -51,7 +62,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
 
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
-            model = self.default_model
+            model = self.default_model.key
         return json.dumps({
             "model": model,
             "messages": messages,
@@ -136,3 +147,7 @@ class OpenaiService(OpenaiLLMStyle):
     @staticmethod
     def get_api_key():
         return config.get_settings().OPENAI_API_KEY
+
+    @staticmethod
+    def get_concurrency():
+        return 1

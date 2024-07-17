@@ -4,17 +4,49 @@ from typing import Tuple, AsyncIterable, Optional, Dict
 
 from retk import config, const
 from retk.logger import logger
-from .base import BaseLLMService, MessagesType, NoAPIKeyError
+from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-thousand-questions-metering-and-billing
-class AliyunModelEnum(str, Enum):
-    QWEN1_5_05B = "qwen1.5-0.5b-chat"  # free
-    QWEN_2B = "qwen-1.8b-chat"  # free
-    QWEN_LONG = "qwen-long"  # in 0.0005/1000, out 0.002/1000
-    QWEN_TURBO = "qwen-turbo"  # in 0.002/1000, out 0.006/1000
-    QWEN_PLUS = "qwen-plus"  # in 0.004/1000, out 0.012/1000
-    QWEN_MAX = "qwen-max"  # in 0.04/1000, out 0.12/1000
+class AliyunModelEnum(Enum):
+    QWEN1_5_05B = ModelConfig(
+        key="qwen1.5-0.5b-chat",
+        max_tokens=32000,
+    )  # free
+    QWEN_2B = ModelConfig(
+        key="qwen-1.8b-chat",
+        max_tokens=32000,
+    )  # free
+    QWEN_LONG = ModelConfig(
+        key="qwen-long",
+        max_tokens=32000,
+        RPM=100,
+        TPM=1000_000,
+    )  # in 0.0005/1000, out 0.002/1000
+    QWEN_TURBO = ModelConfig(
+        key="qwen-turbo",
+        max_tokens=8000,
+        RPM=500,
+        TPM=500_000,
+    )  # in 0.002/1000, out 0.006/1000
+    QWEN_PLUS = ModelConfig(
+        key="qwen-plus",
+        max_tokens=32000,
+        RPM=200,
+        TPM=200_000,
+    )  # in 0.004/1000, out 0.012/1000
+    QWEN_MAX = ModelConfig(
+        key="qwen-max",
+        max_tokens=8000,
+        RPM=60,
+        TPM=100_000,
+    )  # in 0.04/1000, out 0.12/1000
+    QWEN_MAX_LONG_CONTEXT = ModelConfig(
+        key="qwen-max-longcontext",
+        max_tokens=32000,
+        RPM=5,
+        TPM=1500_000,
+    )
 
 
 class AliyunService(BaseLLMService):
@@ -33,6 +65,10 @@ class AliyunService(BaseLLMService):
         )
 
     @staticmethod
+    def get_concurrency() -> int:
+        return 1
+
+    @staticmethod
     def get_headers(stream: bool) -> Dict[str, str]:
         k = config.get_settings().ALIYUN_DASHSCOPE_API_KEY
         if k == "":
@@ -47,7 +83,7 @@ class AliyunService(BaseLLMService):
 
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
-            model = self.default_model
+            model = self.default_model.key
         return json.dumps({
             'model': model,
             "input": {

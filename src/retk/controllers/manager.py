@@ -1,6 +1,6 @@
 import httpx
 
-from retk import const, config, httpx_helper
+from retk import const, config
 from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, json_exception
 from retk.core import account, user, notice, analysis
@@ -14,16 +14,17 @@ async def __get_then_set_github_user_id(au: AuthedUser, req: schemas.manager.Get
 
     url = f"https://api.github.com/users/{req.github}"
     try:
-        resp = await httpx_helper.get_async_client().get(
-            url=url,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {config.get_settings().OAUTH_API_TOKEN_GITHUB}",
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-            follow_redirects=False,
-            timeout=5.
-        )
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url=url,
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "Authorization": f"Bearer {config.get_settings().OAUTH_API_TOKEN_GITHUB}",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+                follow_redirects=False,
+                timeout=5.
+            )
     except (
             httpx.ConnectTimeout,
             httpx.ConnectError,

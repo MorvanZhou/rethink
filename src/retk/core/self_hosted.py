@@ -5,7 +5,7 @@ import httpx
 from bson import ObjectId
 from bson.tz_util import utc
 
-from retk import const, httpx_helper, __version__
+from retk import const, __version__
 from retk.core import scheduler
 from retk.core import user
 from retk.core.notice import post_in_manager_delivery
@@ -103,12 +103,13 @@ async def get_latest_pkg_version() -> Tuple[Tuple[int, int, int], const.CodeEnum
     default_version = (0, 0, 0)
 
     try:
-        response = await httpx_helper.get_async_client().get(
-            url=url,
-            headers=ASYNC_CLIENT_HEADERS,
-            follow_redirects=False,
-            timeout=2.
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url=url,
+                headers=ASYNC_CLIENT_HEADERS,
+                follow_redirects=False,
+                timeout=2.
+            )
     except (
             httpx.ConnectTimeout,
             RuntimeError,

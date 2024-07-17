@@ -16,7 +16,7 @@ import jwt
 from bson import ObjectId
 from markdown import Markdown
 
-from retk import config, const, regex, httpx_helper
+from retk import config, const, regex
 from retk.logger import logger
 from retk.models import tps
 
@@ -265,11 +265,12 @@ async def get_title_description_from_link(
     # end of SSRF protection
 
     try:
-        response = await httpx_helper.get_async_client().get(
-            url=url,
-            headers=ASYNC_CLIENT_HEADERS,
-            timeout=3.
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url=url,
+                headers=ASYNC_CLIENT_HEADERS,
+                timeout=3.
+            )
     except (
             httpx.ConnectTimeout,
             RuntimeError,

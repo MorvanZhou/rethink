@@ -10,7 +10,7 @@ from fastapi.params import Path
 from starlette.status import HTTP_403_FORBIDDEN
 from typing_extensions import Annotated
 
-from retk import core, httpx_helper, const, config, utils
+from retk import core, const, config, utils
 from retk.controllers.oauth import init_oauth_provider_map
 from retk.controllers.utils import json_exception
 from retk.core import scheduler
@@ -107,8 +107,6 @@ async def on_shutdown():
 
     async_tasks.stop()
     logger.debug("fastapi shutdown event: async_tasks stopped")
-
-    await httpx_helper.close_async_client()
 
 
 async def __process_auth_headers(

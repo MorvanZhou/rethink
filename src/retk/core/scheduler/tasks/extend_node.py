@@ -21,7 +21,7 @@ def deliver_unscheduled_extend_nodes():
 
 async def async_deliver_unscheduled_extend_nodes() -> str:
     _, db = init_mongo(connection_timeout=5)
-    batch_size = 3
+    batch_size = 5
     total_success_count = 0
     total_summary_time = 0
     total_extend_time = 0
@@ -35,12 +35,11 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
         for item in batch:
             req_id = "".join([str(random.randint(0, 9)) for _ in range(10)])
             node = await db[CollNameEnum.nodes.value].find_one({"id": item["nid"]})
-            md = node["md"][:int(5000 * 1.8)]  # cut md
             s0 = time.perf_counter()
             _summary, code = await knowledge.summary(
                 llm_service=knowledge.LLM_SERVICES[item["summaryService"]],
                 model=item["summaryModel"],
-                md=md,
+                md=node["md"],
                 req_id=req_id,
             )
             s1 = time.perf_counter()

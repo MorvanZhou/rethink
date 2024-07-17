@@ -15,8 +15,6 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from retk import httpx_helper
-
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -280,8 +278,8 @@ class SSOBase:
         headers.update(additional_headers)
 
         auth = httpx.BasicAuth(self.client_id, self.client_secret)
-        client = httpx_helper.get_async_client()
-        response = await client.post(token_url, headers=headers, content=body, auth=auth)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(token_url, headers=headers, content=body, auth=auth)
         content = response.json()
         self._refresh_token = content.get("refresh_token")
         self.oauth_client.parse_request_body_response(json.dumps(content))

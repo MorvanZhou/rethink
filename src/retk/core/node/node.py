@@ -116,7 +116,7 @@ async def get_batch(
         c["disabled"] = False
     docs = await client.coll.nodes.find(c).to_list(length=None)
     if len(docs) != len(nids):
-        logger.error(f"docs len != nids len: {nids}")
+        logger.error(f"rid: '{au.request_id}' | uid: '{au.u.id}' | docs len != nids len: {nids}")
         return [], const.CodeEnum.NODE_NOT_EXIST
 
     await node_utils.set_linked_nodes(
