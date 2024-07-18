@@ -21,7 +21,7 @@ def deliver_unscheduled_extend_nodes():
 
 async def async_deliver_unscheduled_extend_nodes() -> str:
     _, db = init_mongo(connection_timeout=5)
-    batch_size = 5
+    batch_size = 40
     total_success_count = 0
     total_summary_time = 0
     total_extend_time = 0
@@ -31,50 +31,54 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
             batch_size).to_list(None)
         if len(batch) == 0:
             break
+        cases: List[knowledge.ExtendCase] = []
+        req_id = "".join([str(random.randint(0, 9)) for _ in range(10)])
 
         for item in batch:
-            req_id = "".join([str(random.randint(0, 9)) for _ in range(10)])
             node = await db[CollNameEnum.nodes.value].find_one({"id": item["nid"]})
-            s0 = time.perf_counter()
-            _summary, code = await knowledge.summary(
-                llm_service=knowledge.LLM_SERVICES[item["summaryService"]],
-                model=item["summaryModel"],
-                md=node["md"],
-                req_id=req_id,
+            cases.append(
+                knowledge.ExtendCase(
+                    _id=item["_id"],
+                    uid=item["uid"],
+                    nid=item["nid"],
+                    service=item["summaryService"],
+                    model=item["summaryModel"],
+                    md=node["md"],
+                )
             )
-            s1 = time.perf_counter()
-            if code != const.CodeEnum.OK:
-                logger.error(f"knowledge summary error: {code}")
+
+        s0 = time.perf_counter()
+        cases = await knowledge.batch_summary(
+            cases=cases,
+            req_id=req_id,
+        )
+        s1 = time.perf_counter()
+
+        e0 = time.perf_counter()
+        cases = await knowledge.batch_extend(
+            cases=cases,
+            req_id=req_id,
+        )
+        e1 = time.perf_counter()
+
+        for case in cases:
+            done_id_list.append(case._id)
+            if case.summary_code != const.CodeEnum.OK or case.extend_code != const.CodeEnum.OK:
                 continue
-            oneline_s = _summary.replace('\n', '\\n')
-            logger.debug(f"summary: {oneline_s}")
-            e0 = time.perf_counter()
-            _extended, code = await knowledge.extend(
-                llm_service=knowledge.LLM_SERVICES[item["extendService"]],
-                model=item["extendModel"],
-                md=_summary,
-                req_id=req_id,
-            )
-            e1 = time.perf_counter()
-            if code != const.CodeEnum.OK:
-                logger.error(f"knowledge extend error: code={code}")
-                continue
-            oneline_e = _extended.replace('\n', '\\n')
-            logger.debug(f"extended: {oneline_e}")
             ext = ExtendedNode(
-                uid=item["uid"],
-                sourceNid=item["nid"],
-                sourceMd=node["md"],
-                extendMd=_extended,
+                uid=case.uid,
+                sourceNid=case.nid,
+                sourceMd=case.md,
+                extendMd=case.extend,
             )
             await db[CollNameEnum.llm_extended_node.value].update_one(
-                {"uid": item["uid"], "sourceNid": item["nid"]},
+                {"uid": case.uid, "sourceNid": case.nid},
                 {"$set": ext},
                 upsert=True
             )
-            done_id_list.append(item["_id"])
-            total_summary_time += s1 - s0
-            total_extend_time += e1 - e0
+
+        total_summary_time += s1 - s0
+        total_extend_time += e1 - e0
 
         if len(done_id_list) > 0:
             res = await db[CollNameEnum.llm_extend_node_queue.value].delete_many({"_id": {"$in": done_id_list}})

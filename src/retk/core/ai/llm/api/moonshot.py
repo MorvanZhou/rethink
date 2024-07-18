@@ -1,7 +1,10 @@
+import asyncio
 from enum import Enum
+from typing import List, Tuple
 
-from retk import config
-from .base import ModelConfig
+from retk import config, const
+from retk.core.utils import ratelimiter
+from .base import ModelConfig, MessagesType
 from .openai import OpenaiLLMStyle
 
 
@@ -43,3 +46,23 @@ class MoonshotService(OpenaiLLMStyle):
     @staticmethod
     def get_concurrency():
         return config.get_settings().MOONSHOT_CONCURRENCY
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        settings = config.get_settings()
+        rate_limiter = ratelimiter.RateLimiter(requests=settings.MOONSHOT_RPM, period=60)
+        concurrent_limiter = ratelimiter.ConcurrentLimiter(n=settings.MOONSHOT_CONCURRENCY)
+
+        tasks = [
+            self._batch_complete(
+                limiters=[concurrent_limiter, rate_limiter],
+                messages=m,
+                model=model,
+                req_id=req_id,
+            ) for m in messages
+        ]
+        return await asyncio.gather(*tasks)

@@ -1,8 +1,11 @@
 import unittest
 from textwrap import dedent
 
+from bson import ObjectId
+
 from retk import const
 from retk.core.ai import llm
+from retk.core.ai.llm.knowledge.ops import ExtendCase
 from retk.core.ai.llm.knowledge.utils import parse_json_pattern
 from . import utils
 from .test_ai_llm_api import skip_no_api_key, clear_all_api_key
@@ -73,41 +76,58 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
     @skip_no_api_key
     async def test_summary(self):
         for service, model in [
-            (llm.api.TencentService(), llm.api.TencentModelEnum.HUNYUAN_LITE),
-            (llm.api.AliyunService(), llm.api.AliyunModelEnum.QWEN_2B),
-            (llm.api.BaiduService(), llm.api.BaiduModelEnum.ERNIE_SPEED_8K),
-            # (llm.api.OpenaiService(), llm.api.OpenaiModelEnum.GPT4),
-            (llm.api.XfYunService(), llm.api.XfYunModelEnum.SPARK_LITE),
-            (llm.api.MoonshotService(), llm.api.MoonshotModelEnum.V1_8K),  # 这个总结比较好
+            ("tencent", llm.api.TencentModelEnum.HUNYUAN_LITE),
+            ("ali", llm.api.AliyunModelEnum.QWEN_2B),
+            ("baidu", llm.api.BaiduModelEnum.ERNIE_SPEED_8K),
+            # ("openai", llm.api.OpenaiModelEnum.GPT4),
+            ("xf", llm.api.XfYunModelEnum.SPARK_LITE),
+            ("moonshot", llm.api.MoonshotModelEnum.V1_8K),  # 这个总结比较好
         ]:
-            for md in md_source:
-                text, code = await llm.knowledge.summary(
-                    llm_service=service,
+            cases = [
+                ExtendCase(
+                    _id=ObjectId(),
+                    uid="testuid",
+                    nid="testnid",
+                    service=service,
                     model=model.value.key,
                     md=md,
-                )
-                self.assertEqual(const.CodeEnum.OK, code, msg=text)
-                print(f"{service.__class__.__name__} {model.name}\n{text}\n\n")
+                ) for md in md_source
+            ]
+            await llm.knowledge.batch_summary(
+                cases=cases,
+            )
+            for case in cases:
+                self.assertEqual(const.CodeEnum.OK, case.extend_code, msg=case.md)
+                print(f"{service} {model.value.key}\n{case.summary}\n\n")
 
     @skip_no_api_key
     async def test_extend(self):
         for service, model in [
-            # (llm.api.TencentService(), llm.api.TencentModelEnum.HUNYUAN_PRO),
-            (llm.api.TencentService(), llm.api.TencentModelEnum.HUNYUAN_STANDARD),
-            (llm.api.AliyunService(), llm.api.AliyunModelEnum.QWEN_PLUS),
-            (llm.api.BaiduService(), llm.api.BaiduModelEnum.ERNIE35_8K),
-            # (llm.api.OpenaiService(), llm.api.OpenaiModelEnum.GPT4),
-            (llm.api.XfYunService(), llm.api.XfYunModelEnum.SPARK_PRO),
-            (llm.api.MoonshotService(), llm.api.MoonshotModelEnum.V1_8K),  # 这个延伸比较好
+            # ("tencent", llm.api.TencentModelEnum.HUNYUAN_PRO),
+            ("tencent", llm.api.TencentModelEnum.HUNYUAN_STANDARD),
+            ("ali", llm.api.AliyunModelEnum.QWEN_PLUS),
+            ("baidu", llm.api.BaiduModelEnum.ERNIE35_8K),
+            # ("openai", llm.api.OpenaiModelEnum.GPT4),
+            ("xf", llm.api.XfYunModelEnum.SPARK_PRO),
+            ("moonshot", llm.api.MoonshotModelEnum.V1_8K),  # 这个延伸比较好
         ]:
-            for md in md_source:
-                text, code = await llm.knowledge.extend(
-                    llm_service=service,
+            cases = [
+                ExtendCase(
+                    _id=ObjectId(),
+                    uid="testuid",
+                    nid="testnid",
+                    service=service,
                     model=model.value.key,
                     md=md,
-                )
-                self.assertEqual(const.CodeEnum.OK, code, msg=text)
-                print(f"{service.__class__.__name__} {model.name}\n{text}\n\n")
+                    summary=md
+                ) for md in md_summary
+            ]
+            await llm.knowledge.batch_extend(
+                cases=cases
+            )
+            for case in cases:
+                self.assertEqual(const.CodeEnum.OK, case.extend_code, msg=case.summary)
+                print(f"{service} {model.value.key}\n{case.extend}\n\n")
 
     def test_json_pattern(self):
         title, content = parse_json_pattern("""{"title": "tttt", "content": "cccc\n21\n2"}""")
@@ -137,6 +157,17 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             }
             23423saq1是当前
             """,
+            """\
+            这是一个关于午睡对大脑健康益处的内容描述，以下是按照要求以json格式返回的结果：
+            
+            ```json
+            {
+              "标题": "tttt",
+              "内容": "cccc"
+            }
+            ```. msg: 这结果：```json
+            {  "标题": "午睡对", "内容": "午睡进身心健康。"}```
+            """
         ]
         for case in cases:
             case = dedent(case)

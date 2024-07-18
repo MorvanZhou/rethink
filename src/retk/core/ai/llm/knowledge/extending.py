@@ -8,19 +8,6 @@ from retk.models.tps.llm import NodeExtendQueue
 from retk.models.tps.node import Node
 from .. import api
 
-TOP_P = 0.9
-TEMPERATURE = 0.5
-TIMEOUT = 60
-
-LLM_SERVICES = {
-    "tencent": api.TencentService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "ali": api.AliyunService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "openai": api.OpenaiService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "moonshot": api.MoonshotService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "xf": api.XfYunService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "baidu": api.BaiduService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-}
-
 
 async def extend_on_node_post(data: Node):
     if data["md"].strip() == "":

@@ -90,6 +90,28 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(s)
 
     @skip_no_api_key
+    async def test_hunyuan_batch_complete(self):
+        m = llm.api.TencentService()
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        for text, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=text)
+            print(text)
+
+        m = llm.api.TencentService()
+        m.concurrency = 6
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        reach_limit = False
+        for text, code in res:
+            if code == const.CodeEnum.LLM_API_LIMIT_EXCEEDED:
+                reach_limit = True
+                break
+        self.assertTrue(reach_limit)
+
+    @skip_no_api_key
     async def test_aliyun_complete(self):
         m = llm.api.AliyunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
@@ -102,6 +124,16 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_aliyun_batch_complete(self):
+        m = llm.api.AliyunService()
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        for text, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=text)
+            print(text)
 
     @skip_no_api_key
     async def test_baidu_complete(self):
@@ -118,6 +150,16 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(b.decode("utf-8"))
 
     @skip_no_api_key
+    async def test_baidu_batch_complete(self):
+        m = llm.api.BaiduService()
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        for text, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=text)
+            print(text)
+
+    @skip_no_api_key
     async def test_openai_complete(self):
         m = llm.api.OpenaiService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
@@ -132,6 +174,16 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(b.decode("utf-8"))
 
     @skip_no_api_key
+    async def test_openai_batch_complete(self):
+        m = llm.api.OpenaiService()
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        for text, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=text)
+            print(text)
+
+    @skip_no_api_key
     async def test_xfyun_complete(self):
         m = llm.api.XfYunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
@@ -144,6 +196,16 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_xfyun_batch_complete(self):
+        m = llm.api.XfYunService()
+        res = await m.batch_complete(
+            [[{"role": "user", "content": "你是谁"}]] * 11,
+        )
+        for text, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=text)
+            print(text)
 
     @skip_no_api_key
     async def test_moonshot_complete(self):

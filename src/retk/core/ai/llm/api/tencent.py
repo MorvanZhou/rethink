@@ -1,12 +1,14 @@
+import asyncio
 import hashlib
 import hmac
 import json
 import time
 from datetime import datetime
 from enum import Enum
-from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional
+from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional, List
 
 from retk import config, const
+from retk.core.utils import ratelimiter
 from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
@@ -50,11 +52,12 @@ class TencentService(BaseLLMService):
     service = "hunyuan"
     host = "hunyuan.tencentcloudapi.com"
     version = "2023-09-01"
+    concurrency = 5
 
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.7,
+            temperature: float = 0.4,
             timeout: float = 60.,
     ):
         super().__init__(
@@ -64,10 +67,6 @@ class TencentService(BaseLLMService):
             timeout=timeout,
             default_model=TencentModelEnum.HUNYUAN_LITE.value,
         )
-
-    @staticmethod
-    def get_concurrency() -> int:
-        return 5
 
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
         _s = config.get_settings()
@@ -139,9 +138,11 @@ class TencentService(BaseLLMService):
     def handle_err(req_id: str, error: Dict):
         msg = error.get("Message")
         code = error.get("Code")
-        logger.error(f"ReqId={req_id} Tencent model error code={code}, msg={msg}")
+        logger.error(f"ReqId={req_id} | Tencent | error code={code}, msg={msg}")
         if code == 4001:
             ccode = const.CodeEnum.LLM_TIMEOUT
+        elif code == "LimitExceeded":
+            ccode = const.CodeEnum.LLM_API_LIMIT_EXCEEDED
         else:
             ccode = const.CodeEnum.LLM_SERVICE_ERROR
         return msg, ccode
@@ -153,7 +154,7 @@ class TencentService(BaseLLMService):
             return "No response", const.CodeEnum.LLM_NO_CHOICE
         choice = choices[0]
         m = choice["Delta"] if stream else choice["Message"]
-        logger.info(f"ReqId={req_id} Tencent model usage: {resp['Usage']}")
+        logger.info(f"ReqId={req_id} | Tencent | usage: {resp['Usage']}")
         return m["Content"], const.CodeEnum.OK
 
     async def complete(
@@ -210,17 +211,35 @@ class TencentService(BaseLLMService):
                 try:
                     json_str = s[6:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} Tencent model stream error: string={s}")
+                    logger.error(f"ReqId={req_id} | Tencent {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} Tencent model stream error: string={s}, error={e}")
+                    logger.error(f"ReqId={req_id} | Tencent {model} | stream error: string={s}, error={e}")
                     continue
                 choice = json_data["Choices"][0]
                 if choice["FinishReason"] != "":
-                    logger.info(f"ReqId={req_id} Tencent model usage: {json_data['Usage']}")
+                    logger.info(f"ReqId={req_id} | Tencent {model} | usage: {json_data['Usage']}")
                     break
                 content = choice["Delta"]["Content"]
                 txt += content
             yield txt.encode("utf-8"), code
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        limiter = ratelimiter.ConcurrentLimiter(n=self.concurrency)
+
+        tasks = [
+            self._batch_complete(
+                limiters=[limiter],
+                messages=m,
+                model=model,
+                req_id=req_id,
+            ) for m in messages
+        ]
+        return await asyncio.gather(*tasks)

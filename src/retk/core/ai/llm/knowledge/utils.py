@@ -3,18 +3,26 @@ import re
 from typing import Tuple
 
 JSON_PTN = re.compile(r"^{\s*?\"title\":\s?\"(.+?)\",\s*?\"content\":\s?\"(.+?)\"\s*?}", re.DOTALL | re.MULTILINE)
+JSON_PTN2 = re.compile(r"^{\s*?\"标题\":\s?\"(.+?)\",\s*?\"内容\":\s?\"(.+?)\"\s*?}", re.DOTALL | re.MULTILINE)
 IMG_PTN = re.compile(r"!\[.*?\]\(.+?\)")
 LINK_PTN = re.compile(r"\[(.*?)]\(.+?\)")
 
 
 def parse_json_pattern(text: str) -> Tuple[str, str]:
-    m = JSON_PTN.search(text)
-    if m:
+    def get_title_content(m):
         title, content = m.group(1), m.group(2)
         title = title.replace("\n", "\\n")
         content = content.replace("\n", "\\n")
         d = json.loads(f'{{"title": "{title}", "content": "{content}"}}')
         return d["title"], d["content"]
+
+    m = JSON_PTN.search(text)
+    if m:
+        return get_title_content(m)
+    m = JSON_PTN2.search(text)
+    if m:
+        return get_title_content(m)
+
     raise ValueError(f"Invalid JSON pattern: {text}")
 
 

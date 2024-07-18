@@ -1,11 +1,13 @@
+import asyncio
 import json
 from datetime import datetime
 from enum import Enum
-from typing import Tuple, AsyncIterable
+from typing import Tuple, AsyncIterable, List, Dict
 
 import httpx
 
 from retk import config, const
+from retk.core.utils import ratelimiter
 from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
@@ -56,11 +58,14 @@ class BaiduModelEnum(Enum):
     )  # free
 
 
+_key2model: Dict[str, BaiduModelEnum] = {m.value.key: m for m in BaiduModelEnum}
+
+
 class BaiduService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.7,
+            temperature: float = 0.4,
             timeout: float = 60.,
     ):
         super().__init__(
@@ -70,16 +75,13 @@ class BaiduService(BaseLLMService):
             timeout=timeout,
             default_model=BaiduModelEnum.ERNIE_SPEED_8K.value,
         )
+
         self.headers = {
             "Content-Type": "application/json",
         }
 
         self.token_expires_at = datetime.now().timestamp()
         self.token = ""
-
-    @staticmethod
-    def get_concurrency() -> int:
-        return 9999
 
     async def set_token(self, req_id: str = None):
         _s = config.get_settings()
@@ -101,11 +103,11 @@ class BaiduService(BaseLLMService):
                 }
             )
         if resp.status_code != 200:
-            logger.error(f"ReqId={req_id} Baidu model error: {resp.text}")
+            logger.error(f"ReqId={req_id} | Baidu | error: {resp.text}")
             return ""
         rj = resp.json()
         if rj.get("error") is not None:
-            logger.error(f"ReqId={req_id} Baidu model token error: {rj['error_description']}")
+            logger.error(f"ReqId={req_id} | Baidu | token error: {rj['error_description']}")
             return ""
 
         self.token_expires_at = rj["expires_in"] + datetime.now().timestamp()
@@ -148,9 +150,9 @@ class BaiduService(BaseLLMService):
             return "Model error, please try later", code
 
         if resp.get("error_code") is not None:
-            logger.error(f"ReqId={req_id} Baidu model error: code={resp['error_code']} {resp['error_msg']}")
+            logger.error(f"ReqId={req_id} | Baidu {model} | error: code={resp['error_code']} {resp['error_msg']}")
             return resp["error_msg"], const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} Baidu model usage: {resp['usage']}")
+        logger.info(f"ReqId={req_id} | Baidu {model} | usage: {resp['usage']}")
         return resp["result"], const.CodeEnum.OK
 
     async def stream_complete(
@@ -183,16 +185,38 @@ class BaiduService(BaseLLMService):
                 try:
                     json_str = s[6:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} Baidu model stream error: string={s}")
+                    logger.error(f"ReqId={req_id} | Baidu {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} Baidu model stream error: string={s}, error={e}")
+                    logger.error(f"ReqId={req_id} | Baidu {model} | stream error: string={s}, error={e}")
                     continue
 
                 if json_data["is_end"]:
-                    logger.info(f"ReqId={req_id} Baidu model usage: {json_data['usage']}")
+                    logger.info(f"ReqId={req_id} | Baidu {model} | usage: {json_data['usage']}")
                     break
                 txt += json_data["result"]
             yield txt.encode("utf-8"), code
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        if model is None:
+            m = self.default_model
+        else:
+            m = _key2model[model].value
+        limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
+
+        tasks = [
+            self._batch_complete(
+                limiters=[limiter],
+                messages=m,
+                model=model,
+                req_id=req_id,
+            ) for m in messages
+        ]
+        return await asyncio.gather(*tasks)

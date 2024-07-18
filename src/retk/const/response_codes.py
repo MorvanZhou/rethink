@@ -49,6 +49,7 @@ class CodeEnum(IntEnum):
     LLM_SERVICE_ERROR = 39
     LLM_NO_CHOICE = 40
     LLM_INVALID_RESPONSE_FORMAT = 41
+    LLM_API_LIMIT_EXCEEDED = 42
 
 
 @dataclass
@@ -110,6 +111,7 @@ CODE_MESSAGES: Dict[CodeEnum, CodeMessage] = {
     CodeEnum.LLM_SERVICE_ERROR: CodeMessage(zh="模型服务错误", en="Model service error"),
     CodeEnum.LLM_NO_CHOICE: CodeMessage(zh="无回复", en="No response"),
     CodeEnum.LLM_INVALID_RESPONSE_FORMAT: CodeMessage(zh="无效的回复格式", en="Invalid response format"),
+    CodeEnum.LLM_API_LIMIT_EXCEEDED: CodeMessage(zh="LLM API 调用次数超过限制", en="LLM API call limit exceeded"),
 }
 
 CODE2STATUS_CODE: Dict[CodeEnum, int] = {
@@ -155,6 +157,7 @@ CODE2STATUS_CODE: Dict[CodeEnum, int] = {
     CodeEnum.LLM_SERVICE_ERROR: 500,
     CodeEnum.LLM_NO_CHOICE: 404,
     CodeEnum.LLM_INVALID_RESPONSE_FORMAT: 500,
+    CodeEnum.LLM_API_LIMIT_EXCEEDED: 429,
 }
 
 

@@ -97,7 +97,7 @@ def init_tasks():
     run_every_interval(
         job_id="deliver_unscheduled_node_extend",
         func=tasks.extend_node.deliver_unscheduled_extend_nodes,
-        hours=1,
+        minutes=40,
     )
     return
 

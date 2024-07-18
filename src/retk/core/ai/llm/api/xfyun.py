@@ -1,8 +1,10 @@
+import asyncio
 import json
 from enum import Enum
-from typing import Optional, Tuple, Dict, AsyncIterable
+from typing import Optional, Tuple, Dict, AsyncIterable, List
 
 from retk import config, const
+from retk.core.utils import ratelimiter
 from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
@@ -40,7 +42,7 @@ class XfYunService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.7,
+            temperature: float = 0.4,
             timeout: float = 60.,
     ):
         super().__init__(
@@ -50,10 +52,7 @@ class XfYunService(BaseLLMService):
             timeout=timeout,
             default_model=XfYunModelEnum.SPARK_LITE.value,
         )
-
-    @staticmethod
-    def get_concurrency() -> int:
-        return 1
+        self.concurrency = 1
 
     @staticmethod
     def get_headers() -> Dict:
@@ -94,7 +93,7 @@ class XfYunService(BaseLLMService):
             return "", code
         if rj["code"] != 0:
             return rj["message"], const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} {self.__class__.__name__} model usage: {rj['usage']}")
+        logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {rj['usage']}")
         return rj["choices"][0]["message"]["content"], code
 
     async def stream_complete(
@@ -122,11 +121,11 @@ class XfYunService(BaseLLMService):
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError:
-                    logger.error(f"ReqId={req_id} {self.__class__.__name__} model stream error: json={json_str}")
+                    logger.error(f"ReqId={req_id} | {self.__class__.__name__} {model} | stream error: json={json_str}")
                     continue
                 if json_data["code"] != 0:
                     logger.error(
-                        f"ReqId={req_id} {self.__class__.__name__} model error:"
+                        f"ReqId={req_id} | {self.__class__.__name__} {model} | error:"
                         f" code={json_data['code']} {json_data['message']}"
                     )
                     break
@@ -136,7 +135,25 @@ class XfYunService(BaseLLMService):
                 except KeyError:
                     pass
                 else:
-                    logger.info(f"ReqId={req_id} {self.__class__.__name__} model usage: {usage}")
+                    logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {usage}")
                     break
                 txt += choice["delta"]["content"]
             yield txt.encode("utf-8"), code
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        limiter = ratelimiter.ConcurrentLimiter(n=self.concurrency)
+
+        tasks = [
+            self._batch_complete(
+                limiters=[limiter],
+                messages=m,
+                model=model,
+                req_id=req_id,
+            ) for m in messages
+        ]
+        return await asyncio.gather(*tasks)

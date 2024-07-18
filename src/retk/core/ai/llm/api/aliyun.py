@@ -1,8 +1,10 @@
+import asyncio
 import json
 from enum import Enum
-from typing import Tuple, AsyncIterable, Optional, Dict
+from typing import Tuple, AsyncIterable, Optional, Dict, List
 
 from retk import config, const
+from retk.core.utils import ratelimiter
 from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
@@ -49,11 +51,14 @@ class AliyunModelEnum(Enum):
     )
 
 
+_key2model: Dict[str, AliyunModelEnum] = {m.value.key: m for m in AliyunModelEnum}
+
+
 class AliyunService(BaseLLMService):
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.7,
+            temperature: float = 0.4,
             timeout: float = 60.,
     ):
         super().__init__(
@@ -63,10 +68,7 @@ class AliyunService(BaseLLMService):
             timeout=timeout,
             default_model=AliyunModelEnum.QWEN1_5_05B.value,
         )
-
-    @staticmethod
-    def get_concurrency() -> int:
-        return 1
+        self.concurrency = 5
 
     @staticmethod
     def get_headers(stream: bool) -> Dict[str, str]:
@@ -113,10 +115,14 @@ class AliyunService(BaseLLMService):
         )
         if code != const.CodeEnum.OK:
             return "Aliyun model error, please try later", code
-        if rj.get("code") is not None:
-            logger.error(f"ReqId={req_id} Aliyun model error: code={rj['code']} {rj['message']}")
+        rcode = rj.get("code")
+        if rcode is not None:
+            logger.error(f"ReqId={req_id} | Aliyun {model} | error: code={rj['code']} {rj['message']}")
+            if rcode == "Throttling.RateQuota":
+                return "Aliyun model rate limit exceeded", const.CodeEnum.LLM_API_LIMIT_EXCEEDED
             return "Aliyun model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} Aliyun model usage: {rj['usage']}")
+
+        logger.info(f"ReqId={req_id} | Aliyun {model} | usage: {rj['usage']}")
         return rj["output"]["choices"][0]["message"]["content"], const.CodeEnum.OK
 
     async def stream_complete(
@@ -144,16 +150,39 @@ class AliyunService(BaseLLMService):
                 try:
                     json_str = s[5:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} Aliyun model stream error: string={s}")
+                    logger.error(f"ReqId={req_id} | Aliyun {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} Aliyun model stream error: string={s}, error={e}")
+                    logger.error(f"ReqId={req_id} | Aliyun {model} | stream error: string={s}, error={e}")
                     continue
                 choice = json_data["output"]["choices"][0]
                 if choice["finish_reason"] != "null":
-                    logger.info(f"ReqId={req_id} Aliyun model usage: {json_data['usage']}")
+                    logger.info(f"ReqId={req_id} | Aliyun {model} | usage: {json_data['usage']}")
                     break
                 txt += choice["message"]["content"]
             yield txt.encode("utf-8"), code
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        if model is None:
+            m = self.default_model
+        else:
+            m = _key2model[model].value
+        concurrent_limiter = ratelimiter.ConcurrentLimiter(n=self.concurrency)
+        rate_limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
+
+        tasks = [
+            self._batch_complete(
+                limiters=[concurrent_limiter, rate_limiter],
+                messages=m,
+                model=model,
+                req_id=req_id,
+            ) for m in messages
+        ]
+        return await asyncio.gather(*tasks)
