@@ -62,6 +62,8 @@ _key2model: Dict[str, BaiduModelEnum] = {m.value.key: m for m in BaiduModelEnum}
 
 
 class BaiduService(BaseLLMService):
+    name = "baidu"
+
     def __init__(
             self,
             top_p: float = 0.9,

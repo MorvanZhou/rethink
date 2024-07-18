@@ -25,6 +25,7 @@ class NoAPIKeyError(Exception):
 
 
 class BaseLLMService(ABC):
+    name: str
     default_timeout = 60.
 
     def __init__(
@@ -35,6 +36,9 @@ class BaseLLMService(ABC):
             timeout: float = None,
             default_model: Optional[ModelConfig] = None,
     ):
+        if self.name is None:
+            raise ValueError("name should be set")
+
         self.top_p = top_p
         self.temperature = temperature
         self.timeout = self.default_timeout if timeout is not None else timeout

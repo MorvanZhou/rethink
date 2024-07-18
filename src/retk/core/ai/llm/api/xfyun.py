@@ -39,6 +39,7 @@ _domain_map = {
 
 
 class XfYunService(BaseLLMService):
+    name = "xf"
     def __init__(
             self,
             top_p: float = 0.9,

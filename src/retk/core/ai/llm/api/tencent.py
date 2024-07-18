@@ -49,6 +49,7 @@ def sign(key, msg):
 
 
 class TencentService(BaseLLMService):
+    name = "tencent"
     service = "hunyuan"
     host = "hunyuan.tencentcloudapi.com"
     version = "2023-09-01"

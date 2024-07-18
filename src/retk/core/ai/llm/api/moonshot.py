@@ -25,6 +25,8 @@ class MoonshotModelEnum(Enum):
 
 
 class MoonshotService(OpenaiLLMStyle):
+    name = "moonshot"
+
     def __init__(
             self,
             top_p: float = 0.9,

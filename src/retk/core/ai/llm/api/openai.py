@@ -141,6 +141,8 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
 
 
 class OpenaiService(OpenaiLLMStyle):
+    name = "openai"
+
     def __init__(
             self,
             top_p: float = 0.9,

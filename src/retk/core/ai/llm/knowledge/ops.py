@@ -33,16 +33,18 @@ class ExtendCase:
 
 
 TOP_P = 0.9
-TEMPERATURE = 0.4
+TEMPERATURE = 0.6
 TIMEOUT = 60
 
-LLM_SERVICES = {
-    "tencent": api.TencentService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "ali": api.AliyunService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "openai": api.OpenaiService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "moonshot": api.MoonshotService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "xf": api.XfYunService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
-    "baidu": api.BaiduService(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT),
+LLM_SERVICES_MAP = {
+    s.name: s(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT) for s in [
+        api.TencentService,
+        api.AliyunService,
+        api.OpenaiService,
+        api.MoonshotService,
+        api.XfYunService,
+        api.BaiduService,
+    ]
 }
 
 
@@ -66,7 +68,7 @@ async def _batch_send(
         svr_group[case.service][case.model]["msgs"].append(_m)
     for service, models in svr_group.items():
         for model, model_cases in models.items():
-            llm_service = LLM_SERVICES[service]
+            llm_service = LLM_SERVICES_MAP[service]
             results = await llm_service.batch_complete(
                 messages=model_cases["msgs"],
                 model=model,
@@ -82,9 +84,11 @@ async def _batch_send(
 
                 oneline_s = _text.replace('\n', '\\n')
                 phase = "extend" if is_extend else "summary"
-                logger.debug(f"reqId={req_id} | knowledge {phase}: {oneline_s}")
+                logger.debug(
+                    f"reqId={req_id} | knowledge {phase} | {case.service} {case.model} | response='{oneline_s}'"
+                )
                 if code != const.CodeEnum.OK:
-                    logger.error(f"reqId={req_id} | knowledge {phase} error: {code}")
+                    logger.error(f"reqId={req_id} | knowledge {phase} | {case.service} {case.model} | error: {code}")
     return cases
 
 

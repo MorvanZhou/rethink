@@ -55,6 +55,8 @@ _key2model: Dict[str, AliyunModelEnum] = {m.value.key: m for m in AliyunModelEnu
 
 
 class AliyunService(BaseLLMService):
+    name = "ali"
+
     def __init__(
             self,
             top_p: float = 0.9,
