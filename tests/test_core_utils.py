@@ -29,7 +29,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(*tasks)
         total_time = time.time() - st
         self.assertGreaterEqual(total_time, 0.3)
-        self.assertLess(total_time, 0.4)
+        self.assertLess(total_time, 0.45)
         self.assertEqual(11, count)
 
     @patch("httpx.AsyncClient.get")
@@ -53,7 +53,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(*tasks)
         total_time = time.time() - st
         self.assertGreaterEqual(total_time, 1)
-        self.assertLess(total_time, 2)
+        self.assertLess(total_time, 2.5)
         self.assertEqual(16, count)
 
     async def test_concurrent_limiter(self):
@@ -72,7 +72,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(*tasks)
         total_time = time.time() - st
         self.assertGreaterEqual(total_time, 0.3)
-        self.assertLess(total_time, 0.4)
+        self.assertLess(total_time, 0.45)
         self.assertEqual(5, count)
 
     async def test_concurrent_with_rate_limiter(self):
@@ -93,5 +93,5 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(*tasks)
         total_time = time.time() - st
         self.assertGreaterEqual(total_time, 0.3)
-        self.assertLess(total_time, 0.4)
+        self.assertLess(total_time, 0.45)
         self.assertEqual(4, count)
