@@ -88,8 +88,10 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
                     _id=ObjectId(),
                     uid="testuid",
                     nid="testnid",
-                    service=service,
-                    model=model.value.key,
+                    summary_service=service,
+                    summary_model=model.value.key,
+                    extend_service=service,
+                    extend_model=model.value.key,
                     md=md,
                 ) for md in md_source
             ]
@@ -116,8 +118,10 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
                     _id=ObjectId(),
                     uid="testuid",
                     nid="testnid",
-                    service=service,
-                    model=model.value.key,
+                    summary_service=service,
+                    summary_model=model.value.key,
+                    extend_service=service,
+                    extend_model=model.value.key,
                     md=md,
                     summary=md
                 ) for md in md_summary

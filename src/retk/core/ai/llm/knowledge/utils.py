@@ -22,8 +22,8 @@ def parse_json_pattern(text: str) -> Tuple[str, str]:
     m = JSON_PTN2.search(text)
     if m:
         return get_title_content(m)
-
-    raise ValueError(f"Invalid JSON pattern: {text}")
+    oneline = text.replace("\n", "\\n")
+    raise ValueError(f"Invalid JSON pattern: {oneline}")
 
 
 def remove_links(text: str) -> str:

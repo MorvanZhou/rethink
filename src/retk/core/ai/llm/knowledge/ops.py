@@ -19,8 +19,10 @@ class ExtendCase:
     _id: ObjectId
     uid: str
     nid: str
-    service: str
-    model: str
+    summary_service: str
+    summary_model: str
+    extend_service: str
+    extend_model: str
     md: str
     stripped_md: str = ""
     summary: str = ""
@@ -56,16 +58,26 @@ async def _batch_send(
 ) -> List[ExtendCase]:
     svr_group = {}
     for case in cases:
-        if case.service not in svr_group:
-            svr_group[case.service] = {}
-        if case.model not in svr_group[case.service]:
-            svr_group[case.service][case.model] = {"case": [], "msgs": []}
+        if is_extend:
+            service = case.extend_service
+            model = case.extend_model
+            content = case.summary
+        else:
+            service = case.summary_service
+            model = case.summary_model
+            content = case.stripped_md
+
+        if service not in svr_group:
+            svr_group[service] = {}
+        if model not in svr_group[service]:
+            svr_group[service][model] = {"case": [], "msgs": []}
         _m: MessagesType = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": case.summary if is_extend else case.stripped_md},
+            {"role": "user", "content": content},
         ]
-        svr_group[case.service][case.model]["case"].append(case)
-        svr_group[case.service][case.model]["msgs"].append(_m)
+        svr_group[service][model]["case"].append(case)
+        svr_group[service][model]["msgs"].append(_m)
+
     for service, models in svr_group.items():
         for model, model_cases in models.items():
             llm_service = LLM_SERVICES_MAP[service]
@@ -85,10 +97,14 @@ async def _batch_send(
                 oneline_s = _text.replace('\n', '\\n')
                 phase = "extend" if is_extend else "summary"
                 logger.debug(
-                    f"reqId={req_id} | knowledge {phase} | {case.service} {case.model} | response='{oneline_s}'"
+                    f"reqId={req_id} | knowledge {phase} "
+                    f"| {service} {model} | response='{oneline_s}'"
                 )
                 if code != const.CodeEnum.OK:
-                    logger.error(f"reqId={req_id} | knowledge {phase} | {case.service} {case.model} | error: {code}")
+                    logger.error(
+                        f"reqId={req_id} | knowledge {phase} "
+                        f"| {service} {model} | error: {code}"
+                    )
     return cases
 
 
@@ -122,8 +138,13 @@ async def batch_extend(
         try:
             title, content = parse_json_pattern(case.extend)
         except ValueError as e:
-            oneline = case.extend.replace('\n', '\\n')
-            logger.error(f"reqId={req_id} | parse_json_pattern error: {e}. msg: {oneline}")
+            oneline_e = case.extend.replace('\n', '\\n')
+            oneline_s = case.summary.replace('\n', '\\n')
+            logger.error(
+                f"reqId={req_id} | {case.extend_service} {case.extend_model} "
+                f"| parse_json_pattern error: {e} "
+                f"| summary: {oneline_s} "
+                f"| extension: {oneline_e}")
             case.extend_code = const.CodeEnum.LLM_INVALID_RESPONSE_FORMAT
         else:
             case.extend = f"{title}\n\n{content}"

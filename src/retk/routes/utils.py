@@ -121,7 +121,7 @@ async def __process_auth_headers(
         raise json_exception(
             request_id=request_id,
             code=const.CodeEnum.INVALID_AUTH if is_refresh_token else const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN,
-            log_msg="empty token",
+            log_msg="EmptyToken",
         )
     au = AuthedUser(
         u=None,

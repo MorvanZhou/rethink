@@ -41,8 +41,10 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
                     _id=item["_id"],
                     uid=item["uid"],
                     nid=item["nid"],
-                    service=item["summaryService"],
-                    model=item["summaryModel"],
+                    summary_service=item["summaryService"],
+                    summary_model=item["summaryModel"],
+                    extend_service=item["extendService"],
+                    extend_model=item["extendModel"],
                     md=node["md"],
                 )
             )
