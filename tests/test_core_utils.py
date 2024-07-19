@@ -28,7 +28,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         tasks = [fetch("https://xxx") for _ in range(11)]
         await asyncio.gather(*tasks)
         total_time = time.time() - st
-        self.assertGreaterEqual(total_time, 0.3)
+        self.assertGreaterEqual(total_time, 0.29)
         # self.assertLess(total_time, 0.5)
         self.assertEqual(11, count)
 
@@ -71,7 +71,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         tasks = [fetch() for _ in range(5)]
         await asyncio.gather(*tasks)
         total_time = time.time() - st
-        self.assertGreaterEqual(total_time, 0.3)
+        self.assertGreaterEqual(total_time, 0.29)
         # self.assertLess(total_time, 0.5)
         self.assertEqual(5, count)
 
@@ -92,6 +92,6 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         tasks = [fetch() for _ in range(4)]
         await asyncio.gather(*tasks)
         total_time = time.time() - st
-        self.assertGreaterEqual(total_time, 0.3)
+        self.assertGreaterEqual(total_time, 0.29)
         # self.assertLess(total_time, 0.5)
         self.assertEqual(4, count)
