@@ -94,7 +94,7 @@ class XfYunService(BaseLLMService):
             return "", code
         if rj["code"] != 0:
             return rj["message"], const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {rj['usage']}")
+        logger.info(f"rid='{req_id}' | {self.__class__.__name__} {model} | usage: {rj['usage']}")
         return rj["choices"][0]["message"]["content"], code
 
     async def stream_complete(
@@ -122,11 +122,11 @@ class XfYunService(BaseLLMService):
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError:
-                    logger.error(f"ReqId={req_id} | {self.__class__.__name__} {model} | stream error: json={json_str}")
+                    logger.error(f"rid='{req_id}' | {self.__class__.__name__} {model} | stream error: json={json_str}")
                     continue
                 if json_data["code"] != 0:
                     logger.error(
-                        f"ReqId={req_id} | {self.__class__.__name__} {model} | error:"
+                        f"rid='{req_id}' | {self.__class__.__name__} {model} | error:"
                         f" code={json_data['code']} {json_data['message']}"
                     )
                     break
@@ -136,7 +136,7 @@ class XfYunService(BaseLLMService):
                 except KeyError:
                     pass
                 else:
-                    logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {usage}")
+                    logger.info(f"rid='{req_id}' | {self.__class__.__name__} {model} | usage: {usage}")
                     break
                 txt += choice["delta"]["content"]
             yield txt.encode("utf-8"), code

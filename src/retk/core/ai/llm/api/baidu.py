@@ -105,11 +105,11 @@ class BaiduService(BaseLLMService):
                 }
             )
         if resp.status_code != 200:
-            logger.error(f"ReqId={req_id} | Baidu | error: {resp.text}")
+            logger.error(f"rid='{req_id}' | Baidu | error: {resp.text}")
             return ""
         rj = resp.json()
         if rj.get("error") is not None:
-            logger.error(f"ReqId={req_id} | Baidu | token error: {rj['error_description']}")
+            logger.error(f"rid='{req_id}' | Baidu | token error: {rj['error_description']}")
             return ""
 
         self.token_expires_at = rj["expires_in"] + datetime.now().timestamp()
@@ -152,9 +152,9 @@ class BaiduService(BaseLLMService):
             return "Model error, please try later", code
 
         if resp.get("error_code") is not None:
-            logger.error(f"ReqId={req_id} | Baidu {model} | error: code={resp['error_code']} {resp['error_msg']}")
+            logger.error(f"rid='{req_id}' | Baidu {model} | error: code={resp['error_code']} {resp['error_msg']}")
             return resp["error_msg"], const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} | Baidu {model} | usage: {resp['usage']}")
+        logger.info(f"rid='{req_id}' | Baidu {model} | usage: {resp['usage']}")
         return resp["result"], const.CodeEnum.OK
 
     async def stream_complete(
@@ -187,16 +187,16 @@ class BaiduService(BaseLLMService):
                 try:
                     json_str = s[6:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} | Baidu {model} | stream error: string={s}")
+                    logger.error(f"rid='{req_id}' | Baidu {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} | Baidu {model} | stream error: string={s}, error={e}")
+                    logger.error(f"rid='{req_id}' | Baidu {model} | stream error: string={s}, error={e}")
                     continue
 
                 if json_data["is_end"]:
-                    logger.info(f"ReqId={req_id} | Baidu {model} | usage: {json_data['usage']}")
+                    logger.info(f"rid='{req_id}' | Baidu {model} | usage: {json_data['usage']}")
                     break
                 txt += json_data["result"]
             yield txt.encode("utf-8"), code

@@ -100,7 +100,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             return "", code
         if rj.get("error") is not None:
             return rj["error"]["message"], const.CodeEnum.LLM_SERVICE_ERROR
-        logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {rj['usage']}")
+        logger.info(f"rid='{req_id}' | {self.__class__.__name__} {model} | usage: {rj['usage']}")
         return rj["choices"][0]["message"]["content"], code
 
     async def stream_complete(
@@ -126,7 +126,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError:
-                    logger.error(f"ReqId={req_id} | {self.__class__.__name__} {model} | stream error: json={json_str}")
+                    logger.error(f"rid='{req_id}' | {self.__class__.__name__} {model} | stream error: json={json_str}")
                     continue
                 choice = json_data["choices"][0]
                 if choice["finish_reason"] is not None:
@@ -134,7 +134,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
                         usage = json_data["usage"]
                     except KeyError:
                         usage = choice["usage"]
-                    logger.info(f"ReqId={req_id} | {self.__class__.__name__} {model} | usage: {usage}")
+                    logger.info(f"rid='{req_id}' | {self.__class__.__name__} {model} | usage: {usage}")
                     break
                 txt += choice["delta"]["content"]
             yield txt.encode("utf-8"), code

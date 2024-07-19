@@ -119,12 +119,12 @@ class AliyunService(BaseLLMService):
             return "Aliyun model error, please try later", code
         rcode = rj.get("code")
         if rcode is not None:
-            logger.error(f"ReqId={req_id} | Aliyun {model} | error: code={rj['code']} {rj['message']}")
+            logger.error(f"rid='{req_id}' | Aliyun {model} | error: code={rj['code']} {rj['message']}")
             if rcode == "Throttling.RateQuota":
                 return "Aliyun model rate limit exceeded", const.CodeEnum.LLM_API_LIMIT_EXCEEDED
             return "Aliyun model error, please try later", const.CodeEnum.LLM_SERVICE_ERROR
 
-        logger.info(f"ReqId={req_id} | Aliyun {model} | usage: {rj['usage']}")
+        logger.info(f"rid='{req_id}' | Aliyun {model} | usage: {rj['usage']}")
         return rj["output"]["choices"][0]["message"]["content"], const.CodeEnum.OK
 
     async def stream_complete(
@@ -152,16 +152,16 @@ class AliyunService(BaseLLMService):
                 try:
                     json_str = s[5:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} | Aliyun {model} | stream error: string={s}")
+                    logger.error(f"rid='{req_id}' | Aliyun {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} | Aliyun {model} | stream error: string={s}, error={e}")
+                    logger.error(f"rid='{req_id}' | Aliyun {model} | stream error: string={s}, error={e}")
                     continue
                 choice = json_data["output"]["choices"][0]
                 if choice["finish_reason"] != "null":
-                    logger.info(f"ReqId={req_id} | Aliyun {model} | usage: {json_data['usage']}")
+                    logger.info(f"rid='{req_id}' | Aliyun {model} | usage: {json_data['usage']}")
                     break
                 txt += choice["message"]["content"]
             yield txt.encode("utf-8"), code

@@ -139,7 +139,7 @@ class TencentService(BaseLLMService):
     def handle_err(req_id: str, error: Dict):
         msg = error.get("Message")
         code = error.get("Code")
-        logger.error(f"ReqId={req_id} | Tencent | error code={code}, msg={msg}")
+        logger.error(f"rid='{req_id}' | Tencent | error code={code}, msg={msg}")
         if code == 4001:
             ccode = const.CodeEnum.LLM_TIMEOUT
         elif code == "LimitExceeded":
@@ -155,7 +155,7 @@ class TencentService(BaseLLMService):
             return "No response", const.CodeEnum.LLM_NO_CHOICE
         choice = choices[0]
         m = choice["Delta"] if stream else choice["Message"]
-        logger.info(f"ReqId={req_id} | Tencent | usage: {resp['Usage']}")
+        logger.info(f"rid='{req_id}' | Tencent | usage: {resp['Usage']}")
         return m["Content"], const.CodeEnum.OK
 
     async def complete(
@@ -212,16 +212,16 @@ class TencentService(BaseLLMService):
                 try:
                     json_str = s[6:]
                 except IndexError:
-                    logger.error(f"ReqId={req_id} | Tencent {model} | stream error: string={s}")
+                    logger.error(f"rid='{req_id}' | Tencent {model} | stream error: string={s}")
                     continue
                 try:
                     json_data = json.loads(json_str)
                 except json.JSONDecodeError as e:
-                    logger.error(f"ReqId={req_id} | Tencent {model} | stream error: string={s}, error={e}")
+                    logger.error(f"rid='{req_id}' | Tencent {model} | stream error: string={s}, error={e}")
                     continue
                 choice = json_data["Choices"][0]
                 if choice["FinishReason"] != "":
-                    logger.info(f"ReqId={req_id} | Tencent {model} | usage: {json_data['Usage']}")
+                    logger.info(f"rid='{req_id}' | Tencent {model} | usage: {json_data['Usage']}")
                     break
                 content = choice["Delta"]["Content"]
                 txt += content

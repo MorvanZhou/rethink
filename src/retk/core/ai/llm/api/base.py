@@ -68,14 +68,14 @@ class BaseLLMService(ABC):
                 httpx.ConnectError,
                 httpx.ReadTimeout,
         ) as e:
-            logger.error(f"ReqId={req_id} Model error: {e}")
+            logger.error(f"rid='{req_id}' Model error: {e}")
             return {}, const.CodeEnum.LLM_TIMEOUT
         except httpx.HTTPError as e:
-            logger.error(f"ReqId={req_id} Model error: {e}")
+            logger.error(f"rid='{req_id}' Model error: {e}")
             return {}, const.CodeEnum.LLM_SERVICE_ERROR
         if resp.status_code != 200:
             txt = resp.text.replace('\n', '')
-            logger.error(f"ReqId={req_id} Model error: {txt}")
+            logger.error(f"rid='{req_id}' Model error: {txt}")
             return {}, const.CodeEnum.LLM_SERVICE_ERROR
 
         rj = resp.json()
@@ -110,7 +110,7 @@ class BaseLLMService(ABC):
         ) as resp:
             if resp.status_code != 200:
                 await resp.aread()
-                logger.error(f"ReqId={req_id} Model error: {resp.text}")
+                logger.error(f"rid='{req_id}' Model error: {resp.text}")
                 yield resp.content, const.CodeEnum.LLM_SERVICE_ERROR
                 await client.aclose()
                 return
