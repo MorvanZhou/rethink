@@ -21,6 +21,7 @@ async def set_cookie_response(
     if "id" not in u:
         raise json_exception(
             request_id=req_id,
+            uid=u.get("id", ""),
             code=const.CodeEnum.INVALID_AUTH,
             language=const.LanguageEnum.EN.value,
             log_msg="user id not found",
@@ -77,6 +78,7 @@ async def signup(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
@@ -89,6 +91,7 @@ async def signup(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
@@ -116,12 +119,14 @@ async def login(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
     if u["disabled"]:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=const.CodeEnum.USER_DISABLED,
             language=req.language,
         )
@@ -134,6 +139,7 @@ async def login(
         code = const.CodeEnum.ACCOUNT_OR_PASSWORD_ERROR
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
@@ -211,6 +217,7 @@ async def forget(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
@@ -218,6 +225,7 @@ async def forget(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )
@@ -225,6 +233,7 @@ async def forget(
     if u is None:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=const.CodeEnum.INVALID_AUTH,
             language=req.language,
         )
@@ -236,6 +245,7 @@ async def forget(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=const.LanguageEnum.EN.value,
         )
@@ -290,6 +300,7 @@ async def email_send_code(
         if u is not None:
             raise json_exception(
                 request_id=req_id,
+                uid='',
                 code=const.CodeEnum.ACCOUNT_EXIST_TRY_FORGET_PASSWORD,
                 language=req.language,
             )
@@ -303,6 +314,7 @@ async def email_send_code(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
+            uid='',
             code=code,
             language=req.language,
         )

@@ -13,6 +13,7 @@ async def add_user_behavior(
     except KeyError:
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id,
             code=const.CodeEnum.INVALID_PARAM,
             language=au.u.language,
         )

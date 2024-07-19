@@ -54,6 +54,7 @@ async def login_provider(provider_name: str) -> OAuthResponse:
     except KeyError:
         raise json_exception(
             request_id="",
+            uid='',
             code=const.CodeEnum.OAUTH_PROVIDER_NOT_FOUND,
             language=const.LanguageEnum.EN.value,
         )
@@ -69,6 +70,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
     except KeyError:
         raise json_exception(
             request_id="",
+            uid="",
             code=const.CodeEnum.OAUTH_PROVIDER_NOT_FOUND,
             language=const.LanguageEnum.EN.value,
         )
@@ -77,11 +79,13 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
     except SSOLoginError:
         raise json_exception(
             request_id="",
+            uid="",
             code=const.CodeEnum.INVALID_AUTH,
         )
     if user is None:
         raise json_exception(
             request_id="",
+            uid="",
             code=const.CodeEnum.INVALID_AUTH,
         )
     u, code = await core.user.get_account(account=user.id, source=user_source)
@@ -114,6 +118,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id="",
+            uid="",
             code=code,
         )
 
@@ -121,6 +126,7 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id="",
+            uid="",
             code=code,
         )
 

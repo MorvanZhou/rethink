@@ -33,12 +33,14 @@ async def __get_then_set_github_user_id(au: AuthedUser, req: schemas.manager.Get
     ) as e:
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id,
             code=const.CodeEnum.INVALID_PARAMS,
             log_msg=f"get github user info failed, error={e}",
         )
     if resp.status_code != 200:
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id,
             code=const.CodeEnum.INVALID_PARAMS,
             log_msg=f"get github user info failed, status_code={resp.status_code}",
         )
@@ -71,6 +73,7 @@ async def __check_user_uid(au: AuthedUser, req: schemas.manager.GetUserRequest) 
     if all(v is None for v in req.dict().values()):
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id,
             code=const.CodeEnum.INVALID_PARAMS,
             log_msg="uid and email and github and google can't be all None",
         )

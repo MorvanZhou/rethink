@@ -101,6 +101,7 @@ async def plugin_call(
     if not config.is_local_db():
         raise json_exception(
             request_id=req.requestId,
+            uid="",
             code=const.CodeEnum.NOT_PERMITTED,
             language=const.LanguageEnum.EN.value,
             log_msg="plugin call is not allowed in production",

@@ -1,4 +1,5 @@
 import inspect
+import os
 from typing import Sequence
 from urllib.parse import urlparse
 
@@ -26,6 +27,7 @@ def is_allowed_mime_type(data_url, allowed_mime_types: Sequence[str]):
 
 def json_exception(
         request_id: str,
+        uid: str,
         code: const.CodeEnum,
         language: str = const.LanguageEnum.EN.value,
         log_msg: str = None
@@ -37,8 +39,9 @@ def json_exception(
         previous_f_code = previous_frame.f_code
         caller = previous_f_code.co_name
         previous_frame_file = previous_f_code.co_filename
+        rel_path = os.path.relpath(previous_frame_file, const.settings.RETHINK_DIR)
         previous_frame_line = previous_f_code.co_firstlineno
-        return f"caller='{caller}' in {previous_frame_file}:{previous_frame_line}"
+        return f"caller='{caller}' in {rel_path}:{previous_frame_line}"
 
     if log_msg is not None:
         # get parent function name
@@ -47,12 +50,22 @@ def json_exception(
             ll = logger.info
         else:
             ll = logger.error
-        ll(f"reqId='{request_id}' | {get_parent_function_info()} | err='{one_line_log}'")
+        ll(
+            f"rid='{request_id}' "
+            f"| uid='{uid}' "
+            f"| {get_parent_function_info()} "
+            f"| err='{one_line_log}'"
+        )
 
     status_code = const.CODE2STATUS_CODE[code]
     if status_code == 500:
         one_line_log = const.get_msg_by_code(code, language).replace("\n", "\\n")
-        logger.error(f"reqId='{request_id}' | {get_parent_function_info()} | err='{one_line_log}'")
+        logger.error(
+            f"rid='{request_id}' "
+            f"| uid='{uid}' "
+            f"| {get_parent_function_info()} "
+            f"| err='{one_line_log}'"
+        )
 
     return HTTPException(
         status_code=status_code,
@@ -71,6 +84,7 @@ def maybe_raise_json_exception(
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id,
             code=code,
             language=au.language,
         )

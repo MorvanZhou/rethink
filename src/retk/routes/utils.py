@@ -43,7 +43,12 @@ def measure_time_spend(func):
 
         req_s = req_s[:200] + "..." if len(req_s) > 200 else req_s
         if func.__name__ not in ["login", "forget_password", "signup"]:
-            logger.debug(f"REQ: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | {req_s}")
+            logger.debug(
+                f"rid='{req_id}' "
+                f"| uid='{uid}' "
+                f"| api='{func.__name__}' "
+                f"| request='{req_s}'"
+            )
 
         resp = await func(*args, **kwargs)
         t1 = time.perf_counter()
@@ -51,7 +56,11 @@ def measure_time_spend(func):
             req_id = resp.requestId
         except AttributeError:
             req_id = ""
-        logger.debug(f"RESP: reqId='{req_id}' | uid='{uid}' | api='{func.__name__}' | spend={t1 - t0:.4f}s")
+        logger.debug(
+            f"rid='{req_id}' "
+            f"| uid='{uid}' "
+            f"| api='{func.__name__}' "
+            f"| API spend={t1 - t0:.4f}s")
         return resp
 
     return wrapper
@@ -118,11 +127,16 @@ async def __process_auth_headers(
         )
 ) -> AuthedUser:
     if token is None or token == "":
-        raise json_exception(
-            request_id=request_id,
-            code=const.CodeEnum.INVALID_AUTH if is_refresh_token else const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN,
-            log_msg="EmptyToken",
+        code = const.CodeEnum.INVALID_AUTH if is_refresh_token else const.CodeEnum.EXPIRED_OR_NO_ACCESS_TOKEN
+        raise HTTPException(
+            status_code=const.CODE2STATUS_CODE[code],
+            detail={
+                "code": code.value,
+                "msg": const.get_msg_by_code(code, const.LanguageEnum.EN.value),
+                "requestId": request_id,
+            }
         )
+
     au = AuthedUser(
         u=None,
         request_id=request_id,
@@ -162,6 +176,7 @@ async def __process_auth_headers(
     if code != const.CodeEnum.OK or u is None:
         raise json_exception(
             request_id=request_id,
+            uid="",
             code=code,
             log_msg=err,
         )
@@ -217,6 +232,7 @@ async def process_admin_headers(
     if au.u is None or au.u.type != const.USER_TYPE.ADMIN.id:
         raise json_exception(
             request_id=au.request_id,
+            uid=au.u.id if au.u is not None else "",
             code=const.CodeEnum.NOT_PERMITTED,
         )
     return au

@@ -97,13 +97,19 @@ async def _batch_send(
                 oneline_s = _text.replace('\n', '\\n')
                 phase = "extend" if is_extend else "summary"
                 logger.debug(
-                    f"reqId={req_id} | knowledge {phase} "
-                    f"| {service} {model} | response='{oneline_s}'"
+                    f"rid='{req_id}' "
+                    f"| uid='{case.uid}' "
+                    f"| knowledge {phase} "
+                    f"| {service} {model} "
+                    f"| response='{oneline_s}'"
                 )
                 if code != const.CodeEnum.OK:
                     logger.error(
-                        f"reqId={req_id} | knowledge {phase} "
-                        f"| {service} {model} | error: {code}"
+                        f"rid='{req_id}' "
+                        f"| uid='{case.uid}' "
+                        f"| knowledge {phase} "
+                        f"| {service} {model} "
+                        f"| error: {code}"
                     )
     return cases
 
@@ -141,7 +147,9 @@ async def batch_extend(
             oneline_e = case.extend.replace('\n', '\\n')
             oneline_s = case.summary.replace('\n', '\\n')
             logger.error(
-                f"reqId={req_id} | {case.extend_service} {case.extend_model} "
+                f"rid='{req_id}' "
+                f"| uid='{case.uid}' "
+                f"| {case.extend_service} {case.extend_model} "
                 f"| parse_json_pattern error: {e} "
                 f"| summary: {oneline_s} "
                 f"| extension: {oneline_e}")
