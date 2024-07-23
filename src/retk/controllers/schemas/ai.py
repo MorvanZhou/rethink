@@ -10,6 +10,7 @@ class GetExtendedNodesResponse(BaseModel):
         sourceTitle: str
         title: str
         content: str
+        searchTerms: List[str]
 
     requestId: str
     nodes: List[Node]

@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 from bson import ObjectId
 
 from retk import const
 from retk.logger import logger
-from .utils import parse_json_pattern, remove_links
 from .. import api
-from ..api.base import MessagesType
+from ..api.base import MessagesType, BaseLLMService
+from ..utils import remove_links
 
 system_summary_prompt = (Path(__file__).parent / "system_summary.md").read_text(encoding="utf-8")
 system_extend_prompt = (Path(__file__).parent / "system_extend.md").read_text(encoding="utf-8")
@@ -27,18 +27,24 @@ class ExtendCase:
     stripped_md: str = ""
     summary: str = ""
     summary_code: const.CodeEnum = const.CodeEnum.OK
-    extend: str = ""
+    extend_title: str = ""
+    extend_content: str = ""
+    extend_search_terms: List[str] = None
     extend_code: const.CodeEnum = const.CodeEnum.OK
 
     def __post_init__(self):
         self.stripped_md = remove_links(self.md)
+
+    @property
+    def extend_md(self):
+        return f"{self.extend_title}\n\n{self.extend_content}"
 
 
 TOP_P = 0.9
 TEMPERATURE = 0.6
 TIMEOUT = 60
 
-LLM_SERVICES_MAP = {
+LLM_SERVICES_MAP: Dict[str, BaseLLMService] = {
     s.name: s(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT) for s in [
         api.TencentService,
         api.AliyunService,
@@ -81,20 +87,30 @@ async def _batch_send(
     for service, models in svr_group.items():
         for model, model_cases in models.items():
             llm_service = LLM_SERVICES_MAP[service]
-            results = await llm_service.batch_complete(
-                messages=model_cases["msgs"],
-                model=model,
-                req_id=req_id,
-            )
-            for (_text, code), case in zip(results, model_cases["case"]):
+            if is_extend:
+                results = await llm_service.batch_complete_json_detect(
+                    messages=model_cases["msgs"],
+                    model=model,
+                    req_id=req_id,
+                )
+            else:
+                results = await llm_service.batch_complete(
+                    messages=model_cases["msgs"],
+                    model=model,
+                    req_id=req_id,
+                )
+            for (_data, code), case in zip(results, model_cases["case"]):
                 if is_extend:
-                    case.extend = _text
+                    case.extend_title = _data.get("title", _data.get("标题", ""))
+                    case.extend_content = _data.get("content", _data.get("内容", ""))
+                    case.extend_search_terms = _data.get("searchTerms", _data.get("关键词", ""))
                     case.extend_code = code
+                    oneline_s = case.extend_md.replace('\n', '\\n')
                 else:
-                    case.summary = _text
+                    case.summary = _data
                     case.summary_code = code
+                    oneline_s = _data.replace('\n', '\\n')
 
-                oneline_s = _text.replace('\n', '\\n')
                 phase = "extend" if is_extend else "summary"
                 logger.debug(
                     f"rid='{req_id}' "
@@ -104,12 +120,14 @@ async def _batch_send(
                     f"| response='{oneline_s}'"
                 )
                 if code != const.CodeEnum.OK:
+                    oneline = case.stripped_md.replace('\n', '\\n')
                     logger.error(
                         f"rid='{req_id}' "
                         f"| uid='{case.uid}' "
                         f"| knowledge {phase} "
                         f"| {service} {model} "
-                        f"| error: {code}"
+                        f"| error: {code.name} "
+                        f"| summary: {oneline}"
                     )
     return cases
 
@@ -130,30 +148,9 @@ async def batch_extend(
         cases: List[ExtendCase],
         req_id: str = None,
 ) -> List[ExtendCase]:
-    cases = await _batch_send(
+    return await _batch_send(
         is_extend=True,
         system_prompt=system_extend_prompt,
         cases=cases,
         req_id=req_id,
     )
-
-    for case in cases:
-        if case.extend_code != const.CodeEnum.OK:
-            continue
-
-        try:
-            title, content = parse_json_pattern(case.extend)
-        except ValueError as e:
-            oneline_e = case.extend.replace('\n', '\\n')
-            oneline_s = case.summary.replace('\n', '\\n')
-            logger.error(
-                f"rid='{req_id}' "
-                f"| uid='{case.uid}' "
-                f"| {case.extend_service} {case.extend_model} "
-                f"| parse_json_pattern error: {e} "
-                f"| summary: {oneline_s} "
-                f"| extension: {oneline_e}")
-            case.extend_code = const.CodeEnum.LLM_INVALID_RESPONSE_FORMAT
-        else:
-            case.extend = f"{title}\n\n{content}"
-    return cases

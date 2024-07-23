@@ -90,6 +90,17 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(s)
 
     @skip_no_api_key
+    async def test_hunyuan_stream_complete_json_detect(self):
+        m = llm.api.TencentService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
     async def test_hunyuan_batch_complete(self):
         m = llm.api.TencentService()
         res = await m.batch_complete(
@@ -112,6 +123,19 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(reach_limit)
 
     @skip_no_api_key
+    async def test_hunyuan_batch_stream_complete_json_detect(self):
+        m = llm.api.TencentService()
+        res = await m.batch_complete_json_detect(
+            [[{
+                "role": "user",
+                "content": "你是谁? 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
+
+    @skip_no_api_key
     async def test_aliyun_complete(self):
         m = llm.api.AliyunService()
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
@@ -126,6 +150,17 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(b.decode("utf-8"))
 
     @skip_no_api_key
+    async def test_aliyun_stream_complete_json_detect(self):
+        m = llm.api.AliyunService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
     async def test_aliyun_batch_complete(self):
         m = llm.api.AliyunService()
         res = await m.batch_complete(
@@ -134,6 +169,19 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         for text, code in res:
             self.assertEqual(const.CodeEnum.OK, code, msg=text)
             print(text)
+
+    @skip_no_api_key
+    async def test_aliyun_batch_stream_complete_json_detect(self):
+        m = llm.api.AliyunService()
+        res = await m.batch_complete_json_detect(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
 
     @skip_no_api_key
     async def test_baidu_complete(self):
@@ -150,6 +198,17 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(b.decode("utf-8"))
 
     @skip_no_api_key
+    async def test_baidu_stream_complete_json_detect(self):
+        m = llm.api.BaiduService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
     async def test_baidu_batch_complete(self):
         m = llm.api.BaiduService()
         res = await m.batch_complete(
@@ -158,6 +217,19 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         for text, code in res:
             self.assertEqual(const.CodeEnum.OK, code, msg=text)
             print(text)
+
+    @skip_no_api_key
+    async def test_baidu_batch_stream_complete_json_detect(self):
+        m = llm.api.BaiduService()
+        res = await m.batch_complete_json_detect(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
 
     @skip_no_api_key
     async def test_openai_complete(self):
@@ -172,6 +244,17 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_openai_stream_complete_json_detect(self):
+        m = llm.api.OpenaiService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
 
     @skip_no_api_key
     async def test_openai_batch_complete(self):
@@ -198,6 +281,17 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             print(b.decode("utf-8"))
 
     @skip_no_api_key
+    async def test_xfyun_stream_complete_json_detect(self):
+        m = llm.api.XfYunService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
     async def test_xfyun_batch_complete(self):
         m = llm.api.XfYunService()
         res = await m.batch_complete(
@@ -220,6 +314,43 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
             self.assertEqual(const.CodeEnum.OK, code)
             print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_moonshot_stream_complete_json_detect(self):
+        m = llm.api.MoonshotService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
+    async def test_moonshot_batch_complete(self):
+        m = llm.api.MoonshotService()
+        res = await m.batch_complete(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
+
+    @skip_no_api_key
+    async def test_moonshot_batch_stream_complete_json_detect(self):
+        m = llm.api.MoonshotService()
+        res = await m.batch_complete_json_detect(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
 
     def test_hunyuan_authorization(self):
         payload = {

@@ -2,7 +2,7 @@ import asyncio
 import json
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Tuple, AsyncIterable, Optional, List, Dict
+from typing import Tuple, AsyncIterable, List, Dict, Callable, Union
 
 from retk import config, const
 from retk.core.utils import ratelimiter
@@ -71,9 +71,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             "Authorization": f"Bearer {k}",
         }
 
-    def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
-        if model is None:
-            model = self.default_model.key
+    def get_payload(self, model: str, messages: MessagesType, stream: bool) -> bytes:
         return json.dumps({
             "model": model,
             "messages": messages,
@@ -89,6 +87,8 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             model: str = None,
             req_id: str = None,
     ) -> Tuple[str, const.CodeEnum]:
+        if model is None:
+            model = self.default_model.key
         payload = self.get_payload(model, messages, stream=False)
         rj, code = await self._complete(
             url=self.endpoint,
@@ -109,6 +109,8 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             model: str = None,
             req_id: str = None
     ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
+        if model is None:
+            model = self.default_model.key
         payload = self.get_payload(model, messages, stream=True)
         async for b, code in self._stream_complete(
                 url=self.endpoint,
@@ -161,12 +163,13 @@ class OpenaiService(OpenaiLLMStyle):
     def get_api_key():
         return config.get_settings().OPENAI_API_KEY
 
-    async def batch_complete(
+    async def _batch_complete_union(
             self,
             messages: List[MessagesType],
+            func: Callable,
             model: str = None,
             req_id: str = None,
-    ) -> List[Tuple[str, const.CodeEnum]]:
+    ) -> List[Tuple[Union[str, Dict[str, str]], const.CodeEnum]]:
         if model is None:
             m = self.default_model
         else:
@@ -174,7 +177,7 @@ class OpenaiService(OpenaiLLMStyle):
         limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
 
         tasks = [
-            self._batch_complete(
+            func(
                 limiters=[limiter],
                 messages=m,
                 model=model,
@@ -182,3 +185,29 @@ class OpenaiService(OpenaiLLMStyle):
             ) for m in messages
         ]
         return await asyncio.gather(*tasks)
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_complete,
+            model=model,
+            req_id=req_id,
+        )
+
+    async def batch_complete_json_detect(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[Dict[str, str], const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_stream_complete_json_detect,
+            model=model,
+            req_id=req_id,
+        )

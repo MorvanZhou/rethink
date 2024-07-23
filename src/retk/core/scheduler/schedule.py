@@ -98,6 +98,7 @@ def init_tasks():
         job_id="deliver_unscheduled_node_extend",
         func=tasks.extend_node.deliver_unscheduled_extend_nodes,
         minutes=40,
+        # seconds=10,
     )
     return
 

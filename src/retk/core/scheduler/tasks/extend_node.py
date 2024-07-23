@@ -71,7 +71,8 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
                 uid=case.uid,
                 sourceNid=case.nid,
                 sourceMd=case.md,
-                extendMd=case.extend,
+                extendMd=case.extend_md,
+                extendSearchTerms=case.extend_search_terms,
             )
             await db[CollNameEnum.llm_extended_node.value].update_one(
                 {"uid": case.uid, "sourceNid": case.nid},

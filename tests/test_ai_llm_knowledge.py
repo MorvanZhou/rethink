@@ -1,12 +1,10 @@
 import unittest
-from textwrap import dedent
 
 from bson import ObjectId
 
 from retk import const
 from retk.core.ai import llm
 from retk.core.ai.llm.knowledge.ops import ExtendCase
-from retk.core.ai.llm.knowledge.utils import parse_json_pattern
 from . import utils
 from .test_ai_llm_api import skip_no_api_key, clear_all_api_key
 
@@ -131,76 +129,4 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             )
             for case in cases:
                 # self.assertEqual(const.CodeEnum.OK, case.extend_code, msg=case.summary)
-                print(f"{service} {model.value.key}\n{case.extend}\n\n")
-
-    def test_json_pattern(self):
-        title, content = parse_json_pattern("""{"title": "tttt", "content": "cccc\n21\n2"}""")
-        self.assertEqual("tttt", title)
-        self.assertEqual("cccc\n21\n2", content)
-
-        cases = [
-            """\
-            {
-              "title": "tttt",
-              "content": "cccc"
-            }
-            """,
-            """{"title":"tttt","content":"cccc"}""",
-            """\
-            1afwenq 是当前
-            轻ww 1
-            {
-              "title": "tttt",
-              "content": "cccc"
-            }
-            """,
-            """\
-            {
-              "title": "tttt",
-              "content": "cccc"
-            }
-            23423saq1是当前
-            """,
-            """\
-            这是一个关于午睡对大脑健康益处的内容描述，以下是按照要求以json格式返回的结果：
-            
-            ```json
-            {
-              "标题": "tttt",
-              "内容": "cccc"
-            }
-            ```. msg: 这结果：```json
-            {  "标题": "午睡对", "内容": "午睡进身心健康。"}```
-            """
-        ]
-        for case in cases:
-            case = dedent(case)
-            title, content = parse_json_pattern(case)
-            self.assertEqual("tttt", title)
-            self.assertEqual("cccc", content)
-
-        bad_cases = [
-            """\
-            {
-              'title': "tttt",
-              "content": "cccc"
-            }
-            """,
-            """\
-            {
-              "title": 'tttt',
-              "content": "cccc"
-            }
-            """,
-            """\
-            {
-              "t1itle": "tttt",
-              "content": "cccc"
-            }
-            """
-        ]
-
-        for case in bad_cases:
-            case = dedent(case)
-            with self.assertRaises(ValueError):
-                parse_json_pattern(case)
+                print(f"{service} {model.value.key}\n{case.extend_md}\nkeywords={case.extend_search_terms}\n\n")

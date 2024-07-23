@@ -22,6 +22,10 @@ async def get_extended_nodes(
             sourceTitle=doc["sourceMd"].split("\n", 1)[0].strip(),
             title=title.strip(),
             content=content.strip(),
+            searchTerms=list(filter(
+                lambda x: x != "",
+                map(str.strip, doc.get("extendSearchTerms", "").split(","))
+            ))[:3],
         )
         nodes.append(node)
     return schemas.ai.GetExtendedNodesResponse(

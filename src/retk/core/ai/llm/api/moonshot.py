@@ -1,6 +1,6 @@
 import asyncio
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Callable, Union, Dict
 
 from retk import config, const
 from retk.core.utils import ratelimiter
@@ -46,21 +46,18 @@ class MoonshotService(OpenaiLLMStyle):
         return config.get_settings().MOONSHOT_API_KEY
 
     @staticmethod
-    def get_concurrency():
-        return config.get_settings().MOONSHOT_CONCURRENCY
-
-    async def batch_complete(
-            self,
+    async def _batch_complete_union(
             messages: List[MessagesType],
+            func: Callable,
             model: str = None,
             req_id: str = None,
-    ) -> List[Tuple[str, const.CodeEnum]]:
+    ) -> List[Tuple[Union[str, Dict[str, str]], const.CodeEnum]]:
         settings = config.get_settings()
         rate_limiter = ratelimiter.RateLimiter(requests=settings.MOONSHOT_RPM, period=60)
         concurrent_limiter = ratelimiter.ConcurrentLimiter(n=settings.MOONSHOT_CONCURRENCY)
 
         tasks = [
-            self._batch_complete(
+            func(
                 limiters=[concurrent_limiter, rate_limiter],
                 messages=m,
                 model=model,
@@ -68,3 +65,29 @@ class MoonshotService(OpenaiLLMStyle):
             ) for m in messages
         ]
         return await asyncio.gather(*tasks)
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_complete,
+            model=model,
+            req_id=req_id,
+        )
+
+    async def batch_complete_json_detect(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[Dict[str, str], const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_stream_complete_json_detect,
+            model=model,
+            req_id=req_id,
+        )

@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Literal, AsyncIterable, Tuple, Optional, Union
+from typing import (
+    List, Dict, Literal, AsyncIterable, Tuple, Optional, Union
+)
 
 import httpx
 
 from retk import const
 from retk.core.utils import ratelimiter
 from retk.logger import logger
+from ..utils import parse_json_pattern
 
 MessagesType = List[Dict[Literal["role", "content"], str]]
 
@@ -95,12 +98,13 @@ class BaseLLMService(ABC):
             url: str,
             headers: Dict[str, str],
             payload: bytes,
+            method: str = "POST",
             params: Dict[str, str] = None,
             req_id: str = None,
     ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
         client = httpx.AsyncClient()
         async with client.stream(
-                method="POST",
+                method=method,
                 url=url,
                 headers=headers,
                 content=payload,
@@ -141,6 +145,59 @@ class BaseLLMService(ABC):
         else:
             raise ValueError("Invalid number of limiters, should less than 4")
 
+    async def _batch_stream_complete_json_detect(
+            self,
+            limiters: List[Union[ratelimiter.RateLimiter, ratelimiter.ConcurrentLimiter]],
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> Tuple[Optional[Dict[str, str]], const.CodeEnum]:
+        if len(limiters) == 4:
+            async with limiters[0], limiters[1], limiters[2], limiters[3]:
+                return await self.stream_complete_json_detect(messages=messages, model=model, req_id=req_id)
+        elif len(limiters) == 3:
+            async with limiters[0], limiters[1], limiters[2]:
+                return await self.stream_complete_json_detect(messages=messages, model=model, req_id=req_id)
+        elif len(limiters) == 2:
+            async with limiters[0], limiters[1]:
+                return await self.stream_complete_json_detect(messages=messages, model=model, req_id=req_id)
+        elif len(limiters) == 1:
+            async with limiters[0]:
+                return await self.stream_complete_json_detect(messages=messages, model=model, req_id=req_id)
+        else:
+            raise ValueError("Invalid number of limiters, should less than 4")
+
+    async def stream_complete_json_detect(
+            self,
+            messages: MessagesType,
+            model: str = None,
+            req_id: str = None,
+    ) -> Tuple[Dict[str, str], const.CodeEnum]:
+        chunks: List[bytes] = []
+        chunks_append = chunks.append
+
+        async for b, code in self.stream_complete(
+                messages=messages,
+                model=model,
+                req_id=req_id,
+        ):
+            if code != const.CodeEnum.OK:
+                logger.error(f"rid='{req_id}' | Model error: {code}")
+                return {}, code
+
+            chunks_append(b)
+            if b"}" in b:
+                text_bytes = b"".join(chunks)
+                text = text_bytes.decode("utf-8")
+                try:
+                    d = parse_json_pattern(text)
+                    return d, const.CodeEnum.OK
+                except ValueError:
+                    continue
+        oneline = (b"".join(chunks).decode("utf-8")).replace("\n", "\\n")
+        logger.error(f"rid='{req_id}' | {self.__class__.__name__} {model} | error: No JSON pattern found | {oneline}")
+        return {}, const.CodeEnum.LLM_INVALID_RESPONSE_FORMAT
+
     @abstractmethod
     async def stream_complete(
             self,
@@ -157,4 +214,13 @@ class BaseLLMService(ABC):
             model: str = None,
             req_id: str = None,
     ) -> List[Tuple[str, const.CodeEnum]]:
+        ...
+
+    @abstractmethod
+    async def batch_complete_json_detect(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[Dict[str, str], const.CodeEnum]]:
         ...

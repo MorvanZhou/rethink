@@ -5,7 +5,7 @@ import json
 import time
 from datetime import datetime
 from enum import Enum
-from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional, List
+from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional, List, Callable, Union
 
 from retk import config, const
 from retk.core.utils import ratelimiter
@@ -227,16 +227,17 @@ class TencentService(BaseLLMService):
                 txt += content
             yield txt.encode("utf-8"), code
 
-    async def batch_complete(
+    async def _batch_complete_union(
             self,
             messages: List[MessagesType],
+            func: Callable,
             model: str = None,
             req_id: str = None,
-    ) -> List[Tuple[str, const.CodeEnum]]:
+    ) -> List[Tuple[Union[str, Dict[str, str]], const.CodeEnum]]:
         limiter = ratelimiter.ConcurrentLimiter(n=self.concurrency)
 
         tasks = [
-            self._batch_complete(
+            func(
                 limiters=[limiter],
                 messages=m,
                 model=model,
@@ -244,3 +245,29 @@ class TencentService(BaseLLMService):
             ) for m in messages
         ]
         return await asyncio.gather(*tasks)
+
+    async def batch_complete(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[str, const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_complete,
+            model=model,
+            req_id=req_id,
+        )
+
+    async def batch_complete_json_detect(
+            self,
+            messages: List[MessagesType],
+            model: str = None,
+            req_id: str = None,
+    ) -> List[Tuple[Dict[str, str], const.CodeEnum]]:
+        return await self._batch_complete_union(
+            messages=messages,
+            func=self._batch_stream_complete_json_detect,
+            model=model,
+            req_id=req_id,
+        )

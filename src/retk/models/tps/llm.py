@@ -20,3 +20,4 @@ class ExtendedNode(TypedDict):
     sourceNid: str
     sourceMd: str
     extendMd: str
+    extendSearchTerms: str
