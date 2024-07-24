@@ -39,7 +39,7 @@ class File:
         self._reset_size()
 
     def image_resize(self, resize_threshold: int):
-        if self.type != FileTypesEnum.IMAGE:
+        if self.ext == ".gif" or self.type != FileTypesEnum.IMAGE:
             return
         if self.size > resize_threshold:
             # reduce image size
