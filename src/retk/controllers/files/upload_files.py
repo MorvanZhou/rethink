@@ -1,8 +1,10 @@
 from typing import List
+from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
 from retk import const, core
+from retk.config import get_settings
 from retk.controllers import schemas
 from retk.controllers.utils import (
     AuthedUser,
@@ -94,11 +96,14 @@ async def fetch_image_vditor(
                 url=req.url,
             ),
         )
-
-    if len(req.url) <= 2048:
-        new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)
+    domain = urlparse(req.url).netloc
+    if get_settings().COS_DOMAIN != "" and domain == get_settings().COS_DOMAIN:
+        new_url, code = req.url, const.CodeEnum.OK
     else:
-        new_url, code = "", const.CodeEnum.URL_TOO_LONG
+        if len(req.url) <= 2048:
+            new_url, code = await core.files.fetch_image_vditor(au=au, url=req.url)
+        else:
+            new_url, code = "", const.CodeEnum.URL_TOO_LONG
     maybe_raise_json_exception(au=au, code=code)
     return schemas.files.VditorImagesResponse(
         msg=const.get_msg_by_code(code, au.language),

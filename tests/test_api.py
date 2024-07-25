@@ -901,6 +901,17 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree("temp", ignore_errors=True)
 
     def test_fetch_image(self):
+        config.get_settings().COS_DOMAIN = "example.com"
+        img = f"https://{config.get_settings().COS_DOMAIN}/example.png"
+        resp = self.client.post(
+            "/api/files/vditor/images",
+            json={"url": img},
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual(img, rj["data"]["url"])
+        config.get_settings().COS_DOMAIN = ""
+
         img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/" \
               "w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
         resp = self.client.post(
