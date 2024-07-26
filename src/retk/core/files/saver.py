@@ -19,11 +19,14 @@ from retk.logger import logger
 from retk.models.client import client
 from retk.models.tps import UserFile
 
+RESIZE_IMAGE_TYPE = {".png", ".jpg", ".jpeg"}
+
 
 @dataclass
 class File:
     data: BinaryIO
     filename: str
+    ext: str = ""
 
     def __post_init__(self):
         self.data.seek(0)
@@ -39,8 +42,10 @@ class File:
         self._reset_size()
 
     def image_resize(self, resize_threshold: int):
-        if self.ext == ".gif" or self.type != FileTypesEnum.IMAGE:
+        if self.type != FileTypesEnum.IMAGE or self.ext not in RESIZE_IMAGE_TYPE:
             return
+        if self.ext.lower() == ".jpg":
+            self.ext = ".jpeg"
         if self.size > resize_threshold:
             # reduce image size
             out = io.BytesIO()
