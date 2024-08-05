@@ -174,7 +174,7 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
     content = response.content
 
     file = UploadFile(
-        filename=url.split("?", 1)[0].split("/")[-1],  # remove url parameters
+        filename=url.split("?", 1)[0].split("/")[-1].strip(),  # remove url parameters
         file=io.BytesIO(content),
         headers=Headers(response.headers),
         size=len(content)
@@ -183,6 +183,8 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
     if not file.content_type.startswith(const.app.ValidUploadedFilePrefixEnum.IMAGE.value):
         return "", const.CodeEnum.INVALID_FILE_TYPE
 
+    if file.filename == "":
+        file.filename = f"image.{file.content_type.split('/')[1]}"
     res = await sync_tasks.save_editor_upload_files(
         uid=au.u.id,
         files=[file],
