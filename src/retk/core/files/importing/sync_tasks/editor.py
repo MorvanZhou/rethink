@@ -25,7 +25,12 @@ async def save_editor_upload_files(
 
         # validate file type
         sep = filename.rsplit(".", 1)
-        ext = f".{sep[-1]}" if len(sep) > 1 else ""
+        if len(sep) > 1:
+            ext = f".{sep[-1]}"
+        elif file.content_type.startswith("image/"):
+            ext = "." + file.content_type.split("/", 1)[1]
+        else:
+            ext = ""
         if const.app.FileTypesEnum.get_type(ext) == const.app.FileTypesEnum.UNKNOWN:
             res["errFiles"].append(filename)
             res["code"] = const.CodeEnum.INVALID_FILE_TYPE
@@ -39,6 +44,7 @@ async def save_editor_upload_files(
         f = File(
             filename=filename,
             data=file.file,
+            ext=ext,
         )
         if f.is_unknown_type():
             res["errFiles"].append(filename)

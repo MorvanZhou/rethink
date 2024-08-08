@@ -1,4 +1,4 @@
-from . import version_manager
+from . import local_manager
 from ._version import __version__
 from .core import scheduler
 from .models import tps

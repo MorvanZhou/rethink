@@ -3,13 +3,17 @@ import shutil
 import unittest
 from pathlib import Path
 
-from retk import const, version_manager, __version__
+from retk import const, config, local_manager, __version__
+from retk.local_manager import recover
+from . import utils
 
 
 class RecoverTest(unittest.TestCase):
     def setUp(self) -> None:
+        utils.set_env(".env.test.local")
         self.tmp_dir = Path(__file__).parent / "temp"
-        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+        (self.tmp_dir / ".data").mkdir(parents=True, exist_ok=True)
+        config.get_settings().RETHINK_LOCAL_STORAGE_PATH = self.tmp_dir
 
     def tearDown(self) -> None:
         # remove all files and dirs
@@ -21,9 +25,9 @@ class RecoverTest(unittest.TestCase):
         self.assertEqual(3, len(vs_int))
 
     def test_dump_load(self):
-        version_manager.recover.dump_default_dot_rethink(self.tmp_dir / ".rethink.json")
+        local_manager.recover.dump_default_dot_rethink()
 
-        v = version_manager.recover.load_dot_rethink(self.tmp_dir / ".rethink.json")
+        v = local_manager.recover.load_dot_rethink()
         self.assertIsNotNone(v)
         # self.assertEqual(__version__, v["version"])
         self.assertEqual(const.DEFAULT_USER["email"], v["email"])
@@ -41,8 +45,10 @@ class RecoverTest(unittest.TestCase):
 
 class MigrateTest(unittest.TestCase):
     def setUp(self) -> None:
+        utils.set_env(".env.test.local")
         self.tmp_dir = Path(__file__).parent / "temp"
-        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+        (self.tmp_dir / ".data").mkdir(parents=True, exist_ok=True)
+        config.get_settings().RETHINK_LOCAL_STORAGE_PATH = self.tmp_dir
 
     def tearDown(self) -> None:
         # remove all files and dirs
@@ -62,11 +68,10 @@ class MigrateTest(unittest.TestCase):
         dot_data_dir = self.tmp_dir / const.settings.DOT_DATA
         dot_data_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(self.tmp_dir / const.settings.DOT_DATA / ".rethink.json", "w", encoding="utf-8") as f:
+        with open(recover.get_dot_rethink_path(), "w", encoding="utf-8") as f:
             json.dump(dot_rethink, f, indent=2, ensure_ascii=False)
-
-        version_manager.migrate.to_latest_version(self.tmp_dir)
-        v = version_manager.recover.load_dot_rethink(self.tmp_dir / const.settings.DOT_DATA / ".rethink.json")
+        local_manager.migrate.to_latest_version()
+        v = local_manager.recover.load_dot_rethink()
         # self.assertEqual(__version__, v["version"])
         self.assertGreater(len(v["version"]), 0)
         self.assertIn("settings", v)

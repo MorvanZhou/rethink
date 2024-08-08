@@ -54,7 +54,6 @@ def clear_all_api_key():
     c.BAIDU_QIANFAN_API_KEY = ""
     c.BAIDU_QIANFAN_SECRET_KEY = ""
     c.OPENAI_API_KEY = ""
-    c.XFYUN_APP_ID = ""
     c.XFYUN_API_SECRET = ""
     c.XFYUN_API_KEY = ""
     c.MOONSHOT_API_KEY = ""
@@ -395,7 +394,7 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         m = llm.api.TencentService()
         self.assertEqual("hunyuan-lite", m.default_model.key)
         text, code = await m.complete([{"role": "user", "content": "你是谁"}])
-        self.assertEqual(const.CodeEnum.LLM_SERVICE_ERROR, code, msg=text)
+        self.assertEqual(const.CodeEnum.INVALID_AUTH, code, msg=text)
         self.assertEqual("SecretId不存在，请输入正确的密钥。", text)
         mock_post.assert_called_once()
 

@@ -5,7 +5,8 @@ import httpx
 from bson import ObjectId
 from bson.tz_util import utc
 
-from retk import const, __version__
+from retk import const
+from retk._version import __version__
 from retk.core import scheduler
 from retk.core import user
 from retk.core.notice import post_in_manager_delivery

@@ -35,8 +35,10 @@ class File:
             md5_hash.update(chunk)
         self.data.seek(0)
         self.hash = md5_hash.hexdigest()
-        sep = self.filename.rsplit(".", 1)
-        self.ext = f".{sep[-1]}" if len(sep) > 1 else ""
+
+        if self.ext == "":
+            sep = self.filename.rsplit(".", 1)
+            self.ext = f".{sep[-1]}" if len(sep) > 1 else ""
         self.type = FileTypesEnum.get_type(self.ext)
         self.hashed_filename = f"{self.hash}{self.ext}"
         self._reset_size()

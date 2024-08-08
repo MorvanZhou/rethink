@@ -297,6 +297,12 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         mock_remove_md_from_cos.return_value = const.CodeEnum.OK
         mock_remove_md_all_versions_from_cos.return_value = const.CodeEnum.OK
 
+        settings = config.get_settings()
+        settings.LLM_KNOWLEDGE_SUMMARY_SERVICE = "a"
+        settings.LLM_KNOWLEDGE_SUMMARY_MODEL = "a"
+        settings.LLM_KNOWLEDGE_EXTEND_SERVICE = "a"
+        settings.LLM_KNOWLEDGE_EXTEND_MODEL = "a"
+
         node, code = await core.node.post(
             au=self.au, md="knowledge test\nthis is a knowledge test"
         )
@@ -330,6 +336,11 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         qs_ = await client.coll.llm_extend_node_queue.find().to_list(None)
         q_ = [q for q in qs_ if q["nid"] == node["id"]]
         self.assertGreater(q_[0]["modifiedAt"], q_time)
+
+        settings.LLM_KNOWLEDGE_SUMMARY_SERVICE = ""
+        settings.LLM_KNOWLEDGE_SUMMARY_MODEL = ""
+        settings.LLM_KNOWLEDGE_EXTEND_SERVICE = ""
+        settings.LLM_KNOWLEDGE_EXTEND_MODEL = ""
 
     @utils.skip_no_connect
     @patch("retk.core.node.backup.__remove_md_all_versions_from_cos")

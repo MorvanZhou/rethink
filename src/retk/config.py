@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     COS_BUCKET_NAME: str = Field(env="COS_BUCKET_NAME", default="")
     COS_DOMAIN: Optional[str] = Field(env="COS_DOMAIN", default=None)
 
+    # llm knowledge service settings
+    LLM_KNOWLEDGE_SUMMARY_SERVICE: str = Field(env='LLM_KNOWLEDGE_SUMMARY_SERVICE', default="")
+    LLM_KNOWLEDGE_SUMMARY_MODEL: str = Field(env='LLM_KNOWLEDGE_SUMMARY_MODEL', default="")
+    LLM_KNOWLEDGE_EXTEND_SERVICE: str = Field(env='LLM_KNOWLEDGE_EXTEND_SERVICE', default="")
+    LLM_KNOWLEDGE_EXTEND_MODEL: str = Field(env='LLM_KNOWLEDGE_EXTEND_MODEL', default="")
+
     # hunyuan
     HUNYUAN_SECRET_ID: str = Field(env='HUNYUAN_SECRET_ID', default="")
     HUNYUAN_SECRET_KEY: str = Field(env='HUNYUAN_SECRET_KEY', default="")
@@ -58,7 +64,6 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = Field(env='OPENAI_API_KEY', default="")
 
     # xfyun api
-    XFYUN_APP_ID: str = Field(env='XFYUN_APP_ID', default="")
     XFYUN_API_SECRET: str = Field(env='XFYUN_API_SECRET', default="")
     XFYUN_API_KEY: str = Field(env='XFYUN_API_KEY', default="")
 

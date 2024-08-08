@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from pydantic import BaseModel
 
@@ -14,3 +14,16 @@ class GetExtendedNodesResponse(BaseModel):
 
     requestId: str
     nodes: List[Node]
+
+
+class LLMApiSettingsRequest(BaseModel):
+    service: str
+    model: str
+    auth: Dict[str, str]
+
+
+class LLMApiSettingsResponse(BaseModel):
+    requestId: str
+    service: str
+    model: str
+    auth: Dict[str, str]

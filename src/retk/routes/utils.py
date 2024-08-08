@@ -96,8 +96,9 @@ async def on_startup():
     # init oauth provider map
     init_oauth_provider_map()
 
-    # notice new pkg version
+    # if using local deployment
     if config.is_local_db():
+        # notice new pkg version
         await notice_new_pkg_version()
 
     # register official plugins

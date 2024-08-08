@@ -10,6 +10,7 @@ from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-thousand-questions-metering-and-billing
+# https://help.aliyun.com/zh/dashscope/developer-reference/model-introduction
 class AliyunModelEnum(Enum):
     QWEN1_5_05B = ModelConfig(
         key="qwen1.5-0.5b-chat",
@@ -71,6 +72,11 @@ class AliyunService(BaseLLMService):
             default_model=AliyunModelEnum.QWEN1_5_05B.value,
         )
         self.concurrency = 5
+
+    @classmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        settings = config.get_settings()
+        settings.ALIYUN_DASHSCOPE_API_KEY = auth.get("API-KEY", "")
 
     @staticmethod
     def get_headers(stream: bool) -> Dict[str, str]:

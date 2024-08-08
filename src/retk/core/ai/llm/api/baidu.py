@@ -13,6 +13,7 @@ from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
 
 # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlrk4akp7#tokens%E7%94%A8%E9%87%8F%E5%90%8E%E4%BB%98%E8%B4%B9
+# https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Slkkydake#%E8%AF%A6%E6%83%85
 class BaiduModelEnum(Enum):
     ERNIE4_8K = ModelConfig(
         key="completions_pro",
@@ -20,6 +21,12 @@ class BaiduModelEnum(Enum):
         RPM=120,
         TPM=120_000,
     )  # 0.12 / 0.12
+    ERNIE4_TURBO_8K = ModelConfig(
+        key="ernie-4.0-turbo-8k",
+        max_tokens=8000,
+        RPM=300,
+        TPM=300_000,
+    )  # 0.003 / 0.06
     ERNIE35_8K = ModelConfig(
         key="completions",
         max_tokens=8000,
@@ -84,6 +91,12 @@ class BaiduService(BaseLLMService):
 
         self.token_expires_at = datetime.now().timestamp()
         self.token = ""
+
+    @classmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        settings = config.get_settings()
+        settings.BAIDU_QIANFAN_API_KEY = auth.get("API-KEY", "")
+        settings.BAIDU_QIANFAN_SECRET_KEY = auth.get("Secret Key", "")
 
     async def set_token(self, req_id: str = None):
         _s = config.get_settings()
@@ -153,7 +166,7 @@ class BaiduService(BaseLLMService):
 
         if resp.get("error_code") is not None:
             logger.error(f"rid='{req_id}' | Baidu {model} | error: code={resp['error_code']} {resp['error_msg']}")
-            return resp["error_msg"], const.CodeEnum.LLM_SERVICE_ERROR
+            return resp["error_msg"], const.CodeEnum.INVALID_AUTH
         logger.info(f"rid='{req_id}' | Baidu {model} | usage: {resp['usage']}")
         return resp["result"], const.CodeEnum.OK
 

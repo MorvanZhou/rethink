@@ -48,6 +48,11 @@ class BaseLLMService(ABC):
         self.default_model: Optional[ModelConfig] = default_model
         self.endpoint = endpoint
 
+    @classmethod
+    @abstractmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        ...
+
     async def _complete(
             self,
             url: str,
@@ -79,7 +84,11 @@ class BaseLLMService(ABC):
         if resp.status_code != 200:
             txt = resp.text.replace('\n', '')
             logger.error(f"rid='{req_id}' Model error: {txt}")
-            return {}, const.CodeEnum.LLM_SERVICE_ERROR
+            if resp.status_code in [401, 403]:
+                code = const.CodeEnum.INVALID_AUTH
+            else:
+                code = const.CodeEnum.LLM_SERVICE_ERROR
+            return {}, code
 
         rj = resp.json()
         return rj, const.CodeEnum.OK

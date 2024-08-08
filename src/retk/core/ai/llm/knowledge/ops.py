@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 from bson import ObjectId
 
 from retk import const
 from retk.logger import logger
-from .. import api
-from ..api.base import MessagesType, BaseLLMService
+from ..api import LLM_DEFAULT_SERVICES
+from ..api.base import MessagesType
 from ..utils import remove_links
 
 system_summary_prompt = (Path(__file__).parent / "system_summary.md").read_text(encoding="utf-8")
@@ -40,22 +40,6 @@ class ExtendCase:
         return f"{self.extend_title}\n\n{self.extend_content}"
 
 
-TOP_P = 0.9
-TEMPERATURE = 0.6
-TIMEOUT = 60
-
-LLM_SERVICES_MAP: Dict[str, BaseLLMService] = {
-    s.name: s(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT) for s in [
-        api.TencentService,
-        api.AliyunService,
-        api.OpenaiService,
-        api.MoonshotService,
-        api.XfYunService,
-        api.BaiduService,
-    ]
-}
-
-
 async def _batch_send(
         is_extend: bool,
         system_prompt: str,
@@ -86,7 +70,7 @@ async def _batch_send(
 
     for service, models in svr_group.items():
         for model, model_cases in models.items():
-            llm_service = LLM_SERVICES_MAP[service]
+            llm_service = LLM_DEFAULT_SERVICES[service]
             if is_extend:
                 results = await llm_service.batch_complete_json_detect(
                     messages=model_cases["msgs"],

@@ -56,6 +56,12 @@ class XfYunService(BaseLLMService):
         )
         self.concurrency = 1
 
+    @classmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        settings = config.get_settings()
+        settings.XFYUN_API_KEY = auth.get("API-KEY", "")
+        settings.XFYUN_API_SECRET = auth.get("API Secret", "")
+
     @staticmethod
     def get_headers() -> Dict:
         _s = config.get_settings()

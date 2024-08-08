@@ -7,7 +7,7 @@ from typing import Optional, Union
 from bson import ObjectId
 from bson.tz_util import utc
 
-from retk import config, const, utils, version_manager
+from retk import config, const, utils, local_manager
 from retk.depend.mongita import MongitaClientDisk
 from retk.logger import logger
 from retk.models.search_engine.engine import BaseEngine, SearchDoc, RestoreSearchDoc
@@ -56,6 +56,7 @@ class Client:
 
         if config.is_local_db():
             await self.local_try_create_or_restore()
+            local_manager.llm.set_llm_api_to_config()
 
             # set default language
             default_language = os.getenv("RETHINK_DEFAULT_LANGUAGE", None)
@@ -112,9 +113,7 @@ class Client:
             await self.mongo.drop_database(config.get_settings().DB_NAME)
 
     async def local_try_add_default_user(self):
-        _v = version_manager.recover.dump_default_dot_rethink(
-            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / ".rethink.json"
-        )
+        _v = local_manager.recover.dump_default_dot_rethink()
 
         logger.info("running at the first time, a user with initial data will be created")
         ns = const.NEW_USER_DEFAULT_NODES[_v["settings"]["language"]]
@@ -202,7 +201,7 @@ class Client:
         if not config.get_settings().ONE_USER:
             return
 
-        version_manager.migrate.to_latest_version(config.get_settings().RETHINK_LOCAL_STORAGE_PATH)
+        local_manager.migrate.to_latest_version()
         # check if field changes
         for c, t in [
             (self.coll.users, UserMeta),
@@ -254,12 +253,11 @@ class Client:
 
     async def _local_restore(self):
         # restore user
-        version_manager.migrate.to_latest_version(config.get_settings().RETHINK_LOCAL_STORAGE_PATH)
-        _v = version_manager.recover.load_dot_rethink(
-            path=config.get_settings().RETHINK_LOCAL_STORAGE_PATH / const.settings.DOT_DATA / ".rethink.json"
-        )
+        local_manager.migrate.to_latest_version()
+        _v = local_manager.recover.load_dot_rethink()
         if _v is None:
             return
+
         v_settings = _v.get("settings", {})
         u = utils.get_user_dict(
             _id=ObjectId(_v["_id"]),

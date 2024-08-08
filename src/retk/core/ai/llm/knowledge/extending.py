@@ -3,24 +3,30 @@ from datetime import timedelta
 from bson import ObjectId
 from bson.tz_util import utc
 
+from retk.config import get_settings
 from retk.models.client import client
 from retk.models.tps.llm import NodeExtendQueue
 from retk.models.tps.node import Node
-from .. import api
 
 
 async def extend_on_node_post(data: Node):
     if data["md"].strip() == "":
         return
+    settings = get_settings()
+    if settings.LLM_KNOWLEDGE_SUMMARY_SERVICE == "" or settings.LLM_KNOWLEDGE_SUMMARY_MODEL == "":
+        return
+    if settings.LLM_KNOWLEDGE_EXTEND_SERVICE == "" or settings.LLM_KNOWLEDGE_EXTEND_MODEL == "":
+        return
+
     q: NodeExtendQueue = NodeExtendQueue(
         _id=ObjectId(),
         uid=data["uid"],
         nid=data["id"],
         modifiedAt=int(data["modifiedAt"].replace(tzinfo=utc).timestamp()),
-        summaryService=api.BaiduService.name,
-        summaryModel=api.BaiduModelEnum.ERNIE_SPEED_8K.value.key,
-        extendService=api.TencentService.name,
-        extendModel=api.TencentModelEnum.HUNYUAN_STANDARD.value.key,
+        summaryService=settings.LLM_KNOWLEDGE_SUMMARY_SERVICE,
+        summaryModel=settings.LLM_KNOWLEDGE_SUMMARY_MODEL,
+        extendService=settings.LLM_KNOWLEDGE_EXTEND_SERVICE,
+        extendModel=settings.LLM_KNOWLEDGE_EXTEND_MODEL,
     )
 
     # sort by _id desc
@@ -55,6 +61,11 @@ async def extend_on_node_update(
         cooling_time: int = 60,
 ):
     # filter out frequent updates
-    if new_data["modifiedAt"] - old_data["modifiedAt"] < timedelta(seconds=cooling_time):
+    try:
+        dt = new_data["modifiedAt"] - old_data["modifiedAt"]
+    except TypeError:
+        dt = new_data["modifiedAt"].replace(tzinfo=utc) - old_data["modifiedAt"].replace(tzinfo=utc)
+
+    if dt < timedelta(seconds=cooling_time):
         return
     await extend_on_node_post(new_data)

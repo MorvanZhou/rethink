@@ -159,6 +159,10 @@ class OpenaiService(OpenaiLLMStyle):
             timeout=timeout,
         )
 
+    @classmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        config.get_settings().OPENAI_API_KEY = auth.get("API-KEY", "")
+
     @staticmethod
     def get_api_key():
         return config.get_settings().OPENAI_API_KEY

@@ -69,6 +69,12 @@ class TencentService(BaseLLMService):
             default_model=TencentModelEnum.HUNYUAN_LITE.value,
         )
 
+    @classmethod
+    def set_api_auth(cls, auth: Dict[str, str]):
+        settings = config.get_settings()
+        settings.HUNYUAN_SECRET_ID = auth.get("Secret Id", "")
+        settings.HUNYUAN_SECRET_KEY = auth.get("Secret Key", "")
+
     def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
         _s = config.get_settings()
         if _s.HUNYUAN_SECRET_KEY == "" or _s.HUNYUAN_SECRET_ID == "":
@@ -144,6 +150,10 @@ class TencentService(BaseLLMService):
             ccode = const.CodeEnum.LLM_TIMEOUT
         elif code == "LimitExceeded":
             ccode = const.CodeEnum.LLM_API_LIMIT_EXCEEDED
+        elif code == 'AuthFailure.SecretIdNotFound':
+            ccode = const.CodeEnum.INVALID_AUTH
+        elif code == 'AuthFailure.SignatureFailure':
+            ccode = const.CodeEnum.INVALID_AUTH
         else:
             ccode = const.CodeEnum.LLM_SERVICE_ERROR
         return msg, ccode

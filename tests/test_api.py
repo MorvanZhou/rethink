@@ -1653,3 +1653,52 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual(0, len(rj["nodes"]))
+
+    async def test_llm_settings(self):
+        resp = self.client.get(
+            "/api/ai/llm/settings",
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 400, const.CodeEnum.INVALID_SETTING)
+
+        resp = self.client.patch(
+            "/api/ai/llm/settings",
+            json={
+                "service": "openai",
+                "model": "gpt-4",
+                "auth": {
+                    "api_key": "xxx",
+                },
+            },
+            headers=self.default_headers,
+        )
+        rj = self.check_ok_response(resp, 200)
+        self.assertEqual("openai", rj["service"])
+        self.assertEqual("gpt-4", rj["model"])
+        self.assertEqual("xxx", rj["auth"]["api_key"])
+
+        # test not permitted
+        tmp = config.get_settings().RETHINK_LOCAL_STORAGE_PATH
+        config.get_settings().RETHINK_LOCAL_STORAGE_PATH = None
+
+        resp = self.client.get(
+            "/api/ai/llm/settings",
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
+
+        resp = self.client.patch(
+            "/api/ai/llm/settings",
+            json={
+                "service": "openai",
+                "model": "gpt-4",
+                "auth": {
+                    "api_key": "xxx",
+                },
+            },
+            headers=self.default_headers,
+        )
+        self.error_check(resp, 403, const.CodeEnum.NOT_PERMITTED)
+
+        # set back the original settings
+        config.get_settings().RETHINK_LOCAL_STORAGE_PATH = tmp

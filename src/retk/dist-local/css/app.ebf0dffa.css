@@ -60,7 +60,7 @@ body,
 .header-component {
   position: sticky;
   top: 0;
-  padding: 10px 5px 5px 0;
+  padding: 10px 5px 5px 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -470,6 +470,89 @@ em.match {
   overflow-y: auto;
 }
 
+.at-link {
+  color: rgb(49, 88, 191);
+  background-color: rgba(92, 125, 241, 0.1);
+  text-decoration: none;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.at-link:hover {
+  background: rgba(135, 162, 255, 0.2);
+}
+
+.app-setting-section {
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.app-setting-section form {
+  width: 100%;
+}
+
+.app-setting-section input {
+  border-radius: 5px;
+  width: 97%;
+  line-height: 1.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+}
+
+.app-setting-section input:focus {
+  outline: none;
+  border: 1px solid #1f6feb;
+}
+
+.app-setting-section label {
+  font-weight: 600;
+  padding: 0.7rem 0 0.5rem 0;
+}
+
+.app-setting-section select {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.app-setting-section input:focus {
+  outline: none;
+  border: 1px solid #3d3d3d;
+}
+
+.app-setting-section select {
+  padding: 0.4rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  -webkit-padding-start: 0.7rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23000%27 width=%2718px%27 height=%2718px%27%3E%3Cpath d=%27M7 10l5 5 5-5z%27/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 18px;
+}
+
+.app-setting-section button {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: none;
+  color: white;
+  background-color: #2196f3;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.app-setting-section button:hover {
+  background-color: #1f6feb;
+}
+
 @keyframes blink {
   0% {
     opacity: 1;
@@ -490,6 +573,10 @@ em.match {
 
 .blink {
   animation: blink 0.6s;
+}
+
+.z-node-display-header {
+  z-index: 1;
 }
 
 .z-top-menu {
@@ -514,6 +601,10 @@ em.match {
 
 .z-search {
   z-index: 1002 !important;
+}
+
+.z-hint {
+  z-index: 2001;
 }
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -666,34 +757,6 @@ h2[data-v-6a626ebc] {
   border-bottom: 1px solid #ccc;
 }
 
-/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingInput.vue?vue&type=style&index=0&id=c84dbe12&scoped=true&lang=css ***!
-  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.user-meta[data-v-c84dbe12] {
-  padding-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-}
-label[data-v-c84dbe12] {
-  font-weight: 600;
-  padding: 0.7rem 0 0.5rem 0;
-}
-input[data-v-c84dbe12] {
-  border-radius: 5px;
-  width: 95%;
-  line-height: 1.5rem;
-  padding: 0.3rem 0.5rem;
-  border: 1px solid #ccc;
-}
-input[data-v-c84dbe12]:focus {
-  outline: none;
-  border: 1px solid #1f6feb;
-}
-
 /*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingBar.vue?vue&type=style&index=0&id=2f79da00&scoped=true&lang=css ***!
   \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -742,6 +805,7 @@ label[data-v-2f79da00] {
   margin: 0 auto;
   width: 95%;
   max-width: 600px;
+  padding-bottom: 5rem;
 }
 h1[data-v-19de6e7b] {
   text-align: center;
@@ -1406,45 +1470,6 @@ footer {
   font-size: 2em;
 }
 
-/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingSelection.vue?vue&type=style&index=0&id=2145b739&scoped=true&lang=css ***!
-  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-.user-meta[data-v-2145b739] {
-  padding-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-}
-label[data-v-2145b739] {
-  font-weight: 600;
-  padding: 0.7rem 0 0.5rem 0;
-}
-select[data-v-2145b739] {
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 100%;
-}
-input[data-v-2145b739]:focus {
-  outline: none;
-  border: 1px solid #3d3d3d;
-}
-select[data-v-2145b739] {
-  padding: 0.4rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  -webkit-padding-start: 0.7rem;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23000%27 width=%2718px%27 height=%2718px%27%3E%3Cpath d=%27M7 10l5 5 5-5z%27/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem top 50%;
-  background-size: 18px;
-}
-
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingChangePassword.vue?vue&type=style&index=0&id=555d338e&scoped=true&lang=css ***!
   \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1498,6 +1523,71 @@ button[data-v-555d338e]:disabled {
   margin-left: 1.6rem;
 }
 
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingToggle.vue?vue&type=style&index=0&id=5c750af7&scoped=true&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.switch[data-v-5c750af7] {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  padding: 0;
+}
+.switch input[data-v-5c750af7] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider[data-v-5c750af7] {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+.slider[data-v-5c750af7]:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+}
+input:checked + .slider[data-v-5c750af7] {
+  background-color: #2196f3;
+}
+input:checked + .slider[data-v-5c750af7]:before {
+  transform: translateX(26px);
+}
+.slider.round[data-v-5c750af7] {
+  border-radius: 34px;
+}
+.slider.round[data-v-5c750af7]:before {
+  border-radius: 50%;
+}
+
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/section/SettingLLMApi.vue?vue&type=style&index=0&id=14cebb10&scoped=true&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.document[data-v-14cebb10] {
+  margin-bottom: 5px;
+  color: #007bff;
+  text-decoration: none;
+}
+.document[data-v-14cebb10]:hover {
+  text-decoration: underline;
+}
+.red-border[data-v-14cebb10] {
+  border: 1px solid red;
+}
+
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/userSettings/AppSettings.vue?vue&type=style&index=0&id=056b0cfe&scoped=true&lang=css ***!
   \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1506,6 +1596,7 @@ button[data-v-555d338e]:disabled {
   margin: 0 auto;
   width: 95%;
   max-width: 600px;
+  padding-bottom: 5rem;
 }
 h1[data-v-056b0cfe] {
   text-align: center;
@@ -2530,7 +2621,10 @@ pre {
 }
 
 .vditor-reset img {
-  max-width: 100%;
+  max-width: 650px;
+  display: block;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .vditor-reset img.emoji {
@@ -3016,13 +3110,12 @@ pre {
 }
 
 .vditor-outline {
-  max-width: 200px;
-  width: 20%;
+  max-width: 250px;
+  width: 30%;
   border-right: 1px solid var(--border-color);
   background-color: var(--panel-background-color);
   display: none;
   overflow: auto;
-  letter-spacing: 1px;
 }
 
 .vditor-outline--right {
@@ -3036,7 +3129,7 @@ pre {
 
 .vditor-outline ul {
   list-style: none !important;
-  padding-left: 6px;
+  padding-left: 16px;
   margin: 0;
 }
 
@@ -3055,6 +3148,7 @@ pre {
 .vditor-outline li > span > svg {
   height: 10px;
   width: 10px;
+  margin-right: 4px;
 }
 
 .vditor-outline li > span:hover {
@@ -3077,7 +3171,6 @@ pre {
 .vditor-outline__action {
   transition: all 0.15s ease-in-out;
   fill: currentColor;
-  margin-right: 5px;
   flex-shrink: 0;
 }
 
@@ -4161,9 +4254,9 @@ pre {
   \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 .content[data-v-7749260a] {
-  padding: 5px 0 0 5px;
+  padding-left: 5px;
   max-width: 200px;
-  min-width: 80px;
+  min-width: 150px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4184,22 +4277,21 @@ pre {
   width: 160px;
 }
 .head[data-v-7749260a] {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  min-width: 80px;
-  font-size: 0.85rem;
-  max-height: 1rem;
-  padding-bottom: 4px;
+  display: inline;
+  font-size: 0.83rem;
+  max-height: 2.3rem;
+  margin: 0.2rem 0 0.4rem 0;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .title[data-v-7749260a] {
   margin-left: 5px;
   font-weight: bold;
   color: #333;
-  white-space: nowrap;
   clear: both;
   overflow: hidden;
+  word-break: break-all;
 }
 .snippet[data-v-7749260a] {
   flex: 1;
@@ -4207,13 +4299,8 @@ pre {
   color: #666;
   line-height: 1.1rem;
   max-height: 3.3rem;
-  --mask: linear-gradient(to bottom,
-  rgba(0, 0, 0, 1) 0,
-  rgba(0, 0, 0, 1) 93%,
-  rgba(0, 0, 0, 0) 100%
-  );
-  -webkit-mask: var(--mask);
-  mask: var(--mask);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -4503,13 +4590,11 @@ img[data-v-6484916a]:hover {
   \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 table.view {
-  height: 100%;
   position: relative;
   border-collapse: collapse;
   font-size: 1em;
   color: #5d5c5c;
   text-align: left;
-  overflow-y: auto;
   display: block;
   background: #ffffff;
   padding: 0 5px;
@@ -4520,9 +4605,8 @@ table.view {
 }
 .view tr:first-child {
   position: sticky;
-  top: 0;
+  top: 3.7em;
   background-color: #fff;
-  z-index: 1;
 }
 .cb-hide {
   display: none;
@@ -4700,26 +4784,30 @@ table.view {
 .tool-bar-left[data-v-12cdb325] {
   display: flex;
   align-items: center;
-  margin: 1em 0;
+  padding: 1em 0;
   height: 2em;
+  position: sticky;
+  position: -webkit-sticky; /* For Safari */
+  top: 0;
+  background-color: #fff;
 }
-.app-title[data-v-12cdb325] {
+.page-title[data-v-12cdb325] {
   margin: 5px;
   font-size: 1.6em;
   font-weight: 700;
   color: #333;
   width: 100px;
 }
-.app-title-sm[data-v-12cdb325] {
+.page-title-sm[data-v-12cdb325] {
   font-size: 1em;
   width: 80px;
 }
 
-/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/quickNode/QuickNodeWindow.vue?vue&type=style&index=0&id=7aa49a1e&scoped=true&lang=css ***!
-  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/quickNode/QuickNodePanel.vue?vue&type=style&index=0&id=696465da&scoped=true&lang=css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-.quick-post-panel[data-v-7aa49a1e] {
+.quick-post-panel[data-v-696465da] {
   height: 80px;
   background-color: #fff;
   border: 2px solid rgb(0 160 75 / 40%);
@@ -4730,14 +4818,14 @@ table.view {
   flex-shrink: 0;
   margin: 10px 5px 0 5px;
 }
-.quick-post-panel[data-v-7aa49a1e]:hover {
+.quick-post-panel[data-v-696465da]:hover {
   border: 2px solid rgb(0 160 75 / 90%);
 }
-.focus-expand[data-v-7aa49a1e] {
+.focus-expand[data-v-696465da] {
   border: 2px solid rgb(0 160 75 / 90%);
   height: 150px;
 }
-.quick-post[data-v-7aa49a1e] {
+.quick-post[data-v-696465da] {
   width: 100%;
   height: calc(100% - 30px);
   border: none;
@@ -4753,19 +4841,19 @@ table.view {
   letter-spacing: 1px;
   line-height: 1.7em;
 }
-.quick-post-footer[data-v-7aa49a1e] {
+.quick-post-footer[data-v-696465da] {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   height: 30px;
 }
-.word-count[data-v-7aa49a1e] {
+.word-count[data-v-696465da] {
   margin-left: 0;
   margin-right: auto;
   font-size: 0.8em;
   color: #d7d5d5;
 }
-.too-long[data-v-7aa49a1e] {
+.too-long[data-v-696465da] {
   margin-left: 0;
   margin-right: auto;
   font-size: 0.8em;
@@ -4773,35 +4861,210 @@ table.view {
   color: #ff5e4d;
   cursor: pointer;
 }
-.to-node-page-icon[data-v-7aa49a1e] {
+.to-node-page-icon[data-v-696465da] {
   width: 25px;
   height: 25px;
   margin-right: 15px;
   cursor: pointer;
   opacity: 0.6;
 }
-.to-node-page-icon-disable[data-v-7aa49a1e] {
+.to-node-page-icon-disable[data-v-696465da] {
   opacity: 0.2;
   cursor: not-allowed;
 }
-.btn[data-v-7aa49a1e] {
+.btn[data-v-696465da] {
   border: none;
   border-radius: 5px;
   margin-right: 2px;
   padding: 5px 15px;
   cursor: pointer;
 }
-.btn[data-v-7aa49a1e]:hover {
+.btn[data-v-696465da]:hover {
   cursor: pointer;
 }
-.btn[data-v-7aa49a1e]:disabled {
+.btn[data-v-696465da]:disabled {
   color: #f2eded;
   background-color: #f49182;
   cursor: not-allowed;
 }
-.btn-light[data-v-7aa49a1e] {
+.btn-light[data-v-696465da] {
   color: #fff;
   background-color: #ff5e4d;
+}
+
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/knowledge/ExtendedKnowledgeItem.vue?vue&type=style&index=0&id=c9aa7a8e&scoped=true&lang=css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.item[data-v-c9aa7a8e] {
+  padding: 5px 5px 2px 10px;
+  display: flex;
+  flex-direction: column;
+  height: 135px;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  cursor: default;
+}
+.item[data-v-c9aa7a8e]:hover {
+  background-color: #f5f5f5;
+}
+.content[data-v-c9aa7a8e] {
+  overflow: hidden;
+  transition: background-color 0.3s;
+}
+.title[data-v-c9aa7a8e] {
+  font-size: 1em;
+  font-weight: 600;
+  color: #606060;
+  margin-bottom: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.snippet[data-v-c9aa7a8e] {
+  font-size: 0.9em;
+  color: #606060;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4rem;
+  word-break: break-all;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.source[data-v-c9aa7a8e] {
+  font-size: 0.8em;
+  color: #606060;
+  margin-top: 5px;
+  text-align: right;
+}
+.from[data-v-c9aa7a8e] {
+  color: #606060;
+}
+
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/knowledge/KnowledgePopupWindow.vue?vue&type=style&index=0&id=110c3aad&scoped=true&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.overlay[data-v-110c3aad] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+}
+.popup[data-v-110c3aad] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 5px;
+}
+.header[data-v-110c3aad] {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 5px 5px 10px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.left[data-v-110c3aad] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+img[data-v-110c3aad] {
+  padding: 5px 0 8px 5px;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+}
+img[data-v-110c3aad]:hover {
+  opacity: 0.5;
+}
+.detail-md-content[data-v-110c3aad] {
+  padding: 10px;
+  max-height: 70vh;
+  width: 60vw;
+  overflow-y: auto;
+  word-break: break-all;
+}
+.detail-md-content-sm[data-v-110c3aad] {
+  width: 90vw;
+  max-height: 70vh;
+}
+.body[data-v-110c3aad] {
+  font-size: 0.9rem;
+  line-height: 1.5rem;
+  padding: 10px;
+}
+.footer[data-v-110c3aad] {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #606060;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 10px;
+}
+.content[data-v-110c3aad] {
+  overflow: hidden;
+  transition: background-color 0.3s;
+}
+.source-link[data-v-110c3aad] {
+  display: flex;
+  justify-content: flex-end;
+}
+.from[data-v-110c3aad] {
+  margin-right: 5px;
+}
+.search-terms[data-v-110c3aad] {
+  text-align: right;
+  margin-top: 10px;
+}
+.search-terms a[data-v-110c3aad] {
+  color: #606060;
+}
+
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/app/knowledge/ExtendedKnowledgePanel.vue?vue&type=style&index=0&id=17ded464&scoped=true&lang=css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.extended-knowledge[data-v-17ded464] {
+  margin: 0 5px;
+}
+.head[data-v-17ded464] {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.items[data-v-17ded464] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  -moz-column-gap: 12px;
+       column-gap: 12px;
+  row-gap: 12px;
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/AppHomeView.vue?vue&type=style&index=0&id=e501a8a6&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.page-view {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/TrashView.vue?vue&type=style&index=0&id=22842f76&scoped=true&lang=css ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.page-view[data-v-22842f76] {
+  height: 100%;
+  overflow-y: auto;
 }
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -5627,6 +5890,15 @@ li[data-v-314222b0] {
 }
 
 
+
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/app/FavoritesView.vue?vue&type=style&index=0&id=238d8f38&scoped=true&lang=css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.page-view[data-v-238d8f38] {
+  height: 100%;
+  overflow-y: auto;
+}
 
 /*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/messageBox/FlashMsgBox.vue?vue&type=style&index=0&id=21d867bf&lang=css ***!

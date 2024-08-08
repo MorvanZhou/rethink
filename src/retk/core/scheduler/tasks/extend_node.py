@@ -3,7 +3,7 @@ import random
 import time
 from typing import List
 
-from retk import const
+from retk import const, config
 from retk.core.ai.llm import knowledge
 from retk.logger import logger
 from retk.models.client import init_mongo
@@ -74,11 +74,23 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
                 extendMd=case.extend_md,
                 extendSearchTerms=case.extend_search_terms,
             )
-            await db[CollNameEnum.llm_extended_node.value].update_one(
-                {"uid": case.uid, "sourceNid": case.nid},
-                {"$set": ext},
-                upsert=True
-            )
+            if config.is_local_db():
+                doc = await db[CollNameEnum.llm_extended_node.value].find_one(
+                    {"uid": case.uid, "sourceNid": case.nid}
+                )
+                if doc is None:
+                    await db[CollNameEnum.llm_extended_node.value].insert_one(ext)
+                else:
+                    await db[CollNameEnum.llm_extended_node.value].update_one(
+                        {"uid": case.uid, "sourceNid": case.nid},
+                        {"$set": ext}
+                    )
+            else:
+                await db[CollNameEnum.llm_extended_node.value].update_one(
+                    {"uid": case.uid, "sourceNid": case.nid},
+                    {"$set": ext},
+                    upsert=True
+                )
 
         total_summary_time += s1 - s0
         total_extend_time += e1 - e0

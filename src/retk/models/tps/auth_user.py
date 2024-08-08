@@ -33,7 +33,7 @@ class AuthedUser:
         class Settings:
             __slots__ = (
                 "language", "theme", "editor_mode", "editor_font_size",
-                "editor_code_theme", "editor_sep_right_width", "editor_side_current_tool_id"
+                "editor_code_theme", "editor_sep_right_width", "editor_side_current_tool_id",
             )
             language: str
             theme: str
@@ -64,6 +64,8 @@ class AuthedUser:
 
 
 def convert_user_dict_to_authed_user(u: UserMeta) -> AuthedUser.User:
+    ls = u["lastState"]
+    st = u["settings"]
     return AuthedUser.User(
         _id=u["_id"],
         id=u["id"],
@@ -78,18 +80,18 @@ def convert_user_dict_to_authed_user(u: UserMeta) -> AuthedUser.User:
         used_space=u["usedSpace"],
         type=u["type"],
         last_state=AuthedUser.User.LastState(
-            node_display_method=u["lastState"]["nodeDisplayMethod"],
-            node_display_sort_key=u["lastState"]["nodeDisplaySortKey"],
-            recent_search=u["lastState"]["recentSearch"],
-            recent_cursor_search_selected_nids=u["lastState"]["recentCursorSearchSelectedNIds"],
+            node_display_method=ls["nodeDisplayMethod"],
+            node_display_sort_key=ls["nodeDisplaySortKey"],
+            recent_search=ls["recentSearch"],
+            recent_cursor_search_selected_nids=ls["recentCursorSearchSelectedNIds"],
         ),
         settings=AuthedUser.User.Settings(
-            language=u["settings"]["language"],
-            theme=u["settings"]["theme"],
-            editor_mode=u["settings"]["editorMode"],
-            editor_font_size=u["settings"]["editorFontSize"],
-            editor_code_theme=u["settings"]["editorCodeTheme"],
-            editor_sep_right_width=u["settings"].get("editorSepRightWidth", 200),
-            editor_side_current_tool_id=u["settings"].get("editorSideCurrentToolId", ""),
+            language=st["language"],
+            theme=st["theme"],
+            editor_mode=st["editorMode"],
+            editor_font_size=st["editorFontSize"],
+            editor_code_theme=st["editorCodeTheme"],
+            editor_sep_right_width=st.get("editorSepRightWidth", 200),
+            editor_side_current_tool_id=st.get("editorSideCurrentToolId", ""),
         ),
     )

@@ -215,6 +215,12 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, total)
 
     async def test_node_in_ai_extend_queue(self, mock_batch_send):
+        settings = config.get_settings()
+        settings.LLM_KNOWLEDGE_SUMMARY_SERVICE = "a"
+        settings.LLM_KNOWLEDGE_SUMMARY_MODEL = "a"
+        settings.LLM_KNOWLEDGE_EXTEND_SERVICE = "a"
+        settings.LLM_KNOWLEDGE_EXTEND_MODEL = "a"
+
         node, code = await core.node.post(
             au=self.au, md="knowledge test\nthis is a knowledge test"
         )
@@ -248,6 +254,11 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         q_ = await client.coll.llm_extend_node_queue.find().to_list(None)
         self.assertEqual(1, len(q))
         self.assertGreater(q_[0]["modifiedAt"], q_time)
+
+        settings.LLM_KNOWLEDGE_SUMMARY_SERVICE = ""
+        settings.LLM_KNOWLEDGE_SUMMARY_MODEL = ""
+        settings.LLM_KNOWLEDGE_EXTEND_SERVICE = ""
+        settings.LLM_KNOWLEDGE_EXTEND_MODEL = ""
 
     async def test_parse_at(self, mock_batch_send):
         nid1, _ = await core.node.post(

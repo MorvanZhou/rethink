@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter
 
 from retk.controllers import schemas
-from retk.controllers.ai import knowledge
+from retk.controllers.ai import knowledge, llm_settings
 from retk.routes import utils
 
 router = APIRouter(
@@ -11,6 +11,54 @@ router = APIRouter(
     tags=["ai"],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.get(
+    path="/llm/settings",
+    status_code=200,
+    response_model=schemas.ai.LLMApiSettingsResponse,
+)
+async def get_llm_api(
+        au: utils.ANNOTATED_AUTHED_USER,
+) -> schemas.ai.LLMApiSettingsResponse:
+    return await llm_settings.get_llm_api_settings(au=au)
+
+
+@router.patch(
+    path="/llm/settings",
+    status_code=200,
+    response_model=schemas.ai.LLMApiSettingsResponse,
+)
+async def change_llm_api(
+        au: utils.ANNOTATED_AUTHED_USER,
+        req: schemas.ai.LLMApiSettingsRequest,
+) -> schemas.ai.LLMApiSettingsResponse:
+    return await llm_settings.change_llm_api_settings(
+        au=au,
+        req=req,
+    )
+
+
+@router.delete(
+    path="/llm/settings",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+async def delete_llm_api(
+        au: utils.ANNOTATED_AUTHED_USER,
+) -> schemas.RequestIdResponse:
+    return await llm_settings.delete_llm_api_settings(au=au)
+
+
+@router.get(
+    path="/llm/settings/test",
+    status_code=200,
+    response_model=schemas.RequestIdResponse,
+)
+async def llm_api_test(
+        au: utils.ANNOTATED_AUTHED_USER,
+) -> schemas.RequestIdResponse:
+    return await llm_settings.llm_api_test(au=au)
 
 
 @router.get(
