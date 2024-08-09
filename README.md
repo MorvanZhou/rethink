@@ -13,42 +13,55 @@
   <strong>English</strong> | <a href="README_ZH.md" target="_blank">简体中文</a>
 </p>
 
-Rethink is a new understanding of self-developing.
 
-Every time a new thought is recorded,
-the relevant old thought will automatically emerge,
-cross-connect, and continuously analogize and upgrade cognition.
+Rethink represents rethinking and is an AI (Large Language Model, LLM)
+based personal knowledge and cognitive growth assistant tool.
+Rethink will assist your knowledge and cognitive growth in the following two aspects:
 
-The official web version can be found at [https://rethink.run](https://rethink.run).
+1. Going beyond note-taking software,
+   it automatically recommends and links existing knowledge and cognition when recording,
+   building a more solid knowledge network;
+2. AI knowledge expansion based on the large language model LLM,
+   allowing your cognition to continuously iterate and extend.
 
-![demo](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
+Each time you record new cognition, relevant old cognition will automatically emerge,
+intersecting and connecting, and new and old cognition will continuously analogize and transfer.
+This allows each record to have the opportunity to shine again.
 
-## Let ideas find you rather than you find them
+Please visit [https://rethink.run](https://rethink.run) to experience or view detailed introductions.
 
-Let people who love to record with no useless thought.
-Even with a continuous stream of input, you don't need to worry about finding it.
+Go beyond note-taking software, automatically recommend links
+within the existing knowledge system when recording new cognition and knowledge:
 
-We introduce a recommendation mechanism that allows old records to come back while recording a new thought.
-Making the new thought more connectable and memorable.
+![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
 
-## Features
+AI knowledge expansion based on the large language model LLM,
+allowing your cognition to continuously iterate and extend:
 
-1. **Bi-directional links**: To @ link in the note with one click;
-2. **Markdown syntax**: Seamless support for Markdown syntax;
-3. **Automatic association**: Automatically recommend related notes while writing,
-   actively assist you in forming a knowledge network.
-4. **Local storage**: Rethink attaches great importance to data security.
-   You can store data in a local storage.
-   Or the online version [https://rethink.run](https://rethink.run),
-   which makes it easy to synchronize across multiple platforms.
-5. **Multi-language**: Support multiple languages, including Chinese and English.
+![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai_recommend.gif)
 
-Deploy methods:
+## Main Features of Rethink
 
-- [Deploy with Docker](#deploy-with-docker)
-- [Deploy with Python](#deploy-with-python)
+1. **Personal Cognitive Growth Tool**: [Record](https://rethink.run/guide/use/record.html) and extend your thinking,
+   assisting you in efficient growth;
+2. **AI Recommendation**: AI [knowledge expansion](https://rethink.run/guide/use/ai-extend.html) based on the large
+   language model LLM, allowing your cognition to continuously iterate and extend;
+3. **Bidirectional Linking**: Use [@ linking](https://rethink.run/guide/use/linking.html)
+   or [automatic recommendation](https://rethink.run/guide/use/recommend.html) to other notes;
+4. **Markdown Syntax**: Seamless support for [Markdown syntax](https://rethink.run/guide/use/markdown.html);
+5. **Local Storage**: Rethink highly values data security and provides
+   a [local deployment solution](https://rethink.run/guide/self-hosted/install.html).
+   In addition, there is an online version at [https://rethink.run/r/login](https://rethink.run/r/login) for
+   synchronization between multiple platforms;
+6. **History Version Tracking**: Supports [history version tracking](https://rethink.run/guide/use/history.html), making
+   it easy to view and restore historical versions;
 
-## Deploy with Docker
+Installation and deployment methods:
+
+- [Deploy using Docker containerization](#deploy-using-docker-containerization)
+- [Deploy using Python](#deploy-using-python)
+
+## Deploy using Docker containerization
 
 ### Pull the image:
 
@@ -58,29 +71,31 @@ docker pull morvanzhou/rethink
 
 ### Run the container:
 
-For keeping your data safe, you should mount a local path to the container.
+To ensure data security, you should mount the local path to the container.
 
 ```shell
 docker run \
-  -p 8080:8080 \
-  -v /your/data/path:/.data \
-  morvanzhou/rethink
+ -p 8080:8080 \
+ -v /your/data/path:/.data \
+ morvanzhou/rethink
 ```
 
-Then you can visit `http://127.0.0.1:8080` in your browser.
+Now you can access `http://127.0.0.1:8080` in your browser to use the service.
 
-If you want to define another host's port, you have to also add an environment variable `API_URL`,
-and make sure the port is the same as the host's port (`8001` in this example):
+If you want to customize other ports, in addition to modifying the first half of the `-p` parameter, you also need to
+add an environment variable `API_URL` to redirect the API address in the frontend service:
+Make sure the port number in `API_URL` is consistent with the first half of the `-p` parameter (port `8001` in the
+following example).
 
-```shell
+```shell 
 docker run \
-  -e API_URL=http://127.0.0.1:8001 \
-  -p 8001:8080 \
-  -v /your/data/path:/.data \
-  morvanzhou/rethink
+ -e API_URL=http://127.0.0.1:8081 \
+ -p 8081:8080 \
+ -v /your/data/path:/.data \
+ morvanzhou/rethink
 ```
 
-If you want to set a password for authorization, just add a environment variable `APP_PASSWORD`:
+If you want to use Rethink authentication, you can add the environment variable `APP_PASSWORD`:
 
 ```shell
 docker run \
@@ -90,64 +105,33 @@ docker run \
  morvanzhou/rethink
 ```
 
-### All environment variables:
+### All configurable environment variables:
 
-- `API_URL`: the API url in app js code, default is `http://127.0.0.1:8080`
-- `APP_PASSWORD`: authorization password, default is None
-- `APP_LANGUAGE`: language, default is English, optional: zh, en
+- `API_URL`: API address in the frontend service, default is `http://127.0.0.1:8080`
+- `APP_PASSWORD`: Authentication password, default is None
+- `APP_LANGUAGE`: Language, default is English, optional values: zh, en
 
-## Deploy with Python
+## Deploy using Python
 
 ### Install via pip
 
-The second way to use Rethink is to install it via pip.
+The second way to install and use Rethink is through pip installation. Then start the service directly with Python.
 
-First install:
+Initial installation:
 
 ```shell
 pip install retk
 ```
 
-To update:
+Update:
 
 ```shell
 pip install -U retk
 ```
 
-### Config via Python
+### Configure with Python
 
-Quickly start the note web service with `retk.run()`, and save your note data locally,
-The default save path is the `.data` folder under the path of this script:
-
-```python
-import retk
-
-retk.run()
-```
-
-If you need to customize settings, you can set the parameters in `retk.run()`:
-
-```python
-import retk
-
-retk.run(
-   path='.',  # path to store notes, default is current directory
-   host="127.0.0.1",  # host ip, default is localhost
-   port=8080,  # port number, default is 8080
-   language="zh",  # language, default is English, optional: zh, en
-   password="12345678",  # authorization password, default is None
-   headless=False,  # set True to not auto open browser, default is False
-   debug=False,  # set True to print debug info, default is False
-)
-```
-
-All notes will be stored in the path specified by `path`,
-and the `.data` folder will be created in your `path` directory.
-
-English and Chinese languages are supported, and the default is English `en`.
-If you want to use Chinese `zh`, you can use `language="zh"` parameter.
-
-Open your browser and visit `http://127.0.0.1:8080` to start recording your ideas.
+Use the `retk.run()` method to quickly start
 
 ## Star History
 

@@ -14,29 +14,34 @@
 </p>
 
 
-Rethink 表示重新思考，是对个人成长的新理解。
+Rethink 表示重新思考，是基于 AI (大语言模型 LLM) 的个人知识、认知成长辅助工具。Rethink 在如下两个方面会协助你的知识、认知成长：
+
+1. 超越笔记软件，在记录中，自动推荐、链接已有知识、认知，构建更加坚实的知识网络；
+2. 基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展。
 
 每次记下新的认知时，相关的老认知都会自动涌现，交叉贯通，新旧认知不断 类比-迁移。
 使得每次记录都有再次发光的机会。所以 Rethink 的中文名是 比移。
 
-官方网页版可以在 [https://rethink.run](https://rethink.run) 找到。
+请在 [https://rethink.run/zh](https://rethink.run/zh) 体验或查看详细介绍。
 
-![demo](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
+超越笔记软件，记录新认知、知识时，自动推荐已有知识系统内的链接：
 
-## 让想法主动找你
+![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
 
-让爱记录的人，没有无效记录。即使有源源不断的信息输入，也不用担心找不到，想不起。
+基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展：
 
-我们引入推荐机制，让每一条记录都可以再次发光。 让它在未来的某个时刻，会再次回到面前，成为新认知的一部分。
+![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai_recommend.gif)
 
 ## Rethink 主要有的特点
 
-1. **双向链接**：使用 @ 链接到其它笔记；
-2. **Markdown 语法**：无缝支持 Markdown 语法；
-3. **自动关联**：在编写时自动推荐相关笔记，积极帮助您建立知识网络；
-4. **本地存储**：Rethink 非常重视数据安全。您可以将数据存储在本地存储中。另外，也有在线版本 https://rethink.run
-   ，便于在多个平台之间同步；
-5. **多语言**：支持多种语言，包括中文和英文。
+1. **个人认知成长工具**：[记录](https://rethink.run/zh/guide/use/record.html)、扩展你的思考，协助你高效成长；
+2. **AI 推荐**：基于大语言模型 LLM 的 AI [知识扩展](https://rethink.run/zh/guide/use/ai-extend.html)，让你的认知不断迭代、延展；
+3. **双向链接**：使用 [@ 链接](https://rethink.run/zh/guide/use/linking.html)
+   或 [自动推荐](https://rethink.run/zh/guide/use/recommend.html) 到其它笔记；
+4. **Markdown 语法**：无缝支持 [Markdown 语法](https://rethink.run/zh/guide/use/markdown.html)；
+5. **本地存储**：Rethink 非常重视数据安全，并提供了[本地部署方案](https://rethink.run/zh/guide/self-hosted/install.html)。
+   另外，也有在线版本 [https://rethink.run/r/zh/login](https://rethink.run/r/zh/login)，便于在多个平台之间同步；
+6. **历史版本回溯**：支持[历史版本回溯](https://rethink.run/zh/guide/use/history.html)，方便查看和恢复历史版本；
 
 安装部署方式：
 
