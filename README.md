@@ -14,29 +14,17 @@
 </p>
 
 
-Rethink represents rethinking and is an AI (Large Language Model, LLM)
+[Rethink](https://rethink.run) represents rethinking and is an AI (Large Language Model, LLM)
 based personal knowledge and cognitive growth assistant tool.
-Rethink will assist your knowledge and cognitive growth in the following two aspects:
+[Rethink](https://rethink.run) will assist your knowledge and cognitive growth in the following two aspects:
 
 1. Going beyond note-taking software,
    it automatically recommends and links existing knowledge and cognition when recording,
    building a more solid knowledge network;
-2. AI knowledge expansion based on the large language model LLM,
-   allowing your cognition to continuously iterate and extend.
 
-Each time you record new cognition, relevant old cognition will automatically emerge,
-intersecting and connecting, and new and old cognition will continuously analogize and transfer.
-This allows each record to have the opportunity to shine again.
+![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/linking.gif)
 
-Please visit [https://rethink.run](https://rethink.run) to experience or view detailed introductions.
-
-Go beyond note-taking software, automatically recommend links
-within the existing knowledge system when recording new cognition and knowledge:
-
-![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
-
-AI knowledge expansion based on the large language model LLM,
-allowing your cognition to continuously iterate and extend:
+2. AI knowledge expansion based on the LLM, allowing your cognition to continuously iterate and extend.
 
 ![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai-recommend.gif)
 

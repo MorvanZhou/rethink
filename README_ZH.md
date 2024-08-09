@@ -14,21 +14,14 @@
 </p>
 
 
-Rethink 表示重新思考，是基于 AI (大语言模型 LLM) 的个人知识、认知成长辅助工具。Rethink 在如下两个方面会协助你的知识、认知成长：
+[Rethink](https://rethink.run/zh) 表示重新思考，是基于 AI (大语言模型 LLM) 的个人知识、认知成长辅助工具。
+[Rethink](https://rethink.run/zh) 在如下两个方面会协助你的知识、认知成长：
 
 1. 超越笔记软件，在记录中，自动推荐、链接已有知识、认知，构建更加坚实的知识网络；
+
+![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/linking.gif)
+
 2. 基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展。
-
-每次记下新的认知时，相关的老认知都会自动涌现，交叉贯通，新旧认知不断 类比-迁移。
-使得每次记录都有再次发光的机会。所以 Rethink 的中文名是 比移。
-
-请在 [https://rethink.run/zh](https://rethink.run/zh) 体验或查看详细介绍。
-
-超越笔记软件，记录新认知、知识时，自动推荐已有知识系统内的链接：
-
-![internal link](https://github.com/MorvanZhou/rethink/raw/main/img/demo.gif)
-
-基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展：
 
 ![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai-recommend.gif)
 
