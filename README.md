@@ -30,19 +30,20 @@ based personal knowledge and cognitive growth assistant tool.
 
 ## Main Features of Rethink
 
-1. **Personal Cognitive Growth Tool**: [Record](https://rethink.run/guide/use/record.html) and extend your thinking,
-   assisting you in efficient growth;
-2. **AI Recommendation**: AI [knowledge expansion](https://rethink.run/guide/use/ai-extend.html) based on the large
-   language model LLM, allowing your cognition to continuously iterate and extend;
-3. **Bidirectional Linking**: Use [@ linking](https://rethink.run/guide/use/linking.html)
-   or [automatic recommendation](https://rethink.run/guide/use/recommend.html) to other notes;
-4. **Markdown Syntax**: Seamless support for [Markdown syntax](https://rethink.run/guide/use/markdown.html);
-5. **Local Storage**: Rethink highly values data security and provides
-   a [local deployment solution](https://rethink.run/guide/self-hosted/install.html).
+1. **[Personal Cognitive Growth Tool](https://rethink.run/start/#personal-cognitive-growth-tool)**:
+   Record and extend your thinking, assisting you in efficient growth;
+2. **[AI Recommendation](https://rethink.run/guide/use/ai-extend.html)**:
+   AI knowledge expansion based on the large language model LLM, allowing your cognition to continuously iterate and
+   extend;
+3. **[Bidirectional Linking](https://rethink.run/guide/use/recommend.html)**:
+   Use @ linking or automatic recommendation to other notes;
+4. **[Markdown Syntax](https://rethink.run/guide/use/markdown.html)**: Seamless support for Markdown syntax;
+5. **[Local Storage](https://rethink.run/guide/self-hosted/install.html)**:
+   Rethink highly values data security and provides a local deployment solution.
    In addition, there is an online version at [https://rethink.run/r/login](https://rethink.run/r/login) for
    synchronization between multiple platforms;
-6. **History Version Tracking**: Supports [history version tracking](https://rethink.run/guide/use/history.html), making
-   it easy to view and restore historical versions;
+6. **[History Version Tracking](https://rethink.run/guide/use/history.html)**:
+   Supports history version tracking, making it easy to view and restore historical versions;
 
 Installation and deployment methods:
 

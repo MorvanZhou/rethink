@@ -27,14 +27,14 @@
 
 ## Rethink 主要有的特点
 
-1. **个人认知成长工具**：[记录](https://rethink.run/zh/guide/use/record.html)、扩展你的思考，协助你高效成长；
-2. **AI 推荐**：基于大语言模型 LLM 的 AI [知识扩展](https://rethink.run/zh/guide/use/ai-extend.html)，让你的认知不断迭代、延展；
-3. **双向链接**：使用 [@ 链接](https://rethink.run/zh/guide/use/linking.html)
-   或 [自动推荐](https://rethink.run/zh/guide/use/recommend.html) 到其它笔记；
-4. **Markdown 语法**：无缝支持 [Markdown 语法](https://rethink.run/zh/guide/use/markdown.html)；
-5. **本地存储**：Rethink 非常重视数据安全，并提供了[本地部署方案](https://rethink.run/zh/guide/self-hosted/install.html)。
+1. **[个人认知成长工具](https://rethink.run/zh/start/)**：记录、扩展你的思考，协助你高效成长；
+2. **[AI 推荐](https://rethink.run/zh/guide/use/ai-extend.html)**：基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展；
+3. **[双向链接](https://rethink.run/zh/guide/use/recommend.html)**：
+   使用 @ 链接或自动推荐到其它笔记；
+4. **[Markdown 语法](https://rethink.run/zh/guide/use/markdown.html)**：无缝支持 Markdown 语法；
+5. **[本地存储](https://rethink.run/zh/guide/self-hosted/install.html)**：Rethink 非常重视数据安全，并提供了本地部署方案。
    另外，也有在线版本 [https://rethink.run/r/zh/login](https://rethink.run/r/zh/login)，便于在多个平台之间同步；
-6. **历史版本回溯**：支持[历史版本回溯](https://rethink.run/zh/guide/use/history.html)，方便查看和恢复历史版本；
+6. **[历史版本回溯](https://rethink.run/zh/guide/use/history.html)**：支持历史版本回溯，方便查看和恢复历史版本；
 
 安装部署方式：
 
