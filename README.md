@@ -38,7 +38,7 @@ within the existing knowledge system when recording new cognition and knowledge:
 AI knowledge expansion based on the large language model LLM,
 allowing your cognition to continuously iterate and extend:
 
-![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai_recommend.gif)
+![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai-recommend.gif)
 
 ## Main Features of Rethink
 

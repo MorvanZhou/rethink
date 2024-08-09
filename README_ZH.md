@@ -30,7 +30,7 @@ Rethink 表示重新思考，是基于 AI (大语言模型 LLM) 的个人知识�
 
 基于大语言模型 LLM 的 AI 知识扩展，让你的认知不断迭代、延展：
 
-![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai_recommend.gif)
+![AI recommend](https://github.com/MorvanZhou/rethink/raw/main/img/ai-recommend.gif)
 
 ## Rethink 主要有的特点
 
