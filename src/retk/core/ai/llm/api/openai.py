@@ -131,7 +131,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
                     logger.error(f"rid='{req_id}' | {self.__class__.__name__} {model} | stream error: json={json_str}")
                     continue
                 choice = json_data["choices"][0]
-                if choice["finish_reason"] is not None:
+                if choice.get("finish_reason", None) is not None:
                     try:
                         usage = json_data["usage"]
                     except KeyError:

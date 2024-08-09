@@ -80,6 +80,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             # (llm.api.OpenaiService.name, llm.api.OpenaiModelEnum.GPT4),
             (llm.api.XfYunService.name, llm.api.XfYunModelEnum.SPARK_LITE),
             (llm.api.MoonshotService.name, llm.api.MoonshotModelEnum.V1_8K),  # 这个总结比较好
+            (llm.api.VolcEngineService.name, llm.api.VolcEngineModelEnum.DOUBAO_PRO_32K),
         ]:
             cases = [
                 ExtendCase(
@@ -110,6 +111,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             # (llm.api.OpenaiService.name, llm.api.OpenaiModelEnum.GPT4),
             (llm.api.XfYunService.name, llm.api.XfYunModelEnum.SPARK_PRO),
             (llm.api.MoonshotService.name, llm.api.MoonshotModelEnum.V1_8K),  # 这个延伸比较好
+            (llm.api.VolcEngineService.name, llm.api.VolcEngineModelEnum.DOUBAO_PRO_32K),  # 这个延伸比较好
         ]:
             cases = [
                 ExtendCase(

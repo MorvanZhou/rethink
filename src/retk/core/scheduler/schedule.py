@@ -7,7 +7,7 @@ from typing import Callable, Optional, Tuple, Dict, Any, List, OrderedDict
 from apscheduler.schedulers.background import BackgroundScheduler
 from bson.tz_util import utc
 
-from retk import const
+from retk import const, config
 from retk.const.settings import MAX_SCHEDULE_JOB_INFO_LEN
 from . import tasks
 
@@ -97,8 +97,7 @@ def init_tasks():
     run_every_interval(
         job_id="deliver_unscheduled_node_extend",
         func=tasks.extend_node.deliver_unscheduled_extend_nodes,
-        minutes=40,
-        # seconds=10,
+        minutes=config.get_settings().LLM_KNOWLEDGE_SCHEDULE_MINUTES,
     )
     return
 

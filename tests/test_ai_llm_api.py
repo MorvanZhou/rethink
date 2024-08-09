@@ -57,6 +57,8 @@ def clear_all_api_key():
     c.XFYUN_API_SECRET = ""
     c.XFYUN_API_KEY = ""
     c.MOONSHOT_API_KEY = ""
+    c.VOLCENGINE_API_KEY = ""
+    c.VOLCENGINE_ENDPOINT_ID = ""
 
 
 class ChatBotTest(unittest.IsolatedAsyncioTestCase):
@@ -92,7 +94,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_hunyuan_stream_complete_json_detect(self):
         m = llm.api.TencentService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -127,7 +131,8 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete_json_detect(
             [[{
                 "role": "user",
-                "content": "你是谁? 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+                "content": "你是谁? 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
         for data, code in res:
@@ -152,7 +157,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_aliyun_stream_complete_json_detect(self):
         m = llm.api.AliyunService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -175,7 +182,8 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete_json_detect(
             [[{
                 "role": "user",
-                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
         for data, code in res:
@@ -200,7 +208,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_baidu_stream_complete_json_detect(self):
         m = llm.api.BaiduService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -223,7 +233,8 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete_json_detect(
             [[{
                 "role": "user",
-                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
         for data, code in res:
@@ -248,7 +259,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_openai_stream_complete_json_detect(self):
         m = llm.api.OpenaiService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -283,7 +296,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_xfyun_stream_complete_json_detect(self):
         m = llm.api.XfYunService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -318,7 +333,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
     async def test_moonshot_stream_complete_json_detect(self):
         m = llm.api.MoonshotService()
         resp, code = await m.stream_complete_json_detect(
-            [{"role": "user", "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"}],
+            [{"role": "user",
+              "content": "你是谁, 请以一个 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
         )
         print(resp)
         self.assertEqual(const.CodeEnum.OK, code)
@@ -331,7 +348,8 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete(
             [[{
                 "role": "user",
-                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
         for data, code in res:
@@ -344,7 +362,63 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete_json_detect(
             [[{
                 "role": "user",
-                "content": "你是谁, 请以一个 JSON 格式返回，{\"title\": \"xxx\", \"content\": \"xxx\"}"
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
+
+    @skip_no_api_key
+    async def test_volcengine_complete(self):
+        m = llm.api.VolcEngineService()
+        text, code = await m.complete([{"role": "user", "content": "你是谁"}])
+        self.assertEqual(const.CodeEnum.OK, code, msg=text)
+        print(text)
+
+    @skip_no_api_key
+    async def test_volcengine_stream_complete(self):
+        m = llm.api.VolcEngineService()
+        async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):
+            self.assertEqual(const.CodeEnum.OK, code)
+            print(b.decode("utf-8"))
+
+    @skip_no_api_key
+    async def test_volcengine_stream_complete_json_detect(self):
+        m = llm.api.VolcEngineService()
+        resp, code = await m.stream_complete_json_detect(
+            [{"role": "user",
+              "content": "你是谁？ 请以后续的 JSON 格式返回，"
+                         "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"}],
+        )
+        print(resp)
+        self.assertEqual(const.CodeEnum.OK, code)
+        self.assertIn("title", resp.keys())
+        self.assertIn("content", resp.keys())
+
+    @skip_no_api_key
+    async def test_volcengine_batch_complete(self):
+        m = llm.api.VolcEngineService()
+        res = await m.batch_complete(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
+            }]] * 11,
+        )
+        for data, code in res:
+            self.assertEqual(const.CodeEnum.OK, code, msg=data)
+            print(data)
+
+    @skip_no_api_key
+    async def test_volcengine_batch_stream_complete_json_detect(self):
+        m = llm.api.VolcEngineService()
+        res = await m.batch_complete_json_detect(
+            [[{
+                "role": "user",
+                "content": "你是谁, 请以一个 JSON 格式返回，"
+                           "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
         for data, code in res:

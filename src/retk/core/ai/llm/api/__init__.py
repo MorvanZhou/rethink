@@ -6,6 +6,7 @@ from .base import BaseLLMService
 from .moonshot import MoonshotService, MoonshotModelEnum
 from .openai import OpenaiService, OpenaiModelEnum
 from .tencent import TencentService, TencentModelEnum
+from .volcengine import VolcEngineService, VolcEngineModelEnum
 from .xfyun import XfYunService, XfYunModelEnum
 
 LLM_SERVICES_CLASS = {
@@ -33,6 +34,10 @@ LLM_SERVICES_CLASS = {
         "service": XfYunService,
         "models": XfYunModelEnum,
     },
+    VolcEngineService.name: {
+        "service": VolcEngineService,
+        "models": VolcEngineModelEnum,
+    },
 }
 
 TOP_P = 0.9
@@ -40,12 +45,7 @@ TEMPERATURE = 0.6
 TIMEOUT = 60
 
 LLM_DEFAULT_SERVICES: Dict[str, BaseLLMService] = {
-    s.name: s(top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT) for s in [
-        TencentService,
-        AliyunService,
-        OpenaiService,
-        MoonshotService,
-        XfYunService,
-        BaiduService,
-    ]
+    s["service"].name: s["service"](
+        top_p=TOP_P, temperature=TEMPERATURE, timeout=TIMEOUT
+    ) for s in LLM_SERVICES_CLASS.values()
 }

@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     COS_DOMAIN: Optional[str] = Field(env="COS_DOMAIN", default=None)
 
     # llm knowledge service settings
+    LLM_KNOWLEDGE_SCHEDULE_MINUTES: int = Field(env='LLM_KNOWLEDGE_SCHEDULE_MINUTES', default=60)
     LLM_KNOWLEDGE_SUMMARY_SERVICE: str = Field(env='LLM_KNOWLEDGE_SUMMARY_SERVICE', default="")
     LLM_KNOWLEDGE_SUMMARY_MODEL: str = Field(env='LLM_KNOWLEDGE_SUMMARY_MODEL', default="")
     LLM_KNOWLEDGE_EXTEND_SERVICE: str = Field(env='LLM_KNOWLEDGE_EXTEND_SERVICE', default="")
@@ -73,6 +74,10 @@ class Settings(BaseSettings):
     MOONSHOT_RPM: int = Field(env='MOONSHOT_RPM', default=3)
     MOONSHOT_TPM: int = Field(env='MOONSHOT_TPM', default=32_000)
     MOONSHOT_TPD: int = Field(env='MOONSHOT_TPD', default=1_500_000)
+
+    # voclengine api
+    VOLCENGINE_API_KEY: str = Field(env='VOLCENGINE_API_KEY', default="")
+    VOLCENGINE_ENDPOINT_ID: str = Field(env='VOLCENGINE_ENDPOINT_ID', default="")
 
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
