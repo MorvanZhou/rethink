@@ -2,7 +2,7 @@ import asyncio
 import json
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Tuple, AsyncIterable, List, Dict, Callable, Union
+from typing import Tuple, AsyncIterable, List, Dict, Callable, Union, Any
 
 from retk import config, const
 from retk.core.utils import ratelimiter
@@ -36,12 +36,10 @@ class OpenaiModelEnum(Enum):
     )
 
 
-_key2model: Dict[str, OpenaiModelEnum] = {m.value.key: m for m in OpenaiModelEnum}
-
-
 class OpenaiLLMStyle(BaseLLMService, ABC):
     def __init__(
             self,
+            model_enum: Any,
             endpoint: str,
             default_model: ModelConfig,
             top_p: float = 0.9,
@@ -49,6 +47,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=model_enum,
             endpoint=endpoint,
             top_p=top_p,
             temperature=temperature,
@@ -72,6 +71,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
         }
 
     def get_payload(self, model: str, messages: MessagesType, stream: bool) -> bytes:
+        messages = self._clip_messages(model, messages)
         return json.dumps({
             "model": model,
             "messages": messages,
@@ -152,6 +152,7 @@ class OpenaiService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=OpenaiModelEnum,
             endpoint="https://api.openai.com/v1/chat/completions",
             default_model=OpenaiModelEnum.GPT35_TURBO.value,
             top_p=top_p,
@@ -177,7 +178,7 @@ class OpenaiService(OpenaiLLMStyle):
         if model is None:
             m = self.default_model
         else:
-            m = _key2model[model].value
+            m = self.key2model[model].value
         limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
 
         tasks = [

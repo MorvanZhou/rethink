@@ -52,9 +52,6 @@ class AliyunModelEnum(Enum):
     )
 
 
-_key2model: Dict[str, AliyunModelEnum] = {m.value.key: m for m in AliyunModelEnum}
-
-
 class AliyunService(BaseLLMService):
     name = "ali"
 
@@ -69,6 +66,7 @@ class AliyunService(BaseLLMService):
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
+            model_enum=AliyunModelEnum,
             default_model=AliyunModelEnum.QWEN1_5_05B.value,
         )
         self.concurrency = 5
@@ -94,6 +92,9 @@ class AliyunService(BaseLLMService):
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
             model = self.default_model.key
+
+        messages = self._clip_messages(model, messages)
+
         return json.dumps({
             'model': model,
             "input": {
@@ -182,7 +183,7 @@ class AliyunService(BaseLLMService):
         if model is None:
             m = self.default_model
         else:
-            m = _key2model[model].value
+            m = self.key2model[model].value
         concurrent_limiter = ratelimiter.ConcurrentLimiter(n=self.concurrency)
         rate_limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
 

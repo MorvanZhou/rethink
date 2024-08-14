@@ -13,6 +13,7 @@ from . import (
     statistic,
     notice,
     ai,
+    browser_extension,
 )
 
 

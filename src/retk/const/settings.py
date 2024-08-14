@@ -27,3 +27,7 @@ MAX_SCHEDULE_JOB_INFO_LEN = 1000
 COOKIE_ACCESS_TOKEN = "rethinkAccessToken"
 COOKIE_REFRESH_TOKEN = "rethinkRefreshToken"
 COOKIE_REFRESH_TOKEN_ID = "rethinkRefreshTokenID"
+
+HEADER_ACCESS_TOKEN = "Access-Token"
+HEADER_REFRESH_TOKEN = "Refresh-Token"
+HEADER_REFRESH_TOKEN_ID = "Refresh-Token-Id"

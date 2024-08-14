@@ -109,10 +109,10 @@ async def signup(
     )
 
 
-async def login(
+async def __login(
         req_id: str,
         req: schemas.account.LoginRequest,
-) -> JSONResponse:
+) -> Tuple[str, str, UserMeta]:
     # TODO: 后台应记录成功登录用户名和 IP、时间.
     #  当尝试登录 IP 不在历史常登录 IP 地理位置时，应进行多因素二次验证用户身份，防止用户因密码泄漏被窃取账户
     u, code = await user.get_by_email(req.email, disabled=None, exclude_manager=False)
@@ -147,6 +147,14 @@ async def login(
         uid=u["id"],
         language=u["settings"]["language"],
     )
+    return access_token, refresh_token, u
+
+
+async def login(
+        req_id: str,
+        req: schemas.account.LoginRequest,
+) -> JSONResponse:
+    access_token, refresh_token, u = await __login(req_id=req_id, req=req)
     await statistic.add_user_behavior(
         uid=u["id"],
         type_=const.UserBehaviorTypeEnum.LOGIN,

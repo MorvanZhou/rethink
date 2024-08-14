@@ -65,9 +65,6 @@ class BaiduModelEnum(Enum):
     )  # free
 
 
-_key2model: Dict[str, BaiduModelEnum] = {m.value.key: m for m in BaiduModelEnum}
-
-
 class BaiduService(BaseLLMService):
     name = "baidu"
 
@@ -82,6 +79,7 @@ class BaiduService(BaseLLMService):
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
+            model_enum=BaiduModelEnum,
             default_model=BaiduModelEnum.ERNIE_SPEED_8K.value,
         )
 
@@ -128,12 +126,14 @@ class BaiduService(BaseLLMService):
         self.token_expires_at = rj["expires_in"] + datetime.now().timestamp()
         self.token = rj["access_token"]
 
-    @staticmethod
-    def get_payload(messages: MessagesType, stream: bool) -> bytes:
+    def get_payload(self, model: str, messages: MessagesType, stream: bool) -> bytes:
         if messages[0]["role"] == "system":
             messages[0]["role"] = "user"
             if messages[1]["role"] == "user":
                 messages.insert(1, {"role": "assistant", "content": "明白。"})
+
+        messages = self._clip_messages(model, messages)
+
         return json.dumps(
             {
                 "messages": messages,
@@ -150,7 +150,7 @@ class BaiduService(BaseLLMService):
     ) -> Tuple[str, const.CodeEnum]:
         if model is None:
             model = self.default_model.key
-        payload = self.get_payload(messages=messages, stream=False)
+        payload = self.get_payload(model=model, messages=messages, stream=False)
 
         await self.set_token()
 
@@ -178,7 +178,7 @@ class BaiduService(BaseLLMService):
     ) -> AsyncIterable[Tuple[bytes, const.CodeEnum]]:
         if model is None:
             model = self.default_model.key
-        payload = self.get_payload(messages=messages, stream=True)
+        payload = self.get_payload(model=model, messages=messages, stream=True)
 
         await self.set_token()
         async for b, code in self._stream_complete(
@@ -224,7 +224,7 @@ class BaiduService(BaseLLMService):
         if model is None:
             m = self.default_model
         else:
-            m = _key2model[model].value
+            m = self.key2model[model].value
         limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
 
         tasks = [

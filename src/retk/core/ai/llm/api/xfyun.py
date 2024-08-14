@@ -48,6 +48,7 @@ class XfYunService(BaseLLMService):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=XfYunModelEnum,
             endpoint="https://spark-api-open.xf-yun.com/v1/chat/completions",
             top_p=top_p,
             temperature=temperature,
@@ -75,6 +76,8 @@ class XfYunService(BaseLLMService):
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
             model = self.default_model.key
+
+        messages = self._clip_messages(model, messages)
         data = {
             "model": _domain_map[model],
             "stream": stream,

@@ -53,9 +53,6 @@ class VolcEngineModelEnum(Enum):
     )
 
 
-_key2model: Dict[str, VolcEngineModelEnum] = {m.value.key: m for m in VolcEngineModelEnum}
-
-
 class VolcEngineService(OpenaiLLMStyle):
     name = "volcengine"
 
@@ -66,6 +63,7 @@ class VolcEngineService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=VolcEngineModelEnum,
             endpoint="https://ark.cn-beijing.volces.com/api/v3/chat/completions",
             default_model=VolcEngineModelEnum.DOUBAO_LITE_32K.value,
             top_p=top_p,
@@ -84,6 +82,7 @@ class VolcEngineService(OpenaiLLMStyle):
         return config.get_settings().VOLCENGINE_API_KEY
 
     def get_payload(self, model: str, messages: MessagesType, stream: bool) -> bytes:
+        messages = self._clip_messages(model, messages)
         return json.dumps({
             "model": config.get_settings().VOLCENGINE_ENDPOINT_ID,
             "messages": messages,
@@ -140,7 +139,7 @@ class VolcEngineService(OpenaiLLMStyle):
     ) -> List[Tuple[Union[str, Dict[str, str]], const.CodeEnum]]:
         if model is None:
             model = self.default_model.key
-        m = _key2model[model].value
+        m = self.key2model[model].value
         rate_limiter = ratelimiter.RateLimiter(requests=m.RPM, period=60)
 
         tasks = [

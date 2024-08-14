@@ -83,6 +83,14 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         print(text)
 
     @skip_no_api_key
+    async def test_hunyuan_long_complete(self):
+        m = llm.api.TencentService()
+        async for b, code in m.stream_complete([{"role": "user", "content": "你是谁" * 9999999}]):
+            self.assertEqual(const.CodeEnum.OK, code)
+            s = b.decode("utf-8")
+            print(s)
+
+    @skip_no_api_key
     async def test_hunyuan_stream_complete(self):
         m = llm.api.TencentService()
         async for b, code in m.stream_complete([{"role": "user", "content": "你是谁"}]):

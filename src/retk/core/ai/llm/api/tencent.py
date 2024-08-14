@@ -62,6 +62,7 @@ class TencentService(BaseLLMService):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=TencentModelEnum,
             endpoint=f"https://{self.host}",
             top_p=top_p,
             temperature=temperature,
@@ -129,6 +130,8 @@ class TencentService(BaseLLMService):
     def get_payload(self, model: Optional[str], messages: MessagesType, stream: bool) -> bytes:
         if model is None:
             model = self.default_model.key
+
+        messages = self._clip_messages(model, messages)
         return json.dumps(
             {
                 "Model": model,

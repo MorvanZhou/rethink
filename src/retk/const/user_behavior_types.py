@@ -8,6 +8,7 @@ class UserBehaviorTypeEnum(IntEnum):
     # node ops, backend
     NODE_CREATE = 2
     NODE_QUICK_CREATE = 3
+    NODE_BROWSER_EXTENSION_CREATE = 15
     NODE_TRASHED_OPS = 4
     NODE_RESTORED_OPS = 5
     NODE_DELETED_OPS = 6

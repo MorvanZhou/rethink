@@ -19,6 +19,7 @@ from .routes import (
     statistic,
     notice,
     ai,
+    browser_extension,
 )
 from .routes.utils import on_shutdown, on_startup
 
@@ -61,6 +62,7 @@ for r in [
     statistic,
     notice,
     ai,
+    browser_extension,
 ]:
     app.include_router(r.router)
 

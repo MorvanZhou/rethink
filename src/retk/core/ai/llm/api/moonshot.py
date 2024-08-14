@@ -34,6 +34,7 @@ class MoonshotService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
+            model_enum=MoonshotModelEnum,
             endpoint="https://api.moonshot.cn/v1/chat/completions",
             default_model=MoonshotModelEnum.V1_8K.value,
             top_p=top_p,

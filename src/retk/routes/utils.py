@@ -239,10 +239,44 @@ async def process_admin_headers(
     return au
 
 
+async def process_browser_extension_headers(
+        token: str = Header(alias=const.settings.HEADER_ACCESS_TOKEN, default=""),
+        request_id: str = Header(
+            default="", alias="Request-Id", max_length=const.settings.MD_MAX_LENGTH
+        )
+) -> AuthedUser:
+    return await __process_auth_headers(
+        is_refresh_token=False,
+        refresh_token_id="",
+        token=token,
+        request_id=request_id
+    )
+
+
+async def process_browser_extension_refresh_token_headers(
+        token: str = Header(alias=const.settings.HEADER_REFRESH_TOKEN, default=""),
+        id_: str = Header(alias=const.settings.HEADER_REFRESH_TOKEN_ID, default=""),
+        request_id: str = Header(
+            default="", alias="Request-Id", max_length=const.settings.MD_MAX_LENGTH
+        )
+) -> AuthedUser:
+    return await __process_auth_headers(
+        is_refresh_token=True,
+        refresh_token_id=id_,
+        token=token,
+        request_id=request_id
+    )
+
+
 ANNOTATED_REQUEST_ID = Annotated[str, Depends(process_no_auth_headers)]
 ANNOTATED_AUTHED_USER = Annotated[AuthedUser, Depends(process_normal_headers)]
 ANNOTATED_AUTHED_ADMIN = Annotated[AuthedUser, Depends(process_admin_headers)]
 ANNOTATED_REFRESH_TOKEN = Annotated[AuthedUser, Depends(process_refresh_token_headers)]
+
+ANNOTATED_AUTHED_USER_BROWSER_EXTENSION = Annotated[AuthedUser, Depends(process_browser_extension_headers)]
+ANNOTATED_REFRESH_TOKEN_BROWSER_EXTENSION = Annotated[
+    AuthedUser, Depends(process_browser_extension_refresh_token_headers)
+]
 
 ANNOTATED_UID = Annotated[str, Path(title="The ID of user", max_length=const.settings.UID_MAX_LENGTH, min_length=8)]
 ANNOTATED_NID = Annotated[str, Path(title="The ID of node", max_length=const.settings.NID_MAX_LENGTH, min_length=8)]
