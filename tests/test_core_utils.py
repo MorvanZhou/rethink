@@ -14,7 +14,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
     @patch("httpx.AsyncClient.get")
     async def test_single_rate_limiter(self, mock_get):
         mock_get.return_value = "mock"
-        rate_limiter = ratelimiter.RateLimiter(requests=5, period=timedelta(seconds=0.1))
+        rate_limiter = ratelimiter.RateLimiter(requests=1, period=timedelta(seconds=0.1))
         st = time.time()
         count = 0
 
@@ -25,12 +25,13 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
                     await client.get(url)
                     count += 1
 
-        tasks = [fetch("https://xxx") for _ in range(11)]
+        n = 5
+        tasks = [fetch("https://xxx") for _ in range(n)]
         await asyncio.gather(*tasks)
         total_time = time.time() - st
-        self.assertGreaterEqual(total_time, 0.29)
+        self.assertGreaterEqual(total_time, 0.1 * (n - 1))
         # self.assertLess(total_time, 0.5)
-        self.assertEqual(11, count)
+        self.assertEqual(n, count)
 
     @patch("httpx.AsyncClient.get")
     async def test_rate_limiter(self, mock_get):
