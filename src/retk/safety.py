@@ -8,14 +8,14 @@ if vue_app_mode not in ["dev", "local"]:
     allow_origins = [
         "https://rethink.run",
         "https://www.rethink.run",
-        "chrome-extension://oeglcbaofhebfffmmnppingbpdneachl",
+        "chrome-extension://agkhlkcehlohaafgekhddjefgdgbbajj",
     ]
     csp_local = ""
     cookie_domain = "rethink.run"
     cookie_secure = True
 else:
     allow_origins = [
-        "chrome-extension://oeglcbaofhebfffmmnppingbpdneachl",
+        "chrome-extension://agkhlkcehlohaafgekhddjefgdgbbajj",
         "https://rethink.run",
         "https://www.rethink.run",
         "http://localhost:8080",
