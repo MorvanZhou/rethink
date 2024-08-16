@@ -10,4 +10,5 @@ from . import (
     notice,
     analysis,
     ai,
+    browser_extension,
 )

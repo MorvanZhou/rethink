@@ -140,7 +140,9 @@ async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:
     )
 
 
-async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, const.CodeEnum]:
+# pylint: disable=line-too-long
+async def fetch_image_vditor(au: AuthedUser, url: str, count=0, referer: str = "", user_agent: str = "") -> Tuple[
+    str, const.CodeEnum]:
     if count > 2:
         logger.debug(f"too many 30X code, failed to get {url}")
         return "", const.CodeEnum.FILE_OPEN_ERROR
@@ -149,11 +151,16 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
         return "", const.CodeEnum.FILE_OPEN_ERROR
     if await core.user.user_space_not_enough(au=au):
         return "", const.CodeEnum.USER_SPACE_NOT_ENOUGH
+    headers = ASYNC_CLIENT_HEADERS.copy()
+    if referer != "":
+        headers["Referer"] = referer
+    if user_agent != "":
+        headers["User-Agent"] = user_agent
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
+        async with httpx.AsyncClient() as c:
+            response = await c.get(
                 url=url,
-                headers=ASYNC_CLIENT_HEADERS,
+                headers=headers,
                 follow_redirects=False,
                 timeout=5.
             )
@@ -167,7 +174,13 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0) -> Tuple[str, co
         logger.debug(f"failed to get {url}: {e}")
         return "", const.CodeEnum.FILE_OPEN_ERROR
     if response.status_code in [301, 302]:
-        return await fetch_image_vditor(au=au, url=response.headers["Location"], count=count + 1)
+        return await fetch_image_vditor(
+            au=au,
+            url=response.headers["Location"],
+            count=count + 1,
+            referer=referer,
+            user_agent=user_agent
+        )
     elif response.status_code != 200:
         return "", const.CodeEnum.FILE_OPEN_ERROR
 

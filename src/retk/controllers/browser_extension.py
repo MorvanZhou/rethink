@@ -1,3 +1,7 @@
+from typing import List
+
+from fastapi import UploadFile
+
 from retk import config, core, const
 from retk.controllers import schemas
 from retk.controllers.account import __login
@@ -43,20 +47,21 @@ async def get_access_token(
 
 async def post_node(
         au: AuthedUser,
-        req: schemas.browser_extension.CreateNodeRequest,
+        url: str,
+        title: str,
+        content: str,
+        referer: str,
+        user_agent: str,
+        images: List[UploadFile],
 ) -> schemas.node.NodeResponse:
-    if au.language == const.LanguageEnum.ZH.value:
-        source_prefix = "原文来自:"
-    elif au.language == const.LanguageEnum.EN.value:
-        source_prefix = "Source from:"
-    else:
-        source_prefix = "Source from:"
-    md = f"{req.title}\n\n{source_prefix} [{req.url}]({req.url})\n\n{req.content}"
-    n, code = await core.node.post(
+    n, code = await core.browser_extension.post_node(
         au=au,
-        md=md,
-        type_=const.NodeTypeEnum.MARKDOWN.value,
-        from_nid="",
+        url=url,
+        title=title,
+        content=content,
+        referer=referer,
+        user_agent=user_agent,
+        images=images,
     )
     maybe_raise_json_exception(au=au, code=code)
     await core.statistic.add_user_behavior(

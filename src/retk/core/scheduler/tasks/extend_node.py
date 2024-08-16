@@ -36,6 +36,8 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
 
         for item in batch:
             node = await db[CollNameEnum.nodes.value].find_one({"id": item["nid"]})
+            if node is None:
+                continue
             cases.append(
                 knowledge.ExtendCase(
                     _id=item["_id"],

@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from typing import Annotated, List
+
+from fastapi import APIRouter, Form, UploadFile
 
 from retk.controllers import schemas, browser_extension
 from retk.routes import utils
@@ -43,9 +45,19 @@ async def browser_extension_refresh_token(
 @utils.measure_time_spend
 async def post_node_from_browser_extension(
         au: utils.ANNOTATED_AUTHED_USER_BROWSER_EXTENSION,
-        req: schemas.browser_extension.CreateNodeRequest,
+        url: Annotated[str, Form(...)],
+        title: Annotated[str, Form(...)],
+        content: Annotated[str, Form(...)],
+        referer: Annotated[str, Form(...)],
+        user_agent: Annotated[str, Form(alias="userAgent")],
+        images: List[Annotated[UploadFile, Form(...)]],
 ) -> schemas.node.NodeResponse:
     return await browser_extension.post_node(
         au=au,
-        req=req,
+        url=url,
+        title=title,
+        content=content,
+        referer=referer,
+        user_agent=user_agent,
+        images=images,
     )
