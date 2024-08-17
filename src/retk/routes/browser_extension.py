@@ -1,6 +1,7 @@
-from typing import Annotated, List
+from typing import List
 
 from fastapi import APIRouter, Form, UploadFile
+from typing_extensions import Annotated
 
 from retk.controllers import schemas, browser_extension
 from retk.routes import utils
