@@ -280,12 +280,12 @@ class SSOBase:
         auth = httpx.BasicAuth(self.client_id, self.client_secret)
         async with httpx.AsyncClient() as client:
             response = await client.post(token_url, headers=headers, content=body, auth=auth)
-        content = response.json()
-        self._refresh_token = content.get("refresh_token")
-        self.oauth_client.parse_request_body_response(json.dumps(content))
+            content = response.json()
+            self._refresh_token = content.get("refresh_token")
+            self.oauth_client.parse_request_body_response(json.dumps(content))
 
-        uri, headers, _ = self.oauth_client.add_token(await self.userinfo_endpoint)
-        response = await client.get(uri, headers=headers)
-        content = response.json()
+            uri, headers, _ = self.oauth_client.add_token(await self.userinfo_endpoint)
+            response = await client.get(uri, headers=headers)
+            content = response.json()
 
         return await self.openid_from_response(content)

@@ -35,7 +35,7 @@ async def post_in_manager_delivery(
         senderType=au.u.type,
         senderId=au.u.id,
         title=title,
-        html=md2html(content),
+        html=md2html(content, with_css=True),
         snippet=md2txt(content)[:20],
         recipientType=recipient_type,  # send to which user type, 0: all, 1: batch, 2: admin, 3: manager
         batchTypeIds=batch_type_ids,  # if recipient=batch, put user id here

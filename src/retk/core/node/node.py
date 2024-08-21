@@ -1,6 +1,8 @@
 import copy
 import datetime
-from typing import List, Optional, Tuple, Dict, Any
+import urllib.parse
+from io import BytesIO
+from typing import List, Optional, Tuple, Dict, Any, Literal
 
 from bson import ObjectId
 from bson.tz_util import utc
@@ -8,6 +10,7 @@ from bson.tz_util import utc
 from retk import config, const, utils, regex
 from retk import plugins
 from retk.core import user, ai
+from retk.core.utils import md_tools
 from retk.logger import logger
 from retk.models import tps, db_ops
 from retk.models.client import client
@@ -446,3 +449,22 @@ async def get_hist_edition_md(au: tps.AuthedUser, nid: str, version: str) -> Tup
     if version not in n["history"]:
         return "", const.CodeEnum.NODE_NOT_EXIST
     return backup.get_md(uid=au.u.id, nid=nid, version=version)
+
+
+async def md_export(
+        au: tps.AuthedUser,
+        nid: str,
+        format_: Literal["md", "html", "pdf"],
+) -> Tuple[str, str, Optional[BytesIO], const.CodeEnum]:
+    n, code = await get(au=au, nid=nid)
+    if code != const.CodeEnum.OK:
+        return "", "", None, code
+
+    media_type, file = await md_tools.md_export(
+        uid=au.u.id,
+        title=n["title"],
+        md=n["md"],
+        format_=format_,
+    )
+    title = urllib.parse.quote(n["title"])
+    return media_type, title, file, const.CodeEnum.OK

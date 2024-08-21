@@ -6,15 +6,11 @@ from typing import BinaryIO
 from PIL import Image, UnidentifiedImageError
 from bson import ObjectId
 
-try:
-    from qcloud_cos import CosConfig, CosServiceError, CosS3Client
-except ImportError:
-    pass
-
 from retk.config import get_settings, is_local_db
 from retk.const.app import FileTypesEnum
-from retk.const.settings import IMG_RESIZE_THRESHOLD, DOT_DATA
+from retk.const.settings import IMG_RESIZE_THRESHOLD, DOT_DATA, LOCAL_FILE_URL_PRE_DIR
 from retk.core.user import update_used_space
+from retk.core.utils.cos import cos_client
 from retk.logger import logger
 from retk.models.client import client
 from retk.models.tps import UserFile
@@ -96,7 +92,7 @@ class Saver:
 
         if path.exists():
             # skip the same image
-            return f"/files/{file.hashed_filename}"
+            return f"/{LOCAL_FILE_URL_PRE_DIR}/{file.hashed_filename}"
 
         try:
             if file.type == FileTypesEnum.IMAGE:
@@ -116,62 +112,30 @@ class Saver:
             return ""
 
         await add_to_db(uid=uid, file=file)
-        return f"/files/{file.hashed_filename}"
+        return f"/{LOCAL_FILE_URL_PRE_DIR}/{file.hashed_filename}"
 
     async def save_remote(self, uid: str, file: File):
-        # to cos
-        token = None
-
-        settings = get_settings()
-        secret_id = settings.COS_SECRET_ID
-        secret_key = settings.COS_SECRET_KEY
-        region = settings.COS_REGION
-        domain = settings.COS_DOMAIN
-        cos_conf = CosConfig(
-            Region=region,
-            SecretId=secret_id,
-            SecretKey=secret_key,
-            Token=token,
-            Domain=domain,
-            Scheme='https',
-        )
-        cos_client = CosS3Client(cos_conf)
-
-        key = f"userData/{uid}/{file.hashed_filename}"
-
-        domain = settings.COS_DOMAIN or f"{settings.COS_BUCKET_NAME}.cos.{region}.myqcloud.com"
-        url = f"https://{domain}/{key}"
+        key = cos_client.get_user_data_key(uid=uid, filename=file.hashed_filename)
+        url = f"https://{cos_client.domain}/{key}"
 
         doc = await client.coll.user_file.find_one({"uid": uid, "fid": file.hashed_filename})
         if doc:
             return url
 
-        try:
-            _ = cos_client.head_object(
-                Bucket=settings.COS_BUCKET_NAME,
-                Key=key
-            )
+        if await cos_client.async_has_file(uid=uid, filename=file.hashed_filename):
             return url
-        except CosServiceError as e:
-            if e.get_status_code() != 404:
-                return url
 
         if file.type == FileTypesEnum.IMAGE:
             file.image_resize(resize_threshold=self.resize_threshold)
 
         # can raise error
-        try:
-            _ = cos_client.put_object(
-                Bucket=settings.COS_BUCKET_NAME,
-                Body=file.data,
-                Key=key,
-                StorageClass='STANDARD',  # 'STANDARD'|'STANDARD_IA'|'ARCHIVE',
-                EnableMD5=False,
-                # ContentType=content_type,
-            )
-        except CosServiceError as e:
-            logger.error(f"failed to save file to cos: {e}")
+        if not await cos_client.async_put(
+                file=file.data,
+                uid=uid,
+                filename=file.hashed_filename,
+        ):
             return ""
+
         await add_to_db(uid=uid, file=file)
         return url
 

@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, Literal
+
+from fastapi.responses import StreamingResponse
 
 from retk import const, core
 from retk.controllers import schemas
-from retk.controllers.utils import maybe_raise_json_exception
+from retk.controllers.utils import maybe_raise_json_exception, json_exception
 from retk.models.tps import AuthedUser, Node
 from retk.utils import contain_only_http_link, get_title_description_from_link, datetime2str
 
@@ -222,4 +224,56 @@ async def get_favorite_nodes(
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
         data=_get_node_search_response_data(nodes=nodes, total=total),
+    )
+
+
+async def stream_md_export(
+        au: AuthedUser,
+        nid: str,
+        format_: Literal["md", "html", "pdf"],
+) -> StreamingResponse:
+    media_type, title, file, code = await core.node.md_export(
+        au=au,
+        nid=nid,
+        format_=format_,
+    )
+    maybe_raise_json_exception(au=au, code=code)
+    # stream send file chunk
+    if media_type == "application/zip":
+        headers = {
+            "Content-Disposition": f"attachment; filename={title}.zip",
+        }
+    elif media_type == "text/markdown":
+        headers = {
+            "Content-Disposition": f"attachment; filename={title}.md",
+        }
+    elif media_type == "text/html":
+        headers = {
+            "Content-Disposition": f"attachment; filename={title}.html",
+        }
+    elif media_type == "application/pdf":
+        headers = {
+            "Content-Disposition": f"attachment; filename={title}.pdf",
+        }
+    else:
+        raise json_exception(
+            request_id=au.request_id,
+            uid=au.u.id,
+            code=const.CodeEnum.OPERATION_FAILED,
+            language=au.language,
+        )
+    headers["Request-Id"] = au.request_id
+
+    # iter file by chunk size
+    async def iter_file():
+        while True:
+            chunk = file.read(1024)
+            if not chunk:
+                break
+            yield chunk
+
+    return StreamingResponse(
+        content=iter_file(),
+        media_type=media_type,
+        headers=headers,
     )

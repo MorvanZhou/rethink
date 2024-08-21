@@ -16,6 +16,7 @@ from retk.controllers.utils import json_exception
 from retk.core import scheduler
 from retk.core.files.importing import async_tasks
 from retk.core.self_hosted import notice_new_pkg_version
+from retk.core.utils.cos import cos_client
 from retk.logger import logger, add_rotating_file_handler
 from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
@@ -88,6 +89,12 @@ async def on_startup():
     logger.debug(f'startup_event VUE_APP_API_URL: {os.environ.get("VUE_APP_API_URL")}')
     logger.debug(f'startup_event RETHINK_DEFAULT_LANGUAGE: {os.environ.get("RETHINK_DEFAULT_LANGUAGE")}')
     await client.init()
+
+    # cos client
+    try:
+        cos_client.init()
+    except ModuleNotFoundError:
+        logger.info("cos client not init")
 
     # schedule job
     scheduler.start()

@@ -2,6 +2,7 @@ from typing import Optional, Literal
 
 from fastapi import APIRouter
 from fastapi.params import Path, Query
+from fastapi.responses import StreamingResponse
 from typing_extensions import Annotated
 
 from retk import const
@@ -267,4 +268,22 @@ async def delete_node_favorite(
         au=au,
         nid=nid,
         favorite=False,
+    )
+
+
+@router.get(
+    path="/{nid}/export/{format_}",
+    status_code=200,
+)
+@utils.measure_time_spend
+async def stream_export_md_node(
+        au: utils.ANNOTATED_AUTHED_USER,
+        nid: str = utils.ANNOTATED_NID,
+        format_: Literal["md", "html", "pdf"] = Annotated[Literal["md", "html", "pdf"], Path()],
+        referer: Optional[str] = utils.DEPENDS_REFERER,
+) -> StreamingResponse:
+    return await node_ops.stream_md_export(
+        au=au,
+        nid=nid,
+        format_=format_,
     )

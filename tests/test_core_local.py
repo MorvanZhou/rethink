@@ -702,7 +702,7 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
         n, code = await core.notice.get_system_notice(au.u.id, notice_id=str(doc["_id"]))
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual("title", n["title"])
-        self.assertEqual("<p>content</p>", n["html"])
+        self.assertTrue(n["html"].startswith('\n<!DOCTYPE html>\n<meta name="viewport"'))
         self.assertLess(datetime.datetime.strptime(sn[0]["publishAt"], '%Y-%m-%dT%H:%M:%SZ'), datetime.datetime.now())
         self.assertFalse(sn[0]["read"])
         self.assertIsNone(sn[0]["readTime"])

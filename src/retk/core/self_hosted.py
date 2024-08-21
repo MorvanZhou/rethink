@@ -179,7 +179,7 @@ async def notice_new_pkg_version():
             __new_version_content_temp_zh if language == "zh" else __new_version_content_temp_en
         ).format(local_version_str, remote_version_str)
         for notice in res:
-            if notice["title"] == title and notice["html"] == md2html(content):
+            if notice["title"] == title and notice["html"] == md2html(content, with_css=True):
                 return
         await post_in_manager_delivery(
             au=_local_system_authed_user,

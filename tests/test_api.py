@@ -1414,7 +1414,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, rj["total"])
         self.assertEqual(1, len(rj["notices"]))
         self.assertEqual("title", rj["notices"][0]["title"])
-        self.assertEqual("<p>content</p>", rj["notices"][0]["html"])
+        self.assertTrue(rj["notices"][0]["html"].startswith('\n<!DOCTYPE html>\n<meta name="viewport"'))
         self.assertEqual("content", rj["notices"][0]["snippet"])
         self.assertEqual(pa.strftime("%Y-%m-%dT%H:%M:%SZ"), rj["notices"][0]["publishAt"])
         self.assertFalse(rj["notices"][0]["scheduled"])
@@ -1430,7 +1430,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(docs))
         self.assertEqual(const.notice.RecipientTypeEnum.ALL.value, docs[0]["recipientType"])
         self.assertEqual("title", docs[0]["title"])
-        self.assertEqual("<p>content</p>", docs[0]["html"])
+        self.assertTrue(docs[0]["html"].startswith('\n<!DOCTYPE html>\n<meta name="viewport"'))
         self.assertEqual(admin_uid, docs[0]["senderId"])
         self.assertEqual([], docs[0]["batchTypeIds"])
         self.assertFalse(docs[0]["scheduled"])
@@ -1470,7 +1470,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         )
         rj = self.check_ok_response(resp, 200)
         self.assertEqual("title", rj["notice"]["title"])
-        self.assertEqual("<p>content</p>", rj["notice"]["html"])
+        self.assertTrue(docs[0]["html"].startswith('\n<!DOCTYPE html>\n<meta name="viewport"'))
 
         await self.clear_default_manager(admin_uid)
 

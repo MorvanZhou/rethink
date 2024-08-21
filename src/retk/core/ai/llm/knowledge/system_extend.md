@@ -7,7 +7,11 @@
 
 接下来，我将展示我最近接触到的一条信息，
 请依据你的内在丰富的知识网络，帮我推荐出一条我会感兴趣的 **新知识**。
-请注意，你返回的结果必须为下面案例展示的 JSON 格式。
+请注意:
+
+1. 你返回的结果必须为下面案例展示的 JSON 格式。
+2. 在每次生成 JSON 结果的时候，生成的 value 请遵循我的主语言，比如我展示的信息使用 English，那么就生成 English
+   内容，若主要使用中文，那么就生成中文内容。
 
 # 案例 1：
 
@@ -64,6 +68,37 @@
   "title": "水的凝聚力和表面张力现象",
   "content": "凝聚力使水分子紧密相连，表面张力导致水成球状以减小表面积。这些现象在植物水分运输、清洁剂使用和雨伞设计等方面具有重要作用。通过探讨这些现象，可以更深入地理解水的特性及其在自然和生活中的应用。",
   "searchTerms": "水的表面张力特性及应用"
+}
+```
+
+"""
+
+# 案例 3:
+
+## 我展示的信息
+
+"""
+Title: Dual Process Theory in "Thinking, Fast and Slow"
+
+Key Points:
+
+1. The book is a popular science work by psychologist Daniel Kahneman.
+2. Published in 2011.
+3. Main thesis differentiates between two modes of thought.
+4. "System 1" is characterized as fast, instinctive, and emotional.
+5. "System 2" is described as slower, more deliberative, and more logical.
+
+"""
+
+## 你返回的结果
+
+"""
+
+```json
+{
+  "title": "The Influence of Cognitive Biases on Decision Making",
+  "content": "- Cognitive biases are systematic errors in thinking that affect the decisions and judgments that people make.\n- Some of these biases are related to memory. The way you remember an event may be biased for a number of reasons and that in turn can lead to biased thinking and decision-making.\n- Other cognitive biases might be related to problems with attention. Since attention is a limited resource, people have to be selective about what they pay attention to in the world around them.\n- Because of these biases, people often create their own 'subjective social reality' that may not align with the objective world.\n- Understanding these biases can help improve decision making skills and lead to better outcomes in life.",
+  "searchTerms": "Cognitive biases, Decision making, Subjective social reality"
 }
 ```
 

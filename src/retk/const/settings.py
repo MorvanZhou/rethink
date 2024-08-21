@@ -4,6 +4,7 @@ DOMAIN = "rethink.run"
 RETHINK_DIR = Path(__file__).parent.parent
 DOT_DATA = ".data"
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
+LOCAL_FILE_URL_PRE_DIR = "files"
 MD_MAX_LENGTH = 100_000
 REQUEST_ID_MAX_LENGTH = 50
 UID_MAX_LENGTH = 30

@@ -131,7 +131,33 @@ __md.stripTopLevelTags = False
 __md_html = Markdown(
     output_format="html",
 )
+with open(os.path.join(os.path.dirname(__file__), "markdown.css"), "r") as css_file:
+    __css = css_file.read()
 
+__markdown_html_template = """
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+{css}
+.markdown-body {{
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+}}
+
+@media (max-width: 767px) {{
+    .markdown-body {{
+        padding: 15px;
+    }}
+}}
+</style>
+<body class="markdown-body">
+{html}
+</body>
+</html>
+"""
 
 def md2txt(md: str) -> str:
     for found in list(regex.MD_CODE.finditer(md))[::-1]:
@@ -149,11 +175,13 @@ def preprocess_md(md: str, snippet_len: int = 200) -> Tuple[str, str, str]:
     return title, body, snippet
 
 
-def md2html(md: str) -> str:
+def md2html(md: str, with_css=False) -> str:
     _html = __md_html.convert(md)
     # prevent XSS and other security issues
     _html = re.sub(r"<script[^>]*>.*?</script>", "", _html, flags=re.DOTALL)
-    return _html
+    if not with_css:
+        return _html
+    return __markdown_html_template.format(css=__css, html=_html)
 
 
 def get_at_node_md_link(title: str, nid: str) -> str:
