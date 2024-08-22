@@ -5,7 +5,9 @@ from typing import Optional, BinaryIO, List, Dict
 import httpx
 
 try:
-    from qcloud_cos import CosConfig, CosS3Client, CosServiceError, CosClientError
+    from qcloud_cos import (
+        CosConfig, CosS3Client, CosServiceError, CosClientError
+    )
 except ImportError:
     pass
 
@@ -76,7 +78,7 @@ class COSClient:
                 return False
         return True
 
-    async def async_batch_has_file(self, uid: str, filenames: list[str]) -> dict[str, bool]:
+    async def async_batch_has_file(self, uid: str, filenames: List[str]) -> Dict[str, bool]:
         async def has_file(filename: str):
             return await self.async_has_file(uid=uid, filename=filename)
 
@@ -118,7 +120,7 @@ class COSClient:
             return False
         return True
 
-    async def async_batch_put(self, uid: str, files: dict[str, BinaryIO]) -> dict[str, bool]:
+    async def async_batch_put(self, uid: str, files: Dict[str, BinaryIO]) -> Dict[str, bool]:
         async def put_file(filename: str, file: BinaryIO):
             return await self.async_put(file=file, uid=uid, filename=filename)
 

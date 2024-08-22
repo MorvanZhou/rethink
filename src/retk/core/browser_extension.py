@@ -40,12 +40,12 @@ async def post_node(
     for original_url, new_url in res["succMap"].items():
         content = content.replace(original_url, new_url)
     if au.language == const.LanguageEnum.ZH.value:
-        source_prefix = "原文来自:"
+        source_postfix = "原文来自:"
     elif au.language == const.LanguageEnum.EN.value:
-        source_prefix = "Source from:"
+        source_postfix = "Source from:"
     else:
-        source_prefix = "Source from:"
-    md = f"{title}\n\n{source_prefix} [{url}]({url})\n\n{content}"
+        source_postfix = "Source from:"
+    md = f"{title}\n\n{content}\n\n{source_postfix} [{url}]({url})"
     n, code = await node.post(
         au=au,
         md=md,

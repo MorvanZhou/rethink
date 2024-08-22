@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 DOMAIN = "rethink.run"
@@ -5,6 +6,8 @@ RETHINK_DIR = Path(__file__).parent.parent
 DOT_DATA = ".data"
 FRONTEND_DIR = RETHINK_DIR / "dist-local"
 LOCAL_FILE_URL_PRE_DIR = "files"
+USER_BEHAVIOR_LOG_DIR = Path(os.path.join(os.getcwd(), "user_behavior_logs"))
+MAX_USER_BEHAVIOR_LOG_SIZE = 1024 * 1024 * 10  # 10MB
 MD_MAX_LENGTH = 100_000
 REQUEST_ID_MAX_LENGTH = 50
 UID_MAX_LENGTH = 30

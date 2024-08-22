@@ -1,10 +1,10 @@
-from retk import const, core, config
+from retk import const, core, config, regex
 from retk.controllers import schemas
 from retk.controllers.utils import maybe_raise_json_exception, get_user_info_response_from_u_dict
 from retk.core import account, notice
 from retk.core.user import reset_password
 from retk.models.tps import AuthedUser
-from retk.utils import mask_email, regex, datetime2str
+from retk.utils import mask_email, datetime2str
 
 
 async def get_user(

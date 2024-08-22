@@ -16,7 +16,6 @@ async def remote_try_build_index(coll: Collections):
     await nodes_coll(coll.nodes)
     await import_data_coll(coll.import_data)
     await user_file_coll(coll.user_file)
-    await user_behavior_coll(coll.user_behavior)
     await notice_manager_delivery_coll(coll.notice_manager_delivery)
     await notice_system_coll(coll.notice_system)
     await llm_extend_node_queue_coll(coll.llm_extend_node_queue)

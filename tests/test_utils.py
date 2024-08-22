@@ -117,7 +117,7 @@ class TestAsync(unittest.IsolatedAsyncioTestCase):
         config.get_settings.cache_clear()
 
     # @unittest.skip("skip outer connection test")
-    @patch("retk.utils.httpx.AsyncClient.get")
+    @patch("httpx.AsyncClient.get")
     @patch("retk.config.get_settings")
     async def test_get_title_description_from_link(self, mock_get_settings, mock_get, ):
         s = config.Settings

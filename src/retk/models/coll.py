@@ -20,9 +20,6 @@ class Collections:
     notice_manager_delivery: Union[Collection, "AsyncIOMotorCollection"] = None
     notice_system: Union[Collection, "AsyncIOMotorCollection"] = None
 
-    # user behavior
-    user_behavior: Union[Collection, "AsyncIOMotorCollection"] = None
-
     # llm
     llm_extend_node_queue: Union[Collection, "AsyncIOMotorCollection"] = None
     llm_extended_node: Union[Collection, "AsyncIOMotorCollection"] = None
@@ -35,7 +32,6 @@ class CollNameEnum(str, Enum):
     user_file = "userFile"
     notice_manager_delivery = "noticeManagerDelivery"
     notice_system = "noticeSystem"
-    user_behavior = "userBehavior"
     llm_extend_node_queue = "llmExtendNodeQueue"
     llm_extended_node = "llmExtendedNode"
 

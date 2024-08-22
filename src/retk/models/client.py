@@ -78,7 +78,6 @@ class Client:
         self.coll.nodes = db[CollNameEnum.nodes.value]
         self.coll.import_data = db[CollNameEnum.import_data.value]
         self.coll.user_file = db[CollNameEnum.user_file.value]
-        self.coll.user_behavior = db[CollNameEnum.user_behavior.value]
         self.coll.notice_manager_delivery = db[CollNameEnum.notice_manager_delivery.value]
         self.coll.notice_system = db[CollNameEnum.notice_system.value]
         self.coll.llm_extend_node_queue = db[CollNameEnum.llm_extend_node_queue.value]

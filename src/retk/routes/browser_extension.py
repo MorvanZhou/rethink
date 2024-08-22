@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Form, UploadFile
 from typing_extensions import Annotated
@@ -51,8 +51,10 @@ async def post_node_from_browser_extension(
         content: Annotated[str, Form(...)],
         referer: Annotated[str, Form(...)],
         user_agent: Annotated[str, Form(alias="userAgent")],
-        images: List[Annotated[UploadFile, Form(...)]],
+        images: Optional[List[Annotated[UploadFile, Form(...)]]] = None,
 ) -> schemas.node.NodeResponse:
+    if images is None:
+        images = []
     return await browser_extension.post_node(
         au=au,
         url=url,

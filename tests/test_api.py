@@ -931,7 +931,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.error_check(resp, 400, const.CodeEnum.FILE_OPEN_ERROR)
 
     @patch(
-        "retk.utils.httpx.AsyncClient.get",
+        "httpx.AsyncClient.get",
         return_value=Response(200, content="<title>百度一下</title>".encode("utf-8"))
     )
     def test_put_quick_node(self, mocker):
@@ -1239,135 +1239,6 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         self.error_check(resp, 404, const.CodeEnum.USER_NOT_EXIST)
 
         await self.clear_default_manager(admin_uid)
-
-    async def test_statistic_user_behavior(self):
-        # login
-        self.client.put(
-            "/api/account/login",
-            json={
-                "email": const.DEFAULT_USER["email"],
-                "password": "",
-            }
-        )
-        uid = (await client.coll.users.find_one({"email": const.DEFAULT_USER["email"]})).get("id")
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.LOGIN.value, docs[-1]["type"])
-
-        # create node
-        resp = self.client.post(
-            "/api/nodes",
-            json={
-                "md": "node1\ntext",
-                "type": const.NodeTypeEnum.MARKDOWN.value,
-            },
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.NODE_CREATE.value, docs[-1]["type"])
-        self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
-
-        # quick node
-        resp = self.client.post(
-            "/api/nodes/quick",
-            json={
-                "md": "node1\ntext",
-                "type": const.NodeTypeEnum.MARKDOWN.value,
-            },
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.NODE_QUICK_CREATE.value, docs[-1]["type"])
-        self.assertEqual(resp.json()["node"]["id"], docs[-1]["remark"])
-
-        # trash node
-        self.client.put(
-            f"/api/trash/{resp.json()['node']['id']}",
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.NODE_TRASHED_OPS.value, docs[-1]["type"])
-
-        # restore node
-        self.client.put(
-            f"/api/trash/{resp.json()['node']['id']}/restore",
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.NODE_RESTORED_OPS.value, docs[-1]["type"])
-
-        # delete node
-        self.client.put(
-            f"/api/trash/{resp.json()['node']['id']}",
-            headers=self.default_headers,
-        )
-        self.client.delete(
-            f"/api/trash/{resp.json()['node']['id']}",
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.NODE_DELETED_OPS.value, docs[-1]["type"])
-
-        # search
-        self.client.get(
-            "/api/nodes",
-            params={
-                "q": "1",
-                "sort": "createdAt",
-                "ord": "desc",
-                "p": 0,
-                "limit": 5
-            },
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.SEARCH_GLOBAL.value, docs[-1]["type"])
-        self.assertEqual("1", docs[-1]["remark"])
-
-        # search at
-        self.client.get(
-            f"/api/nodes/{resp.json()['node']['id']}/at",
-            params={
-                "q": "node",
-                "p": 0,
-                "limit": 10,
-            },
-            headers=self.default_headers,
-        )
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.SEARCH_AT.value, docs[-1]["type"])
-        self.assertEqual("node", docs[-1]["remark"])
-
-        # logout
-        resp = self.client.post(
-            "/api/statistic/user-behavior",
-            json={
-                "type": const.UserBehaviorTypeEnum.LOGOUT.value,
-                "remark": "logout",
-            },
-            headers=self.default_headers,
-        )
-        self.assertEqual(201, resp.status_code)
-        docs = await client.coll.user_behavior.find(
-            {"uid": uid}
-        ).to_list(None)
-        self.assertEqual(const.UserBehaviorTypeEnum.LOGOUT.value, docs[-1]["type"])
-        self.assertEqual("logout", docs[-1]["remark"])
 
     async def test_system_notice(self):
         manager_token = self.client.cookies.get(const.settings.COOKIE_ACCESS_TOKEN)
