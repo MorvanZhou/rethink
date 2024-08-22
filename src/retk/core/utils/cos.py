@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import Optional, BinaryIO
+from typing import Optional, BinaryIO, List, Dict
 
 import httpx
 
@@ -165,7 +165,7 @@ class COSClient:
                 return None
             return resp.content
 
-    async def async_batch_get(self, uid: str, filenames: list[str]) -> dict[str, bytes]:
+    async def async_batch_get(self, uid: str, filenames: List[str]) -> Dict[str, bytes]:
         async def get_file(filename: str):
             return await self.async_get(uid=uid, filename=filename)
 
