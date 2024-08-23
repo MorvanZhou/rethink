@@ -8,11 +8,10 @@ class UserBehaviorTypeEnum(IntEnum):
     # node ops, backend
     NODE_CREATE = 2
     NODE_QUICK_CREATE = 3
-    NODE_BROWSER_EXTENSION_CREATE = 15
+
     NODE_TRASHED_OPS = 4
     NODE_RESTORED_OPS = 5
     NODE_DELETED_OPS = 6
-    EXTENDED_NODE_ACCEPTED = 14
 
     # search, backend
     SEARCH_GLOBAL = 7
@@ -24,6 +23,9 @@ class UserBehaviorTypeEnum(IntEnum):
     VIEW_NODE_FROM_RECOMMENDATION = 11
     VIEW_NODE_FROM_LINKED_NODE = 12
     VIEW_EXTENDED_NODE = 13
+
+    EXTENDED_NODE_ACCEPTED = 14  # backend
+    NODE_BROWSER_EXTENSION_CREATE = 15  # backend
 
 
 USER_BEHAVIOR_TYPE_MAP = {
