@@ -99,6 +99,14 @@ def init_tasks():
         func=tasks.extend_node.deliver_unscheduled_extend_nodes,
         minutes=config.get_settings().LLM_KNOWLEDGE_SCHEDULE_MINUTES,
     )
+
+    # auto delete expired trash nodes every day
+    run_every_at(
+        job_id="auto_clean_trash",
+        func=tasks.auto_clean_trash.auto_clean_trash,
+        kwargs={"delta_days": 30},
+        hour=1,
+    )
     return
 
 
