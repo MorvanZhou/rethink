@@ -6,7 +6,7 @@ import httpx
 
 try:
     from qcloud_cos import (
-        CosConfig, CosS3Client, CosServiceError, CosClientError
+        CosConfig, CosS3Client, CosServiceError
     )
 except ImportError:
     pass
@@ -32,7 +32,8 @@ class COSClient:
                 Domain=settings.COS_DOMAIN,
                 Scheme='https',
             )
-        except CosClientError:
+        except Exception:  # pylint: disable=broad-except
+            # CosClientError
             logger.info("COSClient | COS settings not found")
             raise ModuleNotFoundError("COS settings not found")
         self.domain = settings.COS_DOMAIN or f"{settings.COS_BUCKET_NAME}.cos.{settings.COS_REGION}.myqcloud.com"
