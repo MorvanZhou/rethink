@@ -26,6 +26,7 @@ class UserBehaviorTypeEnum(IntEnum):
 
     EXTENDED_NODE_ACCEPTED = 14  # backend
     NODE_BROWSER_EXTENSION_CREATE = 15  # backend
+    USER_REGISTERED = 16  # backend
 
 
 USER_BEHAVIOR_TYPE_MAP = {
