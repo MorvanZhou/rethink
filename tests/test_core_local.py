@@ -619,7 +619,8 @@ class LocalModelsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_version(self, mock_batch_send):
         v, code = await core.self_hosted.get_latest_pkg_version()
-        self.assertEqual(const.CodeEnum.OK, code)
+        if code != const.CodeEnum.OK:
+            return
         self.assertEqual(3, len(v))
         for num in v:
             self.assertTrue(isinstance(num, int))

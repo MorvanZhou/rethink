@@ -104,12 +104,12 @@ async def get_latest_pkg_version() -> Tuple[Tuple[int, int, int], const.CodeEnum
     default_version = (0, 0, 0)
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
+        async with httpx.AsyncClient() as c:
+            response = await c.get(
                 url=url,
                 headers=ASYNC_CLIENT_HEADERS,
                 follow_redirects=False,
-                timeout=2.
+                timeout=3.
             )
     except (
             httpx.ConnectTimeout,

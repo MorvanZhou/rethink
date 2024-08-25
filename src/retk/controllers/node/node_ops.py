@@ -206,6 +206,12 @@ async def set_favorite(
         favorite=favorite,
     )
 
+    c_enum = const.UserBehaviorTypeEnum
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=c_enum.NODE_FAVORITE_ADD if favorite else c_enum.NODE_FAVORITE_REMOVE,
+        remark=nid,
+    )
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
@@ -220,6 +226,11 @@ async def get_favorite_nodes(
         au=au,
         page=p,
         limit=limit,
+    )
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_FAVORITE_VIEW,
+        remark="",
     )
     return schemas.node.NodesSearchResponse(
         requestId=au.request_id,
@@ -272,6 +283,11 @@ async def stream_md_export(
                 break
             yield chunk
 
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_DATA_EXPORT,
+        remark=f"{format_}_{nid}",
+    )
     return StreamingResponse(
         content=iter_file(),
         media_type=media_type,

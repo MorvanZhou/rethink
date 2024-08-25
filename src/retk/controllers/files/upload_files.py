@@ -20,7 +20,11 @@ async def upload_obsidian_files(
 ) -> schemas.RequestIdResponse:
     code = await core.files.upload_obsidian(au=au, zipped_files=files)
     maybe_raise_json_exception(au=au, code=code)
-
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_DATA_IMPORT,
+        remark="obsidian",
+    )
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
@@ -33,6 +37,11 @@ async def upload_text_files(
     code = await core.files.upload_text(au=au, files=files)
     maybe_raise_json_exception(au=au, code=code)
 
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_DATA_IMPORT,
+        remark="text",
+    )
     return schemas.RequestIdResponse(
         requestId=au.request_id,
     )
@@ -70,6 +79,11 @@ async def upload_file_vditor(
         file: UploadFile,
 ) -> schemas.files.VditorFilesResponse:
     res = await core.files.vditor_upload(au=au, files=[file])
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_FILE_UPLOAD,
+        remark="vditorFile",
+    )
     return schemas.files.VditorFilesResponse(
         msg=const.get_msg_by_code(res["code"], au.language),
         code=res["code"].value,
@@ -105,6 +119,12 @@ async def fetch_image_vditor(
         else:
             new_url, code = "", const.CodeEnum.URL_TOO_LONG
     maybe_raise_json_exception(au=au, code=code)
+
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_FILE_UPLOAD,
+        remark="vditorImage",
+    )
     return schemas.files.VditorImagesResponse(
         msg=const.get_msg_by_code(code, au.language),
         code=code.value,

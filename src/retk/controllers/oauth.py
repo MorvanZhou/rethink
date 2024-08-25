@@ -115,6 +115,12 @@ async def provider_callback(provider_name: str, req: Request) -> JSONResponse:
         language=language,
     )
 
+    await core.statistic.add_user_behavior(
+        uid=u["id"],
+        type_=const.UserBehaviorTypeEnum.USER_REGISTERED,
+        remark=provider_name,
+    )
+
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id="",

@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 import bcrypt
 
 from retk import config, const, regex
-from retk.core import user, node
+from retk.core import user, node, statistic
 from retk.logger import logger
 from retk.models import tps
 from retk.models.client import client
@@ -74,6 +74,13 @@ async def signup(
         return None, code
 
     code = await node.new_user_add_default_nodes(uid=u["id"], language=language)
+
+    await statistic.add_user_behavior(
+        uid=u["id"],
+        type_=const.UserBehaviorTypeEnum.USER_REGISTERED,
+        remark="email",
+    )
+
     return u, code
 
 

@@ -8,7 +8,6 @@ from pymongo.errors import DuplicateKeyError
 
 from retk import const, config, utils
 from retk.controllers.schemas.user import PatchUserRequest
-from retk.core import statistic
 from retk.models import tps
 from retk.models.client import client
 
@@ -66,7 +65,6 @@ async def add(
         except DuplicateKeyError:
             data["id"] = utils.short_uuid()
             continue
-    await statistic.add_user_behavior(uid=data["id"], type_=const.UserBehaviorTypeEnum.USER_REGISTERED, remark=language)
     return data, const.CodeEnum.OK
 
 

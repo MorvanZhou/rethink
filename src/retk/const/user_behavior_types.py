@@ -22,11 +22,21 @@ class UserBehaviorTypeEnum(IntEnum):
     # view node, frontend
     VIEW_NODE_FROM_RECOMMENDATION = 11
     VIEW_NODE_FROM_LINKED_NODE = 12
-    VIEW_EXTENDED_NODE = 13
+    NODE_RECOMMEND_KNOWLEDGE_VIEW = 13
 
-    EXTENDED_NODE_ACCEPTED = 14  # backend
+    USER_REGISTERED = 14  # backend
     NODE_BROWSER_EXTENSION_CREATE = 15  # backend
-    USER_REGISTERED = 16  # backend
+
+    NODE_RECOMMEND_KNOWLEDGE_ACCEPT = 16  # backend
+    NODE_RECOMMEND_KNOWLEDGE_REJECT = 17  # backend
+
+    NODE_FAVORITE_ADD = 18  # backend
+    NODE_FAVORITE_REMOVE = 19  # backend
+    NODE_FAVORITE_VIEW = 20  # backend
+
+    NODE_DATA_IMPORT = 21  # backend
+    NODE_DATA_EXPORT = 22  # backend
+    NODE_FILE_UPLOAD = 23  # backend
 
 
 USER_BEHAVIOR_TYPE_MAP = {
