@@ -1,10 +1,12 @@
 import asyncio
+import json
 import random
 import time
 from typing import List
 
 from retk import const, config
 from retk.core.ai.llm import knowledge
+from retk.core.statistic import add_user_behavior
 from retk.logger import logger
 from retk.models.client import init_mongo
 from retk.models.coll import CollNameEnum
@@ -66,6 +68,14 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
         e1 = time.perf_counter()
 
         for case in cases:
+            await add_user_behavior(
+                uid=case.uid,
+                type_=const.user_behavior_types.UserBehaviorTypeEnum.LLM_KNOWLEDGE_RESPONSE,
+                remark=json.dumps(
+                    {"md": case.stripped_md, "summary": case.summary, "extend": case.extend_md},
+                    ensure_ascii=False
+                ),
+            )
             done_id_list.append(case._id)
             if case.summary_code != const.CodeEnum.OK or case.extend_code != const.CodeEnum.OK:
                 continue

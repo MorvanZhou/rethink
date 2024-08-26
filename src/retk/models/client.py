@@ -361,6 +361,10 @@ class Client:
         count_search = await self.search.count_all()
         if count_mongo == count_search:
             return
+        logger.critical(
+            f"restore search index count: {count_search}, mongo count: {count_mongo}."
+            f" They are not equal, tring to restore search index")
+
         await self.search.drop()
         await self.search.init()
         docs = await self.coll.nodes.find({}).to_list(length=None)
@@ -382,6 +386,8 @@ class Client:
             )
         for uid, docs in search_docs.items():
             u = await self.coll.users.find_one({"id": uid})
+            if u is None:
+                raise ValueError(f"cannot find user by uid: {uid}, docs: {docs}")
             code = await self.search.batch_restore_docs(
                 au=AuthedUser(
                     u=convert_user_dict_to_authed_user(u),

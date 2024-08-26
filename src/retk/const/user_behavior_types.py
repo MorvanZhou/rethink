@@ -38,6 +38,8 @@ class UserBehaviorTypeEnum(IntEnum):
     NODE_DATA_EXPORT = 22  # backend
     NODE_FILE_UPLOAD = 23  # backend
 
+    LLM_KNOWLEDGE_RESPONSE = 24  # backend
+
 
 USER_BEHAVIOR_TYPE_MAP = {
     t.value: t
