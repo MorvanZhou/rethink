@@ -1,5 +1,6 @@
 import datetime
 import io
+import ssl
 from typing import List, Tuple, Optional
 
 import httpx
@@ -141,8 +142,13 @@ async def vditor_upload(au: AuthedUser, files: List[UploadFile]) -> dict:
 
 
 # pylint: disable=line-too-long
-async def fetch_image_vditor(au: AuthedUser, url: str, count=0, referer: str = "", user_agent: str = "") -> Tuple[
-    str, const.CodeEnum]:
+async def fetch_image_vditor(
+        au: AuthedUser,
+        url: str,
+        count=0,
+        referer: str = "",
+        user_agent: str = ""
+) -> Tuple[str, const.CodeEnum]:
     if count > 2:
         logger.debug(f"too many 30X code, failed to get {url}")
         return "", const.CodeEnum.FILE_OPEN_ERROR
@@ -169,7 +175,8 @@ async def fetch_image_vditor(au: AuthedUser, url: str, count=0, referer: str = "
             RuntimeError,
             httpx.ConnectError,
             httpx.ReadTimeout,
-            httpx.HTTPError
+            httpx.HTTPError,
+            ssl.SSLError,
     ) as e:
         logger.debug(f"failed to get {url}: {e}")
         return "", const.CodeEnum.FILE_OPEN_ERROR

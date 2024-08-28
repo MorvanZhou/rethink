@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 
-def init_mongo(connection_timeout: int):
+def init_mongo(connection_timeout: int) -> Union["AsyncIOMotorClient", MongitaClientDisk]:
     conf = config.get_settings()
     if config.is_local_db():
         if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():

@@ -13,7 +13,7 @@ except ImportError:
 
 
 async def __write_new(path: Path, lock: asyncio.Lock):
-    async with aiofiles.open(path, "w") as f:
+    async with aiofiles.open(path, "w", encoding="utf-8") as f:
         async with lock:
             await f.write("")
 
@@ -38,7 +38,7 @@ async def add_user_behavior(
         current_log_file.rename(backup_file)
         await __write_new(current_log_file, lock)
 
-    async with aiofiles.open(current_log_file, "a") as f:
+    async with aiofiles.open(current_log_file, "a", encoding="utf-8") as f:
         record = {
             "time": time_now.strftime('%Y-%m-%d %H:%M:%S'),
             "uid": uid,
