@@ -25,6 +25,11 @@ if __name__ == "__main__":
     os.environ["RETHINK_SERVER_DEBUG"] = "true" if args.debug else "false"
     if args.password is not None:
         os.environ["RETHINK_SERVER_PASSWORD"] = args.password
+
+    log_config = uvicorn.config.LOGGING_CONFIG
+    print(log_config)
+    log_config["formatters"]["access"]["fmt"] = "%(levelname)s | %(asctime)s | %(message)s"
+    log_config["formatters"]["default"]["fmt"] = "%(levelname)s | %(asctime)s | %(message)s"
     uvicorn.run(
         "retk.application:app",
         host=args.host,
@@ -32,4 +37,5 @@ if __name__ == "__main__":
         reload=args.reload,
         workers=args.workers,
         env_file=f".env.{args.mode}",
+        log_config=log_config,
     )

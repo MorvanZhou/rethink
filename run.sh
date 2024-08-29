@@ -71,4 +71,4 @@ if [ $mode == "local" ]; then
 fi
 echo "Running in $mode mode with reload=$reload on $host:$port"
 # set working directory to retk
-uvicorn retk.application:app $reload --host $host --port $port --env-file .env.$mode
+uvicorn retk.application:app $reload --log-config log-config.json --host $host --port $port --env-file .env.$mode

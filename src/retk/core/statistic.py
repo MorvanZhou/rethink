@@ -25,16 +25,17 @@ async def add_user_behavior(
 ):
     if is_local_db() or aiofiles is None:
         return
-    current_log_file = const.settings.USER_BEHAVIOR_LOG_DIR / f"behavior.log"
+    data_dir = const.settings.ANALYTICS_DIR / "user_behavior"
+    current_log_file = data_dir / f"behavior.log"
     lock = asyncio.Lock()
     if not current_log_file.exists():
-        const.settings.USER_BEHAVIOR_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        data_dir.mkdir(parents=True, exist_ok=True)
         await __write_new(current_log_file, lock)
 
     time_now = datetime.now()
     # if the file is too large, rename it to current time and create a new one
     if current_log_file.stat().st_size > const.settings.MAX_USER_BEHAVIOR_LOG_SIZE:
-        backup_file = const.settings.USER_BEHAVIOR_LOG_DIR / f"{time_now.strftime('%Y%m%d-%H%M%S')}.log"
+        backup_file = data_dir / f"{time_now.strftime('%Y%m%d-%H%M%S')}.log"
         current_log_file.rename(backup_file)
         await __write_new(current_log_file, lock)
 

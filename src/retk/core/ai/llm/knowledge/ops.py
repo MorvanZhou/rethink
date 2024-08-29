@@ -49,6 +49,8 @@ async def _batch_send(
     svr_group = {}
     for case in cases:
         if is_extend:
+            if case.summary_code != const.CodeEnum.OK:
+                continue
             service = case.extend_service
             model = case.extend_model
             content = case.summary
