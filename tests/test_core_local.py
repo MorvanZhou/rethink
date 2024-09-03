@@ -24,7 +24,7 @@ from retk.models import db_ops
 from retk.models.client import client
 from retk.models.tps import ImportData, AuthedUser, convert_user_dict_to_authed_user
 from retk.utils import short_uuid
-from . import utils
+from tests import utils
 
 
 @patch("retk.core.ai.llm.knowledge.ops._batch_send", new_callable=AsyncMock, return_value=["", const.CodeEnum.OK])

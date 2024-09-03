@@ -36,7 +36,7 @@ class BaseLLMService(ABC):
             model_enum: Any,
             endpoint: str,
             top_p: float = 1.,
-            temperature: float = 0.4,
+            temperature: float = 0.9,
             timeout: float = None,
             default_model: Optional[ModelConfig] = None,
     ):

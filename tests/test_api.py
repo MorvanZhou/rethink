@@ -23,7 +23,7 @@ from retk.models.tps import convert_user_dict_to_authed_user
 from retk.models.tps.llm import ExtendedNode
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
 from retk.utils import jwt_decode
-from . import utils
+from tests import utils
 
 
 class PublicApiTest(unittest.IsolatedAsyncioTestCase):

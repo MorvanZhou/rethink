@@ -3,7 +3,7 @@ import unittest
 from retk import const, core
 from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
-from . import utils
+from tests import utils
 
 
 class DataRestoreTest(unittest.IsolatedAsyncioTestCase):

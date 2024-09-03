@@ -5,8 +5,8 @@ from bson import ObjectId
 from retk import const
 from retk.core.ai import llm
 from retk.core.ai.llm.knowledge.ops import ExtendCase
-from . import utils
-from .test_ai_llm_api import skip_no_api_key, clear_all_api_key
+from tests import utils
+from tests.test_ai_llm_api import skip_no_api_key, clear_all_api_key
 
 md_source = ["""\
     广东猪脚饭特点
@@ -81,6 +81,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             (llm.api.XfYunService.name, llm.api.XfYunModelEnum.SPARK_LITE),
             (llm.api.MoonshotService.name, llm.api.MoonshotModelEnum.V1_8K),  # 这个总结比较好
             (llm.api.VolcEngineService.name, llm.api.VolcEngineModelEnum.DOUBAO_PRO_32K),
+            (llm.api.GLMService.name, llm.api.GLMModelEnum.GLM4_FLASH),
         ]:
             cases = [
                 ExtendCase(
@@ -112,6 +113,7 @@ class LLMKnowledgeExtendTest(unittest.IsolatedAsyncioTestCase):
             (llm.api.XfYunService.name, llm.api.XfYunModelEnum.SPARK_PRO),
             (llm.api.MoonshotService.name, llm.api.MoonshotModelEnum.V1_8K),  # 这个延伸比较好
             (llm.api.VolcEngineService.name, llm.api.VolcEngineModelEnum.DOUBAO_PRO_32K),  # 这个延伸比较好
+            (llm.api.GLMService.name, llm.api.GLMModelEnum.GLM4_PLUS),
         ]:
             cases = [
                 ExtendCase(

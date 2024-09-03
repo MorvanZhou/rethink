@@ -8,7 +8,7 @@ from retk import core, const
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user, AuthedUser
 from retk.plugins.base import event_plugin_map
-from . import utils
+from tests import utils
 
 
 class TestPlugin(retk.Plugin):

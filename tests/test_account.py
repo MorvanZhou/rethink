@@ -8,7 +8,7 @@ from retk.core import account, user
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.utils import jwt_decode
-from . import utils
+from tests import utils
 
 
 class AccountTest(unittest.IsolatedAsyncioTestCase):

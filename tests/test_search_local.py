@@ -7,7 +7,7 @@ from bson import ObjectId
 from retk import const
 from retk.models.search_engine.engine_local import LocalSearcher, SearchDoc
 from retk.models.tps import AuthedUser
-from . import utils
+from tests import utils
 
 
 class LocalSearchTest(unittest.IsolatedAsyncioTestCase):

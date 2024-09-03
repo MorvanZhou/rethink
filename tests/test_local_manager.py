@@ -5,7 +5,7 @@ from pathlib import Path
 
 from retk import const, config, local_manager, __version__
 from retk.local_manager import recover
-from . import utils
+from tests import utils
 
 
 class RecoverTest(unittest.TestCase):

@@ -59,7 +59,7 @@ class VolcEngineService(OpenaiLLMStyle):
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.3,
+            temperature: float = 0.9,
             timeout: float = 60.,
     ):
         super().__init__(

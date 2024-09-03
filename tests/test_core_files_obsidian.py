@@ -10,7 +10,7 @@ from retk import core, const
 from retk.core.files import saver
 from retk.core.files.importing.async_tasks.obsidian import ops
 from retk.models.client import client
-from . import utils
+from tests import utils
 
 
 class ObsidianTest(unittest.IsolatedAsyncioTestCase):

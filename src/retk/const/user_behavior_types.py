@@ -39,6 +39,7 @@ class UserBehaviorTypeEnum(IntEnum):
     NODE_FILE_UPLOAD = 23  # backend
 
     LLM_KNOWLEDGE_RESPONSE = 24  # backend
+    NODE_PAGE_VIEW = 25  # backend
 
 
 USER_BEHAVIOR_TYPE_MAP = {

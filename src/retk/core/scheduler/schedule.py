@@ -107,6 +107,13 @@ def init_tasks():
         kwargs={"delta_days": 30},
         hour=1,
     )
+
+    if not config.is_local_db():
+        run_every_at(
+            job_id="auto_daily_report",
+            func=tasks.auto_daily_report.auto_daily_report,
+            hour=0,
+        )
     return
 
 

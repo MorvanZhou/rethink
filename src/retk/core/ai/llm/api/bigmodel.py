@@ -8,24 +8,24 @@ from .base import ModelConfig, MessagesType
 from .openai import OpenaiLLMStyle
 
 
-# https://platform.moonshot.cn/docs/pricing#%E4%BB%B7%E6%A0%BC%E8%AF%B4%E6%98%8E
-class MoonshotModelEnum(Enum):
-    V1_8K = ModelConfig(
-        key="moonshot-v1-8k",
-        max_tokens=8000,
+# https://open.bigmodel.cn/dev/howuse/rate-limits/tiers?tab=0
+class GLMModelEnum(Enum):
+    GLM4_PLUS = ModelConfig(
+        key="GLM-4-Plus",
+        max_tokens=128_000,
     )
-    V1_32K = ModelConfig(
-        key="moonshot-v1-32k",
-        max_tokens=32000,
+    GLM4_LONG = ModelConfig(
+        key="GLM-4-Long",
+        max_tokens=1_000_000,
     )
-    V1_128K = ModelConfig(
-        key="moonshot-v1-128k",
-        max_tokens=128000,
+    GLM4_FLASH = ModelConfig(
+        key="GLM-4-Flash",
+        max_tokens=128_000,
     )
 
 
-class MoonshotService(OpenaiLLMStyle):
-    name = "moonshot"
+class GLMService(OpenaiLLMStyle):
+    name = "glm"
 
     def __init__(
             self,
@@ -34,9 +34,9 @@ class MoonshotService(OpenaiLLMStyle):
             timeout: float = 60.,
     ):
         super().__init__(
-            model_enum=MoonshotModelEnum,
-            endpoint="https://api.moonshot.cn/v1/chat/completions",
-            default_model=MoonshotModelEnum.V1_8K.value,
+            model_enum=GLMModelEnum,
+            endpoint="https://open.bigmodel.cn/api/paas/v4/chat/completions",
+            default_model=GLMModelEnum.GLM4_FLASH.value,
             top_p=top_p,
             temperature=temperature,
             timeout=timeout,
@@ -44,11 +44,11 @@ class MoonshotService(OpenaiLLMStyle):
 
     @classmethod
     def set_api_auth(cls, auth: Dict[str, str]):
-        config.get_settings().MOONSHOT_API_KEY = auth.get("API-KEY", "")
+        config.get_settings().BIGMODEL_API_KEY = auth.get("API-KEY", "")
 
     @staticmethod
     def get_api_key():
-        return config.get_settings().MOONSHOT_API_KEY
+        return config.get_settings().BIGMODEL_API_KEY
 
     @staticmethod
     async def _batch_complete_union(
@@ -58,12 +58,11 @@ class MoonshotService(OpenaiLLMStyle):
             req_id: str = None,
     ) -> List[Tuple[Union[str, Dict[str, str]], const.CodeEnum]]:
         settings = config.get_settings()
-        rate_limiter = ratelimiter.RateLimiter(requests=settings.MOONSHOT_RPM, period=60)
-        concurrent_limiter = ratelimiter.ConcurrentLimiter(n=settings.MOONSHOT_CONCURRENCY)
+        concurrent_limiter = ratelimiter.ConcurrentLimiter(n=settings.BIGMODEL_CONCURRENCY)
 
         tasks = [
             func(
-                limiters=[concurrent_limiter, rate_limiter],
+                limiters=[concurrent_limiter],
                 messages=m,
                 model=model,
                 req_id=req_id,

@@ -43,7 +43,7 @@ class OpenaiLLMStyle(BaseLLMService, ABC):
             endpoint: str,
             default_model: ModelConfig,
             top_p: float = 0.9,
-            temperature: float = 0.4,
+            temperature: float = 0.9,
             timeout: float = 60.,
     ):
         super().__init__(
@@ -148,7 +148,7 @@ class OpenaiService(OpenaiLLMStyle):
     def __init__(
             self,
             top_p: float = 0.9,
-            temperature: float = 0.7,
+            temperature: float = 0.9,
             timeout: float = 60.,
     ):
         super().__init__(

@@ -79,6 +79,10 @@ class Settings(BaseSettings):
     VOLCENGINE_API_KEY: str = Field(env='VOLCENGINE_API_KEY', default="")
     VOLCENGINE_ENDPOINT_ID: str = Field(env='VOLCENGINE_ENDPOINT_ID', default="")
 
+    # zhipu bigmodel
+    BIGMODEL_API_KEY: str = Field(env='BIGMODEL_API_KEY', default="")
+    BIGMODEL_CONCURRENCY: int = Field(env='BIGMODEL_CONCURRENCY', default=1)
+
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
     RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")

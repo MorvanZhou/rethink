@@ -3,6 +3,7 @@ from typing import Dict
 from .aliyun import AliyunService, AliyunModelEnum
 from .baidu import BaiduService, BaiduModelEnum
 from .base import BaseLLMService
+from .bigmodel import GLMService, GLMModelEnum
 from .moonshot import MoonshotService, MoonshotModelEnum
 from .openai import OpenaiService, OpenaiModelEnum
 from .tencent import TencentService, TencentModelEnum
@@ -38,10 +39,14 @@ LLM_SERVICES_CLASS = {
         "service": VolcEngineService,
         "models": VolcEngineModelEnum,
     },
+    GLMService.name: {
+        "service": GLMService,
+        "models": GLMModelEnum,
+    },
 }
 
 TOP_P = 0.9
-TEMPERATURE = 0.6
+TEMPERATURE = 0.9
 TIMEOUT = 60
 
 LLM_DEFAULT_SERVICES: Dict[str, BaseLLMService] = {

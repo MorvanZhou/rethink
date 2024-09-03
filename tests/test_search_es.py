@@ -8,7 +8,7 @@ from bson.tz_util import utc
 from retk import const, config
 from retk.models.search_engine.engine_es import ESSearcher, SearchDoc
 from retk.models.tps import AuthedUser
-from . import utils
+from tests import utils
 
 
 class ESTest(unittest.IsolatedAsyncioTestCase):

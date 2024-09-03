@@ -102,6 +102,11 @@ async def get_node(
     n, code = await core.node.get(au=au, nid=nid)
     maybe_raise_json_exception(au=au, code=code)
 
+    await core.statistic.add_user_behavior(
+        uid=au.u.id,
+        type_=const.UserBehaviorTypeEnum.NODE_PAGE_VIEW,
+        remark=nid,
+    )
     return schemas.node.NodeResponse(
         requestId=au.request_id,
         node=get_node_data(n),
