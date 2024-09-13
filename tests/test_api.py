@@ -22,7 +22,6 @@ from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
 from retk.models.tps.llm import ExtendedNode
 from retk.plugins.register import register_official_plugins, unregister_official_plugins
-from retk.utils import jwt_decode
 from tests import utils
 
 
@@ -58,21 +57,20 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("xxx", rj["requestId"])
         self.assertIsNone(rj["user"])
 
-        token, _ = account.app_captcha.generate()
-        data = jwt_decode(token)
+        cid = account.email.encode_number("1234", 1)
         resp = self.client.post(
             "/api/account",
             json={
                 "email": "a@c.com",
                 "password": "a",
-                "verificationToken": token,
-                "verification": data["code"],
+                "verificationToken": cid,
+                "verification": "1234",
                 "language": const.LanguageEnum.EN.value,
                 "requestId": "xxx"
             },
             headers={"RequestId": "xxx"}
         )
-        self.assertEqual(403, resp.status_code)
+        self.assertEqual(403, resp.status_code, msg=resp.json())
         rj = resp.json()
         self.assertEqual(const.CodeEnum.ONE_USER_MODE.value, rj["detail"]["code"])
         self.assertEqual("xxx", rj["detail"]["requestId"])
@@ -82,16 +80,16 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
     )
     def test_email_verification(self, mock_send):
         mock_send.return_value = const.CodeEnum.OK
-        token, _ = account.app_captcha.generate()
-        data = jwt_decode(token)
+        cid, _ = account.app_captcha.generate()
+        code = account.app_captcha.cache_captcha[cid][1]
 
         resp = self.client.put(
             "/api/account/email/send-code",
             json={
                 "email": "a@c.com",
                 "userExistOk": True,
-                "captchaToken": token,
-                "captchaCode": data["code"],
+                "captchaToken": cid,
+                "captchaCode": code,
                 "language": "zh",
             },
             headers={"RequestId": "xxx"}
@@ -179,9 +177,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     async def create_new_temp_user(self, email):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
-        token, code = account.app_captcha.generate()
-        data = jwt_decode(token)
-        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
+        cid = account.email.encode_number("1234", 1)
         lang = "zh"
 
         resp = self.client.post(
@@ -189,8 +185,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": email,
                 "password": "abc111",
-                "verificationToken": token,
-                "verification": code,
+                "verificationToken": cid,
+                "verification": "1234",
                 "language": lang,
             },
             headers={"RequestId": "xxx"}
@@ -336,9 +332,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
     async def test_add_user_update_password(self):
         config.get_settings().ONE_USER = False
         config.get_settings().DB_SALT = "test"
-        token, code = account.app_captcha.generate()
-        data = jwt_decode(token)
-        code = data["code"].replace(config.get_settings().CAPTCHA_SALT, "")
+        cid = account.email.encode_number("1234", 1)
 
         email = "a@b.c"
         del self.client.cookies[const.settings.COOKIE_ACCESS_TOKEN]
@@ -354,8 +348,8 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
             json={
                 "email": email,
                 "password": "abc111",
-                "verificationToken": token,
-                "verification": code,
+                "verificationToken": cid,
+                "verification": "1234",
                 "language": lang,
             },
             headers=self.default_headers

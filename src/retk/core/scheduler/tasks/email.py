@@ -1,34 +1,82 @@
-import smtplib
+import asyncio
+import json
+import time
+from typing import Dict, List
 
-from retk import config
+import httpx
+
+from retk.core.utils.tencent import get_auth
 
 
-def send(
-        recipients: list,
+def send_verification_code(
+        from_email: str,
+        to_emails: List[str],
         subject: str,
-) -> str:
-    server = None
-    n = 3
-    for _ in range(n):
-        try:
-            server = smtplib.SMTP('smtp.office365.com', 587)
-        except smtplib.SMTPServerDisconnected:
-            pass
-    if server is None:
-        return f"try send email task {n} times, but failed, SMTPServerDisconnected"
+        template_id: int,
+        values: Dict,
+        secret_id: str,
+        secret_key: str,
+):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    res = loop.run_until_complete(_send_verification_code(
+        from_email=from_email,
+        to_emails=to_emails,
+        subject=subject,
+        template_id=template_id,
+        values=values,
+        secret_id=secret_id,
+        secret_key=secret_key,
+    ))
+    loop.close()
+    return res
 
-    server.ehlo()
-    server.starttls()
-    settings = config.get_settings()
-    try:
-        server.login(settings.RETHINK_EMAIL, password=settings.RETHINK_EMAIL_PASSWORD)
-    except smtplib.SMTPAuthenticationError as e:
-        server.quit()
-        return f"SMTPAuthenticationError: {e}"
-    try:
-        server.sendmail(settings.RETHINK_EMAIL, recipients, subject)
-    except smtplib.SMTPRecipientsRefused as e:
-        server.quit()
-        return f"SMTPRecipientsRefused: {e}"
-    server.quit()
-    return "done"
+
+async def _send_verification_code(
+        from_email: str,
+        to_emails: List[str],
+        subject: str,
+        template_id: int,
+        values: Dict,
+        secret_id: str,
+        secret_key: str,
+):
+    timestamp = int(time.time())
+    payload = {
+        "FromEmailAddress": from_email,
+        "Destination": to_emails,
+        "Template": {
+            "TemplateID": template_id,
+            "TemplateData": json.dumps(values)
+        },
+        "Subject": subject,
+    }
+    payload_bytes = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    host = "ses.tencentcloudapi.com"
+    action = "SendEmail"
+    ct = "application/json"
+    authorization = get_auth(
+        host=host,
+        service="ses",
+        secret_id=secret_id,
+        secret_key=secret_key,
+        action="SendEmail",
+        payload=payload_bytes,
+        timestamp=timestamp,
+        content_type=ct
+    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url=f"https://{host}",
+            headers={
+                "X-TC-Action": action,
+                "X-TC-Region": "ap-hongkong",
+                "X-TC-Version": "2020-10-02",
+                "X-TC-Timestamp": str(timestamp),
+                "Authorization": authorization,
+                "Content-Type": ct,
+            },
+            content=payload_bytes,
+        )
+        print(response.status_code)
+        print(response.text)

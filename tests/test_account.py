@@ -7,7 +7,6 @@ from retk import const, regex
 from retk.core import account, user
 from retk.models.client import client
 from retk.models.tps import convert_user_dict_to_authed_user
-from retk.utils import jwt_decode
 from tests import utils
 
 
@@ -94,10 +93,10 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("sound", data)
 
     def test_verify_img(self):
-        token, _ = account.app_captcha.generate()
-        decoded = jwt_decode(token)
-        code = account.app_captcha.verify_captcha(token=token, code_str=decoded["code"])
+        cid, _ = account.app_captcha.generate()
+        code_str = account.app_captcha.cache_captcha[cid][1]
+        code = account.app_captcha.verify_captcha(cid=cid, code_str=code_str)
         self.assertEqual(const.CodeEnum.OK, code)
 
-        code = account.app_captcha.verify_captcha(token=token, code_str="1234")
+        code = account.app_captcha.verify_captcha(cid=cid, code_str="1234")
         self.assertEqual(const.CodeEnum.CAPTCHA_ERROR, code)

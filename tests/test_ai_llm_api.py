@@ -8,6 +8,7 @@ from httpx import Response
 from retk import const, config
 from retk.core.ai import llm
 from retk.core.ai.llm.api.base import NoAPIKeyError
+from retk.core.utils.tencent import get_auth
 from . import utils
 
 
@@ -117,9 +118,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
         res = await m.batch_complete(
             [[{"role": "user", "content": "你是谁"}]] * 11,
         )
-        for text, code in res:
+        for i, (text, code) in enumerate(res):
             self.assertEqual(const.CodeEnum.OK, code, msg=text)
-            print(text)
+            print(i, text)
 
         m = llm.api.TencentService()
         m.concurrency = 6
@@ -143,9 +144,9 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
                            "{\"title\": \"xxx\", \"content\": \"xxx\", \"keywords\": \"xxx\"}"
             }]] * 11,
         )
-        for data, code in res:
+        for i, (data, code) in enumerate(res):
             self.assertEqual(const.CodeEnum.OK, code, msg=data)
-            print(data)
+            print(i, data)
 
     @skip_no_api_key
     async def test_aliyun_complete(self):
@@ -443,10 +444,12 @@ class ChatBotTest(unittest.IsolatedAsyncioTestCase):
             "EnableEnhancement": False,
         }
         payload = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        config.get_settings().HUNYUAN_SECRET_ID = self.sid
-        config.get_settings().HUNYUAN_SECRET_KEY = self.skey
         m = llm.api.TencentService()
-        auth = m.get_auth(
+        auth = get_auth(
+            host=m.host,
+            service=m.service,
+            secret_id=self.sid,
+            secret_key=self.skey,
             action="ChatCompletions",
             payload=payload,
             timestamp=1716913478,

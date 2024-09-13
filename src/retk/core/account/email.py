@@ -1,14 +1,10 @@
-import email.header
-from datetime import timedelta
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from textwrap import dedent
-from typing import List, Tuple
-
-import jwt
+from collections import OrderedDict
+from datetime import datetime
+from typing import List, Dict, Tuple
 
 from retk import const, config, regex, utils
 from retk.core import scheduler
+from retk.core.utils import cached_verification
 
 
 class EmailServer:
@@ -18,55 +14,24 @@ class EmailServer:
         const.LanguageEnum.EN.value: "Rethink: Security Code",
         const.LanguageEnum.ZH.value: "Rethink: 安全密码",
     }
-    lang_content = {
-        const.LanguageEnum.EN.value: dedent("""\
-        Please use the following security code for your Rethink account {email}:
-        <br><br>
-        Security Code: <br><br>
-        <strong style="font-size:26px;">{numbers}</strong>
-        <br><br>
-        Valid for {expire} minutes, please do not tell others to prevent personal information leakage.
-        <br><br>
-        If you did not request this code, you can safely ignore this email, \
-        someone may have entered your email address by mistake.
-        <br><br>
-        Thank you!<br>
-        Rethink Team
-        """),
-        const.LanguageEnum.ZH.value: dedent("""\
-        请使用以下用于 Rethink 账户 {email} 的安全代码：
-        <br><br>
-        安全代码：<br><br>
-        <strong style="font-size:26px;">{numbers}</strong>
-        <br><br>
-        有效期 {expire} 分钟，请勿告知他人，以防个人信息泄露。
-        <br><br>
-        若您并未要求此代码，可以安全地忽视此邮件，可能有人误输入了您的电子邮件地址。
-        <br><br>
-        谢谢！<br>
-        Rethink 团队
-        """),
+    lang_template_id = {
+        const.LanguageEnum.EN.value: 127743,
+        const.LanguageEnum.ZH.value: 127744,
     }
 
-    def get_subject_content(self, recipient: str, numbers: str, expire: int, language: str) -> Tuple[str, str]:
+    def send(self, recipient: str, numbers: str, expire: int, language: str) -> const.CodeEnum:
         try:
             subject = self.lang_subject[language]
-            content_temp = self.lang_content[language]
+            template_id = self.lang_template_id[language]
         except KeyError:
             subject = self.lang_subject[self.default_language]
-            content_temp = self.lang_content[self.default_language]
-        content = content_temp.format(email=utils.mask_email(recipient), numbers=numbers, expire=expire)
-        return subject, content
-
-    def send(self, recipient: str, numbers: str, expire: int, language: str) -> const.CodeEnum:
-        subject, content = self.get_subject_content(
-            recipient=recipient, numbers=numbers, expire=expire, language=language
-        )
+            template_id = self.lang_template_id[self.default_language]
 
         return self._send(
-            subject=subject,
             recipients=[recipient],
-            html_message=content
+            subject=subject,
+            template_id=template_id,
+            values={"email": utils.mask_email(recipient), "numbers": numbers, "expire": expire},
         )
 
     @staticmethod
@@ -75,45 +40,44 @@ class EmailServer:
             return False
         return True
 
-    def _send(self, recipients: List[str], subject: str, html_message: str) -> const.CodeEnum:
+    def _send(self, recipients: List[str], subject: str, template_id: int, values: Dict) -> const.CodeEnum:
         for recipient in recipients:
             if not self.email_ok(recipient):
                 return const.CodeEnum.INVALID_EMAIL
         conf = config.get_settings()
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = email.header.Header(subject, 'utf-8')
-        msg['From'] = conf.RETHINK_EMAIL
-        msg['To'] = ", ".join(recipients)
-        html_body = MIMEText(html_message, 'html', 'utf-8')
-        msg.attach(html_body)
 
         _, code = scheduler.run_once_now(
-            job_id=f"send_email_{conf.RETHINK_EMAIL}_{recipients}_{subject}_{html_message}",
-            func=scheduler.tasks.email.send,
-            kwargs={"recipients": recipients, "subject": msg.as_string()},
+            job_id=f"send_email_{conf.RETHINK_EMAIL}_{recipients}_{subject}_{template_id}_{values}",
+            func=scheduler.tasks.email.send_verification_code,
+            kwargs={
+                "from_email": f"Rethink <{conf.RETHINK_EMAIL}>",
+                "to_emails": recipients,
+                "subject": subject,
+                "values": values,
+                "template_id": template_id,
+                "secret_id": conf.RETHINK_EMAIL_SECRET_ID,
+                "secret_key": conf.RETHINK_EMAIL_SECRET_KEY,
+            },
         )
         return code
 
 
 email_server = EmailServer()
 
+cache_email: OrderedDict[str, Tuple[datetime, str]] = OrderedDict()
+
 
 def encode_number(number: str, expired_min: int) -> str:
-    token = utils.jwt_encode(
-        exp_delta=timedelta(minutes=expired_min),
-        data={"code": number + config.get_settings().CAPTCHA_SALT}
+    return cached_verification.add_to_cache(
+        cached=cache_email,
+        code=number,
+        expired_seconds=expired_min * 60
     )
-    return token
 
 
-def verify_number(token: str, number_str: str) -> const.CodeEnum:
-    code = const.CodeEnum.CAPTCHA_ERROR
-    try:
-        data = utils.jwt_decode(token)
-        if data["code"] == number_str + config.get_settings().CAPTCHA_SALT:
-            code = const.CodeEnum.OK
-    except jwt.ExpiredSignatureError:
-        code = const.CodeEnum.CAPTCHA_EXPIRED
-    except (jwt.DecodeError, Exception):  # pylint: disable=broad-except
-        code = const.CodeEnum.INVALID_AUTH
-    return code
+def verify_number(cid: str, user_code: str) -> const.CodeEnum:
+    return cached_verification.verify_captcha(
+        cached=cache_email,
+        cid=cid,
+        user_code=user_code
+    )

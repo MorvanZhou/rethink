@@ -74,7 +74,7 @@ async def signup(
 ) -> JSONResponse:
     if not const.LanguageEnum.is_valid(req.language):
         req.language = const.LanguageEnum.EN.value
-    code = account.app_captcha.verify_captcha(token=req.verificationToken, code_str=req.verification)
+    code = account.email.verify_number(cid=req.verificationToken, user_code=req.verification)
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
@@ -221,7 +221,7 @@ async def forget(
         req_id: str,
         req: schemas.account.ForgetPasswordRequest
 ) -> schemas.RequestIdResponse:
-    code = account.email.verify_number(token=req.verificationToken, number_str=req.verification)
+    code = account.email.verify_number(cid=req.verificationToken, user_code=req.verification)
     if code != const.CodeEnum.OK:
         raise json_exception(
             request_id=req_id,
@@ -263,11 +263,11 @@ async def forget(
 
 
 def get_captcha_img():
-    token, data = account.app_captcha.generate(length=4, sound=False)
+    cid, data = account.app_captcha.generate(length=4, sound=False)
     return StreamingResponse(
         data["img"],
         headers={
-            "X-Captcha-Token": token
+            "X-Captcha-Token": cid
         },
         media_type="image/png",
     )
@@ -275,12 +275,12 @@ def get_captcha_img():
 
 def __check_and_send_email(
         email: str,
-        token: str,
+        cid: str,
         code_str: str,
         language: str,
 ) -> Tuple[str, int, const.CodeEnum]:
     # verify captcha code in image
-    code = account.app_captcha.verify_captcha(token=token, code_str=code_str)
+    code = account.app_captcha.verify_captcha(cid=cid, code_str=code_str)
 
     if code != const.CodeEnum.OK:
         return "", 0, code
@@ -315,7 +315,7 @@ async def email_send_code(
 
     numbers, expired_min, code = __check_and_send_email(
         email=req.email,
-        token=req.captchaToken,
+        cid=req.captchaToken,
         code_str=req.captchaCode,
         language=req.language,
     )
@@ -327,10 +327,10 @@ async def email_send_code(
             language=req.language,
         )
 
-    token = account.email.encode_number(number=numbers, expired_min=expired_min)
+    cid = account.email.encode_number(number=numbers, expired_min=expired_min)
     return schemas.account.TokenResponse(
         requestId=req_id,
-        token=token,
+        token=cid,
     )
 
 

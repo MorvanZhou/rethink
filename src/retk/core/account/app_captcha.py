@@ -1,14 +1,14 @@
-from datetime import timedelta
+from collections import OrderedDict
+from datetime import datetime
 from io import BytesIO
 from random import choices
 from typing import Tuple, Dict
 
-import jwt
 from captcha.audio import AudioCaptcha
 from captcha.image import ImageCaptcha
 
-from retk import const, config
-from retk.utils import jwt_encode, jwt_decode
+from retk import const
+from retk.core.utils import cached_verification
 
 DEFAULT_CAPTCHA_EXPIRE_SECOND = 60
 
@@ -19,6 +19,8 @@ alphabet = "347ACEFGJLMNPRTY"
 alphabet_len = len(alphabet)
 code_idx_range = list(range(0, alphabet_len - 1))
 
+cache_captcha: OrderedDict[str, Tuple[datetime, str]] = OrderedDict()
+
 
 def generate(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, BytesIO]]:
     code = [alphabet[i] for i in choices(code_idx_range, k=length)]
@@ -28,22 +30,17 @@ def generate(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, Bytes
     }
     if sound:
         data["sound"] = audio_captcha.generate(code_str)
-    token = jwt_encode(
-        exp_delta=timedelta(seconds=DEFAULT_CAPTCHA_EXPIRE_SECOND),
-        data={"code": code_str.lower() + config.get_settings().CAPTCHA_SALT}
+    cid = cached_verification.add_to_cache(
+        cached=cache_captcha,
+        code=code_str.lower(),
+        expired_seconds=DEFAULT_CAPTCHA_EXPIRE_SECOND
     )
-    # TODO: 以后有 redis 之后要考虑 token 的一次性校验。校验过一次后，需要主动失效
-    return token, data
+    return cid, data
 
 
-def verify_captcha(token: str, code_str: str) -> const.CodeEnum:
-    code = const.CodeEnum.CAPTCHA_ERROR
-    try:
-        data = jwt_decode(token)
-        if data["code"] == code_str.lower() + config.get_settings().CAPTCHA_SALT:
-            code = const.CodeEnum.OK
-    except jwt.ExpiredSignatureError:
-        code = const.CodeEnum.CAPTCHA_EXPIRED
-    except (jwt.DecodeError, Exception):  # pylint: disable=broad-except
-        code = const.CodeEnum.INVALID_AUTH
-    return code
+def verify_captcha(cid: str, code_str: str) -> const.CodeEnum:
+    return cached_verification.verify_captcha(
+        cached=cache_captcha,
+        cid=cid,
+        user_code=code_str
+    )

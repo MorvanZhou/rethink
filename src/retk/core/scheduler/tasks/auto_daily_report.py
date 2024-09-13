@@ -30,7 +30,7 @@ async def _auto_daily_report():
         return
     file = const.settings.ANALYTICS_DIR / "daily_report" / "report.log"
     lock = asyncio.Lock()
-    now = datetime.now()
+    now = datetime.utcnow()
     # get last line efficiently
     if file.exists():
         async with aiofiles.open(file, "r", encoding="utf-8") as f:

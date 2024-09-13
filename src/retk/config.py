@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     VERIFY_REFERER: bool = Field(default=False, env='VERIFY_REFERER')
     PLUGINS: bool = Field(default=False, env='PLUGINS')
     RETHINK_LOCAL_STORAGE_PATH: Optional[DirectoryPath] = Field(env='RETHINK_LOCAL_STORAGE_PATH', default=None)
-    CAPTCHA_SALT: str = Field(env='CAPTCHA_SALT', default="")
     MD_BACKUP_INTERVAL: int = Field(env="MD_BACKUP_INTERVAL", default=60 * 5)  # 5 minutes
 
     # database settings: MongoDB
@@ -85,7 +84,8 @@ class Settings(BaseSettings):
 
     # Email client settings
     RETHINK_EMAIL: str = Field(env='RETHINK_EMAIL', default="")
-    RETHINK_EMAIL_PASSWORD: str = Field(env='RETHINK_EMAIL_PASSWORD', default="")
+    RETHINK_EMAIL_SECRET_ID: str = Field(env='RETHINK_EMAIL_SECRET_ID', default="")
+    RETHINK_EMAIL_SECRET_KEY: str = Field(env='RETHINK_EMAIL_SECRET_KEY', default="")
 
     # OAuth settings
     OAUTH_REDIRECT_URL: str = Field(env='OAUTH_REDIRECT_URL', default="")

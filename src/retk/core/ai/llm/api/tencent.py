@@ -3,12 +3,11 @@ import hashlib
 import hmac
 import json
 import time
-from datetime import datetime
 from enum import Enum
 from typing import TypedDict, Tuple, Dict, AsyncIterable, Optional, List, Callable, Union
 
 from retk import config, const
-from retk.core.utils import ratelimiter
+from retk.core.utils import ratelimiter, tencent
 from retk.logger import logger
 from .base import BaseLLMService, MessagesType, NoAPIKeyError, ModelConfig
 
@@ -76,47 +75,22 @@ class TencentService(BaseLLMService):
         settings.HUNYUAN_SECRET_ID = auth.get("Secret Id", "")
         settings.HUNYUAN_SECRET_KEY = auth.get("Secret Key", "")
 
-    def get_auth(self, action: str, payload: bytes, timestamp: int, content_type: str) -> str:
-        _s = config.get_settings()
-        if _s.HUNYUAN_SECRET_KEY == "" or _s.HUNYUAN_SECRET_ID == "":
-            raise NoAPIKeyError("Tencent secret id or key is empty")
-
-        algorithm = "TC3-HMAC-SHA256"
-        date = datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d")
-
-        # ************* 步骤 1：拼接规范请求串 *************
-        http_request_method = "POST"
-        canonical_uri = "/"
-        canonical_querystring = ""
-        canonical_headers = f"content-type:{content_type}\nhost:{self.host}\nx-tc-action:{action.lower()}\n"
-        signed_headers = "content-type;host;x-tc-action"
-        hashed_request_payload = hashlib.sha256(payload).hexdigest()
-        canonical_request = f"{http_request_method}\n" \
-                            f"{canonical_uri}\n{canonical_querystring}\n{canonical_headers}\n" \
-                            f"{signed_headers}\n{hashed_request_payload}"
-
-        # ************* 步骤 2：拼接待签名字符串 *************
-        credential_scope = f"{date}/{self.service}/tc3_request"
-        hashed_canonical_request = hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
-        string_to_sign = f"{algorithm}\n{timestamp}\n{credential_scope}\n{hashed_canonical_request}"
-
-        # ************* 步骤 3：计算签名 *************
-        secret_date = sign(f"TC3{_s.HUNYUAN_SECRET_KEY}".encode("utf-8"), date)
-        secret_service = sign(secret_date, self.service)
-        secret_signing = sign(secret_service, "tc3_request")
-        signature = hmac.new(secret_signing, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
-
-        # ************* 步骤 4：拼接 Authorization *************
-        authorization = f"{algorithm}" \
-                        f" Credential={_s.HUNYUAN_SECRET_ID}/{credential_scope}," \
-                        f" SignedHeaders={signed_headers}," \
-                        f" Signature={signature}"
-        return authorization
-
     def get_headers(self, action: str, payload: bytes) -> Headers:
         ct = "application/json"
         timestamp = int(time.time())
-        authorization = self.get_auth(action=action, payload=payload, timestamp=timestamp, content_type=ct)
+        _s = config.get_settings()
+        if _s.HUNYUAN_SECRET_KEY == "" or _s.HUNYUAN_SECRET_ID == "":
+            raise NoAPIKeyError("Tencent secret id or key is empty")
+        authorization = tencent.get_auth(
+            host=self.host,
+            service=self.service,
+            secret_id=_s.HUNYUAN_SECRET_ID,
+            secret_key=_s.HUNYUAN_SECRET_KEY,
+            action=action,
+            payload=payload,
+            timestamp=timestamp,
+            content_type=ct,
+        )
         return {
             "Authorization": authorization,
             "Host": self.host,
