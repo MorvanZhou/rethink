@@ -98,5 +98,6 @@ class AccountTest(unittest.IsolatedAsyncioTestCase):
         code = account.app_captcha.verify_captcha(cid=cid, code_str=code_str)
         self.assertEqual(const.CodeEnum.OK, code)
 
+        cid, _ = account.app_captcha.generate()
         code = account.app_captcha.verify_captcha(cid=cid, code_str="1234")
         self.assertEqual(const.CodeEnum.CAPTCHA_ERROR, code)
