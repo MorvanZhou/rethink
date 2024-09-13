@@ -1,6 +1,6 @@
-from collections import OrderedDict
+from collections import OrderedDict as OD
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, OrderedDict
 
 from retk import const, config, regex, utils
 from retk.core import scheduler
@@ -64,7 +64,7 @@ class EmailServer:
 
 email_server = EmailServer()
 
-cache_email: OrderedDict[str, Tuple[datetime, str]] = OrderedDict()
+cache_email: OrderedDict[str, Tuple[datetime, str]] = OD()
 
 
 def encode_number(number: str, expired_min: int) -> str:

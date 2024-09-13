@@ -1,8 +1,8 @@
-from collections import OrderedDict
+from collections import OrderedDict as OD
 from datetime import datetime
 from io import BytesIO
 from random import choices
-from typing import Tuple, Dict
+from typing import Tuple, Dict, OrderedDict
 
 from captcha.audio import AudioCaptcha
 from captcha.image import ImageCaptcha
@@ -19,7 +19,7 @@ alphabet = "347ACEFGJLMNPRTY"
 alphabet_len = len(alphabet)
 code_idx_range = list(range(0, alphabet_len - 1))
 
-cache_captcha: OrderedDict[str, Tuple[datetime, str]] = OrderedDict()
+cache_captcha: OrderedDict[str, Tuple[datetime, str]] = OD()
 
 
 def generate(length: int = 4, sound: bool = False) -> Tuple[str, Dict[str, BytesIO]]:

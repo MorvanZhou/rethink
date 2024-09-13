@@ -1,6 +1,5 @@
-from collections import OrderedDict
 from datetime import timedelta, datetime
-from typing import Tuple
+from typing import Tuple, OrderedDict
 
 from retk import const
 from retk.utils.auth import short_uuid
