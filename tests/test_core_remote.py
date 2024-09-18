@@ -742,4 +742,3 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(await test(ip="123"))
         with self.assertRaises(HTTPException):
             await test(ip="123")
-
