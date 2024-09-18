@@ -1,6 +1,4 @@
 import datetime
-import os
-import shutil
 import time
 import unittest
 from copy import deepcopy
@@ -745,4 +743,3 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException):
             await test(ip="123")
 
-        shutil.rmtree(os.path.join(os.path.dirname(__file__), "analytics"), ignore_errors=True)

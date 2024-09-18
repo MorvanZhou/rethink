@@ -42,6 +42,7 @@ def drop_env(file=".env.test.local"):
         for c in cs:
             k, _ = c.split("=")
             os.environ.pop(k)
+    shutil.rmtree(Path(__file__) / "analytics", ignore_errors=True)
 
 
 def skip_no_connect(f):
