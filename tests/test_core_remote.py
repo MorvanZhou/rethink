@@ -732,6 +732,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(s["read"])
             self.assertIsNotNone(s["readTime"])
 
+    @utils.skip_no_connect
     async def test_req_limit(self, mock_batch_send):
 
         @ratelimiter.req_limit(requests=5, in_seconds=1)
