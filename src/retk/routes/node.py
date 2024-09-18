@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 from retk import const
 from retk.controllers import schemas
 from retk.controllers.node import node_ops, search
+from retk.core.utils.ratelimiter import req_limit
 from retk.routes import utils
 
 router = APIRouter(
@@ -23,6 +24,7 @@ router = APIRouter(
     response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=10, in_seconds=1)
 async def post_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
@@ -40,6 +42,7 @@ async def post_node(
     response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=10, in_seconds=1)
 async def post_quick_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.node.CreateRequest,
@@ -57,6 +60,7 @@ async def post_quick_node(
     response_model=schemas.node.NodesSearchResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def get_search_nodes(
         au: utils.ANNOTATED_AUTHED_USER,
         q: str = Query(max_length=const.settings.SEARCH_QUERY_MAX_LENGTH),
@@ -141,6 +145,7 @@ async def get_node(
     response_model=schemas.node.NodesSearchResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def get_at_search(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
@@ -164,6 +169,7 @@ async def get_at_search(
     response_model=schemas.node.NodesSearchResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def get_recommend_nodes(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
@@ -241,6 +247,7 @@ async def put_node_md(
     response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def put_node_favorite(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,
@@ -276,6 +283,7 @@ async def delete_node_favorite(
     status_code=200,
 )
 @utils.measure_time_spend
+@req_limit(requests=1, in_seconds=1)
 async def stream_export_md_node(
         au: utils.ANNOTATED_AUTHED_USER,
         nid: str = utils.ANNOTATED_NID,

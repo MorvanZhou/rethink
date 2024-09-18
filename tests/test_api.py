@@ -94,7 +94,7 @@ class PublicApiTest(unittest.IsolatedAsyncioTestCase):
             },
             headers={"RequestId": "xxx"}
         )
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(200, resp.status_code, msg=resp.json())
         rj = resp.json()
         self.assertNotEqual("", rj["token"])
         self.assertEqual("xxx", rj["requestId"])
@@ -106,6 +106,7 @@ class TokenApiTest(unittest.IsolatedAsyncioTestCase):
         utils.set_env(".env.test.local")
 
     async def asyncSetUp(self) -> None:
+        os.makedirs(Path(__file__).parent / "temp", exist_ok=True)
         scheduler.start()
         await client.init()
         self.client = TestClient(app)

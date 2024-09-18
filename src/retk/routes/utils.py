@@ -5,7 +5,7 @@ from functools import wraps
 from typing import Optional
 
 import jwt
-from fastapi import HTTPException, Header, Cookie, Depends
+from fastapi import HTTPException, Header, Cookie, Depends, Request
 from fastapi.params import Path
 from starlette.status import HTTP_403_FORBIDDEN
 from typing_extensions import Annotated
@@ -75,6 +75,23 @@ def verify_referer(referer: Optional[str] = Header(None)):
             detail="Invalid referer",
         )
     return referer
+
+
+def get_ip(
+        request: Request
+) -> str:
+    forwarded_for = request.headers.get('X-Forwarded-For')
+    if forwarded_for:
+        ip = forwarded_for.split(',')[0].strip()
+        if ip:
+            return ip
+
+    real_ip = request.headers.get('X-Real-IP')
+    if real_ip:
+        return real_ip
+
+    client_ip = request.client.host
+    return client_ip
 
 
 async def on_startup():
@@ -291,3 +308,4 @@ ANNOTATED_PID = Annotated[str, Path(title="The ID of plugin", max_length=const.s
 ANNOTATED_FID = Annotated[str, Path(title="The ID of file", max_length=const.settings.FID_MAX_LENGTH)]
 
 DEPENDS_REFERER = Depends(verify_referer)
+DEPENDS_IP = Depends(get_ip)

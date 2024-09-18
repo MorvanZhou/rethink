@@ -6,6 +6,7 @@ from typing import Dict, List
 import httpx
 
 from retk.core.utils.tencent import get_auth
+from retk.logger import logger
 
 
 def send_verification_code(
@@ -78,5 +79,5 @@ async def _send_verification_code(
             },
             content=payload_bytes,
         )
-        print(response.status_code)
-        print(response.text)
+        if response.status_code != 200:
+            logger.error(f"send email failed: {response.text}")

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, UploadFile
 from typing_extensions import Annotated
 
 from retk.controllers import schemas, browser_extension
+from retk.core.utils.ratelimiter import req_limit
 from retk.routes import utils
 
 router = APIRouter(
@@ -44,6 +45,7 @@ async def browser_extension_refresh_token(
     response_model=schemas.node.NodeResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=4, in_seconds=1)
 async def post_node_from_browser_extension(
         au: utils.ANNOTATED_AUTHED_USER_BROWSER_EXTENSION,
         url: Annotated[str, Form(...)],

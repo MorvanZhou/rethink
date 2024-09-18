@@ -4,6 +4,7 @@ from fastapi import APIRouter, UploadFile, Request
 
 from retk.controllers import schemas
 from retk.controllers.files import upload_files
+from retk.core.utils.ratelimiter import req_limit
 from retk.routes import utils
 
 router = APIRouter(
@@ -19,6 +20,7 @@ router = APIRouter(
     response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=30)
 async def upload_obsidian_files(
         au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
@@ -36,6 +38,7 @@ async def upload_obsidian_files(
     response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=10, in_seconds=30)
 async def upload_text_files(
         au: utils.ANNOTATED_AUTHED_USER,
         files: List[UploadFile],
@@ -53,6 +56,7 @@ async def upload_text_files(
     response_model=schemas.files.VditorFilesResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def vditor_upload(
         au: utils.ANNOTATED_AUTHED_USER,
         req: Request,
@@ -72,6 +76,7 @@ async def vditor_upload(
     response_model=schemas.files.VditorImagesResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def vditor_fetch_image(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.files.ImageVditorFetchRequest,
@@ -89,6 +94,7 @@ async def vditor_fetch_image(
     response_model=schemas.files.FileUploadProcessResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=10, in_seconds=30)
 async def get_upload_process(
         au: utils.ANNOTATED_AUTHED_USER,
         referer: Optional[str] = utils.DEPENDS_REFERER,

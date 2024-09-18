@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from retk.controllers import schemas, recent
+from retk.core.utils.ratelimiter import req_limit
 from retk.routes import utils
 
 router = APIRouter(
@@ -16,6 +17,7 @@ router = APIRouter(
     response_model=schemas.RequestIdResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def add_recent_at_node(
         au: utils.ANNOTATED_AUTHED_USER,
         req: schemas.recent.AtNodeRequest,
@@ -32,6 +34,7 @@ async def add_recent_at_node(
     response_model=schemas.recent.GetRecentSearchResponse,
 )
 @utils.measure_time_spend
+@req_limit(requests=5, in_seconds=1)
 async def get_recent_searched(
         au: utils.ANNOTATED_AUTHED_USER,
 ) -> schemas.recent.GetRecentSearchResponse:

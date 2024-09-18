@@ -40,6 +40,7 @@ class UserBehaviorTypeEnum(IntEnum):
 
     LLM_KNOWLEDGE_RESPONSE = 24  # backend
     NODE_PAGE_VIEW = 25  # backend
+    RATE_LIMIT_EXCEEDED = 26  # backend
 
 
 USER_BEHAVIOR_TYPE_MAP = {

@@ -1,4 +1,6 @@
 import datetime
+import os
+import shutil
 import time
 import unittest
 from copy import deepcopy
@@ -8,12 +10,14 @@ from unittest.mock import patch, AsyncMock
 import elastic_transport
 import pymongo.errors
 from bson import ObjectId
+from starlette.exceptions import HTTPException
 
 from retk import const, config, core
 from retk.controllers.schemas.user import PatchUserRequest
 from retk.core.account.manager import signup
 from retk.core.ai.llm.knowledge.extending import extend_on_node_update
 from retk.core.scheduler import tasks
+from retk.core.utils import ratelimiter
 from retk.models import db_ops
 from retk.models.client import client
 from retk.models.tps import AuthedUser, convert_user_dict_to_authed_user
@@ -729,3 +733,16 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
         for s in sn:
             self.assertTrue(s["read"])
             self.assertIsNotNone(s["readTime"])
+
+    async def test_req_limit(self, mock_batch_send):
+
+        @ratelimiter.req_limit(requests=5, in_seconds=1)
+        async def test(ip="123"):
+            return True
+
+        for _ in range(5):
+            self.assertTrue(await test(ip="123"))
+        with self.assertRaises(HTTPException):
+            await test(ip="123")
+
+        shutil.rmtree(os.path.join(os.path.dirname(__file__), "analytics"), ignore_errors=True)
