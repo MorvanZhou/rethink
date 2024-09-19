@@ -363,7 +363,7 @@ class Client:
             return
         logger.critical(
             f"restore search index count: {count_search}, mongo count: {count_mongo}."
-            f" They are not equal, tring to restore search index")
+            f" They are not equal, trying to restore search index")
 
         await self.search.drop()
         await self.search.init()

@@ -107,6 +107,7 @@ class COSClient:
                     url=f"https://{self.domain}/{key}",
                     headers=self.get_auth_headers("put", key),
                     content=file.read(),
+                    timeout=60,
                 )
             if resp.status_code != 200:
                 logger.error(f"put_cos_object | error: {resp.text}")
@@ -117,7 +118,7 @@ class COSClient:
                 httpx.ReadTimeout,
                 httpx.HTTPError
         ) as e:
-            logger.error(f"put_cos_object | error: {e}")
+            logger.error(f"put_cos_object | error: {str(e)}")
             return False
         return True
 

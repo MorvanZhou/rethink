@@ -41,7 +41,7 @@ async def post(
     if from_nid != "":
         from_nids.append(from_nid)
         res = await db_ops.node_add_to_set(from_nid, "toNodeIds", nid)
-        if res.modified_count != 1:
+        if not res.acknowledged:
             return None, const.CodeEnum.OPERATION_FAILED
 
     new_to_node_ids = []
