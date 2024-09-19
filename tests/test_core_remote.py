@@ -66,6 +66,7 @@ class RemoteModelsTest(unittest.IsolatedAsyncioTestCase):
                 pymongo.errors.NetworkTimeout,
                 pymongo.errors.ServerSelectionTimeoutError,
                 elastic_transport.ConnectionError,
+                NameError,
         ):
             try:
                 await client.drop()
