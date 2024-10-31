@@ -41,6 +41,7 @@ def get_node_data(n: Node) -> schemas.node.NodeData:
         favorite=n.get("favorite", False),
         fromNodes=from_nodes,
         toNodes=to_nodes,
+        summary=n.get("summary", ""),
     )
 
 

@@ -264,4 +264,5 @@ def get_node_dict(
         toNodeIds=to_node_ids,
         history=history,
         favorite=False,
+        summary="",
     )

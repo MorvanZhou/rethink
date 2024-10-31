@@ -94,6 +94,16 @@ async def async_deliver_unscheduled_extend_nodes() -> str:
             cases=cases,
             req_id=req_id,
         )
+
+        # set summary to nodes
+        for case in cases:
+            if case.summary_code != const.CodeEnum.OK:
+                continue
+            await db[CollNameEnum.nodes.value].update_one(
+                {"id": case.nid},
+                {"$set": {"summary": case.summary}}
+            )
+
         s1 = time.perf_counter()
 
         e0 = time.perf_counter()

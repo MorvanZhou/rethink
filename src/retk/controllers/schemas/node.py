@@ -28,6 +28,7 @@ class NodeData(BaseModel):
     favorite: bool
     fromNodes: List[LinkedNode] = Field(default_factory=list)
     toNodes: List[LinkedNode] = Field(default_factory=list)
+    summary: str = ""
 
 
 class CreateRequest(BaseModel):
