@@ -90,7 +90,7 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
+    async def delete(self, uid: str, nid: str) -> const.CodeEnum:
         ...
 
     @abstractmethod
@@ -98,7 +98,7 @@ class BaseEngine(ABC):
         ...
 
     @abstractmethod
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
+    async def delete_batch(self, uid: str, nids: List[str]) -> const.CodeEnum:
         ...
 
     @abstractmethod

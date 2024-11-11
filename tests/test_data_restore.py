@@ -45,7 +45,7 @@ class DataRestoreTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(20 + base_count, await client.search.count_all())
 
         code = await client.search.delete_batch(
-            au=self.au,
+            uid=self.au.u.id,
             nids=nids[:10],
         )
         self.assertEqual(const.CodeEnum.OK, code)

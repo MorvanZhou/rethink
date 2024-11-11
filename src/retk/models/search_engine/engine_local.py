@@ -114,8 +114,8 @@ class LocalSearcher(BaseEngine):
     async def enable(self, au: AuthedUser, nid: str) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=[nid], disable=False)
 
-    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
-        return await self.delete_batch(au=au, nids=[nid])
+    async def delete(self, uid: str, nid: str) -> const.CodeEnum:
+        return await self.delete_batch(uid=uid, nids=[nid])
 
     async def add_batch(self, au: AuthedUser, docs: List[SearchDoc]) -> const.CodeEnum:
         writer = self.ix.writer()
@@ -142,10 +142,10 @@ class LocalSearcher(BaseEngine):
     async def restore_batch_from_trash(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
         return await self._trash_disable_ops_batch(au=au, nids=nids, in_trash=False)
 
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
+    async def delete_batch(self, uid: str, nids: List[str]) -> const.CodeEnum:
         writer = self.ix.writer()
         for nid in nids:
-            q = And([Term("uid", au.u.id), Term("nid", nid), Term("inTrash", True)])
+            q = And([Term("uid", uid), Term("nid", nid), Term("inTrash", True)])
             count = writer.delete_by_query(q=q)
             if count != 1:
                 logger.error(f"nid {nid} not found or more than one found")

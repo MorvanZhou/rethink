@@ -175,7 +175,7 @@ class LocalSearchTest(unittest.IsolatedAsyncioTestCase):
         code = await self.searcher.batch_to_trash(au=self.au, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(20, await self.searcher.count_all())
-        code = await self.searcher.delete_batch(au=self.au, nids=[f"nid{i}" for i in range(10)])
+        code = await self.searcher.delete_batch(uid=self.au.u.id, nids=[f"nid{i}" for i in range(10)])
         self.assertEqual(const.CodeEnum.OK, code)
         self.assertEqual(10, await self.searcher.count_all())
 

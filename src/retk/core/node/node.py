@@ -361,7 +361,7 @@ async def batch_delete(au: tps.AuthedUser, nids: List[str]) -> const.CodeEnum:
 
     backup.delete_node_md(uid=au.u.id, nids=nids)
 
-    code = await client.search.delete_batch(au=au, nids=nids)
+    code = await client.search.delete_batch(uid=au.u.id, nids=nids)
     if code != const.CodeEnum.OK:
         logger.error(f"delete search index failed, code: {code}")
 

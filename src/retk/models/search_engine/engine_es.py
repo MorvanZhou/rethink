@@ -360,16 +360,16 @@ class ESSearcher(BaseEngine):
             return const.CodeEnum.OPERATION_FAILED
         return const.CodeEnum.OK
 
-    async def delete(self, au: AuthedUser, nid: str) -> const.CodeEnum:
+    async def delete(self, uid: str, nid: str) -> const.CodeEnum:
         doc = await self.es.get(
             index=self.index,
             id=nid,
         )
-        if doc["_source"]["uid"] != au.u.id:
-            logger.error(f"node not belong to user {au.u.id=} {nid=}")
+        if doc["_source"]["uid"] != uid:
+            logger.error(f"node not belong to user {uid=} {nid=}")
             return const.CodeEnum.NODE_NOT_EXIST
         if not doc["_source"]["inTrash"]:
-            logger.error(f"doc not in trash, deletion failed {au.u.id=} {nid=}")
+            logger.error(f"doc not in trash, deletion failed {uid=} {nid=}")
             return const.CodeEnum.OPERATION_FAILED
 
         resp = await self.es.delete(
@@ -378,7 +378,7 @@ class ESSearcher(BaseEngine):
             refresh=True,
         )
         if resp.meta.status != 201:
-            logger.error(f"delete failed {au.u.id=} {nid=}")
+            logger.error(f"delete failed {uid=} {nid=}")
             return const.CodeEnum.OPERATION_FAILED
         return const.CodeEnum.OK
 
@@ -403,7 +403,7 @@ class ESSearcher(BaseEngine):
             now = now + datetime.timedelta(seconds=0.001)
         return await self._batch_ops(actions, op_type="add", refresh=False)
 
-    async def delete_batch(self, au: AuthedUser, nids: List[str]) -> const.CodeEnum:
+    async def delete_batch(self, uid: str, nids: List[str]) -> const.CodeEnum:
         resp = await self.es.delete_by_query(
             index=self.index,
             body={
@@ -413,7 +413,7 @@ class ESSearcher(BaseEngine):
                             {"ids": {"values": nids}},
                             {
                                 "term": {
-                                    "uid": au.u.id
+                                    "uid": uid
                                 }
                             },
                             {

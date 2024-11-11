@@ -44,6 +44,19 @@ def init_mongo(connection_timeout: int) -> Union["AsyncIOMotorClient", MongitaCl
     return mongo, db
 
 
+async def init_search() -> BaseEngine:
+    conf = config.get_settings()
+    if config.is_local_db():
+        if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():
+            raise FileNotFoundError(f"Path not exists: {conf.RETHINK_LOCAL_STORAGE_PATH}")
+        search = LocalSearcher()
+    else:
+        search = ESSearcher()
+
+    await search.init()
+    return search
+
+
 class Client:
     coll: Collections = Collections()
     mongo: Optional[Union["AsyncIOMotorClient", MongitaClientDisk]] = None
@@ -52,7 +65,7 @@ class Client:
 
     async def init(self):
         self.init_mongo()
-        await self.init_search()
+        self.search = await init_search()
 
         if config.is_local_db():
             await self.local_try_create_or_restore()
@@ -82,19 +95,6 @@ class Client:
         self.coll.notice_system = db[CollNameEnum.notice_system.value]
         self.coll.llm_extend_node_queue = db[CollNameEnum.llm_extend_node_queue.value]
         self.coll.llm_extended_node = db[CollNameEnum.llm_extended_node.value]
-
-    async def init_search(self):
-        conf = config.get_settings()
-        if config.is_local_db():
-            if not conf.RETHINK_LOCAL_STORAGE_PATH.exists():
-                raise FileNotFoundError(f"Path not exists: {conf.RETHINK_LOCAL_STORAGE_PATH}")
-            if not isinstance(self.search, LocalSearcher):
-                self.search = LocalSearcher()
-        else:
-            if not isinstance(self.search, ESSearcher):
-                self.search = ESSearcher()
-
-        await self.search.init()
 
     async def close(self):
         if self.search is not None:
