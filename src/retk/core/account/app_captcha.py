@@ -4,16 +4,20 @@ from io import BytesIO
 from random import choices
 from typing import Tuple, Dict, OrderedDict
 
-from captcha.audio import AudioCaptcha
-from captcha.image import ImageCaptcha
+try:
+    from captcha.audio import AudioCaptcha
+    from captcha.image import ImageCaptcha
+except ImportError:
+    img_captcha = None
+    audio_captcha = None
+else:
+    img_captcha = ImageCaptcha(font_sizes=(35, 30, 32))
+    audio_captcha = AudioCaptcha()
 
 from retk import const
 from retk.core.utils import cached_verification
 
 DEFAULT_CAPTCHA_EXPIRE_SECOND = 60
-
-img_captcha = ImageCaptcha(font_sizes=(35, 30, 32))
-audio_captcha = AudioCaptcha()
 
 alphabet = "347ACEFGJLMNPRTY"
 alphabet_len = len(alphabet)
