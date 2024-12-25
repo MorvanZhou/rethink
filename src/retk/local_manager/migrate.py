@@ -41,10 +41,10 @@ def __migrate_older_to_0_2_9(dot_rethink: Dict) -> Dict:
     return dot_rethink
 
 
-def __migrate_older_to_0_3_0(dot_rethink: Dict) -> Dict:
-    """Migrate the database to version 0.3.0.
+def __migrate_older_to_0_3_1(dot_rethink: Dict) -> Dict:
+    """Migrate the database to version 0.3.1.
     """
-    v = "0.3.0"
+    v = "0.3.1"
     dot_rethink = __migrate_older_to_0_2_9(dot_rethink)
     if "llmApi" not in dot_rethink["settings"]:
         dot_rethink["settings"]["llmApi"] = {}
@@ -85,6 +85,6 @@ def to_latest_version():
         logger.debug(".rethink.json is not found. The database is empty.")
         return
 
-    if __version_less_than(dot_rethink, version="0.3.0"):
-        __migrate_older_to_0_3_0(dot_rethink)
+    if __version_less_than(dot_rethink, version="0.3.1"):
+        __migrate_older_to_0_3_1(dot_rethink)
         return
